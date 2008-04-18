@@ -1,11 +1,13 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.4 2008/04/18 17:28:16 ith Exp $
+#CVS: $Id: rk4.py,v 1.5 2008/04/18 18:50:27 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
+import sys
+
 
 CKP = {"A2":0.2, "A3":0.3, "A4":0.6, "A5":1.0, "A6":0.875,
                 "B21":0.2, "B31":3.0/40.0, "B32":9.0/40.0, 
@@ -17,6 +19,9 @@ CKP = {"A2":0.2, "A3":0.3, "A4":0.6, "A5":1.0, "A6":0.875,
                 "DC1":(37.0/378.0-2825.0/27648.0), "DC3":(250.0/621.0-18575.0/48384.0),
                 "DC4":(125.0/594.0-13525.0/55296.0), "DC5":-277.0/14336.0,
                 "DC6":(512.0/1771.0-0.25)}
+                
+MAXSTP = 10000 #Maximum number of steps to take
+TINY = 1.0e-30 #Tiny difference to add 
 
 def rk4step(x, y, h, dydx, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
@@ -103,7 +108,7 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     return xx, y
     
 def rkqs(y, dydx, x, htry, eps, yscal, derivs):
-    """Takes on quality controlled RK step using rkck"""
+    """Takes one quality controlled RK step using rkck"""
     
     #Parameters for quality control
     SAFETY = 0.9
@@ -126,7 +131,7 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
             break #Step succeeded. Compute size of next step
         
         htemp = SAFETY*h*(errmax**PSHRINK)
-        h = max(abs(htemp), 0.1*abs(h))*sign(h)
+        h = max(abs(htemp), 0.1*abs(h))*N.sign(h)
         xnew = x + h
         assert xnew != x, "Stepsize underflow"
         #end of while loop
@@ -141,8 +146,56 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
     
     return x, y, hdid, hnext
         
-def odeint(ystart, x1, x2, eps, h1, hmin
-        
-                
-         
+def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
     
+    x = x1
+    h = N.sign(x2-x1)*abs(h1)
+    nok = nbad = 0
+    
+    xp = [] # Lists that will hold intermediate results
+    yp = []
+    
+    y = ystart
+    
+    xsav = x - 2.0*dxsav #always save first step
+    
+    for i in xrange(MAXSTP):
+        dydx = derivs(x, y)
+        
+        yscal = abs(y) + abs(h*dydx) + TINY
+        
+        if abs(x-xsav) > abs(dxsav):
+            xp.append(x)
+            yp.append(y)
+            xsav = x
+        
+        if (x + h - x2)*(x + h - x1) > 0.0:
+            h = x2 - x
+            
+        x, y, hdid, hnext = rkqs(y, dydx, x, h, eps, yscal, derivs)
+        if hdid == h:
+            nok += 1
+        else:
+            nbad += 1
+        
+        #Are we done?
+        if (x - x2)*(x2 -x1) >= 0.0:
+            
+            #Next line would set ystart to end value, but we are 
+            #saving all steps anyway so not needed.
+            #ystart = y 
+            
+            xp.append(x) #always save last step
+            yp.append(y)
+            
+            #Want to return arrays, not lists so convert them
+            xp = N.array(xp)
+            yp = N.array(yp)
+            return xp, yp, nok, nbad
+        
+        if abs(hnext) <= hmin:
+            print >> sys.stderr, "Step size ", hnext, " too small in odeint, trying again."
+        
+        h = hnext
+        
+    raise IndexError, "Too many steps taken in odeint!"
