@@ -1,9 +1,10 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.3 2008/04/18 15:27:07 ith Exp $
+#CVS: $Id: rk4.py,v 1.4 2008/04/18 17:28:16 ith Exp $
 #
 
+from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 
 CKP = {"A2":0.2, "A3":0.3, "A4":0.6, "A5":1.0, "A6":0.875,
@@ -101,5 +102,47 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     
     return xx, y
     
+def rkqs(y, dydx, x, htry, eps, yscal, derivs):
+    """Takes on quality controlled RK step using rkck"""
     
+    #Parameters for quality control
+    SAFETY = 0.9
+    PGROW = -0.2
+    PSHRINK = -0.25
+    ERRCON = 1.89e-4
+    
+    h = htry #Set initial stepsize
+    
+    while 1:
+        ytemp, yerr = rkck(y, dydx, x, h, derivs) # Take a Cash-Karp Runge-Kutta step
+        
+        #Evaluate accuracy
+        errmax = 0.0
+        errmax = max(errmax, abs(yerr/yscal).max())
+        
+        errmax = errmax/eps #Scale relative to required tolerance
+        
+        if errmax <= 1.0:
+            break #Step succeeded. Compute size of next step
+        
+        htemp = SAFETY*h*(errmax**PSHRINK)
+        h = max(abs(htemp), 0.1*abs(h))*sign(h)
+        xnew = x + h
+        assert xnew != x, "Stepsize underflow"
+        #end of while loop
+        
+    if errmax > ERRCON:
+        hnext = SAFETY*h*(errmax**PGROW)
+    else:
+        hnext = 5.0*h #No more than a factor 5 increase
+    hdid = h
+    x = x + h
+    y = ytemp
+    
+    return x, y, hdid, hnext
+        
+def odeint(ystart, x1, x2, eps, h1, hmin
+        
+                
+         
     
