@@ -1,10 +1,21 @@
 #
-#Runge-Kutta 4th order step
+#Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.2 2008/04/17 19:04:19 ith Exp $
+#CVS: $Id: rk4.py,v 1.3 2008/04/18 15:27:07 ith Exp $
 #
 
 import numpy as N
+
+CKP = {"A2":0.2, "A3":0.3, "A4":0.6, "A5":1.0, "A6":0.875,
+                "B21":0.2, "B31":3.0/40.0, "B32":9.0/40.0, 
+                "B41":0.3, "B42":-0.9, "B43":1.2, 
+                "B51":-11.0/54.0, "B52":2.5, "B53":-70.0/27.0,
+                "B54":35.0/27.0, "B61":1631.0/55296.0, "B62":175.0/512.0,
+                "B63":575.0/13824.0, "B64":44275.0/110592.0, "B65":253.0/4096.0,
+                "C1":37.0/378.0, "C3":250.0/621.0, "C4":125.0/594.0, "C6":512.0/1771.0,
+                "DC1":(37.0/378.0-2825.0/27648.0), "DC3":(250.0/621.0-18575.0/48384.0),
+                "DC4":(125.0/594.0-13525.0/55296.0), "DC5":-277.0/14336.0,
+                "DC6":(512.0/1771.0-0.25)}
 
 def rk4step(x, y, h, dydx, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
@@ -35,6 +46,41 @@ def rk4step(x, y, h, dydx, derivs):
     yout = y + h6*(dydx + dyt + 2*dym)
     
     return yout
+
+def rkck(y, dydx, x, h,derivs):
+    """Take a Cash-Karp Runge-Kutta step."""
+    
+    global CKP
+    
+    #First step
+    ytemp = y + CKP["B21"]*h*dydx
+    
+    #Second step
+    ak2 = derivs(x+CKP["A2"]*h, ytemp)
+    ytemp = y + h*(CKP["B31"]*dydx + CKP["B32"]*ak2)
+    
+    #Third step
+    ak3 = derivs(x + CKP["A3"]*h, ytemp)
+    ytemp = y + h*(CKP["B41"]*dydx + CKP["B42"]*ak2 + CKP["B43"]*ak3)
+    
+    #Fourth step
+    ak4 = derivs(x + CKP["A4"]*h, ytemp)
+    ytemp = y + h*(CKP["B51"]*dydx + CKP["B52"]*ak2 + CKP["B53"]*ak3 + CKP["B54"]*ak4)
+    
+    #Fifth step
+    ak5 = derivs(x + CKP["A5"]*h, ytemp)
+    ytemp = y + h*(CKP["B61"]*dydx + CKP["B62"]*ak2 + CKP["B63"]*ak3 + CKP["B64"]*ak4 + CKP["B65"]*ak5)
+    
+    #Sixth step
+    ak6 = derivs(x + CKP["A6"]*h, ytemp)
+    
+    #Accumulate increments with proper weights.
+    yout = y + h*(CKP["C1"]*dydx + CKP["C3"]*ak3 + CKP["C4"]*ak4 + CKP["C6"]*ak6)
+    
+    #Estimate error between fourth and fifth order methods
+    yerr = h*(CKP["DC1"]*dydx + CKP["DC3"]*ak3 + CKP["DC4"]*ak4 + CKP["DC5"]*ak5 + CKP["DC6"]*ak6)
+    
+    return yout, yerr
 
 def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
