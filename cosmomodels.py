@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.2 2008/04/21 15:31:49 ith Exp $
+    $Id: cosmomodels.py,v 1.3 2008/04/21 17:49:26 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -15,7 +15,7 @@ class ModelError(StandardError):
     def __init__(self, expression, tresult=None, yresult=None):
         self.expression = expression
         self.tresult = tresult
-        self.yresults = yresult
+        self.yresult = yresult
 
 class CosmologicalModel:
     """Generic class for cosmological model simulations.
@@ -26,10 +26,8 @@ class CosmologicalModel:
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-6, dxsav=0.0, solver="odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
-        if not ystart:
-            self.ystart = 0.0
-        else:
-            self.ystart = ystart
+        
+        self.ystart = ystart
         
         if tstart < tend: 
             self.tstart, self.tend = tstart, tend
@@ -67,14 +65,20 @@ class CosmologicalModel:
         self.ynames = ["First dependent variable"]
         
     def derivs(self, t, yarray):
+        """Return an array of derivatives of the dependent variables yarray at timestep t"""
         pass
     
     def run(self):
+        """Execute a simulation run using teh parameters already provided."""
+        
         if self.solver == "odeint":
             try:
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
                     self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
-            except IndexError, e:
+                self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
+            except rk4.SimRunError:
+                raise
+            except Error, e:
                 raise ModelError(e.message, self.tresult, self.yresult)
             self.modelrun = True
             return
@@ -95,6 +99,8 @@ class CosmologicalModel:
         
     
     def plotresults(self, saveplot = False):
+        """Plot results of simulation run on a graph."""
+        
         if not self.modelrun:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
@@ -114,6 +120,64 @@ class TestModel(CosmologicalModel):
         self.ynames = ["Simple y"]
     
     def derivs(self, t, y):
+        """Very simple set of ODEs"""
         return N.cos(t)
-    
 
+class BasicBgModel(CosmologicalModel):
+    """Basic model with background equations
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\eta : First deriv of \phi
+       y[2] - a : Scale Factor
+    """
+    
+    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+        
+        self.plottitle = "Basic Cosmological Model"
+        self.tname = "Conformal time"
+        self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
+        
+    def derivs(self, t, y):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/d\eta etc"""
+        
+        #Mass of inflaton in Planck masses
+        mass = 0.1
+        mass2 = mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        
+        #factor in eom [1/3 a^2 U_0]^{1/2}
+        Ufactor = N.sqrt((1.0/3.0)*(y[2]**2)*U)
+        
+        #Set derivatives
+        dydx = N.zeros(3)
+        
+        #d\phi_0/d\eta = y_1
+        dydx[0] = y[1] 
+        
+        #dy_1/d\eta = -2
+        dydx[1] = -2*Ufactor*y[1] - (y[2]**2)*dUdphi
+        
+        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
+        dydx[2] = Ufactor*y[2]
+        
+        return dydx
+    
+    def plotresults(self, saveplot = False):
+        """Plot results of simulation run on a graph."""
+        
+        if not self.modelrun:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[1])
+        P.xlabel(self.tname)
+        P.ylabel("")
+        P.legend((self.ynames[0], self.ynames[2]))
+        P.title(self.plottitle)
+        P.show()
