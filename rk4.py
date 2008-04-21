@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.6 2008/04/21 15:21:28 ith Exp $
+#CVS: $Id: rk4.py,v 1.7 2008/04/21 17:49:48 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -195,10 +195,18 @@ def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
             return xp, yp, nok, nbad
         
         if abs(hnext) <= hmin:
-            print >> sys.stderr, "Step size ", hnext, " too small in odeint, trying again."
+            print >> sys.stderr, "Step size ", hnext, " smaller than ", hmin, " in odeint, trying again."
         
         h = hnext
         
-    raise IndexError, "Too many steps taken in odeint!"
+    raise SimRunError("Too many steps taken in odeint!", xp, yp)
 
+
+class SimRunError(StandardError):
+    """Generic error for model simulating run. Attributes include current results stack."""
+    
+    def __init__(self, expression, tresult=None, yresult=None):
+        self.expression = expression
+        self.tresult = tresult
+        self.yresult = yresult
 
