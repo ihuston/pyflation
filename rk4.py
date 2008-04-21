@@ -1,14 +1,15 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.5 2008/04/18 18:50:27 ith Exp $
+#CVS: $Id: rk4.py,v 1.6 2008/04/21 15:21:28 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
 
-
+#Constants
+#Cash Karp coefficients for Runge Kutta.
 CKP = {"A2":0.2, "A3":0.3, "A4":0.6, "A5":1.0, "A6":0.875,
                 "B21":0.2, "B31":3.0/40.0, "B32":9.0/40.0, 
                 "B41":0.3, "B42":-0.9, "B43":1.2, 
@@ -199,3 +200,5 @@ def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
         h = hnext
         
     raise IndexError, "Too many steps taken in odeint!"
+
+
