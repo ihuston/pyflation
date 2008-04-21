@@ -1,12 +1,21 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.1 2008/04/21 15:21:12 ith Exp $
+    $Id: cosmomodels.py,v 1.2 2008/04/21 15:31:49 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import pylab as P
+import rk4
 import sys
+
+class ModelError(StandardError):
+    """Generic error for model simulating. Attributes include current results stack."""
+    
+    def __init__(self, expression, tresult=None, yresult=None):
+        self.expression = expression
+        self.tresult = tresult
+        self.yresults = yresult
 
 class CosmologicalModel:
     """Generic class for cosmological model simulations.
@@ -63,7 +72,7 @@ class CosmologicalModel:
     def run(self):
         if self.solver == "odeint":
             try:
-                self.tresult, self.yresult, self.nok, self.nbad = odeint(self.ystart, self.tstart,
+                self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
                     self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
             except IndexError, e:
                 raise ModelError(e.message, self.tresult, self.yresult)
@@ -74,7 +83,7 @@ class CosmologicalModel:
             #Loosely estimate number of steps based on requested step size
             nstep = ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
-                self.tresult, self.yresult = rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
+                self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
             except Error, e:
                 raise ModelError(e.message, self.tresult, self.yresult)
             self.modelrun = True
@@ -105,13 +114,6 @@ class TestModel(CosmologicalModel):
         self.ynames = ["Simple y"]
     
     def derivs(self, t, y):
-        return t
+        return N.cos(t)
     
 
-class ModelError(StandardError):
-    """Generic error for model simulating. Attributes include current results stack."""
-    
-    def __init__(self, expression, tresult=None, yresult=None):
-        self.expression = expression
-        self.tresult = tresult
-        self.yresults = yresult
