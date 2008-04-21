@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.3 2008/04/21 17:49:26 ith Exp $
+    $Id: cosmomodels.py,v 1.4 2008/04/21 18:30:12 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -85,7 +85,7 @@ class CosmologicalModel:
         
         if self.solver == "rkdriver_dumb":
             #Loosely estimate number of steps based on requested step size
-            nstep = ceil((self.tend - self.tstart)/self.tstep_wanted)
+            nstep = N.ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
                 self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
             except Error, e:
