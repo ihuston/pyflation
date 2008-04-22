@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.5 2008/04/22 16:15:17 ith Exp $
+    $Id: cosmomodels.py,v 1.6 2008/04/22 16:54:18 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -10,6 +10,7 @@ import rk4
 import sys
 import os.path
 import datetime
+import pickle
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -85,8 +86,8 @@ class CosmologicalModel:
                 self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
             except rk4.SimRunError:
                 raise
-            except Error, e:
-                raise ModelError(e.message, self.tresult, self.yresult)
+            except StandardError, e:
+                raise ModelError("Error running odeint", self.tresult, self.yresult)
             
         
         if self.solver == "rkdriver_dumb":
@@ -94,8 +95,8 @@ class CosmologicalModel:
             nstep = N.ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
                 self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
-            except Error, e:
-                raise ModelError(e.message, self.tresult, self.yresult)
+            except StandardError, e:
+                raise ModelError("Error running rkdriver_dumb", self.tresult, self.yresult)
             
         
         #Aggregrate results and calling parameters into results list
