@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.4 2008/04/21 18:30:12 ith Exp $
+    $Id: cosmomodels.py,v 1.5 2008/04/22 16:15:17 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -8,6 +8,8 @@ import numpy as N
 import pylab as P
 import rk4
 import sys
+import os.path
+import datetime
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -56,9 +58,11 @@ class CosmologicalModel:
         else:
             raise ValueError, "Solver not recognized!"
         
-        self.tresult = None
-        self.yresult = None
-        self.modelrun = False
+        self.tresult = None #Will hold last time result
+        self.yresult = None #Will hold array of last y results
+        self.runcount = 0 #How many times has the model been run?
+        self.resultlist = [] #List of all completed results.
+        
         
         self.plottitle = "A generic Cosmological Model"
         self.tname = "Time"
@@ -71,6 +75,9 @@ class CosmologicalModel:
     def run(self):
         """Execute a simulation run using teh parameters already provided."""
         
+        if self.solver not in self.solverlist:
+            raise ModelError("Unknown solver!")
+                
         if self.solver == "odeint":
             try:
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
@@ -80,8 +87,7 @@ class CosmologicalModel:
                 raise
             except Error, e:
                 raise ModelError(e.message, self.tresult, self.yresult)
-            self.modelrun = True
-            return
+            
         
         if self.solver == "rkdriver_dumb":
             #Loosely estimate number of steps based on requested step size
@@ -90,18 +96,23 @@ class CosmologicalModel:
                 self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
             except Error, e:
                 raise ModelError(e.message, self.tresult, self.yresult)
-            self.modelrun = True
-            return
+            
         
-        #Don't know how to handle any other solvers!
-        raise ModelError("Unknown solver!")
+        #Aggregrate results and calling parameters into results list
+        callingparams = (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
+                            self.eps, self.dxsav, self.solver, datetime.datetime.now() )
         
+        self.resultlist.append([callingparams, self.tresult, self.yresult])
+        
+        self.runcount += 1
+        
+        return
         
     
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
-        if not self.modelrun:
+        if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
         P.plot(self.tresult, self.yresult)
@@ -109,6 +120,30 @@ class CosmologicalModel:
         P.ylabel(self.ynames[0])
         P.title(self.plottitle)
         P.show()
+        return
+    
+    def saveallresults(self, filename=None):
+        """Tries to save file as a pickled object in directory results."""
+        
+        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        if not filename:
+            filename = "./results/run" + now
+            
+        if os.path.isdir(os.path.dirname(filename)):
+            if os.path.isfile(filename):
+               raise IOError("File already exists!")
+        else:
+            raise IOError("Directory 'results' does not exist")
+        
+        try:
+            resultsfile = open(filename, "w")
+            try:
+                pickle.dump(self.resultlist, resultsfile)
+            finally:
+                resultsfile.close()
+        except IOError:
+            raise
+                
 
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
