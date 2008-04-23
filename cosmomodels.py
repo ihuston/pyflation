@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.9 2008/04/23 18:03:43 ith Exp $
+    $Id: cosmomodels.py,v 1.10 2008/04/23 19:03:54 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -74,7 +74,7 @@ class CosmologicalModel:
         pass
     
     def run(self):
-        """Execute a simulation run using teh parameters already provided."""
+        """Execute a simulation run using the parameters already provided."""
         
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -83,7 +83,8 @@ class CosmologicalModel:
             try:
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
                     self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
-                self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
+                #Commented out next line to work with array of k values
+                #self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
             except rk4.SimRunError:
                 raise
             except StandardError, e:
@@ -250,7 +251,7 @@ class FirstOrderModel(CosmologicalModel):
        y[2] - a : Scale Factor
     """
     
-    def __init__(self, ystart=(N.array([[0.1],[0.1],[0.1],[0.1],[0.1]])*N.ones((5,3))), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+    def __init__(self, ystart=(N.array([[0.1],[0.1],[0.1],[0.1],[0.1]])*N.ones((5,10))), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
         #Mass of inflaton in Planck masses
@@ -267,7 +268,7 @@ class FirstOrderModel(CosmologicalModel):
             dydx[0] = dy[0]/d\eta etc"""
         
         #Let k roam for a start
-        k = N.arange(3)
+        k = 10**(N.arange(10.0)-8)
         
         #Use inflaton mass
         mass2 = self.mass**2
@@ -287,7 +288,7 @@ class FirstOrderModel(CosmologicalModel):
         H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
         
         #Set derivatives
-        dydx = N.zeros((5,3))
+        dydx = N.zeros((5,10))
         
         #d\phi_0/d\eta = y_1
         dydx[0] = y[1] 
