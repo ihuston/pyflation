@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.7 2008/04/23 13:47:47 ith Exp $
+    $Id: cosmomodels.py,v 1.8 2008/04/23 17:24:43 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -87,8 +87,8 @@ class CosmologicalModel:
             except rk4.SimRunError:
                 raise
             except StandardError, e:
-                raise ModelError("Error running odeint", self.tresult, self.yresult)
-            
+                #raise ModelError("Error running odeint", self.tresult, self.yresult)
+                raise
         
         if self.solver == "rkdriver_dumb":
             #Loosely estimate number of steps based on requested step size
@@ -96,8 +96,8 @@ class CosmologicalModel:
             try:
                 self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
             except StandardError, e:
-                raise ModelError("Error running rkdriver_dumb", self.tresult, self.yresult)
-            
+                #raise ModelError("Error running rkdriver_dumb", self.tresult, self.yresult)
+                raise
         
         #Aggregrate results and calling parameters into results list
         callingparams = (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
@@ -109,6 +109,10 @@ class CosmologicalModel:
         
         return
         
+    def argstring(self):
+        a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
+        a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
+        return a
     
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
@@ -119,7 +123,7 @@ class CosmologicalModel:
         P.plot(self.tresult, self.yresult)
         P.xlabel(self.tname)
         P.ylabel(self.ynames[0])
-        P.title(self.plottitle)
+        P.title(self.plottitle + self.argstring())
         P.show()
         return
     
@@ -193,6 +197,7 @@ class BasicBgModel(CosmologicalModel):
         self.tname = "Conformal time"
         self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
         
+    
     def derivs(self, t, y):
         """Basic background equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
@@ -232,5 +237,85 @@ class BasicBgModel(CosmologicalModel):
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[2]))
-        P.title(self.plottitle)
+        P.title(self.plottitle + self.argstring())
         P.show()
+        return
+
+class FirstOrderModel(CosmologicalModel):
+    """First order model with background equations
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\eta : First deriv of \phi
+       y[2] - a : Scale Factor
+    """
+    
+    def __init__(self, ystart=N.array([0.1,0.1,0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+        
+        #Mass of inflaton in Planck masses
+        self.mass = 1.0
+        
+        self.plottitle = "First Order Model"
+        self.tname = "Conformal time"
+        self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
+        
+        
+    
+    def derivs(self, t, y):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/d\eta etc"""
+        
+        #Let k roam for a start
+        k= 1
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        #Things we only want to calculate once
+        #a^2
+        asq = y[4]**2
+        
+        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
+        H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
+        
+        #Set derivatives
+        dydx = N.zeros(5)
+        
+        #d\phi_0/d\eta = y_1
+        dydx[0] = y[1] 
+        
+        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
+        dydx[1] = -2*H*y[1] - asq*dUdphi
+        
+        #dy_2/d\eta = \delta\phi_1^prime
+        dydx[2] = y[3]
+        
+        #delta\phi^prime^prime
+        dydx[3] = -2*H*y[3] - (k**2)*y[2] - asq*d2Udphi2*y[2]
+        
+        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
+        dydx[4] = H*y[2]
+        
+        return dydx
+    
+    def plotresults(self, saveplot = False):
+        """Plot results of simulation run on a graph."""
+        
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[2])
+        P.xlabel(self.tname)
+        P.ylabel("")
+        P.legend((self.ynames[0], self.ynames[2]))
+        P.title(self.plottitle + self.argstring())
+        P.show()
+       
