@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.6 2008/04/22 16:54:18 ith Exp $
+    $Id: cosmomodels.py,v 1.7 2008/04/23 13:47:47 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -144,7 +144,22 @@ class CosmologicalModel:
                 resultsfile.close()
         except IOError:
             raise
-                
+    
+    def loadresults(self, filename):
+        """Loads results from a file and appends them to current results list."""
+        
+        if not os.path.isfile(filename):
+            raise IOError("File does not exist!")
+        
+        try:
+            resultsfile = open(filename, "r")
+            try:
+                newresults = pickle.load(resultsfile)
+                self.resultlist.extend(newresults)
+            finally:
+                resultsfile.close()
+        except IOError:
+                raise    
 
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
@@ -171,6 +186,9 @@ class BasicBgModel(CosmologicalModel):
     def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
+        #Mass of inflaton in Planck masses
+        self.mass = 1.0
+        
         self.plottitle = "Basic Cosmological Model"
         self.tname = "Conformal time"
         self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
@@ -179,9 +197,8 @@ class BasicBgModel(CosmologicalModel):
         """Basic background equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
-        #Mass of inflaton in Planck masses
-        mass = 0.1
-        mass2 = mass**2
+        #Use inflaton mass
+        mass2 = self.mass**2
         
         #potential U = 1/2 m^2 \phi^2
         U = 0.5*(mass2)*(y[0]**2)
@@ -208,10 +225,10 @@ class BasicBgModel(CosmologicalModel):
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
-        if not self.modelrun:
+        if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[1])
+        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[2])
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[2]))
