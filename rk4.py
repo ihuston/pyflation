@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.7 2008/04/21 17:49:48 ith Exp $
+#CVS: $Id: rk4.py,v 1.8 2008/04/23 19:03:46 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -165,7 +165,7 @@ def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
         
         yscal = abs(y) + abs(h*dydx) + TINY
         
-        if abs(x-xsav) > abs(dxsav):
+        if abs(x-xsav) >= abs(dxsav):
             xp.append(x)
             yp.append(y)
             xsav = x
