@@ -1,11 +1,12 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.10 2008/04/23 19:03:54 ith Exp $
+    $Id: cosmomodels.py,v 1.11 2008/04/24 16:50:45 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import pylab as P
+from matplotlib import axes3d
 import rk4
 import sys
 import os.path
@@ -23,7 +24,14 @@ class ModelError(StandardError):
 class CosmologicalModel:
     """Generic class for cosmological model simulations.
     Has no derivs function to pass to ode solver, but does have
-    plotting function and initial conditions check."""
+    plotting function and initial conditions check.
+    
+    Results can be saved in a pickled file as a list of tuples of the following
+    structure:
+       resultset = (callingparams, tresult, yresult)
+       
+       callingparams is formatted as in the function callingparams(self) below
+    """
     
     solverlist = ["odeint", "rkdriver_dumb"]
     
@@ -101,14 +109,18 @@ class CosmologicalModel:
                 raise
         
         #Aggregrate results and calling parameters into results list
-        callingparams = (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                            self.eps, self.dxsav, self.solver, datetime.datetime.now() )
+        callingparams = self.callingparams()
         
         self.resultlist.append([callingparams, self.tresult, self.yresult])
         
         self.runcount += 1
         
         return
+    
+    def callingparams(self):
+        """Returns list of parameters to save with results."""
+        return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
+                            self.eps, self.dxsav, self.solver, datetime.datetime.now() )
         
     def argstring(self):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
@@ -129,7 +141,7 @@ class CosmologicalModel:
         return
     
     def saveallresults(self, filename=None):
-        """Tries to save file as a pickled object in directory results."""
+        """Tries to save file as a pickled object in directory 'results'."""
         
         now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         if not filename:
@@ -160,7 +172,9 @@ class CosmologicalModel:
             resultsfile = open(filename, "r")
             try:
                 newresults = pickle.load(resultsfile)
-                self.resultlist.extend(newresults)
+                #The following doesn't check to see if type of object is right!
+                self.resultlist.extend(newresults) 
+                self.runcount = len(self.resultlist)
             finally:
                 resultsfile.close()
         except IOError:
@@ -248,27 +262,54 @@ class FirstOrderModel(CosmologicalModel):
         
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - a : Scale Factor
+       y[2] - \delta\varphi_1 : First order perturbation
+       y[3] - \delta\varphi_1^\prime : Derivative of first order perturbation
+       y[4] - a : Scale Factor
+       
+       Results can be saved in a pickled file as a list of tuples of the following
+       structure:
+       resultset = (callingparams, tresult, yresult)
+       
+       callingparams is formatted as in the function callingparams(self) below
+       
     """
     
-    def __init__(self, ystart=(N.array([[0.1],[0.1],[0.1],[0.1],[0.1]])*N.ones((5,10))), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, k=None):
+        """Initialize all variables and call ancestor's __init__ method."""
+        
+        #Let k roam for a start
+        if k is None:
+            self.k = 10**(N.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if ystart is None:
+            ystart = (N.array([[0.1],[0.1],[0.1],[0.1],[0.1]])*N.ones((5,len(self.k))))
+        
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+        
         
         #Mass of inflaton in Planck masses
         self.mass = 1.0
         
+        #Text for graphs
         self.plottitle = "First Order Model"
-        self.tname = "Conformal time"
-        self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
+        self.tname = r"$\eta$"
+        self.ynames = [r"$\varphi_0$", 
+                        r"$\varphi_0^\prime$",
+                        r"$\delta\varphi_1$",
+                        r"$\delta\varphi_1^\prime$",
+                        r"$a$"]
         
-        
+    def callingparams(self):
+        """Returns list of parameters to save with results."""
+        return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
+                self.k, self.eps, self.dxsav, self.solver, datetime.datetime.now() )
     
     def derivs(self, t, y):
         """First order equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
-        
-        #Let k roam for a start
-        k = 10**(N.arange(10.0)-8)
         
         #Use inflaton mass
         mass2 = self.mass**2
@@ -288,7 +329,7 @@ class FirstOrderModel(CosmologicalModel):
         H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
         
         #Set derivatives
-        dydx = N.zeros((5,10))
+        dydx = N.zeros((5,len(self.k)))
         
         #d\phi_0/d\eta = y_1
         dydx[0] = y[1] 
@@ -300,10 +341,10 @@ class FirstOrderModel(CosmologicalModel):
         dydx[2] = y[3]
         
         #delta\phi^prime^prime
-        dydx[3] = -2*H*y[3] - (k**2)*y[2] - asq*d2Udphi2*y[2]
+        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - asq*d2Udphi2*y[2]
         
         #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
-        dydx[4] = H*y[2]
+        dydx[4] = H*y[4]
         
         return dydx
     
@@ -319,4 +360,32 @@ class FirstOrderModel(CosmologicalModel):
         P.legend((self.ynames[0], self.ynames[2]))
         P.title(self.plottitle + self.argstring())
         P.show()
-       
+        return
+    
+    def plotallks(self, varindex=2, kfunction=None):
+        """Plot results from all ks run in a plot where k is plotted by kfunction (e.g. log)."""
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+                
+        x = self.tresult
+        
+        fig = P.figure()
+        ax = axes3d.Axes3D(fig)
+        for index in range(len(self.k)):
+            z = self.yresult[:,varindex,index]
+            if kfunction is None:
+                y = self.k[index]*N.ones(len(x))
+            else:
+                y = kfunction(self.k[index])*N.ones(len(x))
+            ax.plot3D(x,y,z)
+        ax.set_xlabel(self.tname)
+        if kfunction is None:
+            ax.set_ylabel(r"$k$")
+        else:
+            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
+        ax.set_zlabel(self.ynames[varindex])
+        P.title(self.plottitle + self.argstring())
+        P.show()
+        
+        return
+        
