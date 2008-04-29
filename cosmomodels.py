@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.12 2008/04/29 15:54:31 ith Exp $
+    $Id: cosmomodels.py,v 1.13 2008/04/29 16:46:35 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -288,9 +288,9 @@ class BgModelInN(CosmologicalModel):
         #dUdphi =  (mass2)*y[0]
         
         
-        
+        #Messing with factor to get rid of instability
         #factor in eom 1/H^2 * U_{,phi}/U
-        Ufactor = (2.0 - (y[1]**2))*(6.0/y[0])
+        Ufactor = ((2.0 - (y[1]**2))*(6.0))/y[0]
         
         #Set derivatives
         dydx = N.zeros(2)
