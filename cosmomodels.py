@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.11 2008/04/24 16:50:45 ith Exp $
+    $Id: cosmomodels.py,v 1.12 2008/04/29 15:54:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -256,6 +256,67 @@ class BasicBgModel(CosmologicalModel):
         P.show()
         return
 
+class BgModelInN(CosmologicalModel):
+    """Basic model with background equations in terms of n
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\n : First deriv of \phi
+    """
+    
+    def __init__(self, ystart=N.array([1.0,-0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+        
+        #Mass of inflaton in Planck masses
+        self.mass = 1.0
+        
+        self.plottitle = r"Basic Cosmological Model in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0"]
+        
+    
+    def derivs(self, t, y):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        
+        #Use inflaton mass
+        #mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        #U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        #dUdphi =  (mass2)*y[0]
+        
+        
+        
+        #factor in eom 1/H^2 * U_{,phi}/U
+        Ufactor = (2.0 - (y[1]**2))*(6.0/y[0])
+        
+        #Set derivatives
+        dydx = N.zeros(2)
+        
+        #d\phi_0/d\eta = y_1
+        dydx[0] = y[1] 
+        
+        #dy_1/d\eta = -2
+        dydx[1] = -2*y[1] - Ufactor
+        
+        return dydx
+    
+    def plotresults(self, saveplot = False):
+        """Plot results of simulation run on a graph."""
+        
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[1])
+        P.xlabel(self.tname)
+        P.ylabel("")
+        P.legend((self.ynames[0], self.ynames[1]))
+        P.title(self.plottitle + self.argstring())
+        P.show()
+        return
+    
 class FirstOrderModel(CosmologicalModel):
     """First order model with background equations
         Array of dependent variables y is given by:
