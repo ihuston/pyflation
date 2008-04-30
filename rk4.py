@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.8 2008/04/23 19:03:46 ith Exp $
+#CVS: $Id: rk4.py,v 1.9 2008/04/30 11:07:50 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -132,7 +132,13 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
             break #Step succeeded. Compute size of next step
         
         htemp = SAFETY*h*(errmax**PSHRINK)
-        h = max(abs(htemp), 0.1*abs(h))*N.sign(h)
+        #Truncation error too large, reduce step size
+        #h = max(abs(htemp), 0.1*abs(h))*N.sign(h)#Old version from Fortran book
+        if h >= 0.0:
+            h = max(htemp, 0.1*h)
+        else:
+            h = min(htemp, 0.1*h)
+            
         xnew = x + h
         assert xnew != x, "Stepsize underflow"
         #end of while loop
