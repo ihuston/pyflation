@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.13 2008/04/29 16:46:35 ith Exp $
+    $Id: cosmomodels.py,v 1.14 2008/04/30 11:43:34 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -248,7 +248,7 @@ class BasicBgModel(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[2])
+        P.plot(self.tresult, self.yresult[:,0])
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[2]))
