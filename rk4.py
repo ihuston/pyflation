@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.10 2008/04/30 11:43:48 ith Exp $
+#CVS: $Id: rk4.py,v 1.11 2008/04/30 16:43:10 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -124,10 +124,11 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
         
         #Evaluate accuracy
         errmax = 0.0
-        #errmax = max(errmax, abs(yerr/yscal).max()) # Changed to version in C book
+        errmax = max(errmax, abs(yerr/yscal).max()) # Changed to version in C book
         
-        for yerritem, yscalitem in zip(yerr, yscal):
-            errmax = max(errmax, abs(yerritem/yscalitem))
+#         This does not work in all cases, e.g. single variables
+        #for yerritem, yscalitem in zip(yerr, yscal):
+        #    errmax = max(errmax, abs(yerritem/yscalitem).max())
         
         errmax = errmax/eps #Scale relative to required tolerance
         
