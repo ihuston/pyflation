@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.14 2008/04/30 11:43:34 ith Exp $
+    $Id: cosmomodels.py,v 1.15 2008/05/14 10:27:55 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -432,12 +432,13 @@ class FirstOrderModel(CosmologicalModel):
         
         fig = P.figure()
         ax = axes3d.Axes3D(fig)
-        for index in range(len(self.k)):
+        #plot lines in reverse order
+        for index, kitem in enumerate(self.k[::-1]):
             z = self.yresult[:,varindex,index]
             if kfunction is None:
-                y = self.k[index]*N.ones(len(x))
+                y = kitem*N.ones(len(x))
             else:
-                y = kfunction(self.k[index])*N.ones(len(x))
+                y = kfunction(kitem)*N.ones(len(x))
             ax.plot3D(x,y,z)
         ax.set_xlabel(self.tname)
         if kfunction is None:
@@ -450,3 +451,46 @@ class FirstOrderModel(CosmologicalModel):
         
         return
         
+class HarmonicFirstOrder(FirstOrderModel):
+    """Just change derivs to get harmonic motion"""
+            
+    def derivs(self, t, y):
+        """First order equations of motion.
+            dydx[0] = dy[0]/d\eta etc"""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        #Things we only want to calculate once
+        #a^2
+        asq = y[4]**2
+        
+        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
+        H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
+        
+        #Set derivatives
+        dydx = N.zeros((5,len(self.k)))
+        
+        #d\phi_0/d\eta = y_1
+        dydx[0] = y[1] 
+        
+        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
+        dydx[1] = -2*H*y[1] - asq*dUdphi
+        
+        #dy_2/d\eta = \delta\phi_1^prime
+        dydx[2] = y[3]
+        
+        #delta\phi^prime^prime
+        dydx[3] = -(self.k**2)*y[2] - asq*d2Udphi2*y[2]
+        
+        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
+        dydx[4] = H*y[4]
+        
+        return dydx
