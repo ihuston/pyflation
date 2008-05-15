@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.15 2008/05/14 10:27:55 ith Exp $
+    $Id: cosmomodels.py,v 1.16 2008/05/15 19:06:17 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -433,7 +433,7 @@ class FirstOrderModel(CosmologicalModel):
         fig = P.figure()
         ax = axes3d.Axes3D(fig)
         #plot lines in reverse order
-        for index, kitem in enumerate(self.k[::-1]):
+        for index, kitem in zip(range(len(self.k))[::-1], self.k[::-1]):
             z = self.yresult[:,varindex,index]
             if kfunction is None:
                 y = kitem*N.ones(len(x))
