@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.16 2008/05/15 19:06:17 ith Exp $
+    $Id: cosmomodels.py,v 1.17 2008/05/21 16:07:02 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -435,6 +435,34 @@ class FirstOrderModel(CosmologicalModel):
         #plot lines in reverse order
         for index, kitem in zip(range(len(self.k))[::-1], self.k[::-1]):
             z = self.yresult[:,varindex,index]
+            if kfunction is None:
+                y = kitem*N.ones(len(x))
+            else:
+                y = kfunction(kitem)*N.ones(len(x))
+            ax.plot3D(x,y,z)
+        ax.set_xlabel(self.tname)
+        if kfunction is None:
+            ax.set_ylabel(r"$k$")
+        else:
+            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
+        ax.set_zlabel(self.ynames[varindex])
+        P.title(self.plottitle + self.argstring())
+        P.show()
+        
+        return
+        
+    def plotkdiffs(self, varindex=2, kfunction=None, basekindex=0):
+        """Plot the difference of k results to a specific k"""
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+                
+        x = self.tresult
+        
+        fig = P.figure()
+        ax = axes3d.Axes3D(fig)
+        #plot lines in reverse order
+        for index, kitem in zip(range(len(self.k))[::-1], self.k[::-1]):
+            z = self.yresult[:,varindex,index] - self.yresult[:,varindex,basekindex]
             if kfunction is None:
                 y = kitem*N.ones(len(x))
             else:
