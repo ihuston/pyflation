@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.18 2008/06/23 12:54:32 ith Exp $
+    $Id: cosmomodels.py,v 1.19 2008/06/23 17:16:47 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -387,7 +387,7 @@ class FirstOrderModel(CosmologicalModel):
         asq = y[4]**2
         
         #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
+        H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -414,8 +414,8 @@ class FirstOrderModel(CosmologicalModel):
         
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-        
-        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[2])
+        for kindex in N.arange(len(self.k)):
+            P.plot(self.tresult, self.yresult[:,0,kindex], self.tresult, self.yresult[:,2,kindex])
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[2]))
@@ -439,7 +439,7 @@ class FirstOrderModel(CosmologicalModel):
                 y = kitem*N.ones(len(x))
             else:
                 y = kfunction(kitem)*N.ones(len(x))
-            ax.plot3D(x,y,z)
+            ax.plot3D(x,y,z,color="b")
         ax.set_xlabel(self.tname)
         if kfunction is None:
             ax.set_ylabel(r"$k$")
