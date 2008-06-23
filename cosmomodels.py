@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.17 2008/05/21 16:07:02 ith Exp $
+    $Id: cosmomodels.py,v 1.18 2008/06/23 12:54:32 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -479,6 +479,49 @@ class FirstOrderModel(CosmologicalModel):
         
         return
         
+class FullFirstOrder(FirstOrderModel):
+    """Full (not slow roll) first order model"""
+    
+    def derivs(self, t, y):
+        """First Order eqs of motion"""
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        #Things we only want to calculate once
+        #a^2
+        asq = y[4]**2
+        
+        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
+        H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
+        
+        #Set derivatives
+        dydx = N.zeros((5,len(self.k)))
+        
+        #d\phi_0/d\eta = y_1
+        dydx[0] = y[1] 
+        
+        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
+        dydx[1] = -2*H*y[1] - asq*dUdphi
+        
+        #dy_2/d\eta = \delta\phi_1^prime
+        dydx[2] = y[3]
+        
+        #delta\phi^prime^prime
+        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2 + 2*y[1]*dUdphi*asq/H + (y[1]**2)*U*asq/(H**2) )
+        
+        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
+        dydx[4] = H*y[4]
+        
+        return dydx
+        
+            
 class HarmonicFirstOrder(FirstOrderModel):
     """Just change derivs to get harmonic motion"""
             
