@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.20 2008/06/26 15:13:05 ith Exp $
+    $Id: cosmomodels.py,v 1.21 2008/06/26 15:28:18 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -361,6 +361,8 @@ class FirstOrderModel(CosmologicalModel):
         #Initialize Hubble value /mathcal{H}
         self.H = N.array([])
         
+        self.oddterm = N.array([])
+        
         #Text for graphs
         self.plottitle = "First Order Model"
         self.tname = r"$\eta$"
@@ -397,7 +399,7 @@ class FirstOrderModel(CosmologicalModel):
         H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
         
         #Store H value for analysis later
-        append(self.H, H)
+        N.append(self.H, H)
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -492,6 +494,8 @@ class FirstOrderModel(CosmologicalModel):
 class FullFirstOrder(FirstOrderModel):
     """Full (not slow roll) first order model"""
     
+    
+    
     def derivs(self, t, y):
         """First Order eqs of motion"""
         #Use inflaton mass
@@ -512,7 +516,7 @@ class FullFirstOrder(FirstOrderModel):
         H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
         
         #Store H value for analysis later
-        append(self.H, H)
+        N.append(self.H, H)
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -534,8 +538,8 @@ class FullFirstOrder(FirstOrderModel):
         dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2  + (y[1]**2)*U*asq/(H**2)  + 2*y[1]*dUdphi*asq/H )
         
         #terms for analysis later
-        if not self.oddterm: self.oddterm = N.array([])
-        append(self.oddterm, y[2]*2*y[1]*dUdphi*asq/H)
+        
+        N.append(self.oddterm, y[2]*2*y[1]*dUdphi*asq/H)
         
         
         
