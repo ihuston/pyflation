@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.19 2008/06/23 17:16:47 ith Exp $
+    $Id: cosmomodels.py,v 1.20 2008/06/26 15:13:05 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -12,6 +12,10 @@ import sys
 import os.path
 import datetime
 import pickle
+
+#debugging
+from IPython.Debugger import Pdb
+
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -354,6 +358,9 @@ class FirstOrderModel(CosmologicalModel):
         #Mass of inflaton in Planck masses
         self.mass = 1.0
         
+        #Initialize Hubble value /mathcal{H}
+        self.H = N.array([])
+        
         #Text for graphs
         self.plottitle = "First Order Model"
         self.tname = r"$\eta$"
@@ -366,7 +373,7 @@ class FirstOrderModel(CosmologicalModel):
     def callingparams(self):
         """Returns list of parameters to save with results."""
         return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                self.k, self.eps, self.dxsav, self.solver, datetime.datetime.now() )
+                self.k, self.H, self.eps, self.dxsav, self.solver, datetime.datetime.now() )
     
     def derivs(self, t, y):
         """First order equations of motion.
@@ -388,6 +395,9 @@ class FirstOrderModel(CosmologicalModel):
         
         #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
         H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
+        
+        #Store H value for analysis later
+        append(self.H, H)
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -501,6 +511,9 @@ class FullFirstOrder(FirstOrderModel):
         #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
         H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
         
+        #Store H value for analysis later
+        append(self.H, H)
+        
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
         
@@ -513,8 +526,18 @@ class FullFirstOrder(FirstOrderModel):
         #dy_2/d\eta = \delta\phi_1^prime
         dydx[2] = y[3]
         
+        #debugging
+        #assert N.all(abs(y[1])>1.0e-6)
+        
+        
         #delta\phi^prime^prime
-        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2 + 2*y[1]*dUdphi*asq/H + (y[1]**2)*U*asq/(H**2) )
+        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2  + (y[1]**2)*U*asq/(H**2)  + 2*y[1]*dUdphi*asq/H )
+        
+        #terms for analysis later
+        if not self.oddterm: self.oddterm = N.array([])
+        append(self.oddterm, y[2]*2*y[1]*dUdphi*asq/H)
+        
+        
         
         #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
         dydx[4] = H*y[4]
