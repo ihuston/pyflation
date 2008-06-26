@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.22 2008/06/26 15:57:31 ith Exp $
+    $Id: cosmomodels.py,v 1.23 2008/06/26 16:09:00 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -119,6 +119,11 @@ class CosmologicalModel:
         
         self.runcount += 1
         
+        try:
+            print "Results saved in " + self.saveallresults()
+        except IOError:
+            print "Error trying to save results! Results NOT saved."
+            
         return
     
     def callingparams(self):
@@ -165,6 +170,8 @@ class CosmologicalModel:
                 resultsfile.close()
         except IOError:
             raise
+        
+        return filename
     
     def loadresults(self, filename):
         """Loads results from a file and appends them to current results list."""
