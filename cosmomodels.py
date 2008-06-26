@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.23 2008/06/26 16:09:00 ith Exp $
+    $Id: cosmomodels.py,v 1.24 2008/06/26 16:15:11 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -366,7 +366,8 @@ class FirstOrderModel(CosmologicalModel):
         self.mass = 1.0
         
         #Initialize Hubble value /mathcal{H}
-        self.H = N.array([])
+        self.H = []
+        self.oddterm = []
                 
         #Text for graphs
         self.plottitle = "First Order Model"
@@ -521,7 +522,7 @@ class FullFirstOrder(FirstOrderModel):
         H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
         
         #Store H value for analysis later
-        H = N.append(self.H, H)
+        self.H.append((t, H))
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -544,7 +545,7 @@ class FullFirstOrder(FirstOrderModel):
         
         #terms for analysis later
         
-        print y[2]*2*y[1]*dUdphi*asq/H
+        self.oddterm.append((t,y[2]*2*y[1]*dUdphi*asq/H))
         
         
         
