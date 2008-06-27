@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.29 2008/06/27 11:31:11 ith Exp $
+    $Id: cosmomodels.py,v 1.30 2008/06/27 11:32:28 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -377,7 +377,7 @@ class FirstOrderModel(CosmologicalModel):
     def callingparams(self):
         """Returns list of parameters to save with results."""
         return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                self.k, self.H, self.eps, self.dxsav, self.solver, datetime.datetime.now() )
+                self.k, self.H, self.eps, self.dxsav, self.solver, self.__class__.__name__, datetime.datetime.now() )
     
     def derivs(self, t, y):
         """First order equations of motion.
