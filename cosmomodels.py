@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.26 2008/06/27 11:20:07 ith Exp $
+    $Id: cosmomodels.py,v 1.27 2008/06/27 11:27:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -387,28 +387,15 @@ class FirstOrderModel(CosmologicalModel):
         """First order equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y)
         
         #Things we only want to calculate once
         #a^2
         asq = y[4]**2
         
         #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
-        
-        #Store H value for analysis later
-        if self.H is None: 
-            self.H = N.array([H])
-        else:
-            self.H = N.vstack((self.H, N.array([H])))
+        H = self.findH(U, y)
         
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
@@ -429,7 +416,32 @@ class FirstOrderModel(CosmologicalModel):
         dydx[4] = H*y[4]
         
         return dydx
+        
+    def findH(self, potential, y):
+        """Return value of comoving Hubble variable, \mathcal{H} at y for given potential."""
+        phiprime = y[1]
+        a = y[4]
+        
+        #Expression for H
+        H = N.sqrt((1.0/3.0)*((a**2)*potential + 0.5*(phiprime**2)))
+        
+        return H
     
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2
+        
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
@@ -513,7 +525,7 @@ class FullFirstOrder(FirstOrderModel):
         
         return H
     
-    def potential(self, y):
+    def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
         
         #Use inflaton mass
@@ -532,7 +544,7 @@ class FullFirstOrder(FirstOrderModel):
         """First Order eqs of motion"""
         
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potential(y)
+        U, dUdphi, d2Udphi2 = self.potentials(y)
         
         #Things we only want to calculate once
         #a^2
