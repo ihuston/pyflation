@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.28 2008/06/27 11:28:46 ith Exp $
+    $Id: cosmomodels.py,v 1.29 2008/06/27 11:31:11 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -129,7 +129,7 @@ class CosmologicalModel:
     def callingparams(self):
         """Returns list of parameters to save with results."""
         return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                            self.eps, self.dxsav, self.solver, datetime.datetime.now() )
+                            self.eps, self.dxsav, self.solver, self.__class__.__name__, datetime.datetime.now() )
         
     def argstring(self):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
