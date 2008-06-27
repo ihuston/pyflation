@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.33 2008/06/27 11:47:47 ith Exp $
+    $Id: cosmomodels.py,v 1.34 2008/06/27 16:20:27 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -146,7 +146,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.33 $",
+                  "CVSRevision":"$Revision: 1.34 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -407,7 +407,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.33 $",
+                  "CVSRevision":"$Revision: 1.34 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -543,8 +543,8 @@ class FirstOrderModel(CosmologicalModel):
     
     def getallHs(self):
         """Computes all H values for current tresult and yresult results. Stored in self.Hresult."""
-        potential = self.potentials(self.yresult)[0]
-        self.findH(potential,self.yresult[103])
+        self.Hresult = N.array([self.findH(self.potentials(row)[0],row) for row in self.yresult])
+        return
         
 class FullFirstOrder(FirstOrderModel):
     """Full (not slow roll) first order model"""
