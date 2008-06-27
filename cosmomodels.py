@@ -1,6 +1,6 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.31 2008/06/27 11:45:33 ith Exp $
-    $Revision: 1.31 $
+    $Id: cosmomodels.py,v 1.32 2008/06/27 11:46:16 ith Exp $
+    
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -395,6 +395,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
+                  "CVSRevision":"$Revision: 1.32 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
