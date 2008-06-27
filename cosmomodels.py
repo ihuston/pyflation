@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.25 2008/06/27 10:31:04 ith Exp $
+    $Id: cosmomodels.py,v 1.26 2008/06/27 11:20:07 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -503,10 +503,19 @@ class FirstOrderModel(CosmologicalModel):
 class FullFirstOrder(FirstOrderModel):
     """Full (not slow roll) first order model"""
     
+    def findH(self, potential, y):
+        """Return value of comoving Hubble variable, \mathcal{H} at y for given potential."""
+        phiprime = y[1]
+        a = y[4]
+        
+        #Expression for H
+        H = N.sqrt((1.0/3.0)*((a**2)*potential + 0.5*(phiprime**2)))
+        
+        return H
     
-    
-    def derivs(self, t, y):
-        """First Order eqs of motion"""
+    def potential(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
         #Use inflaton mass
         mass2 = self.mass**2
         
@@ -517,19 +526,21 @@ class FullFirstOrder(FirstOrderModel):
         #2nd deriv
         d2Udphi2 = mass2
         
+        return U,dUdphi,d2Udphi2
+    
+    def derivs(self, t, y):
+        """First Order eqs of motion"""
+        
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potential(y)
+        
         #Things we only want to calculate once
         #a^2
         asq = y[4]**2
         
         #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = N.sqrt((1.0/3.0)*((asq)*U + 0.5*(y[1]**2)))
+        H = self.findH(U, y)
         
-        #Store H value for analysis later
-        if self.H is None: 
-            self.H = N.array([H])
-        else:
-            self.H = N.vstack((self.H, N.array([H])))
-            
         #Set derivatives
         dydx = N.zeros((5,len(self.k)))
         
@@ -542,18 +553,8 @@ class FullFirstOrder(FirstOrderModel):
         #dy_2/d\eta = \delta\phi_1^prime
         dydx[2] = y[3]
         
-        #debugging
-        #assert N.all(abs(y[1])>1.0e-6)
-        
-        
         #delta\phi^prime^prime
         dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2  + (y[1]**2)*U*asq/(H**2)  + 2*y[1]*dUdphi*asq/H )
-        
-        #terms for analysis later
-        
-        #self.oddterm.append((t,y[2]*2*y[1]*dUdphi*asq/H))
-        
-        
         
         #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
         dydx[4] = H*y[4]
