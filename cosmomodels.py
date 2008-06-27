@@ -1,6 +1,6 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.30 2008/06/27 11:32:28 ith Exp $
-    
+    $Id: cosmomodels.py,v 1.31 2008/06/27 11:45:33 ith Exp $
+    $Revision: 1.31 $
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -83,6 +83,14 @@ class CosmologicalModel:
         
     def derivs(self, t, yarray):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
+        pass
+    
+    def potentials(self, y):
+        """Return a 3-tuple of potential, 1st and 2nd derivs given y."""
+        pass
+    
+    def findH(self,potential,y):
+        """Return value of comoving Hubble variable given potential and y."""
         pass
     
     def run(self):
@@ -375,9 +383,21 @@ class FirstOrderModel(CosmologicalModel):
                         r"$a$"]
         
     def callingparams(self):
-        """Returns list of parameters to save with results."""
-        return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                self.k, self.H, self.eps, self.dxsav, self.solver, self.__class__.__name__, datetime.datetime.now() )
+        """Returns dictionary of parameters to save with results."""
+        
+        params = {"ystart":self.ystart, 
+                  "tstart":self.tstart,
+                  "tend":self.tend,
+                  "tstep_wanted":self.tstep_wanted,
+                  "tstep_min":self.tstep_min,
+                  "k":self.k,
+                  "eps":self.eps,
+                  "dxsav":self.dxsav,
+                  "solver":self.solver,
+                  "classname":self.__class__.__name__,
+                  "datetime":datetime.datetime.now()
+                  }
+        return params
     
     def derivs(self, t, y):
         """First order equations of motion.
@@ -507,6 +527,11 @@ class FirstOrderModel(CosmologicalModel):
         P.show()
         
         return
+    
+    def getallHs(self):
+        """Computes all H values for current tresult and yresult results. Stored in self.Hresult."""
+        potential = self.potentials(self.yresult)[0]
+        self.findH(potential,self.yresult[103])
         
 class FullFirstOrder(FirstOrderModel):
     """Full (not slow roll) first order model"""
