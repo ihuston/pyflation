@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.32 2008/06/27 11:46:16 ith Exp $
+    $Id: cosmomodels.py,v 1.33 2008/06/27 11:47:47 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -136,9 +136,21 @@ class CosmologicalModel:
     
     def callingparams(self):
         """Returns list of parameters to save with results."""
-        return (self.ystart, self.tstart, self.tend, self.tstep_wanted, self.tstep_min, 
-                            self.eps, self.dxsav, self.solver, self.__class__.__name__, datetime.datetime.now() )
-        
+        params = {"ystart":self.ystart, 
+                  "tstart":self.tstart,
+                  "tend":self.tend,
+                  "tstep_wanted":self.tstep_wanted,
+                  "tstep_min":self.tstep_min,
+                  #"k":self.k,
+                  "eps":self.eps,
+                  "dxsav":self.dxsav,
+                  "solver":self.solver,
+                  "classname":self.__class__.__name__,
+                  "CVSRevision":"$Revision: 1.33 $",
+                  "datetime":datetime.datetime.now()
+                  }
+        return params
+               
     def argstring(self):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
         a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
@@ -395,7 +407,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.32 $",
+                  "CVSRevision":"$Revision: 1.33 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
