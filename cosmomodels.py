@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.27 2008/06/27 11:27:31 ith Exp $
+    $Id: cosmomodels.py,v 1.28 2008/06/27 11:28:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -364,11 +364,7 @@ class FirstOrderModel(CosmologicalModel):
         
         #Mass of inflaton in Planck masses
         self.mass = 1.0
-        
-        #Initialize Hubble value /mathcal{H}
-        self.H = None
-        self.oddterm = None
-                
+                        
         #Text for graphs
         self.plottitle = "First Order Model"
         self.tname = r"$\eta$"
