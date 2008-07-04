@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.35 2008/07/04 15:39:16 ith Exp $
+    $Id: cosmomodels.py,v 1.36 2008/07/04 15:45:30 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -146,7 +146,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.35 $",
+                  "CVSRevision":"$Revision: 1.36 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -354,11 +354,22 @@ class BgModelInN(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
+        P.figure(1)
+        
+        #First plot of phi and phi^dot
+        P.subplot(121)
         P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[1])
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[1]))
-        P.title(self.plottitle + self.argstring())
+        #P.title(self.plottitle + self.argstring())
+        
+        #Second plot of H
+        P.subplot(122)
+        P.plot(self.tresult, self.yresult[2])
+        P.xlabel(self.tname)
+        P.ylabel(self.yname[2])
+        
         P.show()
         return
     
@@ -421,7 +432,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.35 $",
+                  "CVSRevision":"$Revision: 1.36 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
