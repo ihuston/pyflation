@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.34 2008/06/27 16:20:27 ith Exp $
+    $Id: cosmomodels.py,v 1.35 2008/07/04 15:39:16 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -146,7 +146,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.34 $",
+                  "CVSRevision":"$Revision: 1.35 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -293,44 +293,58 @@ class BgModelInN(CosmologicalModel):
         
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\n : First deriv of \phi
+       y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([1.0,-0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+    def __init__(self, ystart=N.array([1.0,0.0,N.sqrt(1.0/6.0)]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
         #Mass of inflaton in Planck masses
         self.mass = 1.0
         
-        self.plottitle = r"Basic Cosmological Model in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0"]
+        #Set initial H value if None
+        if not self.ystart[2]:
+            U = self.potentials(self.ystart)[0]
+            self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
         
+        #Titles
+        self.plottitle = r"Basic (improved) Cosmological Model in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0", r"$H$"]
+    
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2       
     
     def derivs(self, t, y):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         
-        #Use inflaton mass
-        #mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        #U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        #dUdphi =  (mass2)*y[0]
-        
-        
-        #Messing with factor to get rid of instability
-        #factor in eom 1/H^2 * U_{,phi}/U
-        Ufactor = ((2.0 - (y[1]**2))*(6.0))/y[0]
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y)        
         
         #Set derivatives
-        dydx = N.zeros(2)
+        dydx = N.zeros(3)
         
-        #d\phi_0/d\eta = y_1
+        #d\phi_0/dn = y_1
         dydx[0] = y[1] 
         
-        #dy_1/d\eta = -2
-        dydx[1] = -2*y[1] - Ufactor
+        #dphi^prime/dn
+        dydx[1] = (U*y[1] - dUdphi)/(y[2]**2)
+        
+        #dH/dn
+        dydx[2] = -0.5*(y[1]**2)*y[2]
         
         return dydx
     
@@ -407,7 +421,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.34 $",
+                  "CVSRevision":"$Revision: 1.35 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
