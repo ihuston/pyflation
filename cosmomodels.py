@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.40 2008/07/07 16:35:29 ith Exp $
+    $Id: cosmomodels.py,v 1.41 2008/07/07 16:54:00 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -156,7 +156,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.40 $",
+                  "CVSRevision":"$Revision: 1.41 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -322,7 +322,7 @@ class BgModelInN(CosmologicalModel):
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0$", r"$H$"]
+        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -465,7 +465,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.40 $",
+                  "CVSRevision":"$Revision: 1.41 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
