@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.38 2008/07/07 12:57:12 ith Exp $
+    $Id: cosmomodels.py,v 1.39 2008/07/07 14:00:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -124,7 +124,8 @@ class CosmologicalModel:
         if self.solver == "scipy_odeint":
             #Use scipy solver. Need to massage derivs into right form.
             swap_derivs = lambda y, t : self.derivs(t,y)
-            times = N.linspace(tstart, tend, tstep_wanted)
+            times = N.arange(self.tstart, self.tend, self.tstep_wanted)
+            print times
             self.yresult = scipy_odeint(swap_derivs, self.ystart, times)
             self.tresult = times
             
@@ -154,7 +155,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.38 $",
+                  "CVSRevision":"$Revision: 1.39 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -241,8 +242,8 @@ class BasicBgModel(CosmologicalModel):
        y[2] - a : Scale Factor
     """
     
-    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, solver="odeint"):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
         self.mass = 1.0
@@ -304,17 +305,19 @@ class BgModelInN(CosmologicalModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([1.0,-1.0,None]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+    def __init__(self, ystart=N.array([1.0,-1.0,0.0]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, solver="odeint"):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
-        self.mass = 1.0
+        self.mass = 1.0e-6 # COBE normalization from Liddle and Lyth
         
         #Set initial H value if None
-        if not self.ystart[2]:
+        if self.ystart[2] == 0.0:
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
         
+        self.epsilon = []
+            
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
@@ -354,6 +357,8 @@ class BgModelInN(CosmologicalModel):
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
         
+        self.epsilon.append(-dydx[2]/y[2])
+        
         return dydx
     
     def plotresults(self, saveplot = False):
@@ -362,7 +367,7 @@ class BgModelInN(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        P.figure(1)
+        P.figure()
         
         #First plot of phi and phi^dot
         P.subplot(121)
@@ -440,7 +445,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.38 $",
+                  "CVSRevision":"$Revision: 1.39 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
