@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.36 2008/07/04 15:45:30 ith Exp $
+    $Id: cosmomodels.py,v 1.37 2008/07/07 12:51:29 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -12,6 +12,7 @@ import sys
 import os.path
 import datetime
 import pickle
+from numpy.integrate import odeint as numpy_odeint
 
 #debugging
 from IPython.Debugger import Pdb
@@ -146,7 +147,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.36 $",
+                  "CVSRevision":"$Revision: 1.37 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -296,7 +297,7 @@ class BgModelInN(CosmologicalModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([1.0,0.0,N.sqrt(1.0/6.0)]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
+    def __init__(self, ystart=N.array([1.0,-1.0,None]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
         #Mass of inflaton in Planck masses
@@ -341,7 +342,7 @@ class BgModelInN(CosmologicalModel):
         dydx[0] = y[1] 
         
         #dphi^prime/dn
-        dydx[1] = (U*y[1] - dUdphi)/(y[2]**2)
+        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
         
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
@@ -358,7 +359,7 @@ class BgModelInN(CosmologicalModel):
         
         #First plot of phi and phi^dot
         P.subplot(121)
-        P.plot(self.tresult, self.yresult[0], self.tresult, self.yresult[1])
+        P.plot(self.tresult, self.yresult[:,0], self.tresult, self.yresult[:,1])
         P.xlabel(self.tname)
         P.ylabel("")
         P.legend((self.ynames[0], self.ynames[1]))
@@ -366,9 +367,9 @@ class BgModelInN(CosmologicalModel):
         
         #Second plot of H
         P.subplot(122)
-        P.plot(self.tresult, self.yresult[2])
+        P.plot(self.tresult, self.yresult[:,2])
         P.xlabel(self.tname)
-        P.ylabel(self.yname[2])
+        P.ylabel(self.ynames[2])
         
         P.show()
         return
@@ -432,7 +433,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.36 $",
+                  "CVSRevision":"$Revision: 1.37 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
