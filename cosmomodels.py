@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.39 2008/07/07 14:00:24 ith Exp $
+    $Id: cosmomodels.py,v 1.40 2008/07/07 16:35:29 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -150,12 +150,13 @@ class CosmologicalModel:
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
-                  #"k":self.k,
+                  #"k":self.k, #model dependent params
+                  "mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.39 $",
+                  "CVSRevision":"$Revision: 1.40 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -321,7 +322,7 @@ class BgModelInN(CosmologicalModel):
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0", r"$H$"]
+        self.ynames = [r"$\phi$", r"$\overdot{\phi}_0$", r"$H$"]
     
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -357,10 +358,28 @@ class BgModelInN(CosmologicalModel):
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
         
-        self.epsilon.append(-dydx[2]/y[2])
+        #Hubble flow parameter
+        self.epsilon.append((t,-dydx[2]/y[2]))
         
         return dydx
     
+    def findinflend(self):
+        """Find the efold time where inflation ends,
+            i.e. the hubble flow parameter epsilon >1.
+            Returns tuple of endefold and endindex (in tresult)."""
+        
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        #Make epsilon an array before any work
+        if type(self.epsilon) == list:
+            self.epsilon = N.array(self.epsilon)
+        
+        endefold = self.epsilon[N.where(self.epsilon[:,1]>1)[0][0], 0]
+        endindex = self.tresult[N.where(self.tresult > endefold)[0][0]]
+        
+        return endefold, endindex
+        
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
@@ -441,11 +460,12 @@ class FirstOrderModel(CosmologicalModel):
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
                   "k":self.k,
+                  "mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.39 $",
+                  "CVSRevision":"$Revision: 1.40 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
