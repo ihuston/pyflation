@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.45 2008/07/09 18:34:59 ith Exp $
+    $Id: cosmomodels.py,v 1.46 2008/07/09 20:26:40 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -164,7 +164,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.45 $",
+                  "CVSRevision":"$Revision: 1.46 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -385,9 +385,10 @@ class EfoldModel(CosmologicalModel):
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
         self.epsilon = self.getepsilon()
-        
-        endefold = self.epsilon[N.where(self.epsilon>1)[0][0], 0]
-        endindex = N.where(self.tresult > endefold)
+        if not any(self.epsilon>1):
+            raise ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
+        endindex = N.where(self.epsilon>1)[0][0]
+        endefold = self.tresult[endindex]
         
         return endefold, endindex
     
@@ -410,7 +411,7 @@ class BgModelInN(EfoldModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint"):
         EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
@@ -421,8 +422,6 @@ class BgModelInN(EfoldModel):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
         
-        #self.epsilon = []
-            
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
@@ -448,8 +447,7 @@ class BgModelInN(EfoldModel):
         
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        
+                
         return dydx
     
          
@@ -532,7 +530,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.45 $",
+                  "CVSRevision":"$Revision: 1.46 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
