@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.41 2008/07/07 16:54:00 ith Exp $
+    $Id: cosmomodels.py,v 1.42 2008/07/09 10:47:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -156,7 +156,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.41 $",
+                  "CVSRevision":"$Revision: 1.42 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -306,7 +306,7 @@ class BgModelInN(CosmologicalModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([1.0,-1.0,0.0]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, solver="odeint"):
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
@@ -465,7 +465,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.41 $",
+                  "CVSRevision":"$Revision: 1.42 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
