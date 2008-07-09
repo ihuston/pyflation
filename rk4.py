@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.11 2008/04/30 16:43:10 ith Exp $
+#CVS: $Id: rk4.py,v 1.12 2008/07/09 15:58:27 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -209,14 +209,13 @@ def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
         
         h = hnext
         
-    raise SimRunError("Too many steps taken in odeint!", xp, yp)
+    simerror = SimRunError("Too many steps taken in odeint!")
+    simerror.tresult = xp
+    simerror.yresult = yp
+    raise simerror
 
 
 class SimRunError(StandardError):
     """Generic error for model simulating run. Attributes include current results stack."""
-    
-    def __init__(self, expression, tresult=None, yresult=None):
-        self.expression = expression
-        self.tresult = tresult
-        self.yresult = yresult
+    pass
 
