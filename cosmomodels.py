@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.44 2008/07/09 17:34:33 ith Exp $
+    $Id: cosmomodels.py,v 1.45 2008/07/09 18:34:59 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -164,7 +164,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.44 $",
+                  "CVSRevision":"$Revision: 1.45 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -360,8 +360,6 @@ class EfoldModel(CosmologicalModel):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         #Mass of inflaton in Planck masses
         self.mass = 1.0e-6 # COBE normalization from Liddle and Lyth
-        #List to store epsilon values
-        self.epsilon = []
     
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -386,14 +384,22 @@ class EfoldModel(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        #Make epsilon an array before any work
-        if type(self.epsilon) == list:
-            self.epsilon = N.array(self.epsilon)
+        self.epsilon = self.getepsilon()
         
-        endefold = self.epsilon[N.where(self.epsilon[:,1]>1)[0][0], 0]
-        endindex = self.tresult[N.where(self.tresult > endefold)[0][0]]
+        endefold = self.epsilon[N.where(self.epsilon>1)[0][0], 0]
+        endindex = N.where(self.tresult > endefold)
         
-        return endefold, endindex   
+        return endefold, endindex
+    
+    def getepsilon(self):
+        """Return an array of epsilon = -\dot{H}/H values for each timestep."""
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!")
+        #Find Hdot
+        Hdot = N.array(map(self.derivs, self.tresult, self.yresult))[:,2]
+        epsilon = - Hdot/self.yresult[:,2]
+        
+        return epsilon
         
 class BgModelInN(EfoldModel):
     """Basic model with background equations in terms of n
@@ -443,8 +449,6 @@ class BgModelInN(EfoldModel):
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
         
-        #Hubble flow parameter
-        self.epsilon.append((t,-dydx[2]/y[2]))
         
         return dydx
     
@@ -528,7 +532,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.44 $",
+                  "CVSRevision":"$Revision: 1.45 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
