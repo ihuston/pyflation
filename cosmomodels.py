@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.42 2008/07/09 10:47:20 ith Exp $
+    $Id: cosmomodels.py,v 1.43 2008/07/09 15:58:13 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -20,11 +20,7 @@ from IPython.Debugger import Pdb
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
-    
-    def __init__(self, expression, tresult=None, yresult=None):
-        self.expression = expression
-        self.tresult = tresult
-        self.yresult = yresult
+    pass
 
 class CosmologicalModel:
     """Generic class for cosmological model simulations.
@@ -33,9 +29,9 @@ class CosmologicalModel:
     
     Results can be saved in a pickled file as a list of tuples of the following
     structure:
-       resultset = (callingparams, tresult, yresult)
+       resultset = (lastparams, tresult, yresult)
        
-       callingparams is formatted as in the function callingparams(self) below
+       lastparams is formatted as in the function callingparams(self) below
     """
     
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint"]
@@ -108,7 +104,7 @@ class CosmologicalModel:
                 #self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
             except rk4.SimRunError:
                 raise
-            except StandardError, e:
+            except StandardError, er:
                 #raise ModelError("Error running odeint", self.tresult, self.yresult)
                 raise
         
@@ -117,46 +113,55 @@ class CosmologicalModel:
             nstep = N.ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
                 self.tresult, self.yresult = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
-            except StandardError, e:
-                #raise ModelError("Error running rkdriver_dumb", self.tresult, self.yresult)
-                raise
+            except StandardError, er:
+                merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
+                raise merror
         
         if self.solver == "scipy_odeint":
             #Use scipy solver. Need to massage derivs into right form.
             swap_derivs = lambda y, t : self.derivs(t,y)
             times = N.arange(self.tstart, self.tend, self.tstep_wanted)
-            print times
+            #print times
             self.yresult = scipy_odeint(swap_derivs, self.ystart, times)
             self.tresult = times
             
         #Aggregrate results and calling parameters into results list
-        callingparams = self.callingparams()
+        self.lastparams = self.callingparams()
         
-        self.resultlist.append([callingparams, self.tresult, self.yresult])
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])
         
         self.runcount += 1
         
         try:
             print "Results saved in " + self.saveallresults()
-        except IOError:
+        except IOError, er:
             print "Error trying to save results! Results NOT saved."
+            print er
             
         return
     
     def callingparams(self):
         """Returns list of parameters to save with results."""
+        #Test whether k has been set
+        try:
+            self.k, self.mass
+        except (NameError, AttributeError):
+            self.k=None
+            self.mass=None
+            
+        #Form dictionary of inputs
         params = {"ystart":self.ystart, 
                   "tstart":self.tstart,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
-                  #"k":self.k, #model dependent params
+                  "k":self.k, #model dependent params
                   "mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.42 $",
+                  "CVSRevision":"$Revision: 1.43 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -166,23 +171,54 @@ class CosmologicalModel:
         a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
         return a
     
-    def plotresults(self, saveplot = False):
-        """Plot results of simulation run on a graph."""
-        
+    def plotresults(self, fig=None, show=True, varindex=None, klist=None, saveplot=False):
+        """Plot results of simulation run on a graph.
+            Return figure instance used."""
         if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+            raise ModelError("Model has not been run yet, cannot plot results!")
         
-        P.plot(self.tresult, self.yresult)
+        if not varindex:
+            varindex = [0] #Set default list of variables to plot
+        
+        if not fig:
+            fig = P.figure() #Create figure
+        else:
+            P.figure(fig.number)
+        #One plot command for with ks, one for without
+        if not klist:
+            P.plot(self.tresult, self.yresult[:,varindex])
+        else:
+            P.plot(self.tresult, self.yresult[:,varindex,klist])
+        #Create legends and axis names
         P.xlabel(self.tname)
-        P.ylabel(self.ynames[0])
-        P.title(self.plottitle + self.argstring())
-        P.show()
-        return
+        P.legend(N.array(self.ynames)[varindex])
+        #P.title(self.plottitle, figure=fig)
+        
+        #Should we show it now or just return it without showing?
+        if show:
+            P.show()
+        #Should we save the plot somewhere?
+        if saveplot:
+            time = self.lastparams["datetime"].strftime("%Y%m%d%H%M%S")
+            filename = "./graphs/run" + time + ".png"
+                
+            if os.path.isdir(os.path.dirname(filename)):
+                if os.path.isfile(filename):
+                    raise IOError("File already exists!")
+            else:
+                raise IOError("Directory 'graphs' does not exist")
+            try:
+                f.savefig(filename)
+                print "Plot saved as " + filename
+            except IOError:
+                raise
+        #Return the figure instance
+        return fig
     
     def saveallresults(self, filename=None):
         """Tries to save file as a pickled object in directory 'results'."""
         
-        now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        now = self.lastparams["datetime"].strftime("%Y%m%d%H%M%S")
         if not filename:
             filename = "./results/run" + now
             
@@ -386,21 +422,26 @@ class BgModelInN(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        P.figure()
+        f = P.figure()
         
         #First plot of phi and phi^dot
         P.subplot(121)
-        P.plot(self.tresult, self.yresult[:,0], self.tresult, self.yresult[:,1])
-        P.xlabel(self.tname)
-        P.ylabel("")
-        P.legend((self.ynames[0], self.ynames[1]))
+        #P.plot(self.tresult, self.yresult[:,0], self.tresult, self.yresult[:,1])
+         
+        #P.xlabel(self.tname)
+        #P.ylabel("")
+        #P.legend((self.ynames[0], self.ynames[1]))
         #P.title(self.plottitle + self.argstring())
+        
+        CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        P.plot(self.tresult, self.yresult[:,2])
-        P.xlabel(self.tname)
-        P.ylabel(self.ynames[2])
+        
+        #P.plot(self.tresult, self.yresult[:,2])
+        #P.xlabel(self.tname)
+        #P.ylabel(self.ynames[2])
+        CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
         
         P.show()
         return
@@ -465,7 +506,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.42 $",
+                  "CVSRevision":"$Revision: 1.43 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
