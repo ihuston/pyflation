@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.43 2008/07/09 15:58:13 ith Exp $
+    $Id: cosmomodels.py,v 1.44 2008/07/09 17:34:33 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -36,7 +36,7 @@ class CosmologicalModel:
     
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint"]
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-6, dxsav=0.0, solver="odeint"):
+    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-6, dxsav=0.0, solver="scipy_odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
         
         self.ystart = ystart
@@ -144,9 +144,12 @@ class CosmologicalModel:
         """Returns list of parameters to save with results."""
         #Test whether k has been set
         try:
-            self.k, self.mass
+            self.k
         except (NameError, AttributeError):
             self.k=None
+        try:
+            self.mass
+        except (NameError, AttributeError):    
             self.mass=None
             
         #Form dictionary of inputs
@@ -161,7 +164,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.43 $",
+                  "CVSRevision":"$Revision: 1.44 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -259,16 +262,20 @@ class CosmologicalModel:
 
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
-    def __init__(self, ystart=1.0, tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
+    def __init__(self, ystart=N.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
-        self.plottitle = r"TestModel: $\frac{dy}{dt} = t$"
+        self.plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
         self.tname = "Time"
-        self.ynames = ["Simple y"]
+        self.ynames = [r"Simple $y$", r"$\dot{y}$"]
     
     def derivs(self, t, y):
         """Very simple set of ODEs"""
-        return N.cos(t)
+        dydx = N.zeros(2)
+        
+        dydx[0] = y[1]
+        dydx[1] = y[0]
+        return dydx
 
 class BasicBgModel(CosmologicalModel):
     """Basic model with background equations
@@ -279,7 +286,9 @@ class BasicBgModel(CosmologicalModel):
        y[2] - a : Scale Factor
     """
     
-    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, solver="odeint"):
+    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
+                    tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
+        
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
@@ -289,10 +298,8 @@ class BasicBgModel(CosmologicalModel):
         self.tname = "Conformal time"
         self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
         
-    
-    def derivs(self, t, y):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/d\eta etc"""
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
         
         #Use inflaton mass
         mass2 = self.mass**2
@@ -301,6 +308,17 @@ class BasicBgModel(CosmologicalModel):
         U = 0.5*(mass2)*(y[0]**2)
         #deriv of potential wrt \phi
         dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2
+    
+    def derivs(self, t, y):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/d\eta etc"""
+        
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y)
         
         #factor in eom [1/3 a^2 U_0]^{1/2}
         Ufactor = N.sqrt((1.0/3.0)*(y[2]**2)*U)
@@ -325,40 +343,25 @@ class BasicBgModel(CosmologicalModel):
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
         
-        P.plot(self.tresult, self.yresult[:,0])
-        P.xlabel(self.tname)
-        P.ylabel("")
-        P.legend((self.ynames[0], self.ynames[2]))
-        P.title(self.plottitle + self.argstring())
-        P.show()
+        CosmologicalModel.plotresults(self, varindex=[0,2], saveplot=saveplot)
+        
         return
 
-class BgModelInN(CosmologicalModel):
-    """Basic model with background equations in terms of n
-        Array of dependent variables y is given by:
-        
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\n : First deriv of \phi
-       y[2] - H: Hubble parameter
-    """
+class EfoldModel(CosmologicalModel):
+    """Base class for models which use efold time variable n.
+        Provides some of the functions needed to deal with this situation.
+        Need at least the following three variables:
+        y[0] - \phi_0 : Background inflaton
+        y[1] - d\phi_0/d\n : First deriv of \phi
+        y[2] - H: Hubble parameter
+        """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
+    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
         #Mass of inflaton in Planck masses
         self.mass = 1.0e-6 # COBE normalization from Liddle and Lyth
-        
-        #Set initial H value if None
-        if self.ystart[2] == 0.0:
-            U = self.potentials(self.ystart)[0]
-            self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
-        
+        #List to store epsilon values
         self.epsilon = []
-            
-        #Titles
-        self.plottitle = r"Basic (improved) Cosmological Model in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -373,7 +376,53 @@ class BgModelInN(CosmologicalModel):
         #2nd deriv
         d2Udphi2 = mass2
         
-        return U,dUdphi,d2Udphi2       
+        return U,dUdphi,d2Udphi2         
+    
+    def findinflend(self):
+        """Find the efold time where inflation ends,
+            i.e. the hubble flow parameter epsilon >1.
+            Returns tuple of endefold and endindex (in tresult)."""
+        
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        #Make epsilon an array before any work
+        if type(self.epsilon) == list:
+            self.epsilon = N.array(self.epsilon)
+        
+        endefold = self.epsilon[N.where(self.epsilon[:,1]>1)[0][0], 0]
+        endindex = self.tresult[N.where(self.tresult > endefold)[0][0]]
+        
+        return endefold, endindex   
+        
+class BgModelInN(EfoldModel):
+    """Basic model with background equations in terms of n
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\n : First deriv of \phi
+       y[2] - H: Hubble parameter
+    """
+    
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
+        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        #Mass of inflaton in Planck masses
+        #self.mass = 1.0e-6 # COBE normalization from Liddle and Lyth
+        
+        #Set initial H value if None
+        if self.ystart[2] == 0.0:
+            U = self.potentials(self.ystart)[0]
+            self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
+        
+        #self.epsilon = []
+            
+        #Titles
+        self.plottitle = r"Basic (improved) Cosmological Model in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+    
+      
     
     def derivs(self, t, y):
         """Basic background equations of motion.
@@ -399,23 +448,7 @@ class BgModelInN(CosmologicalModel):
         
         return dydx
     
-    def findinflend(self):
-        """Find the efold time where inflation ends,
-            i.e. the hubble flow parameter epsilon >1.
-            Returns tuple of endefold and endindex (in tresult)."""
-        
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-        
-        #Make epsilon an array before any work
-        if type(self.epsilon) == list:
-            self.epsilon = N.array(self.epsilon)
-        
-        endefold = self.epsilon[N.where(self.epsilon[:,1]>1)[0][0], 0]
-        endindex = self.tresult[N.where(self.tresult > endefold)[0][0]]
-        
-        return endefold, endindex
-        
+         
     def plotresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
@@ -426,21 +459,10 @@ class BgModelInN(CosmologicalModel):
         
         #First plot of phi and phi^dot
         P.subplot(121)
-        #P.plot(self.tresult, self.yresult[:,0], self.tresult, self.yresult[:,1])
-         
-        #P.xlabel(self.tname)
-        #P.ylabel("")
-        #P.legend((self.ynames[0], self.ynames[1]))
-        #P.title(self.plottitle + self.argstring())
-        
         CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        
-        #P.plot(self.tresult, self.yresult[:,2])
-        #P.xlabel(self.tname)
-        #P.ylabel(self.ynames[2])
         CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
         
         P.show()
@@ -506,7 +528,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.43 $",
+                  "CVSRevision":"$Revision: 1.44 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
