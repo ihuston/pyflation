@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.46 2008/07/09 20:26:40 ith Exp $
+    $Id: cosmomodels.py,v 1.47 2008/07/09 22:26:26 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -102,8 +102,10 @@ class CosmologicalModel:
                     self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
                 #Commented out next line to work with array of k values
                 #self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
-            except rk4.SimRunError:
-                raise
+            except rk4.SimRunError, er:
+                self.yresult = N.array(er.yresult)
+                self.tresult = N.array(er.tresult)
+                print "Error during run, but some results obtained: ", er.message
             except StandardError, er:
                 #raise ModelError("Error running odeint", self.tresult, self.yresult)
                 raise
@@ -164,7 +166,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.46 $",
+                  "CVSRevision":"$Revision: 1.47 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -180,15 +182,15 @@ class CosmologicalModel:
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!")
         
-        if not varindex:
+        if varindex is None:
             varindex = [0] #Set default list of variables to plot
         
-        if not fig:
+        if fig is None:
             fig = P.figure() #Create figure
         else:
             P.figure(fig.number)
         #One plot command for with ks, one for without
-        if not klist:
+        if klist is None:
             P.plot(self.tresult, self.yresult[:,varindex])
         else:
             P.plot(self.tresult, self.yresult[:,varindex,klist])
@@ -376,6 +378,14 @@ class EfoldModel(CosmologicalModel):
         
         return U,dUdphi,d2Udphi2         
     
+    def findH(self, U, y):
+        """Return value of Hubble variable, H at y for given potential."""
+        phidot = y[1]
+        
+        #Expression for H
+        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
+        return H
+    
     def findinflend(self):
         """Find the efold time where inflation ends,
             i.e. the hubble flow parameter epsilon >1.
@@ -420,7 +430,8 @@ class BgModelInN(EfoldModel):
         #Set initial H value if None
         if self.ystart[2] == 0.0:
             U = self.potentials(self.ystart)[0]
-            self.ystart[2] = N.sqrt(U/(3.0-0.5*(ystart[1]**2)))
+            #self.ystart[2] = N.sqrt(U/(3.0-0.5*(self.ystart[1]**2)))
+            self.ystart[2] = self.findH(U, self.ystart)
         
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
@@ -469,7 +480,70 @@ class BgModelInN(EfoldModel):
         
         P.show()
         return
-    
+
+class FirstOrderInN(EfoldModel):
+    """First order model using efold as time variable.
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\eta : First deriv of \phi
+       y[2] - H : Hubble parameter
+       y[3] - \delta\varphi_1 : First order perturbation
+       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation
+       """
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, solver="scipy_odeint"):
+        """Initialize all variables and call ancestor's __init__ method."""
+        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        #Let k roam for a start
+        if k is None:
+            self.k = 10**(N.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart = (N.array([[15.0],[-0.1],[0.0],[0.1],[0.1]])*N.ones((5,len(self.k))))   
+        #Set initial H value if None
+        if all(self.ystart[2] == 0.0):
+            U = self.potentials(self.ystart)[0]
+            #self.ystart[2] = N.sqrt(U/(3.0-0.5*(self.ystart[1]**2)))
+            self.ystart[2] = self.findH(U, self.ystart)
+            
+        #Text for graphs
+        self.plottitle = "First Order Model in Efold time"
+        self.tname = r"$n$"
+        self.ynames = [r"$\varphi_0$", 
+                        r"$\varphi_0^\prime$",
+                        r"$H$",
+                        r"$\delta\varphi_1$",
+                        r"$\delta\varphi_1^\prime$"]
+        
+    def derivs(self, t, y):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y)        
+        
+        #Set derivatives
+        dydx = N.zeros((5,len(self.k)))
+        
+        #d\phi_0/dn = y_1
+        dydx[0] = y[1] 
+        
+        #dphi^prime/dn
+        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        
+        #dH/dn
+        dydx[2] = -0.5*(y[1]**2)*y[2]
+        
+        #d\deltaphi_1/dn = y[4]
+        dydx[3] = y[4]
+        
+        #d\deltaphi_1^prime/dn
+        dydx[4] = 0 #Temp value for testing
+                
+        return dydx       
+        
 class FirstOrderModel(CosmologicalModel):
     """First order model with background equations
         Array of dependent variables y is given by:
@@ -530,7 +604,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.46 $",
+                  "CVSRevision":"$Revision: 1.47 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
