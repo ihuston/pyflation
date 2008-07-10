@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.53 2008/07/10 16:40:28 ith Exp $
+    $Id: cosmomodels.py,v 1.54 2008/07/10 16:55:35 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -188,7 +188,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.53 $",
+                  "CVSRevision":"$Revision: 1.54 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -642,11 +642,12 @@ class FirstOrderInN(EfoldModel):
         dydx[3] = y[4]
         
         #Get a
-        a = ainit*N.exp(t)
+        a = self.ainit*N.exp(t)
+        
         #d\deltaphi_1^prime/dn
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3] 
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-                
+        print dydx[4]
         return dydx       
         
 class FirstOrderModel(CosmologicalModel):
@@ -709,7 +710,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.53 $",
+                  "CVSRevision":"$Revision: 1.54 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
