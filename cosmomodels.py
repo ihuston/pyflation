@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.48 2008/07/10 13:43:44 ith Exp $
+    $Id: cosmomodels.py,v 1.49 2008/07/10 14:50:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -166,7 +166,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.48 $",
+                  "CVSRevision":"$Revision: 1.49 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -219,7 +219,72 @@ class CosmologicalModel:
                 raise
         #Return the figure instance
         return fig
-    
+            
+    def plot3dresults(self, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
+        """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
+        #Test whether model has run yet
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!")
+        
+        #Test whether model has k variable dependence
+        try:
+            self.yresult[0,0,0] #Does this exist?
+        except IndexError, er:
+            raise ModelError("This model does not have any k variable to plot in third dimension! Got " + er.message)
+        
+        if varindex is None:
+            varindex = 0 #Set variable to plot
+        if klist is None:
+            klist = N.arange(len(self.k)) #Plot all ks
+        
+        if fig is None:
+            fig = P.figure() #Create figure
+        else:
+            P.figure(fig.number)
+        
+        #Plot 3d figure
+        
+        x = self.tresult
+        
+        ax = axes3d.Axes3D(fig)
+        #plot lines in reverse order
+        for kindex in klist[::-1]:
+            z = self.yresult[:,varindex,kindex]
+            #Do we need to change k by some function (e.g. log)?
+            if kfunction is None:
+                y = self.k[kindex]*N.ones(len(x))
+            else:
+                y = kfunction(self.k[kindex])*N.ones(len(x))
+            #Plot the line
+            ax.plot3D(x,y,z,color="b")
+        ax.set_xlabel(self.tname)
+        if kfunction is None:
+            ax.set_ylabel(r"$k$")
+        else:
+            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
+        ax.set_zlabel(self.ynames[varindex])
+        P.title(self.plottitle + self.argstring())
+        
+        #Should we show it now or just return it without showing?
+        if show:
+            P.show()
+        #Should we save the plot somewhere?
+        if saveplot:
+            time = self.lastparams["datetime"].strftime("%Y%m%d%H%M%S")
+            filename = "./graphs/run" + time + ".png"
+                
+            if os.path.isdir(os.path.dirname(filename)):
+                if os.path.isfile(filename):
+                    raise IOError("File already exists!")
+            else:
+                raise IOError("Directory 'graphs' does not exist")
+            try:
+                f.savefig(filename)
+                print "Plot saved as " + filename
+            except IOError:
+                raise
+        return fig
+            
     def saveallresults(self, filename=None):
         """Tries to save file as a pickled object in directory 'results'."""
         
@@ -406,9 +471,15 @@ class EfoldModel(CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!")
+        #Only need one background value to find epsilon so
+        #pick only one k result to check
+        if self.yresult.shape[2]:
+            yres = self.yresult[:,:,0]
+        else:
+            yres = self.yresult
         #Find Hdot
-        Hdot = N.array(map(self.derivs, self.tresult, self.yresult))[:,2]
-        epsilon = - Hdot/self.yresult[:,2]
+        Hdot = N.array(map(self.derivs, self.tresult, yres))[:,2]
+        epsilon = - Hdot/yres[:,2]
         
         return epsilon
         
@@ -530,8 +601,33 @@ class FirstOrderInN(EfoldModel):
         
         if self.solver == "scipy_odeint":
             if type(self.k) is N.ndarray or type(self.k) is list:
-                pass
+                #Make a copy of k while we work
+                klist = N.copy(self.k)
+                #Swap t and y for scipy_odeint
+                swap_derivs = lambda y, t : self.derivs(t,y)
+                #Get times we want to calculate at
+                times = N.arange(self.tstart, self.tend, self.tstep_wanted)
+                
+                #Compute list of ks in a row
+                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
+                #Now stack results to look like as normal (time,variable,k)
+                self.yresult = N.dstack(ylist)
+                self.tresult = times
+                #Return klist to normal
+                self.k = klist
+                
+                #Clean up and save results
+                #Aggregrate results and calling parameters into results list
+                self.lastparams = self.callingparams()
+                self.resultlist.append([self.lastparams, self.tresult, self.yresult])
+                self.runcount += 1
+                try:
+                    print "Results saved in " + self.saveallresults()
+                except IOError, er:
+                    print "Error trying to save results! Results NOT saved."
+                    print er
             else:
+                #We have only one k value so do normal run
                 EfoldModel.run(self)
                 
     def derivs(self, t, y):
@@ -625,7 +721,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.48 $",
+                  "CVSRevision":"$Revision: 1.49 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
