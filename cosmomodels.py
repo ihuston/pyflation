@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.51 2008/07/10 16:31:22 ith Exp $
+    $Id: cosmomodels.py,v 1.52 2008/07/10 16:32:02 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -188,7 +188,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.51 $",
+                  "CVSRevision":"$Revision: 1.52 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -493,12 +493,7 @@ class EfoldModel(CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         if self.runcount == 0:
             raise ModelError("Model has not been run yet, cannot plot results!")
-        #Only need one background value to find epsilon so
-        #pick only one k result to check
-        #if self.yresult.shape[2]:
-        #    yres = self.yresult[:,:,0]
-        #else:
-        #    yres = self.yresult
+
         #Find Hdot
         if self.k is not None:
             Hdot = N.array(map(self.derivs, self.tresult, self.yresult))[:,2,0]
@@ -705,7 +700,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.51 $",
+                  "CVSRevision":"$Revision: 1.52 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
