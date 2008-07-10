@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.47 2008/07/09 22:26:26 ith Exp $
+    $Id: cosmomodels.py,v 1.48 2008/07/10 13:43:44 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -166,7 +166,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.47 $",
+                  "CVSRevision":"$Revision: 1.48 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -501,11 +501,11 @@ class FirstOrderInN(EfoldModel):
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = (N.array([[15.0],[-0.1],[0.0],[0.1],[0.1]])*N.ones((5,len(self.k))))   
+            self.ystart = N.array([15.0,-0.1,0.0,0.1,0.1])   
+        
         #Set initial H value if None
-        if all(self.ystart[2] == 0.0):
+        if self.ystart[2] == 0.0:
             U = self.potentials(self.ystart)[0]
-            #self.ystart[2] = N.sqrt(U/(3.0-0.5*(self.ystart[1]**2)))
             self.ystart[2] = self.findH(U, self.ystart)
             
         #Text for graphs
@@ -516,7 +516,24 @@ class FirstOrderInN(EfoldModel):
                         r"$H$",
                         r"$\delta\varphi_1$",
                         r"$\delta\varphi_1^\prime$"]
+    def run(self):
+        """Override CosmologicalModel run function in order to handle k appropriately."""
         
+        if self.solver not in self.solverlist:
+            raise ModelError("Unknown solver!")
+        
+        if self.solver == "odeint" or self.solver == "rkdriver_dumb":
+            #Make the initial conditions the right shape
+            if type(self.k) is N.ndarray or type(self.k) is list: 
+                self.ystart = self.ystart.reshape((5,1))*N.ones((5,len(self.k)))
+            EfoldModel.run(self)
+        
+        if self.solver == "scipy_odeint":
+            if type(self.k) is N.ndarray or type(self.k) is list:
+                pass
+            else:
+                EfoldModel.run(self)
+                
     def derivs(self, t, y):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
@@ -524,8 +541,12 @@ class FirstOrderInN(EfoldModel):
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y)        
         
-        #Set derivatives
-        dydx = N.zeros((5,len(self.k)))
+        #Set derivatives taking care of k type
+        if type(self.k) is N.ndarray or type(self.k) is list: 
+            dydx = N.zeros((5,len(self.k)))
+        else:
+            dydx = N.zeros(5)
+            
         
         #d\phi_0/dn = y_1
         dydx[0] = y[1] 
@@ -604,7 +625,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.47 $",
+                  "CVSRevision":"$Revision: 1.48 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
