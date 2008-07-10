@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.49 2008/07/10 14:50:20 ith Exp $
+    $Id: cosmomodels.py,v 1.50 2008/07/10 16:24:12 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -40,6 +40,7 @@ class CosmologicalModel:
         """Initialize model variables, some with default values. Default solver is odeint."""
         
         self.ystart = ystart
+        self.k = None #so we can test whether k is set
         
         if tstart < tend: 
             self.tstart, self.tend = tstart, tend
@@ -95,7 +96,13 @@ class CosmologicalModel:
         
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
-                
+        #Test whether k exists and if so change init conditions
+        
+        if self.k is not None and (self.solver == "odeint" or self.solver == "rkdriver_dumb"):
+            #Make the initial conditions the right shape
+            if type(self.k) is N.ndarray or type(self.k) is list: 
+                self.ystart = self.ystart.reshape((5,1))*N.ones((5,len(self.k)))
+                        
         if self.solver == "odeint":
             try:
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
@@ -120,12 +127,27 @@ class CosmologicalModel:
                 raise merror
         
         if self.solver == "scipy_odeint":
+            
             #Use scipy solver. Need to massage derivs into right form.
             swap_derivs = lambda y, t : self.derivs(t,y)
             times = N.arange(self.tstart, self.tend, self.tstep_wanted)
-            #print times
-            self.yresult = scipy_odeint(swap_derivs, self.ystart, times)
-            self.tresult = times
+            
+            #Now split depending on whether k exists
+            if type(self.k) is N.ndarray or type(self.k) is list:
+                #Make a copy of k while we work
+                klist = N.copy(self.k)
+                
+                #Do calculation
+                #Compute list of ks in a row
+                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
+                #Now stack results to look like as normal (time,variable,k)
+                self.yresult = N.dstack(ylist)
+                self.tresult = times
+                #Return klist to normal
+                self.k = klist
+            else:
+                self.yresult = scipy_odeint(swap_derivs, self.ystart, times)
+                self.tresult = times
             
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
@@ -166,7 +188,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.49 $",
+                  "CVSRevision":"$Revision: 1.50 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -587,49 +609,7 @@ class FirstOrderInN(EfoldModel):
                         r"$H$",
                         r"$\delta\varphi_1$",
                         r"$\delta\varphi_1^\prime$"]
-    def run(self):
-        """Override CosmologicalModel run function in order to handle k appropriately."""
-        
-        if self.solver not in self.solverlist:
-            raise ModelError("Unknown solver!")
-        
-        if self.solver == "odeint" or self.solver == "rkdriver_dumb":
-            #Make the initial conditions the right shape
-            if type(self.k) is N.ndarray or type(self.k) is list: 
-                self.ystart = self.ystart.reshape((5,1))*N.ones((5,len(self.k)))
-            EfoldModel.run(self)
-        
-        if self.solver == "scipy_odeint":
-            if type(self.k) is N.ndarray or type(self.k) is list:
-                #Make a copy of k while we work
-                klist = N.copy(self.k)
-                #Swap t and y for scipy_odeint
-                swap_derivs = lambda y, t : self.derivs(t,y)
-                #Get times we want to calculate at
-                times = N.arange(self.tstart, self.tend, self.tstep_wanted)
-                
-                #Compute list of ks in a row
-                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
-                #Now stack results to look like as normal (time,variable,k)
-                self.yresult = N.dstack(ylist)
-                self.tresult = times
-                #Return klist to normal
-                self.k = klist
-                
-                #Clean up and save results
-                #Aggregrate results and calling parameters into results list
-                self.lastparams = self.callingparams()
-                self.resultlist.append([self.lastparams, self.tresult, self.yresult])
-                self.runcount += 1
-                try:
-                    print "Results saved in " + self.saveallresults()
-                except IOError, er:
-                    print "Error trying to save results! Results NOT saved."
-                    print er
-            else:
-                #We have only one k value so do normal run
-                EfoldModel.run(self)
-                
+                    
     def derivs(self, t, y):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
@@ -721,7 +701,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.49 $",
+                  "CVSRevision":"$Revision: 1.50 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
