@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.55 2008/07/11 14:07:32 ith Exp $
+    $Id: cosmomodels.py,v 1.56 2008/07/11 14:10:11 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -133,20 +133,14 @@ class CosmologicalModel:
             swap_derivs = lambda y, t : self.derivs(t,y)
             times = N.arange(self.tstart, self.tend, self.tstep_wanted)
             
-            #Deal with complex init conditions.
-            if self.ystart.dtype == complex and self.decoupled == False:
-                raise ModelError("Cannot run coupled complex model in scipy_odeint!")
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
                 #Make a copy of k while we work
                 klist = N.copy(self.k)
                 
-                #Do calculation in both real and complex case
+                #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(swap_derivs, self.ystart.real, times) for self.k in klist] 
-                if self.ystart.dtype == complex:
-                    ycompl = [scipy_odeint(swap_derivs, self.ystart.imag, times) for self.k in klist]
-                    ylist = N.array(ylist) + N.array(ycompl)*1j
+                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -195,7 +189,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.55 $",
+                  "CVSRevision":"$Revision: 1.56 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -604,9 +598,6 @@ class FirstOrderInN(EfoldModel):
         else:
             self.k = k
         
-        #Are the complex equations decoupled?
-        self.decoupled = True
-        
         #Initial conditions for each of the variables.
         if self.ystart is None:
             self.ystart = N.array([15.0,-0.1,0.0,0.1,0.1])   
@@ -720,7 +711,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.55 $",
+                  "CVSRevision":"$Revision: 1.56 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
