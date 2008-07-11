@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.54 2008/07/10 16:55:35 ith Exp $
+    $Id: cosmomodels.py,v 1.55 2008/07/11 14:07:32 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -100,8 +100,9 @@ class CosmologicalModel:
         
         if self.k is not None and (self.solver == "odeint" or self.solver == "rkdriver_dumb"):
             #Make the initial conditions the right shape
+            
             if type(self.k) is N.ndarray or type(self.k) is list: 
-                self.ystart = self.ystart.reshape((5,1))*N.ones((5,len(self.k)))
+                self.ystart = self.ystart.reshape((len(self.ystart),1))*N.ones((len(self.ystart),len(self.k)))
                         
         if self.solver == "odeint":
             try:
@@ -132,14 +133,20 @@ class CosmologicalModel:
             swap_derivs = lambda y, t : self.derivs(t,y)
             times = N.arange(self.tstart, self.tend, self.tstep_wanted)
             
+            #Deal with complex init conditions.
+            if self.ystart.dtype == complex and self.decoupled == False:
+                raise ModelError("Cannot run coupled complex model in scipy_odeint!")
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
                 #Make a copy of k while we work
                 klist = N.copy(self.k)
                 
-                #Do calculation
+                #Do calculation in both real and complex case
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
+                ylist = [scipy_odeint(swap_derivs, self.ystart.real, times) for self.k in klist] 
+                if self.ystart.dtype == complex:
+                    ycompl = [scipy_odeint(swap_derivs, self.ystart.imag, times) for self.k in klist]
+                    ylist = N.array(ylist) + N.array(ycompl)*1j
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -188,7 +195,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.54 $",
+                  "CVSRevision":"$Revision: 1.55 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -597,6 +604,9 @@ class FirstOrderInN(EfoldModel):
         else:
             self.k = k
         
+        #Are the complex equations decoupled?
+        self.decoupled = True
+        
         #Initial conditions for each of the variables.
         if self.ystart is None:
             self.ystart = N.array([15.0,-0.1,0.0,0.1,0.1])   
@@ -610,10 +620,10 @@ class FirstOrderInN(EfoldModel):
         self.plottitle = "First Order Model in Efold time"
         self.tname = r"$n$"
         self.ynames = [r"$\varphi_0$", 
-                        r"$\varphi_0^\prime$",
+                        r"$\dot{\varphi_0}$",
                         r"$H$",
                         r"$\delta\varphi_1$",
-                        r"$\delta\varphi_1^\prime$"]
+                        r"$\dot{\delta\varphi_1}$"]
                     
     def derivs(self, t, y):
         """Basic background equations of motion.
@@ -647,7 +657,7 @@ class FirstOrderInN(EfoldModel):
         #d\deltaphi_1^prime/dn
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3] 
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-        print dydx[4]
+        #print dydx[4]
         return dydx       
         
 class FirstOrderModel(CosmologicalModel):
@@ -710,7 +720,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.54 $",
+                  "CVSRevision":"$Revision: 1.55 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
