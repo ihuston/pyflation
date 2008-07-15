@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.57 2008/07/11 17:15:58 ith Exp $
+    $Id: cosmomodels.py,v 1.58 2008/07/15 12:33:45 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -91,7 +91,7 @@ class CosmologicalModel:
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self):
+    def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
         
         if self.solver not in self.solverlist:
@@ -157,11 +157,12 @@ class CosmologicalModel:
         
         self.runcount += 1
         
-        try:
-            print "Results saved in " + self.saveallresults()
-        except IOError, er:
-            print "Error trying to save results! Results NOT saved."
-            print er
+        if saveresults:
+            try:
+                print "Results saved in " + self.saveallresults()
+            except IOError, er:
+                print "Error trying to save results! Results NOT saved."
+                print er
             
         return
     
@@ -189,7 +190,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.57 $",
+                  "CVSRevision":"$Revision: 1.58 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -679,7 +680,7 @@ class ComplexFirstOrderInN(EfoldModel):
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,0.0,0.0])   
+            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
         if self.ystart[2] == 0.0:
@@ -799,7 +800,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.57 $",
+                  "CVSRevision":"$Revision: 1.58 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
