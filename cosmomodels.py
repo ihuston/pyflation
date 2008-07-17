@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.60 2008/07/17 16:19:12 ith Exp $
+    $Id: cosmomodels.py,v 1.61 2008/07/17 16:22:07 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -79,7 +79,7 @@ class CosmologicalModel:
         self.tname = "Time"
         self.ynames = ["First dependent variable"]
         
-    def derivs(self, t, yarray):
+    def derivs(self, yarray, t):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
         pass
     
@@ -130,7 +130,7 @@ class CosmologicalModel:
         if self.solver == "scipy_odeint":
             
             #Use scipy solver. Need to massage derivs into right form.
-            swap_derivs = lambda y, t : self.derivs(t,y)
+            #swap_derivs = lambda y, t : self.derivs(t,y)
             times = N.arange(self.tstart, self.tend, self.tstep_wanted)
             
             #Now split depending on whether k exists
@@ -140,14 +140,14 @@ class CosmologicalModel:
                 yslist = N.copy(self.ystart)
                 #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(swap_derivs, ys, times) for self.k,ys in zip(klist,yslist)] 
+                ylist = [scipy_odeint(self.derivs, ys, times) for self.k,ys in zip(klist,yslist)] 
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
                 #Return klist to normal
                 self.k = klist
             else:
-                self.yresult = scipy_odeint(swap_derivs, self.ystart, times)
+                self.yresult = scipy_odeint(self.derivs, self.ystart, times)
                 self.tresult = times
             
         #Aggregrate results and calling parameters into results list
@@ -190,7 +190,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.60 $",
+                  "CVSRevision":"$Revision: 1.61 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -360,7 +360,7 @@ class TestModel(CosmologicalModel):
         self.tname = "Time"
         self.ynames = [r"Simple $y$", r"$\dot{y}$"]
     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """Very simple set of ODEs"""
         dydx = N.zeros(2)
         
@@ -404,7 +404,7 @@ class BasicBgModel(CosmologicalModel):
         
         return U,dUdphi,d2Udphi2
     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
@@ -498,10 +498,10 @@ class EfoldModel(CosmologicalModel):
 
         #Find Hdot
         if self.k is not None:
-            Hdot = N.array(map(self.derivs, self.tresult, self.yresult))[:,2,0]
+            Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
             epsilon = - Hdot/self.yresult[:,2,0]
         else:
-            Hdot = N.array(map(self.derivs, self.tresult, self.yresult))[:,2]
+            Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2]
             epsilon = - Hdot/self.yresult[:,2]
         
         return epsilon
@@ -534,7 +534,7 @@ class BgModelInN(EfoldModel):
     
       
     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         
@@ -619,7 +619,7 @@ class FirstOrderInN(EfoldModel):
                         r"$\delta\varphi_1$",
                         r"$\dot{\delta\varphi_1}$"]
                     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         
@@ -700,7 +700,7 @@ class ComplexFirstOrderInN(EfoldModel):
                         r"Imag $\delta\varphi_1$",
                         r"Imag $\dot{\delta\varphi_1}$"]
                     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         
@@ -922,12 +922,12 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.60 $",
+                  "CVSRevision":"$Revision: 1.61 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """First order equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
@@ -1089,7 +1089,7 @@ class FullFirstOrder(FirstOrderModel):
         
         return U,dUdphi,d2Udphi2
     
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """First Order eqs of motion"""
         
         #get potential from function
@@ -1126,7 +1126,7 @@ class FullFirstOrder(FirstOrderModel):
 class HarmonicFirstOrder(FirstOrderModel):
     """Just change derivs to get harmonic motion"""
             
-    def derivs(self, t, y):
+    def derivs(self, y, t):
         """First order equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
