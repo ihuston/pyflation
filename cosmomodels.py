@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.63 2008/07/17 17:08:28 ith Exp $
+    $Id: cosmomodels.py,v 1.64 2008/07/17 17:08:55 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -13,7 +13,6 @@ import os.path
 import datetime
 import pickle
 from scipy.integrate import odeint as scipy_odeint
-from scipy import weave
 
 #debugging
 from IPython.Debugger import Pdb
@@ -193,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.63 $",
+                  "CVSRevision":"$Revision: 1.64 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -924,7 +923,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.63 $",
+                  "CVSRevision":"$Revision: 1.64 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
