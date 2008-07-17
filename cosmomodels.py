@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.59 2008/07/17 11:16:58 ith Exp $
+    $Id: cosmomodels.py,v 1.60 2008/07/17 16:19:12 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -135,12 +135,12 @@ class CosmologicalModel:
             
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
-                #Make a copy of k while we work
+                #Make a copy of k and ystart while we work
                 klist = N.copy(self.k)
-                
+                yslist = N.copy(self.ystart)
                 #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(swap_derivs, self.ystart, times) for self.k in klist] 
+                ylist = [scipy_odeint(swap_derivs, ys, times) for self.k,ys in zip(klist,yslist)] 
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -190,7 +190,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.59 $",
+                  "CVSRevision":"$Revision: 1.60 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -607,7 +607,9 @@ class FirstOrderInN(EfoldModel):
         if self.ystart[2] == 0.0:
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
-            
+        #Make ystart right shape
+        self.ystart = N.outer(N.ones(len(self.k)), self.ystart)
+                
         #Text for graphs
         self.plottitle = "First Order Model in Efold time"
         self.tname = r"$n$"
@@ -760,7 +762,7 @@ class TwoStageModel(EfoldModel):
         
         #Let k roam if we don't know correct ks
         if k is None:
-            self.k = 10**(N.arange(7.0)-8)
+            self.k = 10**(N.arange(7.0)-59)
         else:
             self.k = k
         
@@ -799,9 +801,46 @@ class TwoStageModel(EfoldModel):
         err = 1.0e-26
         #get aHs
         aH = self.ainit*N.exp(t)*H
-        kcrindex = N.where(abs(k - (self.cq*aH))<err)[0][0]
+        kcrindex = N.where(N.sign(k - (self.cq*aH))<=0)[0][0]
         kcrefold = t[kcrindex]
         return kcrindex, kcrefold
+    
+    def findallkcrossings(self, t, H):
+        """Iterate over findkcrossing to get full list"""
+        return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+        
+    def setfirstorderics(self):
+        """After a bg run has completed, set the initial conditions for the 
+            first order run."""
+        #Check if bg run is completed
+        if self.bgmodel.runcount == 0:
+            raise ModelError("Background system must be run first before setting 1st order ICs!")
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        Hend = self.bgmodel.yresult[self.tendindex,2]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*N.exp(-self.tend)
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.tendindex], 
+                            self.bgmodel.yresult[:self.tendindex,2])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.tstart, self.tstartindex = N.min(kcrossefolds), kcrossings[N.argmin(kcrossefolds),0]
+        
+        #Reset starting conditions at new time
+        self.ystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
+        #Mould init conditions into right shape for number of ks
+        
+        
+        #Set \delta\phi_1 initial condition
+        self.ystart[3] = 1
         
     def run(self, saveresults=True):
         """Run BgModelInN with initial conditions and then use the results
@@ -820,11 +859,6 @@ class TwoStageModel(EfoldModel):
         self.tend, self.tendindex = self.bgmodel.findinflend()
         print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
         
-        #Find initial conditions for 1st order model
-        #Find a_end using instantaneous reheating
-        Hend = self.bgmodel.yresult[self.tendindex,2]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.tend)
         
         
             
@@ -888,7 +922,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.59 $",
+                  "CVSRevision":"$Revision: 1.60 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
