@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.61 2008/07/17 16:22:07 ith Exp $
+    $Id: cosmomodels.py,v 1.62 2008/07/17 16:41:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -140,7 +140,7 @@ class CosmologicalModel:
                 yslist = N.copy(self.ystart)
                 #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(self.derivs, ys, times) for self.k,ys in zip(klist,yslist)] 
+                ylist = [scipy_odeint(self.derivs, ys, times) for self.k, ys in zip(klist,yslist)] 
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -190,7 +190,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.61 $",
+                  "CVSRevision":"$Revision: 1.62 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -922,7 +922,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.61 $",
+                  "CVSRevision":"$Revision: 1.62 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
