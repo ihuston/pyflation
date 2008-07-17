@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.62 2008/07/17 16:41:24 ith Exp $
+    $Id: cosmomodels.py,v 1.63 2008/07/17 17:08:28 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -13,6 +13,7 @@ import os.path
 import datetime
 import pickle
 from scipy.integrate import odeint as scipy_odeint
+from scipy import weave
 
 #debugging
 from IPython.Debugger import Pdb
@@ -140,7 +141,9 @@ class CosmologicalModel:
                 yslist = N.copy(self.ystart)
                 #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(self.derivs, ys, times) for self.k, ys in zip(klist,yslist)] 
+                #Test weave
+                ylist = [scipy_odeint(self.derivs, ys, times) for self.k, ys in zip(klist,yslist)]
+                
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -190,7 +193,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.62 $",
+                  "CVSRevision":"$Revision: 1.63 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -552,7 +555,7 @@ class BgModelInN(EfoldModel):
         
         #dH/dn
         dydx[2] = -0.5*(y[1]**2)*y[2]
-                
+
         return dydx
     
          
@@ -649,9 +652,8 @@ class FirstOrderInN(EfoldModel):
         a = self.ainit*N.exp(t)
         
         #d\deltaphi_1^prime/dn
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3] 
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-        #print dydx[4]
+        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3] - (d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
+        
         return dydx       
 
 class ComplexFirstOrderInN(EfoldModel):
@@ -922,7 +924,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.62 $",
+                  "CVSRevision":"$Revision: 1.63 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
