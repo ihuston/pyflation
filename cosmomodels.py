@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.58 2008/07/15 12:33:45 ith Exp $
+    $Id: cosmomodels.py,v 1.59 2008/07/17 11:16:58 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -190,7 +190,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.58 $",
+                  "CVSRevision":"$Revision: 1.59 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -739,7 +739,95 @@ class ComplexFirstOrderInN(EfoldModel):
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
         return dydx
-                        
+   
+class TwoStageModel(EfoldModel):
+    """Uses both BgModelInN and ComplexModelInN to run a full simulation.
+        Main additional functionality is in determining initial conditions.
+        Variables finally stored are as in ComplexModelInN.
+    """                
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
+        """Initialize model and ensure initial conditions are sane."""
+        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Set constant factor for 1st order initial conditions
+        self.cq = 50
+        
+        #Let k roam if we don't know correct ks
+        if k is None:
+            self.k = 10**(N.arange(7.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            #Initial conditions for all variables
+            self.ystart = N.array([15.0, # \phi_0
+                                   -0.1, # \dot{\phi_0}
+                                    0.0, # H - leave as 0.0 to let program determine
+                                    1.0, # Re\delta\phi_1
+                                    0.0, # Re\dot{\delta\phi_1}
+                                    1.0, # Im\delta\phi_1
+                                    0.0  # Im\dot{\delta\phi_1}
+                                    ])   
+        
+        #Set initial H value if None
+        if self.ystart[2] == 0.0:
+            U = self.potentials(self.ystart)[0]
+            self.ystart[2] = self.findH(U, self.ystart)
+        
+        #Set up variables for the two models
+        self.bgmodel = self.firstordermodel = None
+    
+    def finda_end(self, Hend, Hreh=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating
+            calculate the scale factor at the end of inflation."""
+        if Hreh is None:
+            Hreh = Hend #Instantaneous reheating
+        a_0 = 1 # Normalize today
+        a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        return a_end
+        
+    def findkcrossing(self, k, t, H):
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        #threshold
+        err = 1.0e-26
+        #get aHs
+        aH = self.ainit*N.exp(t)*H
+        kcrindex = N.where(abs(k - (self.cq*aH))<err)[0][0]
+        kcrefold = t[kcrindex]
+        return kcrindex, kcrefold
+        
+    def run(self, saveresults=True):
+        """Run BgModelInN with initial conditions and then use the results
+            to run ComplexModelInN."""
+        #Need to initialize bgmodel first
+        self.bgmodel = BgModelInN(ystart=self.ystart[0:3], tstart=self.tstart, tend=self.tend, 
+                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver)
+        
+        #Start background run
+        print("Running background model...")
+        try:
+            self.bgmodel.run(saveresults=False)
+        except ModelError, er:
+            print "Error in background run, aborting! Message: " + er.message
+        #Find end of inflation
+        self.tend, self.tendindex = self.bgmodel.findinflend()
+        print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        Hend = self.bgmodel.yresult[self.tendindex,2]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*N.exp(-self.tend)
+        
+        
+            
 class FirstOrderModel(CosmologicalModel):
     """First order model with background equations
         Array of dependent variables y is given by:
@@ -800,7 +888,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.58 $",
+                  "CVSRevision":"$Revision: 1.59 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
