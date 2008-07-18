@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.65 2008/07/18 11:22:56 ith Exp $
+    $Id: cosmomodels.py,v 1.66 2008/07/18 15:28:25 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -99,11 +99,10 @@ class CosmologicalModel:
             raise ModelError("Unknown solver!")
         #Test whether k exists and if so change init conditions
         
-        if self.k is not None and (self.solver == "odeint" or self.solver == "rkdriver_dumb"):
-            #Make the initial conditions the right shape
-            
-            if type(self.k) is N.ndarray or type(self.k) is list: 
-                self.ystart = self.ystart.reshape((len(self.ystart),1))*N.ones((len(self.ystart),len(self.k)))
+#         if self.k is not None and (self.solver == "odeint" or self.solver == "rkdriver_dumb"):
+#             #Make the initial conditions the right shape
+#             if type(self.k) is N.ndarray or type(self.k) is list: 
+#                 self.ystart = self.ystart.reshape((len(self.ystart),1))*N.ones((len(self.ystart),len(self.k)))
                         
         if self.solver == "odeint":
             try:
@@ -138,7 +137,8 @@ class CosmologicalModel:
             if type(self.k) is N.ndarray or type(self.k) is list:
                 #Make a copy of k and ystart while we work
                 klist = N.copy(self.k)
-                yslist = N.copy(self.ystart)
+                yslist = N.rollaxis(N.copy(self.ystart),1,0)
+                
                 #Do calculation
                 #Compute list of ks in a row
                 #Test weave
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.65 $",
+                  "CVSRevision":"$Revision: 1.66 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -492,10 +492,11 @@ class EfoldModel(CosmologicalModel):
         
         #Interpolate results to find more accurate endpoint
         tck = interpolate.splrep(self.tresult[:endindex], self.epsilon[:endindex])
-        t2 = linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
+        t2 = N.linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
         y2 = interpolate.splev(t2, tck)
-        
-        endefold = self.tresult[endindex]
+        endindex2 = N.where(y2>1)[0][0]
+        #Return efold of more accurate endpoint
+        endefold = t2[endindex2]
         
         return endefold, endindex
     
@@ -574,11 +575,11 @@ class BgModelInN(EfoldModel):
         
         #First plot of phi and phi^dot
         P.subplot(121)
-        CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
+        EfoldModel.plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        CosmologicalModel.plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
+        EfoldModel.plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
         
         P.show()
         return
@@ -692,7 +693,7 @@ class ComplexFirstOrderInN(EfoldModel):
             self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
-        if self.ystart[2] == 0.0:
+        if all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
             
@@ -769,7 +770,7 @@ class TwoStageModel(EfoldModel):
         
         #Let k roam if we don't know correct ks
         if k is None:
-            self.k = 10**(N.arange(7.0)-59)
+            self.k = 10**(N.arange(7.0)-56)
         else:
             self.k = k
         
@@ -845,7 +846,7 @@ class TwoStageModel(EfoldModel):
         self.ystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
         #Mould init conditions into right shape for number of ks
         if self.ystart.ndim == 1:
-            self.ystart = self.ystart[:,N.newaxis]*ones(len(self.k))
+            self.ystart = self.ystart[:,N.newaxis]*N.ones(len(self.k))
             
         #Set Re\delta\phi_1 initial condition
         self.ystart[3,:] = N.exp(-self.tstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
@@ -854,27 +855,64 @@ class TwoStageModel(EfoldModel):
         #Set Im\delta\phi_1
         self.ystart[5,:] = 0
         #Set Im\dot\delta\phi_1
-        self.ystart[6,:] = -N.exp(-self.tstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*N.exp(t)*H)
+        self.ystart[6,:] = -N.exp(-2*self.tstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.ystart[2,:])
         
     def run(self, saveresults=True):
         """Run BgModelInN with initial conditions and then use the results
             to run ComplexModelInN."""
         #Need to initialize bgmodel first
-        self.bgmodel = BgModelInN(ystart=self.ystart[0:3], tstart=self.tstart, tend=self.tend, 
+        #Check ystart is in right form (1-d array of three values)
+        if self.ystart.ndim == 1:
+            ys = self.ystart[0:3]
+        elif self.ystart.ndim == 2:
+            ys = self.ystart[0:3,0]
+        self.bgmodel = BgModelInN(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver)
         
         #Start background run
-        print("Running background model...")
+        print("Running background model...\n")
         try:
             self.bgmodel.run(saveresults=False)
         except ModelError, er:
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
         self.tend, self.tendindex = self.bgmodel.findinflend()
-        
         print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
         
+        #Set initial conditions for first order model
+        self.setfirstorderics()
         
+        #Initialize first order model
+        self.firstordermodel = ComplexFirstOrderInN(ystart=self.ystart, tstart=self.tstart, tend=self.tend,
+                                tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
+                                k=self.k, ainit=self.ainit)
+        #Set names as in ComplexModel
+        self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
+        #Start first order run
+        print("Beginning first order run...\n")
+        try:
+            self.firstordermodel.run(saveresults=False)
+        except ModelError, er:
+            print "Error in first order run, aborting! Message: " + er.message
+        
+        #Set results to current object
+        self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        
+        #Save results in resultlist and file
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()
+        
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.runcount += 1
+        
+        if saveresults:
+            try:
+                print "Results saved in " + self.saveallresults()
+            except IOError, er:
+                print "Error trying to save results! Results NOT saved."
+                print er                
+        
+        return
         
             
 class FirstOrderModel(CosmologicalModel):
@@ -937,7 +975,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.65 $",
+                  "CVSRevision":"$Revision: 1.66 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
