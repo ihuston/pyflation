@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.64 2008/07/17 17:08:55 ith Exp $
+    $Id: cosmomodels.py,v 1.65 2008/07/18 11:22:56 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -13,6 +13,7 @@ import os.path
 import datetime
 import pickle
 from scipy.integrate import odeint as scipy_odeint
+from scipy import interpolate
 
 #debugging
 from IPython.Debugger import Pdb
@@ -131,7 +132,7 @@ class CosmologicalModel:
             
             #Use scipy solver. Need to massage derivs into right form.
             #swap_derivs = lambda y, t : self.derivs(t,y)
-            times = N.arange(self.tstart, self.tend, self.tstep_wanted)
+            times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
             
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
@@ -155,8 +156,7 @@ class CosmologicalModel:
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
         
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])
-        
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
         self.runcount += 1
         
         if saveresults:
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.64 $",
+                  "CVSRevision":"$Revision: 1.65 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -489,6 +489,12 @@ class EfoldModel(CosmologicalModel):
         if not any(self.epsilon>1):
             raise ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
         endindex = N.where(self.epsilon>1)[0][0]
+        
+        #Interpolate results to find more accurate endpoint
+        tck = interpolate.splrep(self.tresult[:endindex], self.epsilon[:endindex])
+        t2 = linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
+        y2 = interpolate.splev(t2, tck)
+        
         endefold = self.tresult[endindex]
         
         return endefold, endindex
@@ -499,7 +505,7 @@ class EfoldModel(CosmologicalModel):
             raise ModelError("Model has not been run yet, cannot plot results!")
 
         #Find Hdot
-        if self.k is not None:
+        if self.yresult.ndim == 3:
             Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
             epsilon = - Hdot/self.yresult[:,2,0]
         else:
@@ -838,10 +844,17 @@ class TwoStageModel(EfoldModel):
         #Reset starting conditions at new time
         self.ystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
         #Mould init conditions into right shape for number of ks
-        
-        
-        #Set \delta\phi_1 initial condition
-        self.ystart[3] = 1
+        if self.ystart.ndim == 1:
+            self.ystart = self.ystart[:,N.newaxis]*ones(len(self.k))
+            
+        #Set Re\delta\phi_1 initial condition
+        self.ystart[3,:] = N.exp(-self.tstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        #set Re\dot\delta\phi_1 ic
+        self.ystart[4,:] = -N.exp(-self.tstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        #Set Im\delta\phi_1
+        self.ystart[5,:] = 0
+        #Set Im\dot\delta\phi_1
+        self.ystart[6,:] = -N.exp(-self.tstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*N.exp(t)*H)
         
     def run(self, saveresults=True):
         """Run BgModelInN with initial conditions and then use the results
@@ -858,6 +871,7 @@ class TwoStageModel(EfoldModel):
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
         self.tend, self.tendindex = self.bgmodel.findinflend()
+        
         print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
         
         
@@ -923,7 +937,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.64 $",
+                  "CVSRevision":"$Revision: 1.65 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
