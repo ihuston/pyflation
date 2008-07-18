@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.66 2008/07/18 15:28:25 ith Exp $
+    $Id: cosmomodels.py,v 1.67 2008/07/18 15:44:50 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.66 $",
+                  "CVSRevision":"$Revision: 1.67 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -857,10 +857,8 @@ class TwoStageModel(EfoldModel):
         #Set Im\dot\delta\phi_1
         self.ystart[6,:] = -N.exp(-2*self.tstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.ystart[2,:])
         
-    def run(self, saveresults=True):
-        """Run BgModelInN with initial conditions and then use the results
-            to run ComplexModelInN."""
-        #Need to initialize bgmodel first
+    def runbg(self):
+        """Run bg model after setting initial conditions."""
         #Check ystart is in right form (1-d array of three values)
         if self.ystart.ndim == 1:
             ys = self.ystart[0:3]
@@ -878,7 +876,10 @@ class TwoStageModel(EfoldModel):
         #Find end of inflation
         self.tend, self.tendindex = self.bgmodel.findinflend()
         print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
+        return
         
+    def runfo(self):
+        """Run first order model after setting initial conditions."""
         #Set initial conditions for first order model
         self.setfirstorderics()
         
@@ -897,6 +898,15 @@ class TwoStageModel(EfoldModel):
         
         #Set results to current object
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        return
+    
+    def run(self, saveresults=True):
+        """Run BgModelInN with initial conditions and then use the results
+            to run ComplexModelInN."""
+        #Run bg model
+        self.runbg()
+        #Run first order model
+        self.runfo()
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
@@ -975,7 +985,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.66 $",
+                  "CVSRevision":"$Revision: 1.67 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
