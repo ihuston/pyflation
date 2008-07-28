@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.67 2008/07/18 15:44:50 ith Exp $
+    $Id: cosmomodels.py,v 1.68 2008/07/28 13:53:54 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.67 $",
+                  "CVSRevision":"$Revision: 1.68 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -700,7 +700,7 @@ class ComplexFirstOrderInN(EfoldModel):
         #Text for graphs
         self.plottitle = "Complex First Order Model in Efold time"
         self.tname = r"$n$"
-        self.ynames = [r"$\varphi_0$", 
+        self.ynames = [r"$\varphi_0$",
                         r"$\dot{\varphi_0}$",
                         r"$H$",
                         r"Real $\delta\varphi_1$",
@@ -985,7 +985,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.67 $",
+                  "CVSRevision":"$Revision: 1.68 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
