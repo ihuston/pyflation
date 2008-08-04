@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.68 2008/07/28 13:53:54 ith Exp $
+    $Id: cosmomodels.py,v 1.69 2008/08/04 13:17:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.68 $",
+                  "CVSRevision":"$Revision: 1.69 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -770,7 +770,7 @@ class TwoStageModel(EfoldModel):
         
         #Let k roam if we don't know correct ks
         if k is None:
-            self.k = 10**(N.arange(7.0)-56)
+            self.k = 10**(N.arange(7.0)-62)
         else:
             self.k = k
         
@@ -840,22 +840,23 @@ class TwoStageModel(EfoldModel):
             raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
         
         #Find new start time from earliest kcrossing
-        self.tstart, self.tstartindex = N.min(kcrossefolds), kcrossings[N.argmin(kcrossefolds),0]
+        self.fotstart, self.fotstartindex = N.min(kcrossefolds), kcrossings[N.argmin(kcrossefolds),0]
         
         #Reset starting conditions at new time
-        self.ystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
+        self.foystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
+        
         #Mould init conditions into right shape for number of ks
-        if self.ystart.ndim == 1:
-            self.ystart = self.ystart[:,N.newaxis]*N.ones(len(self.k))
+        if self.foystart.ndim == 1:
+            self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
             
         #Set Re\delta\phi_1 initial condition
-        self.ystart[3,:] = N.exp(-self.tstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        self.foystart[3,:] = N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
         #set Re\dot\delta\phi_1 ic
-        self.ystart[4,:] = -N.exp(-self.tstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        self.foystart[4,:] = -N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
         #Set Im\delta\phi_1
-        self.ystart[5,:] = 0
+        self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
-        self.ystart[6,:] = -N.exp(-2*self.tstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.ystart[2,:])
+        self.foystart[6,:] = -N.exp(-2*self.fotstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.foystart[2,:])
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
@@ -874,8 +875,8 @@ class TwoStageModel(EfoldModel):
         except ModelError, er:
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
-        self.tend, self.tendindex = self.bgmodel.findinflend()
-        print("Background run complete, inflation ended " + str(self.tend) + " efoldings after start.")
+        self.fotend, self.fotendindex = self.bgmodel.findinflend()
+        print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
     def runfo(self):
@@ -884,7 +885,7 @@ class TwoStageModel(EfoldModel):
         self.setfirstorderics()
         
         #Initialize first order model
-        self.firstordermodel = ComplexFirstOrderInN(ystart=self.ystart, tstart=self.tstart, tend=self.tend,
+        self.firstordermodel = ComplexFirstOrderInN(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
                                 k=self.k, ainit=self.ainit)
         #Set names as in ComplexModel
@@ -985,7 +986,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.68 $",
+                  "CVSRevision":"$Revision: 1.69 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
