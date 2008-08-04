@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.72 2008/08/04 16:58:53 ith Exp $
+    $Id: cosmomodels.py,v 1.73 2008/08/04 17:22:48 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -14,6 +14,7 @@ import datetime
 import pickle
 from scipy.integrate import odeint as scipy_odeint
 from scipy import interpolate
+from helpers import *
 
 #debugging
 from IPython.Debugger import Pdb
@@ -148,7 +149,8 @@ class CosmologicalModel:
                 #Do calculation
                 #Compute list of ks in a row
                 ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
-                
+                ylistlengths = [len(ys) for ys in ylist]
+                ylist = [nanfillstart(y, max(ylistlengths)) for y in ylist]
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -198,7 +200,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.72 $",
+                  "CVSRevision":"$Revision: 1.73 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1002,7 +1004,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.72 $",
+                  "CVSRevision":"$Revision: 1.73 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
