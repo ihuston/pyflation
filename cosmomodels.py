@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.71 2008/08/04 16:01:20 ith Exp $
+    $Id: cosmomodels.py,v 1.72 2008/08/04 16:58:53 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -43,9 +43,9 @@ class CosmologicalModel:
         self.ystart = ystart
         self.k = None #so we can test whether k is set
         
-        if tstart < tend: 
+        if N.all(tstart < tend): 
             self.tstart, self.tend = tstart, tend
-        elif tstart==tend:
+        elif N.all(tstart==tend):
             raise ValueError, "End time is the same as start time!"
         else:
             raise ValueError, "Ending time is before starting time!"
@@ -131,18 +131,23 @@ class CosmologicalModel:
             
             #Use scipy solver. Need to massage derivs into right form.
             #swap_derivs = lambda y, t : self.derivs(t,y)
-            times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-            
+                        
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
+                #Get set of times for each k
+                if type(self.tstart) is N.ndarray or type(self.tstart) is list:
+                    times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [N.where(ts <= times)[0][0] for ts in self.tstart]
+                else:
+                    times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [0]
                 #Make a copy of k and ystart while we work
                 klist = N.copy(self.k)
                 yslist = N.rollaxis(N.copy(self.ystart),1,0)
                 
                 #Do calculation
                 #Compute list of ks in a row
-                #Test weave
-                ylist = [scipy_odeint(self.derivs, ys, times) for self.k, ys in zip(klist,yslist)]
+                ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
@@ -150,6 +155,7 @@ class CosmologicalModel:
                 #Return klist to normal
                 self.k = klist
             else:
+                times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                 self.yresult = scipy_odeint(self.derivs, self.ystart, times)
                 self.tresult = times
             
@@ -192,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.71 $",
+                  "CVSRevision":"$Revision: 1.72 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -996,7 +1002,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.71 $",
+                  "CVSRevision":"$Revision: 1.72 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
