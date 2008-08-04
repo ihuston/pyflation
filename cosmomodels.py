@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.69 2008/08/04 13:17:20 ith Exp $
+    $Id: cosmomodels.py,v 1.70 2008/08/04 15:27:51 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.69 $",
+                  "CVSRevision":"$Revision: 1.70 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -755,7 +755,7 @@ class TwoStageModel(EfoldModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in ComplexModelInN.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
         """Initialize model and ensure initial conditions are sane."""
         EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
@@ -777,7 +777,7 @@ class TwoStageModel(EfoldModel):
         #Initial conditions for each of the variables.
         if self.ystart is None:
             #Initial conditions for all variables
-            self.ystart = N.array([15.0, # \phi_0
+            self.ystart = N.array([18.0, # \phi_0
                                    -0.1, # \dot{\phi_0}
                                     0.0, # H - leave as 0.0 to let program determine
                                     1.0, # Re\delta\phi_1
@@ -826,13 +826,13 @@ class TwoStageModel(EfoldModel):
         
         #Find initial conditions for 1st order model
         #Find a_end using instantaneous reheating
-        Hend = self.bgmodel.yresult[self.tendindex,2]
+        Hend = self.bgmodel.yresult[self.fotendindex,2]
         self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.tend)
+        self.ainit = self.a_end*N.exp(-self.fotend)
         
         #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.tendindex], 
-                            self.bgmodel.yresult[:self.tendindex,2])
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex,2])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
@@ -843,7 +843,8 @@ class TwoStageModel(EfoldModel):
         self.fotstart, self.fotstartindex = N.min(kcrossefolds), kcrossings[N.argmin(kcrossefolds),0]
         
         #Reset starting conditions at new time
-        self.foystart[0:3] = self.bgmodel.yresult[self.tstartindex,:]
+        self.foystart = N.zeros(len(self.ystart))
+        self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:]
         
         #Mould init conditions into right shape for number of ks
         if self.foystart.ndim == 1:
@@ -857,6 +858,10 @@ class TwoStageModel(EfoldModel):
         self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
         self.foystart[6,:] = -N.exp(-2*self.fotstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.foystart[2,:])
+        
+        #Testing
+        #self.foystart[3,:] = self.foystart[5,:] = 0.01
+        #self.foystart[4,:] = self.foystart[6,:] = 0.0
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
@@ -881,9 +886,7 @@ class TwoStageModel(EfoldModel):
         
     def runfo(self):
         """Run first order model after setting initial conditions."""
-        #Set initial conditions for first order model
-        self.setfirstorderics()
-        
+                
         #Initialize first order model
         self.firstordermodel = ComplexFirstOrderInN(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
@@ -906,6 +909,9 @@ class TwoStageModel(EfoldModel):
             to run ComplexModelInN."""
         #Run bg model
         self.runbg()
+        
+        #Set initial conditions for first order model
+        self.setfirstorderics()
         #Run first order model
         self.runfo()
         
@@ -986,7 +992,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.69 $",
+                  "CVSRevision":"$Revision: 1.70 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
