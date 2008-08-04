@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.70 2008/08/04 15:27:51 ith Exp $
+    $Id: cosmomodels.py,v 1.71 2008/08/04 16:01:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.70 $",
+                  "CVSRevision":"$Revision: 1.71 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -809,7 +809,10 @@ class TwoStageModel(EfoldModel):
         err = 1.0e-26
         #get aHs
         aH = self.ainit*N.exp(t)*H
-        kcrindex = N.where(N.sign(k - (self.cq*aH))<=0)[0][0]
+        try:
+            kcrindex = N.where(N.sign(k - (self.cq*aH))<=0)[0][0]
+        except IndexError, ex:
+            raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
         kcrefold = t[kcrindex]
         return kcrindex, kcrefold
     
@@ -840,16 +843,17 @@ class TwoStageModel(EfoldModel):
             raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
         
         #Find new start time from earliest kcrossing
-        self.fotstart, self.fotstartindex = N.min(kcrossefolds), kcrossings[N.argmin(kcrossefolds),0]
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
         
         #Reset starting conditions at new time
-        self.foystart = N.zeros(len(self.ystart))
-        self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:]
+        self.foystart = N.zeros((len(self.ystart), len(self.k)))
         
         #Mould init conditions into right shape for number of ks
-        if self.foystart.ndim == 1:
-            self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
+        #if self.foystart.ndim == 1:
+         #   self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
             
+        self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
+                   
         #Set Re\delta\phi_1 initial condition
         self.foystart[3,:] = N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
         #set Re\dot\delta\phi_1 ic
@@ -992,7 +996,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.70 $",
+                  "CVSRevision":"$Revision: 1.71 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
