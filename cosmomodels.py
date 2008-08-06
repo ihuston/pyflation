@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.76 2008/08/06 15:30:26 ith Exp $
+    $Id: cosmomodels.py,v 1.77 2008/08/06 15:44:44 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.76 $",
+                  "CVSRevision":"$Revision: 1.77 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -310,7 +310,7 @@ class CosmologicalModel:
             self.saveplot(fig)
         return fig
             
-    def plotkcrosssection(self, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
+    def plotkcrosssection(self, tindex=None, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
         """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
         #Test whether model has run yet
         if self.runcount == 0:
@@ -320,41 +320,29 @@ class CosmologicalModel:
         try:
             self.yresult[0,0,0] #Does this exist?
         except IndexError, er:
-            raise ModelError("This model does not have any k variable to plot in third dimension! Got " + er.message)
+            raise ModelError("This model does not have any k variable to plot! Got " + er.message)
         
         if varindex is None:
             varindex = 0 #Set variable to plot
         if klist is None:
             klist = N.arange(len(self.k)) #Plot all ks
+        if tindex is None:
+            tindex = N.arange(0,len(self.tresult), 1000) #Selection of time slices
+        #Set names for t slices
+        tnames = str(self.tresult[tindex])
         
         if fig is None:
             fig = P.figure() #Create figure
         else:
             P.figure(fig.number)
         
-        #Plot 3d figure
-        
-        x = self.tresult
-        
-        ax = axes3d.Axes3D(fig)
-        #plot lines in reverse order
-        for kindex in klist[::-1]:
-            z = self.yresult[:,varindex,kindex]
-            #Do we need to change k by some function (e.g. log)?
-            if kfunction is None:
-                y = self.k[kindex]*N.ones(len(x))
-            else:
-                y = kfunction(self.k[kindex])*N.ones(len(x))
-            #Plot the line
-            ax.plot3D(x,y,z,color="b")
-        ax.set_xlabel(self.tname)
-        if kfunction is None:
-            ax.set_ylabel(r"$k$")
-        else:
-            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
-        ax.set_zlabel(self.ynames[varindex])
-        P.title(self.plottitle + self.argstring())
-        
+        #Plot figure, default is semilogx for k
+        P.semilogx(self.k[klist], self.yresult[tindex,varindex,klist].transpose())
+                
+        #Create legends and axis names
+        P.xlabel(r"$k$")
+        P.legend(tnames)
+                
         #Should we show it now or just return it without showing?
         if show:
             P.show()
@@ -1074,7 +1062,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.76 $",
+                  "CVSRevision":"$Revision: 1.77 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
