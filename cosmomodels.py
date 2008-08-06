@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.74 2008/08/06 14:47:21 ith Exp $
+    $Id: cosmomodels.py,v 1.75 2008/08/06 15:05:08 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.74 $",
+                  "CVSRevision":"$Revision: 1.75 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -862,13 +862,13 @@ class TwoStageModel(EfoldModel):
         self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
                    
         #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
+        self.foystart[3,:] = 1/(N.sqrt(2*self.cq))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = -N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
+        self.foystart[4,:] = -N.sqrt(self.cq/2)
         #Set Im\delta\phi_1
         self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = -N.exp(-self.fotstart)*self.cq/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
+        self.foystart[6,:] = 0
         
         return
         
@@ -1029,7 +1029,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.74 $",
+                  "CVSRevision":"$Revision: 1.75 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
