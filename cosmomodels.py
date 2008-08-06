@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.73 2008/08/04 17:22:48 ith Exp $
+    $Id: cosmomodels.py,v 1.74 2008/08/06 14:47:21 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -35,7 +35,6 @@ class CosmologicalModel:
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint"]
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-6, dxsav=0.0, solver="scipy_odeint"):
@@ -95,7 +94,6 @@ class CosmologicalModel:
     
     def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
-        
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
         #Test whether k exists and if so change init conditions
@@ -200,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.73 $",
+                  "CVSRevision":"$Revision: 1.74 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -359,8 +357,8 @@ class CosmologicalModel:
             finally:
                 resultsfile.close()
         except IOError:
-                raise    
-
+                raise
+            
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
     def __init__(self, ystart=N.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
@@ -856,6 +854,7 @@ class TwoStageModel(EfoldModel):
         #Reset starting conditions at new time
         self.foystart = N.zeros((len(self.ystart), len(self.k)))
         
+        
         #Mould init conditions into right shape for number of ks
         #if self.foystart.ndim == 1:
          #   self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
@@ -863,17 +862,39 @@ class TwoStageModel(EfoldModel):
         self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
                    
         #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        self.foystart[3,:] = N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = -N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.k))
+        self.foystart[4,:] = -N.exp(-self.fotstart)/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
         #Set Im\delta\phi_1
         self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = -N.exp(-2*self.fotstart)*N.sqrt(self.k)/(N.sqrt(2)*(self.ainit**2)*self.foystart[2,:])
+        self.foystart[6,:] = -N.exp(-self.fotstart)*self.cq/(N.sqrt(2)*self.ainit*N.sqrt(self.cq))
         
+        return
+        
+    def setfoicsplain(self):
         #Testing
-        #self.foystart[3,:] = self.foystart[5,:] = 0.01
-        #self.foystart[4,:] = self.foystart[6,:] = 0.0
+        
+        #Check if bg run is completed
+        if self.bgmodel.runcount == 0:
+            raise ModelError("Background system must be run first before setting 1st order ICs!")
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        Hend = self.bgmodel.yresult[self.fotendindex,2]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*N.exp(-self.fotend)
+        
+        #Reset starting conditions at new time
+        self.foystart = N.zeros((len(self.ystart), len(self.k)))
+        self.fotstart = N.zeros((len(self.k)))
+        
+        self.foystart[0:3] = self.bgmodel.yresult[N.zeros(len(self.k)).astype(int),:].transpose()
+        self.foystart[3,:] = self.foystart[5,:] = 0.01
+        self.foystart[4,:] = self.foystart[6,:] = 0.0
+        #self.fotstart[:] = 0
+        
+        return
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
@@ -916,14 +937,18 @@ class TwoStageModel(EfoldModel):
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, plain=False):
         """Run BgModelInN with initial conditions and then use the results
             to run ComplexModelInN."""
         #Run bg model
         self.runbg()
         
-        #Set initial conditions for first order model
-        self.setfirstorderics()
+        if plain:
+            self.setfoicsplain()
+        else:
+            #Set initial conditions for first order model
+            self.setfirstorderics()
+        
         #Run first order model
         self.runfo()
         
@@ -1004,7 +1029,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.73 $",
+                  "CVSRevision":"$Revision: 1.74 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
