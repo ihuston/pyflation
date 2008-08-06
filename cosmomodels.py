@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.78 2008/08/06 16:08:31 ith Exp $
+    $Id: cosmomodels.py,v 1.79 2008/08/06 17:18:03 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -14,7 +14,7 @@ import datetime
 import pickle
 from scipy.integrate import odeint as scipy_odeint
 from scipy import interpolate
-from helpers import *
+import helpers 
 
 #debugging
 from IPython.Debugger import Pdb
@@ -148,7 +148,7 @@ class CosmologicalModel:
                 #Compute list of ks in a row
                 ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 ylistlengths = [len(ys) for ys in ylist]
-                ylist = [nanfillstart(y, max(ylistlengths)) for y in ylist]
+                ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
                 #Now stack results to look like as normal (time,variable,k)
                 self.yresult = N.dstack(ylist)
                 self.tresult = times
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.78 $",
+                  "CVSRevision":"$Revision: 1.79 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -232,20 +232,22 @@ class CosmologicalModel:
             raise ModelError("Model has not been run yet, cannot plot results!")
         
         if varindex is None:
-            varindex = [0] #Set default list of variables to plot
+            varindex = 0 #Set default list of variables to plot
         
         if fig is None:
             fig = P.figure() #Create figure
         else:
             P.figure(fig.number)
         #One plot command for with ks, one for without
+        
         if klist is None:
             P.plot(self.tresult, self.yresult[:,varindex])
         else:
             P.plot(self.tresult, self.yresult[:,varindex,klist])
         #Create legends and axis names
         P.xlabel(self.tname)
-        P.legend(self.ynames[varindex])
+        P.ylabel(self.ynames[varindex])
+        P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in self.k[klist]])
         #P.title(self.plottitle, figure=fig)
         
         #Should we show it now or just return it without showing?
@@ -329,7 +331,7 @@ class CosmologicalModel:
         if tindex is None:
             tindex = N.arange(0,len(self.tresult), 1000) #Selection of time slices
         #Set names for t slices
-        tnames = str(self.tresult[tindex])
+        #tnames = str(self.tresult[tindex])
         
         if fig is None:
             fig = P.figure() #Create figure
@@ -337,11 +339,12 @@ class CosmologicalModel:
             P.figure(fig.number)
         
         #Plot figure, default is semilogx for k
-        P.semilogx(self.k[klist], self.yresult[tindex,varindex,klist].transpose())
+        P.semilogx(self.k[klist], self.yresult[tindex,varindex,:][:,klist].transpose(), 'o-')
                 
         #Create legends and axis names
         P.xlabel(r"$k$")
-        P.legend(tnames)
+        #P.legend(tnames)
+        P.legend([r"$t=" + str(ts) + "$" for ts in self.tresult[tindex]])
                 
         #Should we show it now or just return it without showing?
         if show:
@@ -1062,7 +1065,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.78 $",
+                  "CVSRevision":"$Revision: 1.79 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
