@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.2 2008/08/04 17:22:59 ith Exp $
+    $Id: helpers.py,v 1.3 2008/08/06 17:17:47 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -16,3 +16,10 @@ def nanfillstart(a, l):
         b = N.ones(bshape)*N.NaN
         c = N.concatenate((b,a))
         return c
+
+def eto10(number):
+    """Convert scientific notation e.g. 1e-5 to 1x10^{-5} for use in LaTeX, converting to string."""
+    s = str(number)
+    s = s.replace("e", r"\times10^{")
+    s = s + "}"
+    return s 
