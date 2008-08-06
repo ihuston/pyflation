@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.79 2008/08/06 17:18:03 ith Exp $
+    $Id: cosmomodels.py,v 1.80 2008/08/06 17:18:59 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.79 $",
+                  "CVSRevision":"$Revision: 1.80 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -345,6 +345,7 @@ class CosmologicalModel:
         P.xlabel(r"$k$")
         #P.legend(tnames)
         P.legend([r"$t=" + str(ts) + "$" for ts in self.tresult[tindex]])
+        P.ylabel(self.ynames[varindex])
                 
         #Should we show it now or just return it without showing?
         if show:
@@ -1065,7 +1066,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.79 $",
+                  "CVSRevision":"$Revision: 1.80 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
