@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.80 2008/08/06 17:18:59 ith Exp $
+    $Id: cosmomodels.py,v 1.81 2008/08/19 16:42:23 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.80 $",
+                  "CVSRevision":"$Revision: 1.81 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -259,7 +259,7 @@ class CosmologicalModel:
         #Return the figure instance
         return fig
             
-    def plot3dresults(self, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
+    def plot3dresults(self, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False, tstart=0, tend=None):
         """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
         #Test whether model has run yet
         if self.runcount == 0:
@@ -281,14 +281,17 @@ class CosmologicalModel:
         else:
             P.figure(fig.number)
         
+        if tend is None:
+            tend = len(self.tresult) #Plot all times
+            
         #Plot 3d figure
         
-        x = self.tresult
+        x = self.tresult[tstart:tend]
         
         ax = axes3d.Axes3D(fig)
         #plot lines in reverse order
         for kindex in klist[::-1]:
-            z = self.yresult[:,varindex,kindex]
+            z = self.yresult[tstart:tend,varindex,kindex]
             #Do we need to change k by some function (e.g. log)?
             if kfunction is None:
                 y = self.k[kindex]*N.ones(len(x))
@@ -1066,7 +1069,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.80 $",
+                  "CVSRevision":"$Revision: 1.81 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
