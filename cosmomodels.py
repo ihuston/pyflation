@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.82 2008/08/21 16:10:29 ith Exp $
+    $Id: cosmomodels.py,v 1.83 2008/08/21 17:39:22 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.82 $",
+                  "CVSRevision":"$Revision: 1.83 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -951,11 +951,11 @@ class TwoStageModel(EfoldModel):
         #Set Re\delta\phi_1 initial condition
         self.foystart[3,:] = 1/(astar*(N.sqrt(2*self.k)))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = -N.sqrt(self.k/2)/astar
+        self.foystart[4,:] = 0
         #Set Im\delta\phi_1
         self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = 0
+        self.foystart[6,:] = -N.sqrt(self.k/2)/astar
         
         return
         
@@ -1116,7 +1116,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.82 $",
+                  "CVSRevision":"$Revision: 1.83 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
