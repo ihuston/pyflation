@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.87 2008/08/26 14:47:46 ith Exp $
+    $Id: cosmomodels.py,v 1.88 2008/08/26 14:52:23 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.87 $",
+                  "CVSRevision":"$Revision: 1.88 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -919,6 +919,20 @@ class TwoStageModel(EfoldModel):
         self.foystart[6,:] = -N.sqrt(self.k/2)/astar
         
         return
+    
+    def findspectrum(self):
+        """Find the spectrum of perturbations for each k."""
+        #Check if bg run is completed
+        if self.firstordermodel.runcount == 0:
+            raise ModelError("First order system must be run trying to find spectrum!")
+        
+        #Set nice variable names
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        phidot = self.yresult[:,1,:]
+        
+        Pr = (self.k**3/2*N.pi**2)*(deltaphi*deltaphi.conj())/phidot**2  
+        return Pr
+        
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
@@ -1050,7 +1064,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.87 $",
+                  "CVSRevision":"$Revision: 1.88 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
