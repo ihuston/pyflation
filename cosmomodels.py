@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.89 2008/08/26 15:11:05 ith Exp $
+    $Id: cosmomodels.py,v 1.90 2008/08/26 15:12:23 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.89 $",
+                  "CVSRevision":"$Revision: 1.90 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -853,10 +853,12 @@ class TwoStageModel(EfoldModel):
         a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
         return a_end
         
-    def findkcrossing(self, k, t, H, factor=self.cq):
+    def findkcrossing(self, k, t, H, factor=None):
         """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
         #threshold
         err = 1.0e-26
+        if factor is None:
+            factor = self.cq #time before horizon crossing
         #get aHs
         aH = self.ainit*N.exp(t)*H
         try:
@@ -1064,7 +1066,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.89 $",
+                  "CVSRevision":"$Revision: 1.90 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
