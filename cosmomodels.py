@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.88 2008/08/26 14:52:23 ith Exp $
+    $Id: cosmomodels.py,v 1.89 2008/08/26 15:11:05 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.88 $",
+                  "CVSRevision":"$Revision: 1.89 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -853,14 +853,14 @@ class TwoStageModel(EfoldModel):
         a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
         return a_end
         
-    def findkcrossing(self, k, t, H):
+    def findkcrossing(self, k, t, H, factor=self.cq):
         """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
         #threshold
         err = 1.0e-26
         #get aHs
         aH = self.ainit*N.exp(t)*H
         try:
-            kcrindex = N.where(N.sign(k - (self.cq*aH))<=0)[0][0]
+            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
         except IndexError, ex:
             raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
         kcrefold = t[kcrindex]
@@ -1064,7 +1064,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.88 $",
+                  "CVSRevision":"$Revision: 1.89 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
