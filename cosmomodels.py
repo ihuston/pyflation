@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.85 2008/08/26 10:35:52 ith Exp $
+    $Id: cosmomodels.py,v 1.86 2008/08/26 14:46:09 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.85 $",
+                  "CVSRevision":"$Revision: 1.86 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -803,7 +803,7 @@ class TwoStageModel(EfoldModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in ComplexModelInN.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
         """Initialize model and ensure initial conditions are sane."""
         EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
@@ -812,6 +812,8 @@ class TwoStageModel(EfoldModel):
             self.ainit = 1
         else:
             self.ainit = ainit
+        
+        self.mass = mass
         
         #Set constant factor for 1st order initial conditions
         self.cq = 50
@@ -867,6 +869,9 @@ class TwoStageModel(EfoldModel):
     def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list"""
         return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+    def findHorizoncrossings(self):
+        """FInd horizon crossing for all ks"""
+        return N.array([self.findkcrossing(onek, self.tresult, oneH) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
         
     def setfirstorderics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -993,7 +998,7 @@ class TwoStageModel(EfoldModel):
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
         self.bgmodel = BgModelInN(ystart=ys, tstart=self.tstart, tend=self.tend, 
-                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver)
+                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
         
         #Start background run
         print("Running background model...\n")
@@ -1012,7 +1017,7 @@ class TwoStageModel(EfoldModel):
         #Initialize first order model
         self.firstordermodel = ComplexFirstOrderInN(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit)
+                                k=self.k, ainit=self.ainit, mass=self.mass)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
@@ -1118,7 +1123,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.85 $",
+                  "CVSRevision":"$Revision: 1.86 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
