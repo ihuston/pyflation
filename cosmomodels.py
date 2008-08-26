@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.84 2008/08/26 10:29:46 ith Exp $
+    $Id: cosmomodels.py,v 1.85 2008/08/26 10:35:52 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.84 $",
+                  "CVSRevision":"$Revision: 1.85 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -570,11 +570,11 @@ class BgModelInN(EfoldModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint"):
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
         EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         #Mass of inflaton in Planck masses
-        #self.mass = 1.0e-6 # COBE normalization from Liddle and Lyth
+        self.mass = mass 
         
         #Set initial H value if None
         if self.ystart[2] == 0.0:
@@ -718,9 +718,11 @@ class ComplexFirstOrderInN(EfoldModel):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        self.mass = mass
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1116,7 +1118,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.84 $",
+                  "CVSRevision":"$Revision: 1.85 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
