@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.90 2008/08/26 15:12:23 ith Exp $
+    $Id: cosmomodels.py,v 1.91 2008/08/26 17:51:06 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.90 $",
+                  "CVSRevision":"$Revision: 1.91 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -871,9 +871,9 @@ class TwoStageModel(EfoldModel):
     def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list"""
         return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
-    def findHorizoncrossings(self):
+    def findHorizoncrossings(self, factor=1):
         """FInd horizon crossing for all ks"""
-        return N.array([self.findkcrossing(onek, self.tresult, oneH) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
+        return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
         
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -932,7 +932,7 @@ class TwoStageModel(EfoldModel):
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
         phidot = self.yresult[:,1,:]
         
-        Pr = (self.k**3/2*N.pi**2)*(deltaphi*deltaphi.conj())/phidot**2  
+        Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/phidot**2  
         return Pr
         
         
@@ -1066,7 +1066,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.90 $",
+                  "CVSRevision":"$Revision: 1.91 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
