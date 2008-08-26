@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.86 2008/08/26 14:46:09 ith Exp $
+    $Id: cosmomodels.py,v 1.87 2008/08/26 14:47:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.86 $",
+                  "CVSRevision":"$Revision: 1.87 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -873,53 +873,7 @@ class TwoStageModel(EfoldModel):
         """FInd horizon crossing for all ks"""
         return N.array([self.findkcrossing(onek, self.tresult, oneH) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
         
-    def setfirstorderics(self):
-        """After a bg run has completed, set the initial conditions for the 
-            first order run."""
-        #Check if bg run is completed
-        if self.bgmodel.runcount == 0:
-            raise ModelError("Background system must be run first before setting 1st order ICs!")
-        
-        #Find initial conditions for 1st order model
-        #Find a_end using instantaneous reheating
-        Hend = self.bgmodel.yresult[self.fotendindex,2]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.fotend)
-        
-        #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
-        kcrossefolds = kcrossings[:,1]
-                
-        #If mode crosses horizon before t=0 then we will not be able to propagate it
-        if any(kcrossefolds==0):
-            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
-        
-        #Find new start time from earliest kcrossing
-        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
-        
-        #Reset starting conditions at new time
-        self.foystart = N.zeros((len(self.ystart), len(self.k)))
-        
-        
-        #Mould init conditions into right shape for number of ks
-        #if self.foystart.ndim == 1:
-         #   self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
-            
-        self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
-                   
-        #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = 1/(N.sqrt(2*self.cq))
-        #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = -N.sqrt(self.cq/2)
-        #Set Im\delta\phi_1
-        self.foystart[5,:] = 0
-        #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = 0
-        
-        return
-    
-    def setfoicsnew(self):
+    def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
         #Check if bg run is completed
@@ -963,30 +917,6 @@ class TwoStageModel(EfoldModel):
         self.foystart[5,:] = 0
         #Set Im\dot\delta\phi_1
         self.foystart[6,:] = -N.sqrt(self.k/2)/astar
-        
-        return
-        
-    def setfoicsplain(self):
-        #Testing
-        
-        #Check if bg run is completed
-        if self.bgmodel.runcount == 0:
-            raise ModelError("Background system must be run first before setting 1st order ICs!")
-        
-        #Find initial conditions for 1st order model
-        #Find a_end using instantaneous reheating
-        Hend = self.bgmodel.yresult[self.fotendindex,2]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.fotend)
-        
-        #Reset starting conditions at new time
-        self.foystart = N.zeros((len(self.ystart), len(self.k)))
-        self.fotstart = N.zeros((len(self.k)))
-        
-        self.foystart[0:3] = self.bgmodel.yresult[N.zeros(len(self.k)).astype(int),:].transpose()
-        self.foystart[3,:] = self.foystart[5,:] = 0.01
-        self.foystart[4,:] = self.foystart[6,:] = 0.0
-        #self.fotstart[:] = 0
         
         return
         
@@ -1037,11 +967,8 @@ class TwoStageModel(EfoldModel):
         #Run bg model
         self.runbg()
         
-        if plain:
-            self.setfoicsplain()
-        else:
-            #Set initial conditions for first order model
-            self.setfirstorderics()
+        #Set initial conditions for first order model
+        self.setfoics()
         
         #Run first order model
         self.runfo()
@@ -1123,7 +1050,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.86 $",
+                  "CVSRevision":"$Revision: 1.87 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
