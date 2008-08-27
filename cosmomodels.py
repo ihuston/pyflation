@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.93 2008/08/27 10:23:56 ith Exp $
+    $Id: cosmomodels.py,v 1.94 2008/08/27 10:33:53 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.93 $",
+                  "CVSRevision":"$Revision: 1.94 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -862,7 +862,7 @@ class TwoStageModel(EfoldModel):
         #get aHs
         aH = self.ainit*N.exp(t)*H
         try:
-            kcrindex = N.where(abs(k - (factor*aH))<self.eps)[0][0]
+            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
         except IndexError, ex:
             raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
         kcrefold = t[kcrindex]
@@ -1066,7 +1066,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.93 $",
+                  "CVSRevision":"$Revision: 1.94 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
