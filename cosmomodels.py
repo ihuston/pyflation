@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.99 2008/08/27 15:57:15 ith Exp $
+    $Id: cosmomodels.py,v 1.100 2008/08/27 16:04:53 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -193,7 +193,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.99 $",
+                  "CVSRevision":"$Revision: 1.100 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -537,32 +537,8 @@ class EfoldModel(CosmologicalModel):
         else:
             Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2]
             epsilon = - Hdot/self.yresult[:,2]
-        
         return epsilon
-        
-class BgModelInN(EfoldModel):
-    """Basic model with background equations in terms of n
-        Array of dependent variables y is given by:
-        
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\n : First deriv of \phi
-       y[2] - H: Hubble parameter
-    """
     
-    def __init__(self, *args, **kwargs):
-        """Initialize variables and call superclass"""
-        super(BgModelInN,self).__init__(*args, **kwargs)
-                
-        #Set initial H value if None
-        if self.ystart[2] == 0.0:
-            U = self.potentials(self.ystart)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-        
-        #Titles
-        self.plottitle = r"Basic (improved) Cosmological Model in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
-         
     def plotbgresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
@@ -573,16 +549,55 @@ class BgModelInN(EfoldModel):
         
         #First plot of phi and phi^dot
         P.subplot(121)
-        super(BgModelInN,self).plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
+        super(EfoldModel, self).plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        super(BgModelInN,self).plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
+        super(EfoldModel, self).plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
         
         P.show()
         return
-
-class MalikBg(BgModelInN):
+    
+class MalikModels(EfoldModel):
+    """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
+    def __init__(self, *args, **kwargs):
+        """Call superclass init method."""
+        super(MalikModels, self).__init__(*args, **kwargs)
+                    
+        #Set initial H value if None
+        if self.ystart[2] == 0.0:
+            U = self.potentials(self.ystart)[0]
+            self.ystart[2] = self.findH(U, self.ystart)
+        
+        #Titles
+        self.plottitle = r"Malik Models in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+        
+    def findH(self, U, y):
+        """Return value of Hubble variable, H at y for given potential."""
+        phidot = y[1]
+        
+        #Expression for H
+        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
+        return H
+    
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2
+    
+class MalikBg(MalikModels):
     """Basic model with background equations in terms of n
         Array of dependent variables y is given by:
         
@@ -1015,7 +1030,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.99 $",
+                  "CVSRevision":"$Revision: 1.100 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
