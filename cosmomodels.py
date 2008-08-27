@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.94 2008/08/27 10:33:53 ith Exp $
+    $Id: cosmomodels.py,v 1.95 2008/08/27 13:44:22 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.94 $",
+                  "CVSRevision":"$Revision: 1.95 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -888,6 +888,10 @@ class TwoStageModel(EfoldModel):
         self.a_end = self.finda_end(Hend)
         self.ainit = self.a_end*N.exp(-self.fotend)
         
+        #Find epsilon from bg model
+        if not self.bgepsilon:
+            self.bgepsilon = self.bgmodel.getepsilon()
+        
         #find k crossing indices
         kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
                             self.bgmodel.yresult[:self.fotendindex,2])
@@ -903,7 +907,11 @@ class TwoStageModel(EfoldModel):
         #Reset starting conditions at new time
         self.foystart = N.zeros((len(self.ystart), len(self.k)))
         
+        #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(self.fotstart)
+        Hstar = self.bgmodel.yresult[self.fotstart,2]
+        epsstar = self.bgepsilon[self.fotstart]
+        etastar = -1/(astar*Hstar*(1-epsstar))
         
         #Mould init conditions into right shape for number of ks
         #if self.foystart.ndim == 1:
@@ -912,13 +920,13 @@ class TwoStageModel(EfoldModel):
         self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
       
         #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = 1/(astar*(N.sqrt(2*self.k)))
+        self.foystart[3,:] = N.cos(-self.k*etastar)/(astar*(N.sqrt(2*self.k)))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = 0
+        self.foystart[4,:] = N.sin(-self.k*etastar)*N.sqrt(self.k/2)/astar
         #Set Im\delta\phi_1
-        self.foystart[5,:] = 0
+        self.foystart[5,:] = N.sin(-self.k*etastar)/(astar*(N.sqrt(2*self.k)))
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = -N.sqrt(self.k/2)/astar
+        self.foystart[6,:] = -N.cos(-self.k*etastar)*N.sqrt(self.k/2)/astar
         
         return
     
@@ -1066,7 +1074,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.94 $",
+                  "CVSRevision":"$Revision: 1.95 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
