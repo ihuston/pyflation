@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.95 2008/08/27 13:44:22 ith Exp $
+    $Id: cosmomodels.py,v 1.96 2008/08/27 14:08:49 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.95 $",
+                  "CVSRevision":"$Revision: 1.96 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -889,7 +889,9 @@ class TwoStageModel(EfoldModel):
         self.ainit = self.a_end*N.exp(-self.fotend)
         
         #Find epsilon from bg model
-        if not self.bgepsilon:
+        try:
+            self.bgepsilon
+        except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         
         #find k crossing indices
@@ -909,8 +911,8 @@ class TwoStageModel(EfoldModel):
         
         #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(self.fotstart)
-        Hstar = self.bgmodel.yresult[self.fotstart,2]
-        epsstar = self.bgepsilon[self.fotstart]
+        Hstar = self.bgmodel.yresult[self.fotstartindex,2]
+        epsstar = self.bgepsilon[self.fotstartindex]
         etastar = -1/(astar*Hstar*(1-epsstar))
         
         #Mould init conditions into right shape for number of ks
@@ -1074,7 +1076,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.95 $",
+                  "CVSRevision":"$Revision: 1.96 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
