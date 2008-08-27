@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.97 2008/08/27 15:17:24 ith Exp $
+    $Id: cosmomodels.py,v 1.98 2008/08/27 15:28:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -24,7 +24,7 @@ class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
     pass
 
-class CosmologicalModel:
+class CosmologicalModel(object):
     """Generic class for cosmological model simulations.
     Has no derivs function to pass to ode solver, but does have
     plotting function and initial conditions check.
@@ -193,7 +193,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.97 $",
+                  "CVSRevision":"$Revision: 1.98 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -582,7 +582,7 @@ class BgModelInN(EfoldModel):
         P.show()
         return
 
-class MalikBg(EfoldModel):
+class MalikBg(BgModelInN):
     """Basic model with background equations in terms of n
         Array of dependent variables y is given by:
         
@@ -592,7 +592,7 @@ class MalikBg(EfoldModel):
     """
     
     def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
-        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(MalikBg, self).__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         self.mass = mass
         #Titles
@@ -1091,7 +1091,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.97 $",
+                  "CVSRevision":"$Revision: 1.98 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
