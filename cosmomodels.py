@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.98 2008/08/27 15:28:46 ith Exp $
+    $Id: cosmomodels.py,v 1.99 2008/08/27 15:57:15 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -39,7 +39,7 @@ class CosmologicalModel(object):
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
-        
+        print self,ystart,tstart,tend,tstep_wanted,tstep_min
         self.ystart = ystart
         self.k = None #so we can test whether k is set
         
@@ -193,7 +193,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.98 $",
+                  "CVSRevision":"$Revision: 1.99 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -490,9 +490,9 @@ class EfoldModel(CosmologicalModel):
         y[2] - H: Hubble parameter
         """
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver):
+    def __init__(self, *args, **kwargs):
         """Inititialize vars using parent."""
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(EfoldModel, self).__init__(*args, **kwargs)
         
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -549,8 +549,9 @@ class BgModelInN(EfoldModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, *args):
-        super(BgModelInN,self).__init__(self, *args)
+    def __init__(self, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        super(BgModelInN,self).__init__(*args, **kwargs)
                 
         #Set initial H value if None
         if self.ystart[2] == 0.0:
@@ -561,9 +562,8 @@ class BgModelInN(EfoldModel):
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
         self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
-        return
          
-    def plotresults(self, saveplot = False):
+    def plotbgresults(self, saveplot = False):
         """Plot results of simulation run on a graph."""
         
         if self.runcount == 0:
@@ -592,9 +592,11 @@ class MalikBg(BgModelInN):
     """
     
     def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
-        super(MalikBg, self).__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        """Initialize variables and call superclass"""
+        self.mass = mass #Set mass before calling superclass
+        super(MalikBg, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
-        self.mass = mass
+        
         #Titles
         self.plottitle = r"Background Malik model in $n$"
         self.tname = r"E-folds $n$"
@@ -645,85 +647,7 @@ class MalikBg(BgModelInN):
 
         return dydx
 
-class FirstOrderInN(EfoldModel):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation
-       """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint"):
-        """Initialize all variables and call ancestor's __init__ method."""
-        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
-        if ainit is None:
-            #Don't know value of ainit yet so scale it to 1
-            self.ainit = 1
-        else:
-            self.ainit = ainit
-        
-        #Let k roam for a start
-        if k is None:
-            self.k = 10**(N.arange(10.0)-8)
-        else:
-            self.k = k
-        
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,0.1,0.1])   
-        
-        #Set initial H value if None
-        if self.ystart[2] == 0.0:
-            U = self.potentials(self.ystart)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-        #Make ystart right shape
-        self.ystart = N.outer(N.ones(len(self.k)), self.ystart)
-                
-        #Text for graphs
-        self.plottitle = "First Order Model in Efold time"
-        self.tname = r"$n$"
-        self.ynames = [r"$\varphi_0$", 
-                        r"$\dot{\varphi_0}$",
-                        r"$H$",
-                        r"$\delta\varphi_1$",
-                        r"$\dot{\delta\varphi_1}$"]
-                    
-    def derivs(self, y, t):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/dn etc"""
-        
-        #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)        
-        
-        #Set derivatives taking care of k type
-        if type(self.k) is N.ndarray or type(self.k) is list: 
-            dydx = N.zeros((5,len(self.k)))
-        else:
-            dydx = N.zeros(5)
-            
-        
-        #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
-        
-        #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
-        
-        #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
-        
-        #Get a
-        a = self.ainit*N.exp(t)
-        
-        #d\deltaphi_1^prime/dn
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3] - (d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-        
-        return dydx       
-
-class ComplexFirstOrderInN(EfoldModel):
+class MalikFirstOrder(EfoldModel):
     """First order model using efold as time variable.
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
@@ -735,7 +659,7 @@ class ComplexFirstOrderInN(EfoldModel):
        """
     def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
         """Initialize all variables and call ancestor's __init__ method."""
-        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(MalikFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         self.mass = mass
         
@@ -1091,7 +1015,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.98 $",
+                  "CVSRevision":"$Revision: 1.99 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
