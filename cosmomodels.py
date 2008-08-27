@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.100 2008/08/27 16:04:53 ith Exp $
+    $Id: cosmomodels.py,v 1.101 2008/08/27 16:21:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -39,7 +39,6 @@ class CosmologicalModel(object):
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
-        print self,ystart,tstart,tend,tstep_wanted,tstep_min
         self.ystart = ystart
         self.k = None #so we can test whether k is set
         
@@ -193,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.100 $",
+                  "CVSRevision":"$Revision: 1.101 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -242,7 +241,8 @@ class CosmologicalModel(object):
         #Create legends and axis names
         P.xlabel(self.tname)
         P.ylabel(self.ynames[varindex])
-        P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in self.k[klist]])
+        if klist is not None:
+            P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in self.k[klist]])
         #P.title(self.plottitle, figure=fig)
         
         #Should we show it now or just return it without showing?
@@ -352,6 +352,7 @@ class CosmologicalModel(object):
         if saveplot:
             self.saveplot(fig)
         return fig
+        
     def saveallresults(self, filename=None):
         """Tries to save file as a pickled object in directory 'results'."""
         
@@ -547,14 +548,14 @@ class EfoldModel(CosmologicalModel):
         
         f = P.figure()
         
-        #First plot of phi and phi^dot
+        #First plot of phi
         P.subplot(121)
-        super(EfoldModel, self).plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
+        super(EfoldModel, self).plotresults(fig=f, show=False, varindex=0, saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        super(EfoldModel, self).plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
-        
+        super(EfoldModel, self).plotresults(fig=f, show=False, varindex=2, saveplot=False)
+                
         P.show()
         return
     
@@ -1030,7 +1031,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.100 $",
+                  "CVSRevision":"$Revision: 1.101 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
