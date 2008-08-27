@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.103 2008/08/27 16:45:20 ith Exp $
+    $Id: cosmomodels.py,v 1.104 2008/08/27 16:46:50 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.103 $",
+                  "CVSRevision":"$Revision: 1.104 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -754,7 +754,7 @@ class TwoStageModel(MalikModels):
                                     ])
         else:
             self.ystart = ystart
-            
+        #Call superclass
         super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         if ainit is None:
@@ -809,6 +809,7 @@ class TwoStageModel(MalikModels):
     def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list"""
         return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+    
     def findHorizoncrossings(self, factor=1):
         """FInd horizon crossing for all ks"""
         return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
@@ -925,7 +926,7 @@ class TwoStageModel(MalikModels):
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True, plain=False):
+    def run(self, saveresults=True):
         """Run BgModelInN with initial conditions and then use the results
             to run ComplexModelInN."""
         #Run bg model
