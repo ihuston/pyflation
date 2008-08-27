@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.96 2008/08/27 14:08:49 ith Exp $
+    $Id: cosmomodels.py,v 1.97 2008/08/27 15:17:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -97,12 +97,7 @@ class CosmologicalModel:
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
         #Test whether k exists and if so change init conditions
-        
-#         if self.k is not None and (self.solver == "odeint" or self.solver == "rkdriver_dumb"):
-#             #Make the initial conditions the right shape
-#             if type(self.k) is N.ndarray or type(self.k) is list: 
-#                 self.ystart = self.ystart.reshape((len(self.ystart),1))*N.ones((len(self.ystart),len(self.k)))
-                        
+               
         if self.solver == "odeint":
             try:
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
@@ -198,7 +193,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.96 $",
+                  "CVSRevision":"$Revision: 1.97 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -496,32 +491,16 @@ class EfoldModel(CosmologicalModel):
         """
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver):
+        """Inititialize vars using parent."""
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        #Mass of inflaton in Planck masses
-        self.mass = 5.6e-6 # COBE normalization from Liddle and Lyth
-    
+        
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2         
+        pass       
     
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
-        phidot = y[1]
-        
-        #Expression for H
-        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
-        return H
+        pass
     
     def findinflend(self):
         """Find the efold time where inflation ends,
@@ -570,23 +549,79 @@ class BgModelInN(EfoldModel):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
-        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
-        #Mass of inflaton in Planck masses
-        self.mass = mass 
-        
+    def __init__(self, *args):
+        super(BgModelInN,self).__init__(self, *args)
+                
         #Set initial H value if None
         if self.ystart[2] == 0.0:
             U = self.potentials(self.ystart)[0]
-            #self.ystart[2] = N.sqrt(U/(3.0-0.5*(self.ystart[1]**2)))
             self.ystart[2] = self.findH(U, self.ystart)
         
         #Titles
         self.plottitle = r"Basic (improved) Cosmological Model in $n$"
         self.tname = r"E-folds $n$"
         self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+        return
+         
+    def plotresults(self, saveplot = False):
+        """Plot results of simulation run on a graph."""
+        
+        if self.runcount == 0:
+            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+        
+        f = P.figure()
+        
+        #First plot of phi and phi^dot
+        P.subplot(121)
+        super(BgModelInN,self).plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
+        
+        #Second plot of H
+        P.subplot(122)
+        super(BgModelInN,self).plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
+        
+        P.show()
+        return
+
+class MalikBg(EfoldModel):
+    """Basic model with background equations in terms of n
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\n : First deriv of \phi
+       y[2] - H: Hubble parameter
+    """
     
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
+        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        self.mass = mass
+        #Titles
+        self.plottitle = r"Background Malik model in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+    
+    def findH(self, U, y):
+        """Return value of Hubble variable, H at y for given potential."""
+        phidot = y[1]
+        
+        #Expression for H
+        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
+        return H
+    
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2         
       
     
     def derivs(self, y, t):
@@ -609,26 +644,6 @@ class BgModelInN(EfoldModel):
         dydx[2] = -0.5*(y[1]**2)*y[2]
 
         return dydx
-    
-         
-    def plotresults(self, saveplot = False):
-        """Plot results of simulation run on a graph."""
-        
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-        
-        f = P.figure()
-        
-        #First plot of phi and phi^dot
-        P.subplot(121)
-        EfoldModel.plotresults(self, fig=f, show=False, varindex=[0,1], saveplot=False)
-        
-        #Second plot of H
-        P.subplot(122)
-        EfoldModel.plotresults(self, fig=f, show=False, varindex=[2], saveplot=False)
-        
-        P.show()
-        return
 
 class FirstOrderInN(EfoldModel):
     """First order model using efold as time variable.
@@ -1076,7 +1091,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.96 $",
+                  "CVSRevision":"$Revision: 1.97 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
