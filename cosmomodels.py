@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.101 2008/08/27 16:21:46 ith Exp $
+    $Id: cosmomodels.py,v 1.102 2008/08/27 16:33:06 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.101 $",
+                  "CVSRevision":"$Revision: 1.102 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -618,30 +618,6 @@ class MalikBg(MalikModels):
         self.tname = r"E-folds $n$"
         self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
-    def findH(self, U, y):
-        """Return value of Hubble variable, H at y for given potential."""
-        phidot = y[1]
-        
-        #Expression for H
-        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
-        return H
-    
-    def potentials(self, y):
-        """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2         
-      
-    
     def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
@@ -663,7 +639,7 @@ class MalikBg(MalikModels):
 
         return dydx
 
-class MalikFirstOrder(EfoldModel):
+class MalikFirstOrder(MalikModels):
     """First order model using efold as time variable.
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
@@ -675,9 +651,8 @@ class MalikFirstOrder(EfoldModel):
        """
     def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
         """Initialize all variables and call ancestor's __init__ method."""
-        super(MalikFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
         self.mass = mass
+        super(MalikFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -685,7 +660,7 @@ class MalikFirstOrder(EfoldModel):
         else:
             self.ainit = ainit
         
-        #Let k roam for a start
+        #Let k roam for a start if not given
         if k is None:
             self.k = 10**(N.arange(10.0)-8)
         else:
@@ -701,7 +676,7 @@ class MalikFirstOrder(EfoldModel):
             self.ystart[2] = self.findH(U, self.ystart)
             
         #Text for graphs
-        self.plottitle = "Complex First Order Model in Efold time"
+        self.plottitle = "Complex First Order Malik Model in Efold time"
         self.tname = r"$n$"
         self.ynames = [r"$\varphi_0$",
                         r"$\dot{\varphi_0}$",
@@ -754,13 +729,14 @@ class MalikFirstOrder(EfoldModel):
         return dydx
    
 class TwoStageModel(EfoldModel):
-    """Uses both BgModelInN and ComplexModelInN to run a full simulation.
+    """Uses both MalikBg and MalikFirstOrder to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
-        Variables finally stored are as in ComplexModelInN.
+        Variables finally stored are as in MalikFirstOrder.
     """                
     def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
         """Initialize model and ensure initial conditions are sane."""
-        EfoldModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        self.mass = mass
+        super(TwoStageModel, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -768,7 +744,7 @@ class TwoStageModel(EfoldModel):
         else:
             self.ainit = ainit
         
-        self.mass = mass
+        
         
         #Set constant factor for 1st order initial conditions
         self.cq = 50
@@ -969,309 +945,3 @@ class TwoStageModel(EfoldModel):
                 print er                
         
         return
-        
-            
-class FirstOrderModel(CosmologicalModel):
-    """First order model with background equations
-        Array of dependent variables y is given by:
-        
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - \delta\varphi_1 : First order perturbation
-       y[3] - \delta\varphi_1^\prime : Derivative of first order perturbation
-       y[4] - a : Scale Factor
-       
-       Results can be saved in a pickled file as a list of tuples of the following
-       structure:
-       resultset = (callingparams, tresult, yresult)
-       
-       callingparams is formatted as in the function callingparams(self) below
-       
-    """
-    
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.02, tstep_min=0.0001, k=None):
-        """Initialize all variables and call ancestor's __init__ method."""
-        
-        #Let k roam for a start
-        if k is None:
-            self.k = 10**(N.arange(10.0)-8)
-        else:
-            self.k = k
-        
-        #Initial conditions for each of the variables.
-        if ystart is None:
-            ystart = (N.array([[0.1],[0.1],[0.1],[0.1],[0.1]])*N.ones((5,len(self.k))))
-        
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
-        
-        
-        #Mass of inflaton in Planck masses
-        self.mass = 1.0
-                        
-        #Text for graphs
-        self.plottitle = "First Order Model"
-        self.tname = r"$\eta$"
-        self.ynames = [r"$\varphi_0$", 
-                        r"$\varphi_0^\prime$",
-                        r"$\delta\varphi_1$",
-                        r"$\delta\varphi_1^\prime$",
-                        r"$a$"]
-        
-    def callingparams(self):
-        """Returns dictionary of parameters to save with results."""
-        
-        params = {"ystart":self.ystart, 
-                  "tstart":self.tstart,
-                  "tend":self.tend,
-                  "tstep_wanted":self.tstep_wanted,
-                  "tstep_min":self.tstep_min,
-                  "k":self.k,
-                  "mass":self.mass,
-                  "eps":self.eps,
-                  "dxsav":self.dxsav,
-                  "solver":self.solver,
-                  "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.101 $",
-                  "datetime":datetime.datetime.now()
-                  }
-        return params
-    
-    def derivs(self, y, t):
-        """First order equations of motion.
-            dydx[0] = dy[0]/d\eta etc"""
-        
-        #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)
-        
-        #Things we only want to calculate once
-        #a^2
-        asq = y[4]**2
-        
-        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = self.findH(U, y)
-        
-        #Set derivatives
-        dydx = N.zeros((5,len(self.k)))
-        
-        #d\phi_0/d\eta = y_1
-        dydx[0] = y[1] 
-        
-        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
-        dydx[1] = -2*H*y[1] - asq*dUdphi
-        
-        #dy_2/d\eta = \delta\phi_1^prime
-        dydx[2] = y[3]
-        
-        #delta\phi^prime^prime
-        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - asq*d2Udphi2*y[2]
-        
-        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
-        dydx[4] = H*y[4]
-        
-        return dydx
-        
-    def findH(self, potential, y):
-        """Return value of comoving Hubble variable, \mathcal{H} at y for given potential."""
-        phiprime = y[1]
-        a = y[4]
-        
-        #Expression for H
-        H = N.sqrt((1.0/3.0)*((a**2)*potential + 0.5*(phiprime**2)))
-        
-        return H
-    
-    def potentials(self, y):
-        """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2
-        
-    def plotresults(self, saveplot = False):
-        """Plot results of simulation run on a graph."""
-        
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-        for kindex in N.arange(len(self.k)):
-            P.plot(self.tresult, self.yresult[:,0,kindex], self.tresult, self.yresult[:,2,kindex])
-        P.xlabel(self.tname)
-        P.ylabel("")
-        P.legend((self.ynames[0], self.ynames[2]))
-        P.title(self.plottitle + self.argstring())
-        P.show()
-        return
-    
-    def plotallks(self, varindex=2, kfunction=None):
-        """Plot results from all ks run in a plot where k is plotted by kfunction (e.g. log)."""
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-                
-        x = self.tresult
-        
-        fig = P.figure()
-        ax = axes3d.Axes3D(fig)
-        #plot lines in reverse order
-        for index, kitem in zip(range(len(self.k))[::-1], self.k[::-1]):
-            z = self.yresult[:,varindex,index]
-            if kfunction is None:
-                y = kitem*N.ones(len(x))
-            else:
-                y = kfunction(kitem)*N.ones(len(x))
-            ax.plot3D(x,y,z,color="b")
-        ax.set_xlabel(self.tname)
-        if kfunction is None:
-            ax.set_ylabel(r"$k$")
-        else:
-            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
-        ax.set_zlabel(self.ynames[varindex])
-        P.title(self.plottitle + self.argstring())
-        P.show()
-        
-        return
-        
-    def plotkdiffs(self, varindex=2, kfunction=None, basekindex=0):
-        """Plot the difference of k results to a specific k"""
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-                
-        x = self.tresult
-        
-        fig = P.figure()
-        ax = axes3d.Axes3D(fig)
-        #plot lines in reverse order
-        for index, kitem in zip(range(len(self.k))[::-1], self.k[::-1]):
-            z = self.yresult[:,varindex,index] - self.yresult[:,varindex,basekindex]
-            if kfunction is None:
-                y = kitem*N.ones(len(x))
-            else:
-                y = kfunction(kitem)*N.ones(len(x))
-            ax.plot3D(x,y,z)
-        ax.set_xlabel(self.tname)
-        if kfunction is None:
-            ax.set_ylabel(r"$k$")
-        else:
-            ax.set_ylabel(r"Function of k: " + kfunction.__name__)
-        ax.set_zlabel(self.ynames[varindex])
-        P.title(self.plottitle + self.argstring())
-        P.show()
-        
-        return
-    
-    def getallHs(self):
-        """Computes all H values for current tresult and yresult results. Stored in self.Hresult."""
-        self.Hresult = N.array([self.findH(self.potentials(row)[0],row) for row in self.yresult])
-        return
-        
-class FullFirstOrder(FirstOrderModel):
-    """Full (not slow roll) first order model"""
-    
-    def findH(self, potential, y):
-        """Return value of comoving Hubble variable, \mathcal{H} at y for given potential."""
-        phiprime = y[1]
-        a = y[4]
-        
-        #Expression for H
-        H = N.sqrt((1.0/3.0)*((a**2)*potential + 0.5*(phiprime**2)))
-        
-        return H
-    
-    def potentials(self, y):
-        """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2
-    
-    def derivs(self, y, t):
-        """First Order eqs of motion"""
-        
-        #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)
-        
-        #Things we only want to calculate once
-        #a^2
-        asq = y[4]**2
-        
-        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = self.findH(U, y)
-        
-        #Set derivatives
-        dydx = N.zeros((5,len(self.k)))
-        
-        #d\phi_0/d\eta = y_1
-        dydx[0] = y[1] 
-        
-        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
-        dydx[1] = -2*H*y[1] - asq*dUdphi
-        
-        #dy_2/d\eta = \delta\phi_1^prime
-        dydx[2] = y[3]
-        
-        #delta\phi^prime^prime
-        dydx[3] = -2*H*y[3] - (self.k**2)*y[2] - y[2]*( asq*d2Udphi2  + (y[1]**2)*U*asq/(H**2)  + 2*y[1]*dUdphi*asq/H )
-        
-        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
-        dydx[4] = H*y[4]
-        
-        return dydx
-        
-            
-class HarmonicFirstOrder(FirstOrderModel):
-    """Just change derivs to get harmonic motion"""
-            
-    def derivs(self, y, t):
-        """First order equations of motion.
-            dydx[0] = dy[0]/d\eta etc"""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        #Things we only want to calculate once
-        #a^2
-        asq = y[4]**2
-        
-        #factor in eom \mathcal{H} = [1/3 a^2 U_0]^{1/2}
-        H = N.sqrt((1.0/3.0)*(asq)*U + 0.5*(y[1]**2))
-        
-        #Set derivatives
-        dydx = N.zeros((5,len(self.k)))
-        
-        #d\phi_0/d\eta = y_1
-        dydx[0] = y[1] 
-        
-        #d^2phi/d\eta^2 = -2Hphi^prime -a^2U_,phi
-        dydx[1] = -2*H*y[1] - asq*dUdphi
-        
-        #dy_2/d\eta = \delta\phi_1^prime
-        dydx[2] = y[3]
-        
-        #delta\phi^prime^prime
-        dydx[3] = -(self.k**2)*y[2] - asq*d2Udphi2*y[2]
-        
-        #da/d\eta = [1/3 a^2 U_0]^{1/2}*a
-        dydx[4] = H*y[4]
-        
-        return dydx
