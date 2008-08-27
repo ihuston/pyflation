@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.92 2008/08/26 17:54:06 ith Exp $
+    $Id: cosmomodels.py,v 1.93 2008/08/27 10:23:56 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -37,7 +37,7 @@ class CosmologicalModel:
     """
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint"]
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-6, dxsav=0.0, solver="scipy_odeint"):
+    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
         
         self.ystart = ystart
@@ -136,7 +136,7 @@ class CosmologicalModel:
                 #Get set of times for each k
                 if type(self.tstart) is N.ndarray or type(self.tstart) is list:
                     times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [N.where(ts <= times)[0][0] for ts in self.tstart]
+                    startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
                 else:
                     times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                     startindices = [0]
@@ -198,7 +198,7 @@ class CosmologicalModel:
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.92 $",
+                  "CVSRevision":"$Revision: 1.93 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -534,7 +534,7 @@ class EfoldModel(CosmologicalModel):
         self.epsilon = self.getepsilon()
         if not any(self.epsilon>1):
             raise ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
-        endindex = N.where(self.epsilon>1)[0][0]
+        endindex = N.where(self.epsilon>=1)[0][0]
         
         #Interpolate results to find more accurate endpoint
         tck = interpolate.splrep(self.tresult[:endindex], self.epsilon[:endindex])
@@ -862,7 +862,7 @@ class TwoStageModel(EfoldModel):
         #get aHs
         aH = self.ainit*N.exp(t)*H
         try:
-            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
+            kcrindex = N.where(abs(k - (factor*aH))<self.eps)[0][0]
         except IndexError, ex:
             raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
         kcrefold = t[kcrindex]
@@ -1066,7 +1066,7 @@ class FirstOrderModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.92 $",
+                  "CVSRevision":"$Revision: 1.93 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
