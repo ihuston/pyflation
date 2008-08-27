@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.102 2008/08/27 16:33:06 ith Exp $
+    $Id: cosmomodels.py,v 1.103 2008/08/27 16:45:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.102 $",
+                  "CVSRevision":"$Revision: 1.103 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -566,7 +566,7 @@ class MalikModels(EfoldModel):
         super(MalikModels, self).__init__(*args, **kwargs)
                     
         #Set initial H value if None
-        if self.ystart[2] == 0.0:
+        if N.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
         
@@ -671,7 +671,7 @@ class MalikFirstOrder(MalikModels):
             self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
-        if all(self.ystart[2] == 0.0):
+        if N.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
             
@@ -728,15 +728,34 @@ class MalikFirstOrder(MalikModels):
         
         return dydx
    
-class TwoStageModel(EfoldModel):
+class TwoStageModel(MalikModels):
     """Uses both MalikBg and MalikFirstOrder to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in MalikFirstOrder.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None):
         """Initialize model and ensure initial conditions are sane."""
-        self.mass = mass
-        super(TwoStageModel, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        #Set mass as specified
+        if mass is None:
+            self.mass = 2.95e-5
+        else:
+            self.mass = mass
+        
+        #Initial conditions for each of the variables.
+        if ystart is None:
+            #Initial conditions for all variables
+            self.ystart = N.array([18.0, # \phi_0
+                                   -0.1, # \dot{\phi_0}
+                                    0.0, # H - leave as 0.0 to let program determine
+                                    1.0, # Re\delta\phi_1
+                                    0.0, # Re\dot{\delta\phi_1}
+                                    1.0, # Im\delta\phi_1
+                                    0.0  # Im\dot{\delta\phi_1}
+                                    ])
+        else:
+            self.ystart = ystart
+            
+        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -754,18 +773,6 @@ class TwoStageModel(EfoldModel):
             self.k = 10**(N.arange(7.0)-62)
         else:
             self.k = k
-        
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            #Initial conditions for all variables
-            self.ystart = N.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
-                                    ])   
         
         #Set initial H value if None
         if self.ystart[2] == 0.0:
@@ -884,7 +891,7 @@ class TwoStageModel(EfoldModel):
             ys = self.ystart[0:3]
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
-        self.bgmodel = BgModelInN(ystart=ys, tstart=self.tstart, tend=self.tend, 
+        self.bgmodel = MalikBg(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
         
         #Start background run
@@ -902,7 +909,7 @@ class TwoStageModel(EfoldModel):
         """Run first order model after setting initial conditions."""
                 
         #Initialize first order model
-        self.firstordermodel = ComplexFirstOrderInN(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
+        self.firstordermodel = MalikFirstOrder(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
                                 k=self.k, ainit=self.ainit, mass=self.mass)
         #Set names as in ComplexModel
