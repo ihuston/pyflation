@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.106 2008/08/28 13:03:48 ith Exp $
+    $Id: cosmomodels.py,v 1.107 2008/08/28 14:49:51 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.106 $",
+                  "CVSRevision":"$Revision: 1.107 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -893,7 +893,24 @@ class TwoStageModel(EfoldModel):
         return Pr
     
     def findns(self, k=None):
-        pass    
+        """Return the value of n_s at the specified k mode."""
+        #If k is not defined, get value at all self.k
+        if k is None:
+            k = self.k
+        else:
+            if k<self.k.min() and k>self.k.max():
+                print "Warning: Extrapolating to k value outside those used in spline!"
+        Pr = self.findspectrum()
+        ts = self.findHorizoncrossings(factor=1)[:,0] + 300 #About 3 efolds after horizon exit
+        xp = N.zeros(len(ts))
+        for ix, t in enumerate(ts):
+            xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
+        lnk = N.log(k)
+        #Use cubic splines to find deriv
+        tck = interpolate.splrep(lnk, xp)
+        ders = interpolate.splev(lnk, tck, der=1)
+        
+        return ders
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
