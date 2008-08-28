@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.105 2008/08/28 12:54:14 ith Exp $
+    $Id: cosmomodels.py,v 1.106 2008/08/28 13:03:48 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.105 $",
+                  "CVSRevision":"$Revision: 1.106 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -729,9 +729,9 @@ class MalikFirstOrder(MalikModels):
         return dydx
    
 class TwoStageModel(EfoldModel):
-    """Uses both MalikBg and MalikFirstOrder to run a full (first-order) simulation.
+    """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
-        Variables finally stored are as in MalikFirstOrder.
+        Variables finally stored are as in first order class.
     """                
     def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None):
         """Initialize model and ensure initial conditions are sane."""
@@ -891,7 +891,9 @@ class TwoStageModel(EfoldModel):
         
         Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/phidot**2  
         return Pr
-        
+    
+    def findns(self, k=None):
+        pass    
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
