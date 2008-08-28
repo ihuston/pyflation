@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.3 2008/08/06 17:17:47 ith Exp $
+    $Id: helpers.py,v 1.4 2008/08/28 12:53:38 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -23,3 +23,14 @@ def eto10(number):
     s = s.replace("e", r"\times10^{")
     s = s + "}"
     return s 
+
+def invmpc2mpl(x=1):
+    """Convert from Mpc^-1 to Mpl (reduced Planck Mass)"""
+    return 2.625e-57*x
+
+
+def mpl2invmpc(x=1):
+    """Convert from Mpl (reduced Planck Mass) to Mpc^-1"""
+    return 3.8095e+56*x
+
+
