@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.104 2008/08/27 16:46:50 ith Exp $
+    $Id: cosmomodels.py,v 1.105 2008/08/28 12:54:14 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.104 $",
+                  "CVSRevision":"$Revision: 1.105 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -728,12 +728,12 @@ class MalikFirstOrder(MalikModels):
         
         return dydx
    
-class TwoStageModel(MalikModels):
+class TwoStageModel(EfoldModel):
     """Uses both MalikBg and MalikFirstOrder to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in MalikFirstOrder.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -775,11 +775,19 @@ class TwoStageModel(MalikModels):
             self.k = k
         
         #Set initial H value if None
-        if self.ystart[2] == 0.0:
-            U = self.potentials(self.ystart)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
+        #if self.ystart[2] == 0.0:
+        #    U = self.potentials(self.ystart)[0]
+        #    self.ystart[2] = self.findH(U, self.ystart)
         
         #Set up variables for the two models
+        if bgclass is None:
+            self.bgclass = MalikBg
+        else:
+            self.bgclass = bgclass
+        if foclass is None:
+            self.foclass = MalikFirstOrder
+        else:
+            self.foclass = foclass
         self.bgmodel = self.firstordermodel = None
     
     def finda_end(self, Hend, Hreh=None):
@@ -892,7 +900,7 @@ class TwoStageModel(MalikModels):
             ys = self.ystart[0:3]
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
-        self.bgmodel = MalikBg(ystart=ys, tstart=self.tstart, tend=self.tend, 
+        self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
         
         #Start background run
@@ -910,7 +918,7 @@ class TwoStageModel(MalikModels):
         """Run first order model after setting initial conditions."""
                 
         #Initialize first order model
-        self.firstordermodel = MalikFirstOrder(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
+        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
                                 k=self.k, ainit=self.ainit, mass=self.mass)
         #Set names as in ComplexModel
