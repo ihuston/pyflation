@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.108 2008/08/28 16:33:49 ith Exp $
+    $Id: cosmomodels.py,v 1.109 2008/08/28 17:19:00 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -192,7 +192,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.108 $",
+                  "CVSRevision":"$Revision: 1.109 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -728,7 +728,7 @@ class MalikFirstOrder(MalikModels):
         
         return dydx
 
- class MWFirstOrder(MalikModels):
+class MWFirstOrder(MalikModels):
     """First order Malik-Wands model using efold as time variable.
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
