@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.110 2008/08/29 17:33:58 ith Exp $
+    $Id: cosmomodels.py,v 1.111 2008/08/29 18:04:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -35,7 +35,7 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint"]
+    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode"]
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint"):
         """Initialize model variables, some with default values. Default solver is odeint."""
@@ -154,39 +154,45 @@ class CosmologicalModel(object):
                 self.tresult = times
                 
             if self.solver == "scipy_vode":
-            
-            #Use scipy solver. Need to massage derivs into right form.
-            swap_derivs = lambda t, y : self.derivs(y,t)
-                        
-            #Now split depending on whether k exists
-            if type(self.k) is N.ndarray or type(self.k) is list:
-                #Get set of times for each k
-                if type(self.tstart) is N.ndarray or type(self.tstart) is list:
-                    times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
+                #Use scipy solver. Need to massage derivs into right form.
+                swap_derivs = (lambda t, y : self.derivs(y,t))
+                #Now split depending on whether k exists
+                if type(self.k) is N.ndarray or type(self.k) is list:
+                    #Get set of times for each k
+                    if type(self.tstart) is N.ndarray or type(self.tstart) is list:
+                        times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
+                        startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
+                    else:
+                        times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                        startindices = [0]
+                    #Make a copy of k and ystart while we work
+                    klist = N.copy(self.k)
+                    yslist = N.rollaxis(N.copy(self.ystart),1,0)
+                    
+                    #Do calculation
+                    #Compute list of ks in a row
+                    ylist = []
+                    for self.k, ys, ts in zip(klist,yslist,startindices):
+                        r = integrate.ode(swap_derivs)
+                        r = r.set_integrator('vode')
+                        r = r.set_initial_value(ys, ts)
+                        yr = []
+                        while r.successful() and r.t < self.tend :
+                            yr += [r.integrate(r.t+self.tstep_wanted)]
+                        ylist += [yr]
+                    #ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                    
+                    ylistlengths = [len(ys) for ys in ylist]
+                    ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
+                    #Now stack results to look like as normal (time,variable,k)
+                    self.yresult = N.dstack(ylist)
+                    self.tresult = times
+                    #Return klist to normal
+                    self.k = klist
                 else:
                     times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [0]
-                #Make a copy of k and ystart while we work
-                klist = N.copy(self.k)
-                yslist = N.rollaxis(N.copy(self.ystart),1,0)
-                
-                #Do calculation
-                #Compute list of ks in a row
-                
-                ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
-                
-                ylistlengths = [len(ys) for ys in ylist]
-                ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
-                #Now stack results to look like as normal (time,variable,k)
-                self.yresult = N.dstack(ylist)
-                self.tresult = times
-                #Return klist to normal
-                self.k = klist
-            else:
-                times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                self.yresult = scipy_odeint(self.derivs, self.ystart, times)
-                self.tresult = times
+                    self.yresult = scipy_odeint(self.derivs, self.ystart, times)
+                    self.tresult = times
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
         
@@ -226,7 +232,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.110 $",
+                  "CVSRevision":"$Revision: 1.111 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
