@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.112 2008/08/29 18:25:19 ith Exp $
+    $Id: cosmomodels.py,v 1.113 2008/08/29 22:28:57 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.112 $",
+                  "CVSRevision":"$Revision: 1.113 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1017,6 +1017,260 @@ class TwoStageModel(EfoldModel):
         
         #Set nice variable names
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        phidot = self.yresult[:,1,:]
+        
+        Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/phidot**2  
+        return Pr
+    
+    def findns(self, k=None):
+        """Return the value of n_s at the specified k mode."""
+        #If k is not defined, get value at all self.k
+        if k is None:
+            k = self.k
+        else:
+            if k<self.k.min() and k>self.k.max():
+                print "Warning: Extrapolating to k value outside those used in spline!"
+        Pr = self.findspectrum()
+        ts = self.findHorizoncrossings(factor=1)[:,0] + 300 #About 3 efolds after horizon exit
+        xp = N.zeros(len(ts))
+        for ix, t in enumerate(ts):
+            xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
+        lnk = N.log(k)
+        #Use cubic splines to find deriv
+        tck = interpolate.splrep(lnk, xp)
+        ders = interpolate.splev(lnk, tck, der=1)
+        
+        return ders
+        
+    def runbg(self):
+        """Run bg model after setting initial conditions."""
+        #Check ystart is in right form (1-d array of three values)
+        if self.ystart.ndim == 1:
+            ys = self.ystart[0:3]
+        elif self.ystart.ndim == 2:
+            ys = self.ystart[0:3,0]
+        self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
+                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
+        
+        #Start background run
+        print("Running background model...\n")
+        try:
+            self.bgmodel.run(saveresults=False)
+        except ModelError, er:
+            print "Error in background run, aborting! Message: " + er.message
+        #Find end of inflation
+        self.fotend, self.fotendindex = self.bgmodel.findinflend()
+        print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        return
+        
+    def runfo(self):
+        """Run first order model after setting initial conditions."""
+                
+        #Initialize first order model
+        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
+                                tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
+                                k=self.k, ainit=self.ainit, mass=self.mass)
+        #Set names as in ComplexModel
+        self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
+        #Start first order run
+        print("Beginning first order run...\n")
+        try:
+            self.firstordermodel.run(saveresults=False)
+        except ModelError, er:
+            print "Error in first order run, aborting! Message: " + er.message
+        
+        #Set results to current object
+        self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        return
+    
+    def run(self, saveresults=True):
+        """Run BgModelInN with initial conditions and then use the results
+            to run ComplexModelInN."""
+        #Run bg model
+        self.runbg()
+        
+        #Set initial conditions for first order model
+        self.setfoics()
+        
+        #Run first order model
+        self.runfo()
+        
+        #Save results in resultlist and file
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()
+        
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.runcount += 1
+        
+        if saveresults:
+            try:
+                print "Results saved in " + self.saveallresults()
+            except IOError, er:
+                print "Error trying to save results! Results NOT saved."
+                print er                
+        
+        return
+
+class ScaledTwoStage(EfoldModel):
+    """Uses a background and firstorder class to run a full (first-order) simulation.
+        Main additional functionality is in determining initial conditions.
+        Variables finally stored are as in first order class.
+    """                
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None):
+        """Initialize model and ensure initial conditions are sane."""
+        #Set mass as specified
+        if mass is None:
+            self.mass = 2.95e-5
+        else:
+            self.mass = mass
+        
+        #Initial conditions for each of the variables.
+        if ystart is None:
+            #Initial conditions for all variables
+            self.ystart = N.array([18.0, # \phi_0
+                                   -0.1, # \dot{\phi_0}
+                                    0.0, # H - leave as 0.0 to let program determine
+                                    1.0, # Re\delta\phi_1
+                                    0.0, # Re\dot{\delta\phi_1}
+                                    1.0, # Im\delta\phi_1
+                                    0.0  # Im\dot{\delta\phi_1}
+                                    ])
+        else:
+            self.ystart = ystart
+        #Call superclass
+        super(ScaledTwoStage, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        
+        
+        #Set constant factor for 1st order initial conditions
+        self.cq = 50
+        
+        #Let k roam if we don't know correct ks
+        if k is None:
+            self.k = 10**(N.arange(7.0)-62)
+        else:
+            self.k = k
+        
+        #Set initial H value if None
+        #if self.ystart[2] == 0.0:
+        #    U = self.potentials(self.ystart)[0]
+        #    self.ystart[2] = self.findH(U, self.ystart)
+        
+        #Set up variables for the two models
+        if bgclass is None:
+            self.bgclass = MalikBg
+        else:
+            self.bgclass = bgclass
+        if foclass is None:
+            self.foclass = MalikFirstOrder
+        else:
+            self.foclass = foclass
+        self.bgmodel = self.firstordermodel = None
+    
+    def finda_end(self, Hend, Hreh=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating
+            calculate the scale factor at the end of inflation."""
+        if Hreh is None:
+            Hreh = Hend #Instantaneous reheating
+        a_0 = 1 # Normalize today
+        a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        return a_end
+        
+    def findkcrossing(self, k, t, H, factor=None):
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        #threshold
+        err = 1.0e-26
+        if factor is None:
+            factor = self.cq #time before horizon crossing
+        #get aHs
+        aH = self.ainit*N.exp(t)*H
+        try:
+            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
+        except IndexError, ex:
+            raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
+        kcrefold = t[kcrindex]
+        return kcrindex, kcrefold
+    
+    def findallkcrossings(self, t, H):
+        """Iterate over findkcrossing to get full list"""
+        return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+    
+    def findHorizoncrossings(self, factor=1):
+        """FInd horizon crossing for all ks"""
+        return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
+        
+    def setfoics(self):
+        """After a bg run has completed, set the initial conditions for the 
+            first order run."""
+        #Check if bg run is completed
+        if self.bgmodel.runcount == 0:
+            raise ModelError("Background system must be run first before setting 1st order ICs!")
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        Hend = self.bgmodel.yresult[self.fotendindex,2]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*N.exp(-self.fotend)
+        
+        #Find epsilon from bg model
+        try:
+            self.bgepsilon
+        except AttributeError:            
+            self.bgepsilon = self.bgmodel.getepsilon()
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex,2])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
+        
+        #Reset starting conditions at new time
+        self.foystart = N.zeros((len(self.ystart), len(self.k)))
+        
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*N.exp(self.fotstart)
+        Hstar = self.bgmodel.yresult[self.fotstartindex,2]
+        epsstar = self.bgepsilon[self.fotstartindex]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        self.k0 = self.k[0]
+        
+        #Mould init conditions into right shape for number of ks
+        #if self.foystart.ndim == 1:
+         #   self.foystart = self.foystart[:,N.newaxis]*N.ones(len(self.k))
+            
+        self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
+      
+        #Set Re\delta\phi_1 initial condition
+        self.foystart[3,:] = N.cos(-self.k*etastar)/(astar*(N.sqrt(2*(self.k/self.k0))))
+        #set Re\dot\delta\phi_1 ic
+        self.foystart[4,:] = N.sin(-self.k*etastar)*N.sqrt(self.k/2*self.k0)/astar
+        #Set Im\delta\phi_1
+        self.foystart[5,:] = N.sin(-self.k*etastar)/(astar*(N.sqrt(2*(self.k/self.k0))))
+        #Set Im\dot\delta\phi_1
+        self.foystart[6,:] = -N.cos(-self.k*etastar)*N.sqrt(self.k/2*self.k0)/astar
+        
+        return
+    
+    def findspectrum(self):
+        """Find the spectrum of perturbations for each k."""
+        #Check if bg run is completed
+        if self.firstordermodel.runcount == 0:
+            raise ModelError("First order system must be run trying to find spectrum!")
+        
+        #Set nice variable names
+        deltaphi = self.yresult[:,3,:]/N.sqrt(self.k0) + self.yresult[:,5,:]/N.sqrt(self.k0)*1j
         phidot = self.yresult[:,1,:]
         
         Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/phidot**2  
