@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.113 2008/08/29 22:28:57 ith Exp $
+    $Id: cosmomodels.py,v 1.114 2008/08/30 16:13:01 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.113 $",
+                  "CVSRevision":"$Revision: 1.114 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1253,13 +1253,13 @@ class ScaledTwoStage(EfoldModel):
         self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
       
         #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = N.cos(-self.k*etastar)/(astar*(N.sqrt(2*(self.k/self.k0))))
+        self.foystart[3,:] = N.cos(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = N.sin(-self.k*etastar)*N.sqrt(self.k/2*self.k0)/astar
+        self.foystart[4,:] = N.sin(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
         #Set Im\delta\phi_1
-        self.foystart[5,:] = N.sin(-self.k*etastar)/(astar*(N.sqrt(2*(self.k/self.k0))))
+        self.foystart[5,:] = N.sin(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = -N.cos(-self.k*etastar)*N.sqrt(self.k/2*self.k0)/astar
+        self.foystart[6,:] = -N.cos(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
         
         return
     
@@ -1270,10 +1270,10 @@ class ScaledTwoStage(EfoldModel):
             raise ModelError("First order system must be run trying to find spectrum!")
         
         #Set nice variable names
-        deltaphi = self.yresult[:,3,:]/N.sqrt(self.k0) + self.yresult[:,5,:]/N.sqrt(self.k0)*1j
+        deltaphi = self.yresult[:,3,:]/self.k**(1.5) + self.yresult[:,5,:]/self.k**(1.5)*1j
         phidot = self.yresult[:,1,:]
         
-        Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/phidot**2  
+        Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/(phidot**2)  
         return Pr
     
     def findns(self, k=None):
