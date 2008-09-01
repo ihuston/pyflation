@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.114 2008/08/30 16:13:01 ith Exp $
+    $Id: cosmomodels.py,v 1.115 2008/09/01 17:15:19 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.114 $",
+                  "CVSRevision":"$Revision: 1.115 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1264,17 +1264,20 @@ class ScaledTwoStage(EfoldModel):
         return
     
     def findspectrum(self):
-        """Find the spectrum of perturbations for each k."""
+        """Find the spectrum of perturbations for each k. 
+           Returns Pr, Pphi.
+           """
         #Check if bg run is completed
         if self.firstordermodel.runcount == 0:
             raise ModelError("First order system must be run trying to find spectrum!")
         
         #Set nice variable names
-        deltaphi = self.yresult[:,3,:]/self.k**(1.5) + self.yresult[:,5,:]/self.k**(1.5)*1j
+        du = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #du=dphi*k^(3/2)
         phidot = self.yresult[:,1,:]
         
-        Pr = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())/(phidot**2)  
-        return Pr
+        Pphi = (1/(2*N.pi**2))*(du*du.conj())
+        Pr = Pphi/(phidot**2)  
+        return Pr, Pphi
     
     def findns(self, k=None):
         """Return the value of n_s at the specified k mode."""
