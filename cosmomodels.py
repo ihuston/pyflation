@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.115 2008/09/01 17:15:19 ith Exp $
+    $Id: cosmomodels.py,v 1.116 2008/09/02 16:58:14 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -18,7 +18,7 @@ from scipy import interpolate
 import helpers 
 
 #debugging
-from IPython.Debugger import Pdb
+from ipdb import set_trace
 
 
 class ModelError(StandardError):
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.115 $",
+                  "CVSRevision":"$Revision: 1.116 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1208,6 +1208,7 @@ class ScaledTwoStage(EfoldModel):
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
+        set_trace()
         #Check if bg run is completed
         if self.bgmodel.runcount == 0:
             raise ModelError("Background system must be run first before setting 1st order ICs!")
@@ -1240,10 +1241,10 @@ class ScaledTwoStage(EfoldModel):
         self.foystart = N.zeros((len(self.ystart), len(self.k)))
         
         #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(self.fotstart)
-        Hstar = self.bgmodel.yresult[self.fotstartindex,2]
-        epsstar = self.bgepsilon[self.fotstartindex]
-        etastar = -1/(astar*Hstar*(1-epsstar))
+        self.astar = self.ainit*N.exp(self.fotstart)
+        self.Hstar = self.bgmodel.yresult[self.fotstartindex,2]
+        self.epsstar = self.bgepsilon[self.fotstartindex]
+        self.etastar = -1/(self.astar*self.Hstar*(1-self.epsstar))
         self.k0 = self.k[0]
         
         #Mould init conditions into right shape for number of ks
@@ -1253,13 +1254,13 @@ class ScaledTwoStage(EfoldModel):
         self.foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
       
         #Set Re\delta\phi_1 initial condition
-        self.foystart[3,:] = N.cos(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
+        self.foystart[3,:] = N.cos(-self.k*self.etastar)*self.k/(self.astar*(N.sqrt(2)))
         #set Re\dot\delta\phi_1 ic
-        self.foystart[4,:] = N.sin(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
+        self.foystart[4,:] = N.sin(-self.k*self.etastar)*self.k*N.sqrt(self.k/2)/self.astar
         #Set Im\delta\phi_1
-        self.foystart[5,:] = N.sin(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
+        self.foystart[5,:] = N.sin(-self.k*self.etastar)*self.k/(self.astar*(N.sqrt(2)))
         #Set Im\dot\delta\phi_1
-        self.foystart[6,:] = -N.cos(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
+        self.foystart[6,:] = -N.cos(-self.k*self.etastar)*self.k*N.sqrt(self.k/2)/self.astar
         
         return
     
