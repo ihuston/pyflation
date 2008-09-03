@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.117 2008/09/02 17:05:41 ith Exp $
+    $Id: cosmomodels.py,v 1.118 2008/09/03 14:53:37 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.117 $",
+                  "CVSRevision":"$Revision: 1.118 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1381,7 +1381,7 @@ class ScaledTwoStage(EfoldModel):
             if k<self.k.min() and k>self.k.max():
                 print "Warning: Extrapolating to k value outside those used in spline!"
         Pr = self.findspectrum()
-        ts = self.findHorizoncrossings(factor=1)[:,0] + 300 #About 3 efolds after horizon exit
+        ts = self.findHorizoncrossings(factor=1)[:,0] + 3/self.tstep_wanted #About 3 efolds after horizon exit
         xp = N.zeros(len(ts))
         for ix, t in enumerate(ts):
             xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
