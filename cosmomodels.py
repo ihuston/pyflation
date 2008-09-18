@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.120 2008/09/18 14:53:44 ith Exp $
+    $Id: cosmomodels.py,v 1.121 2008/09/18 15:04:14 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.120 $",
+                  "CVSRevision":"$Revision: 1.121 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -847,14 +847,14 @@ class ReorderedMalikFirstOrder(MalikModels):
         
         #d\deltaphi_1^prime/dn
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ( ( self.k/(a*y[2]) )**2 
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)/(y[2]**2) )*y[3])
+                    + (d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)/(y[2]**2) )*y[3])
         #print dydx[4]
         
         #Complex parts
         dydx[5] = y[6]
         
         dydx[6] = (-(3 + dydx[2]/y[2])*y[6] - ( ( self.k/(a*y[2]) )**2 
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)/(y[2]**2) )*y[5])
+                    + (d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)/(y[2]**2) )*y[5])
         
         return dydx
         
