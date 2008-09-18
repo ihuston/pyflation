@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.124 2008/09/18 21:49:32 ith Exp $
+    $Id: cosmomodels.py,v 1.125 2008/09/18 21:57:56 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -129,20 +129,19 @@ class CosmologicalModel(object):
             #Now split depending on whether k exists
             if type(self.k) is N.ndarray or type(self.k) is list:
                 #Get set of times for each k
-#                 if type(self.tstart) is N.ndarray or type(self.tstart) is list:
-#                     times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-#                     startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
-#                 else:
-#                     times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-#                     startindices = [0]
-                times = [N.arange(ts, self.tend+self.tstep_wanted, self.tstep_wanted) for ts in self.tstart]
+                if type(self.tstart) is N.ndarray or type(self.tstart) is list:
+                    times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
+                else:
+                    times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [0]
                 #Make a copy of k and ystart while we work
                 klist = N.copy(self.k)
                 yslist = N.rollaxis(N.copy(self.ystart),1,0)
                 
                 #Do calculation
                 #Compute list of ks in a row
-                yres = [scipy_odeint(self.derivs, ys, times[ts], full_output=True) for self.k, ys, ts in zip(klist,yslist,N.arange(len(times)))]
+                yres = [scipy_odeint(self.derivs, ys, times[ts:], full_output=True) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 ylist = [yr[0] for yr in yres]
                 self.solverinfo = [yr[1] for yr in yres] #information about solving routine
                 ylistlengths = [len(ys) for ys in ylist]
@@ -237,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.124 $",
+                  "CVSRevision":"$Revision: 1.125 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
