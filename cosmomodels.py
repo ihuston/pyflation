@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.118 2008/09/03 14:53:37 ith Exp $
+    $Id: cosmomodels.py,v 1.119 2008/09/18 14:27:38 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -176,9 +176,9 @@ class CosmologicalModel(object):
                 for self.k, ys, ts in zip(klist,yslist,startindices):
                     r = integrate.ode(swap_derivs)
                     r = r.set_integrator('vode')
-                    r = r.set_initial_value(ys, ts)
+                    r = r.set_initial_value(ys, times[ts])
                     yr = []
-                    while r.successful() and r.t < self.tend :
+                    while r.successful() and r.t <= self.tend :
                         yr += [r.integrate(r.t+self.tstep_wanted)]
                     ylist += [N.array(yr)]
                 #ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
@@ -233,7 +233,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.118 $",
+                  "CVSRevision":"$Revision: 1.119 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1415,7 +1415,8 @@ class ScaledTwoStage(EfoldModel):
         
     def runfo(self):
         """Run first order model after setting initial conditions."""
-                
+         
+        set_trace()       
         #Initialize first order model
         self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
@@ -1460,3 +1461,37 @@ class ScaledTwoStage(EfoldModel):
                 print er                
         
         return
+
+class BasicODE(EfoldModel):
+    """Basic model with background equations in terms of n
+        Array of dependent variables y is given by:
+        
+       y[0] - y : Background inflaton
+       y[1] - y^prime : First deriv of \phi
+    """
+    
+    def __init__(self, ystart=N.array([0.0,0.0]), tstart=0.0, tend=5.0, tstep_wanted=0.1, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
+        """Initialize variables and call superclass"""
+        self.mass = mass #Set mass before calling superclass
+        super(BasicODE, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        
+        #Titles
+        self.plottitle = r"Background model in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$y$", r"$\dot{y}$"]
+    
+    def derivs(self, y, t):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        
+        #Set derivatives
+        dydx = N.zeros(2)
+        
+        #d\phi_0/dn = y_1
+        dydx[0] = y[1] 
+        
+        #dphi^prime/dn
+        dydx[1] = 2*y[1] -3*y[0] + N.cos(t)
+        
+        return dydx
