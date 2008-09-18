@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.121 2008/09/18 15:04:14 ith Exp $
+    $Id: cosmomodels.py,v 1.122 2008/09/18 15:26:26 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -141,7 +141,9 @@ class CosmologicalModel(object):
                 
                 #Do calculation
                 #Compute list of ks in a row
-                ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                yres = [scipy_odeint(self.derivs, ys, times[ts:], full_output=True) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                ylist = [yr[0] for yr in yres]
+                self.solverinfo = [yr[1] for yr in yres] #information about solving routine
                 ylistlengths = [len(ys) for ys in ylist]
                 ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
                 #Now stack results to look like as normal (time,variable,k)
@@ -233,7 +235,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.121 $",
+                  "CVSRevision":"$Revision: 1.122 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
