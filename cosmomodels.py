@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.128 2008/09/19 15:26:21 ith Exp $
+    $Id: cosmomodels.py,v 1.129 2008/09/19 16:20:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.128 $",
+                  "CVSRevision":"$Revision: 1.129 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -818,7 +818,8 @@ class MukhanovFirstOrder(MalikModels):
                         r"Real $\dot{\delta\mu_1}$",
                         r"Imag $\delta\mu_1$",
                         r"Imag $\dot{\delta\mu_1}$"]
-                    
+        #End of init
+    
     def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
@@ -1329,17 +1330,20 @@ class MukhanovTwoStage(TwoStageModel):
         Hstar = self.bgmodel.yresult[self.fotstartindex,2]
         epsstar = self.bgepsilon[self.fotstartindex]
         etastar = -1/(astar*Hstar*(1-epsstar))
-                
+        etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        negetak = -self.k*(etastar - etainit) 
+        
+        #Get background results        
         foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
       
         #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = N.cos(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
+        foystart[3,:] = N.cos(negetak)/N.sqrt(self.k)
         #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = N.sin(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
+        foystart[4,:] = N.sin(negetak)*N.sqrt(self.k)/(astar*Hstar)
         #Set Im\delta\phi_1
-        foystart[5,:] = N.sin(-self.k*etastar)*self.k/(astar*(N.sqrt(2)))
+        foystart[5,:] = N.sin(negetak)/N.sqrt(self.k)
         #Set Im\dot\delta\phi_1
-        foystart[6,:] = -N.cos(-self.k*etastar)*self.k*N.sqrt(self.k/2)/astar
+        foystart[6,:] = -N.cos(negetak)*N.sqrt(self.k)/(astar*Hstar)
         
         return foystart
     
@@ -1352,11 +1356,13 @@ class MukhanovTwoStage(TwoStageModel):
             raise ModelError("First order system must be run trying to find spectrum!")
         
         #Set nice variable names
-        du = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #du=dphi*k^(3/2)
+        dmu = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #dmu=-sqrt(2)*a*dphi
         phidot = self.yresult[:,1,:]
         
-        Pphi = (1/(2*N.pi**2))*(du*du.conj())
-        Pr = Pphi/(phidot**2)  
+        epsilon = self.getepsilon()
+        a2 = (self.ainit*exp(self.tresult))**2
+        
+        Pr = (self.k/(8*N.pi**2))*(dmu*dmu.conj())/(a2*epsilon)
         return Pr
 
 class EtaInitTwoStage(TwoStageModel):
