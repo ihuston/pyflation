@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.125 2008/09/18 21:57:56 ith Exp $
+    $Id: cosmomodels.py,v 1.126 2008/09/19 13:30:41 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.125 $",
+                  "CVSRevision":"$Revision: 1.126 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -999,12 +999,6 @@ class TwoStageModel(EfoldModel):
         else:
             self.k = k
         
-        #Set initial H value if None
-        #if self.ystart[2] == 0.0:
-        #    U = self.potentials(self.ystart)[0]
-        #    self.ystart[2] = self.findH(U, self.ystart)
-        
-        #Set up variables for the two models
         if bgclass is None:
             self.bgclass = MalikBg
         else:
@@ -1014,7 +1008,7 @@ class TwoStageModel(EfoldModel):
         else:
             self.foclass = foclass
         self.bgmodel = self.firstordermodel = None
-    
+            
     def finda_end(self, Hend, Hreh=None):
         """Given the Hubble parameter at the end of inflation and at the end of reheating
             calculate the scale factor at the end of inflation."""
@@ -1206,67 +1200,16 @@ class TwoStageModel(EfoldModel):
         
         return
 
-class ScaledTwoStage(EfoldModel):
+class ScaledTwoStage(TwoStageModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None):
+    def __init__(self, *args, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
-        if mass is None:
-            self.mass = 2.95e-5
-        else:
-            self.mass = mass
-        
-        #Initial conditions for each of the variables.
-        if ystart is None:
-            #Initial conditions for all variables
-            self.ystart = N.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
-                                    ])
-        else:
-            self.ystart = ystart
         #Call superclass
-        super(ScaledTwoStage, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
-        if ainit is None:
-            #Don't know value of ainit yet so scale it to 1
-            self.ainit = 1
-        else:
-            self.ainit = ainit
-        
-        
-        
-        #Set constant factor for 1st order initial conditions
-        self.cq = 50
-        
-        #Let k roam if we don't know correct ks
-        if k is None:
-            self.k = 10**(N.arange(7.0)-62)
-        else:
-            self.k = k
-        
-        #Set initial H value if None
-        #if self.ystart[2] == 0.0:
-        #    U = self.potentials(self.ystart)[0]
-        #    self.ystart[2] = self.findH(U, self.ystart)
-        
-        #Set up variables for the two models
-        if bgclass is None:
-            self.bgclass = MalikBg
-        else:
-            self.bgclass = bgclass
-        if foclass is None:
-            self.foclass = MalikFirstOrder
-        else:
-            self.foclass = foclass
-        self.bgmodel = self.firstordermodel = None
+        super(ScaledTwoStage, self).__init__(*args, **kwargs)
     
     def finda_end(self, Hend, Hreh=None):
         """Given the Hubble parameter at the end of inflation and at the end of reheating
