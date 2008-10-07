@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.129 2008/09/19 16:20:46 ith Exp $
+    $Id: cosmomodels.py,v 1.130 2008/10/07 13:20:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.129 $",
+                  "CVSRevision":"$Revision: 1.130 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -823,7 +823,7 @@ class MukhanovFirstOrder(MalikModels):
     def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        
+            
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y)        
         
@@ -1337,13 +1337,13 @@ class MukhanovTwoStage(TwoStageModel):
         foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
       
         #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = N.cos(negetak)/N.sqrt(self.k)
+        foystart[3,:] = N.cos(negetak)
         #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = N.sin(negetak)*N.sqrt(self.k)/(astar*Hstar)
+        foystart[4,:] = N.sin(negetak)*self.k/(astar*Hstar)
         #Set Im\delta\phi_1
-        foystart[5,:] = N.sin(negetak)/N.sqrt(self.k)
+        foystart[5,:] = N.sin(negetak)
         #Set Im\dot\delta\phi_1
-        foystart[6,:] = -N.cos(negetak)*N.sqrt(self.k)/(astar*Hstar)
+        foystart[6,:] = -N.cos(negetak)*self.k/(astar*Hstar)
         
         return foystart
     
@@ -1359,10 +1359,10 @@ class MukhanovTwoStage(TwoStageModel):
         dmu = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #dmu=-sqrt(2)*a*dphi
         phidot = self.yresult[:,1,:]
         
-        epsilon = self.getepsilon()
-        a2 = (self.ainit*exp(self.tresult))**2
+        epsilon = self.firstordermodel.getepsilon()
+        a2 = (self.ainit*N.exp(self.tresult))**2
         
-        Pr = (self.k/(8*N.pi**2))*(dmu*dmu.conj())/(a2*epsilon)
+        Pr = (self.k**2/(8*N.pi**2))*(dmu*dmu.conj())/(a2*epsilon)
         return Pr
 
 class EtaInitTwoStage(TwoStageModel):
