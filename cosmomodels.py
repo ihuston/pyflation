@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.130 2008/10/07 13:20:20 ith Exp $
+    $Id: cosmomodels.py,v 1.131 2008/10/14 15:15:11 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.130 $",
+                  "CVSRevision":"$Revision: 1.131 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1135,12 +1135,16 @@ class TwoStageModel(EfoldModel):
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
+        #debug
+        set_trace()
+        
         #Check if bg run is completed
         if self.bgmodel.runcount == 0:
             raise ModelError("Background system must be run first before setting 1st order ICs!")
         
         #Find initial conditions for 1st order model
         #Find a_end using instantaneous reheating
+        #Need to change to find using splines
         Hend = self.bgmodel.yresult[self.fotendindex,2]
         self.a_end = self.finda_end(Hend)
         self.ainit = self.a_end*N.exp(-self.fotend)
@@ -1311,6 +1315,7 @@ class ScaledTwoStage(TwoStageModel):
         Pphi = (1/(2*N.pi**2))*(du*du.conj())
         Pr = Pphi/(phidot**2)  
         return Pr
+
 class MukhanovTwoStage(TwoStageModel):
     """Implementation of two stage model with standard initial conditions for phi.
     """                
