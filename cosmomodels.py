@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.131 2008/10/14 15:15:11 ith Exp $
+    $Id: cosmomodels.py,v 1.132 2008/10/14 15:16:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.131 $",
+                  "CVSRevision":"$Revision: 1.132 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1147,7 +1147,7 @@ class TwoStageModel(EfoldModel):
         #Need to change to find using splines
         Hend = self.bgmodel.yresult[self.fotendindex,2]
         self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.fotend)
+        self.ainit = self.a_end*N.exp(-self.bgmodel.tresult[self.fotendindex])
         
         #Find epsilon from bg model
         try:
