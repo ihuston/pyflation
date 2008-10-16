@@ -145,7 +145,7 @@ class RingevalTwoStage(TwoStageModel):
         phidot = self.yresult[:,1,:] #bg phidot
         
         Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
-        Pr = Pphi/(phidot**2)  
+        Pr = Pphi/(phidot**2) #change if bg evol is different  
         return Pr
     
 class MalikFirstOrder2(MalikModels):
