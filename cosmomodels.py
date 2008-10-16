@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.133 2008/10/16 10:20:05 ith Exp $
+    $Id: cosmomodels.py,v 1.134 2008/10/16 11:01:37 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -92,7 +92,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, rtol_wanted=None, atol_wanted=None):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -141,7 +141,7 @@ class CosmologicalModel(object):
                 
                 #Do calculation
                 #Compute list of ks in a row
-                yres = [scipy_odeint(self.derivs, ys, times[ts:], full_output=True) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                yres = [scipy_odeint(self.derivs, ys, times[ts:], full_output=True, rtol=rtol_wanted, atol=atol_wanted) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 ylist = [yr[0] for yr in yres]
                 self.solverinfo = [yr[1] for yr in yres] #information about solving routine
                 ylistlengths = [len(ys) for ys in ylist]
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.133 $",
+                  "CVSRevision":"$Revision: 1.134 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
