@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.132 2008/10/14 15:16:31 ith Exp $
+    $Id: cosmomodels.py,v 1.133 2008/10/16 10:20:05 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.132 $",
+                  "CVSRevision":"$Revision: 1.133 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1178,7 +1178,7 @@ class TwoStageModel(EfoldModel):
         """Find the spectrum of perturbations for each k. Implemented model-by-model"""
         pass
      
-    def findns(self, k=None):
+    def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode."""
         #If k is not defined, get value at all self.k
         if k is None:
@@ -1187,7 +1187,7 @@ class TwoStageModel(EfoldModel):
             if k<self.k.min() and k>self.k.max():
                 print "Warning: Extrapolating to k value outside those used in spline!"
         Pr = self.findspectrum()
-        ts = self.findHorizoncrossings(factor=1)[:,0] + 3/self.tstep_wanted #About 3 efolds after horizon exit
+        ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
         xp = N.zeros(len(ts))
         for ix, t in enumerate(ts):
             xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
