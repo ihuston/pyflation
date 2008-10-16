@@ -109,17 +109,26 @@ class RingevalTwoStage(TwoStageModel):
         epsstar = self.bgepsilon[self.fotstartindex]
         etastar = -1/(astar*Hstar*(1-epsstar))
         etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
-        etadiff = etastar - etainit                
+        etadiff = etastar - etainit
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
         foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
-      
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(N.sqrt(2*self.k)))
+        #Find cos and sin(-keta)
+        csketa = N.cos(-keta)
+        snketa = N.cos(-keta)
+        
         #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = 1/(astar*(N.sqrt(2*self.k)))
+        foystart[3,:] = csketa*arootk
         #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = -foystart[3,:]
+        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
         #Set Im\delta\phi_1
-        foystart[5,:] = 0
+        foystart[5,:] = snketa*arootk
         #Set Im\dot\delta\phi_1
-        foystart[6,:] = -foystart[3,:]*self.k/(astar*Hstar)
+        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
         
         return foystart
     
@@ -132,8 +141,8 @@ class RingevalTwoStage(TwoStageModel):
             raise ModelError("First order system must be run trying to find spectrum!")
         
         #Set nice variable names
-        dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #dphi
-        phidot = self.yresult[:,1,:]
+        dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex dphi
+        phidot = self.yresult[:,1,:] #bg phidot
         
         Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
         Pr = Pphi/(phidot**2)  
