@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.134 2008/10/16 11:01:37 ith Exp $
+    $Id: cosmomodels.py,v 1.135 2008/10/16 15:28:48 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.134 $",
+                  "CVSRevision":"$Revision: 1.135 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1049,7 +1049,7 @@ class TwoStageModel(EfoldModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -1057,6 +1057,9 @@ class TwoStageModel(EfoldModel):
         else:
             self.mass = mass
         
+        #set noise level
+        self.quiet=quiet
+            
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
@@ -1136,7 +1139,7 @@ class TwoStageModel(EfoldModel):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
         #debug
-        set_trace()
+        #set_trace()
         
         #Check if bg run is completed
         if self.bgmodel.runcount == 0:
@@ -1209,14 +1212,16 @@ class TwoStageModel(EfoldModel):
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
         
         #Start background run
-        print("Running background model...\n")
+        if not self.quiet:
+            print("Running background model...\n")
         try:
             self.bgmodel.run(saveresults=False)
         except ModelError, er:
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
         self.fotend, self.fotendindex = self.bgmodel.findinflend()
-        print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        if not self.quiet:
+            print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
     def runfo(self):
@@ -1229,7 +1234,8 @@ class TwoStageModel(EfoldModel):
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
-        print("Beginning first order run...\n")
+        if not self.quiet:
+            print("Beginning first order run...\n")
         try:
             self.firstordermodel.run(saveresults=False)
         except ModelError, er:
