@@ -1,5 +1,6 @@
 #Cosmomodels2 - testing classes
 import numpy as N
+from ipdb import set_trace
 from cosmomodels import *
 
 class RingevalFirstOrder(MalikModels):
@@ -12,7 +13,7 @@ class RingevalFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(RingevalFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -103,6 +104,7 @@ class RingevalTwoStage(TwoStageModel):
         #Reset starting conditions at new time
         foystart = N.zeros((len(self.ystart), len(self.k)))
         
+        #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(self.fotstart)
         Hstar = self.bgmodel.yresult[self.fotstartindex,2]
@@ -119,7 +121,7 @@ class RingevalTwoStage(TwoStageModel):
         arootk = 1/(astar*(N.sqrt(2*self.k)))
         #Find cos and sin(-keta)
         csketa = N.cos(-keta)
-        snketa = N.cos(-keta)
+        snketa = N.sin(-keta)
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = csketa*arootk
@@ -158,7 +160,7 @@ class MalikFirstOrder2(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(MalikFirstOrder2, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)

@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.135 2008/10/16 15:28:48 ith Exp $
+    $Id: cosmomodels.py,v 1.136 2008/10/17 13:41:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.135 $",
+                  "CVSRevision":"$Revision: 1.136 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -651,7 +651,7 @@ class MalikBg(MalikModels):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=6.133e-6):
         """Initialize variables and call superclass"""
         self.mass = mass #Set mass before calling superclass
         super(MalikBg, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -693,7 +693,7 @@ class MalikFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(MalikFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -782,7 +782,7 @@ class MukhanovFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(MukhanovFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -873,7 +873,7 @@ class MWFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(MWFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -962,7 +962,7 @@ class OnlyFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=5e-6, bgyresult=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6, bgyresult=None):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(OnlyFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -1433,7 +1433,7 @@ class BasicODE(EfoldModel):
        y[1] - y^prime : First deriv of \phi
     """
     
-    def __init__(self, ystart=N.array([0.0,0.0]), tstart=0.0, tend=5.0, tstep_wanted=0.1, tstep_min=0.0001, solver="scipy_odeint", mass=5e-6):
+    def __init__(self, ystart=N.array([0.0,0.0]), tstart=0.0, tend=5.0, tstep_wanted=0.1, tstep_min=0.0001, solver="scipy_odeint", mass=6.133e-6):
         """Initialize variables and call superclass"""
         self.mass = mass #Set mass before calling superclass
         super(BasicODE, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
