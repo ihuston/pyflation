@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.136 2008/10/17 13:41:46 ith Exp $
+    $Id: cosmomodels.py,v 1.137 2008/10/17 14:45:38 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.136 $",
+                  "CVSRevision":"$Revision: 1.137 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1053,7 +1053,7 @@ class TwoStageModel(EfoldModel):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
-            self.mass = 2.95e-5
+            self.mass = 6.133e-6
         else:
             self.mass = mass
         
@@ -1191,15 +1191,25 @@ class TwoStageModel(EfoldModel):
                 print "Warning: Extrapolating to k value outside those used in spline!"
         Pr = self.findspectrum()
         ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = N.zeros(len(ts))
-        for ix, t in enumerate(ts):
-            xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
+        #xp = N.zeros(len(ts))
+        #for ix, t in enumerate(ts):
+        #    xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
+        xp = N.log(Pr[ts.astype(int)].diagonal())
         lnk = N.log(k)
-        #Use cubic splines to find deriv
-        tck = interpolate.splrep(lnk, xp)
-        ders = interpolate.splev(lnk, tck, der=1)
         
-        return ders  
+        #Need to sort into ascending k
+        sortix = lnk.argsort()
+                
+        #Use cubic splines to find deriv
+        tck = interpolate.splrep(lnk[sortix], xp[sortix])
+        ders = interpolate.splev(lnk[sortix], tck[sortix], der=1)
+        
+        ns = 1 + ders
+        #Unorder the ks again
+        nsunsort = zeros(len(ns))
+        nsunsort[sortix] = ns
+        
+        return nsunsort  
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
