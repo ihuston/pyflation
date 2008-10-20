@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.144 2008/10/20 16:59:03 ith Exp $
+    $Id: cosmomodels.py,v 1.145 2008/10/20 17:13:35 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.144 $",
+                  "CVSRevision":"$Revision: 1.145 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -622,7 +622,7 @@ class PhiModels(CosmologicalModel):
         P.show()
         return
     
-class MalikBg(PhiModels):
+class PhiBackground(PhiModels):
     """Basic model with background equations in terms of n
         Array of dependent variables y is given by:
         
@@ -634,7 +634,7 @@ class MalikBg(PhiModels):
     def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=6.133e-6):
         """Initialize variables and call superclass"""
         self.mass = mass #Set mass before calling superclass
-        super(MalikBg, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(PhiBackground, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         
         #Titles
@@ -663,7 +663,7 @@ class MalikBg(PhiModels):
 
         return dydx
 
-class MalikFirstOrder2(PhiModels):
+class PhiFirstOrder(PhiModels):
     """First order model using efold as time variable.
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
@@ -676,7 +676,7 @@ class MalikFirstOrder2(PhiModels):
     def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
-        super(MalikFirstOrder2, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(PhiFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -802,11 +802,11 @@ class TwoStageModel(CosmologicalModel):
             self.k = k
         
         if bgclass is None:
-            self.bgclass = MalikBg
+            self.bgclass = PhiBackground
         else:
             self.bgclass = bgclass
         if foclass is None:
-            self.foclass = MalikFirstOrder
+            self.foclass = PhiFirstOrder
         else:
             self.foclass = foclass
         self.bgmodel = self.firstordermodel = None
