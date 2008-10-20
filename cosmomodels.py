@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.143 2008/10/20 16:55:00 ith Exp $
+    $Id: cosmomodels.py,v 1.144 2008/10/20 16:59:03 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.143 $",
+                  "CVSRevision":"$Revision: 1.144 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -527,11 +527,11 @@ class BasicBgModel(CosmologicalModel):
         return
 
     
-class MalikModels(CosmologicalModel):
+class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
-        super(MalikModels, self).__init__(*args, **kwargs)
+        super(PhiModels, self).__init__(*args, **kwargs)
                     
         #Set initial H value if None
         if N.all(self.ystart[2] == 0.0):
@@ -622,7 +622,7 @@ class MalikModels(CosmologicalModel):
         P.show()
         return
     
-class MalikBg(MalikModels):
+class MalikBg(PhiModels):
     """Basic model with background equations in terms of n
         Array of dependent variables y is given by:
         
@@ -663,7 +663,7 @@ class MalikBg(MalikModels):
 
         return dydx
 
-class MalikFirstOrder2(MalikModels):
+class MalikFirstOrder2(PhiModels):
     """First order model using efold as time variable.
        y[0] - \phi_0 : Background inflaton
        y[1] - d\phi_0/d\eta : First deriv of \phi
