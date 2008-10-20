@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.140 2008/10/20 15:32:27 ith Exp $
+    $Id: cosmomodels.py,v 1.141 2008/10/20 15:38:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.140 $",
+                  "CVSRevision":"$Revision: 1.141 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -930,7 +930,7 @@ class TwoStageModel(EfoldModel):
                 
         #Use cubic splines to find deriv
         tck = interpolate.splrep(lnk[sortix], xp[sortix])
-        ders = interpolate.splev(lnk[sortix], tck[sortix], der=1)
+        ders = interpolate.splev(lnk[sortix], tck, der=1)
         
         ns = 1 + ders
         #Unorder the ks again
