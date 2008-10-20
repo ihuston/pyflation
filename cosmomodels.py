@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.145 2008/10/20 17:13:35 ith Exp $
+    $Id: cosmomodels.py,v 1.146 2008/10/20 17:24:55 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -18,7 +18,7 @@ from scipy import interpolate
 import helpers 
 
 #debugging
-from ipdb import set_trace
+#from pdb import set_trace
 
 
 class ModelError(StandardError):
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.145 $",
+                  "CVSRevision":"$Revision: 1.146 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
