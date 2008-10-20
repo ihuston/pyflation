@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.141 2008/10/20 15:38:46 ith Exp $
+    $Id: cosmomodels.py,v 1.142 2008/10/20 16:04:25 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.141 $",
+                  "CVSRevision":"$Revision: 1.142 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -772,7 +772,7 @@ class MalikFirstOrder2(MalikModels):
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
         return dydx                
-class TwoStageModel(EfoldModel):
+class TwoStageModel(CosmologicalModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
@@ -934,7 +934,7 @@ class TwoStageModel(EfoldModel):
         
         ns = 1 + ders
         #Unorder the ks again
-        nsunsort = zeros(len(ns))
+        nsunsort = N.zeros(len(ns))
         nsunsort[sortix] = ns
         
         return nsunsort  
