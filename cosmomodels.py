@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.142 2008/10/20 16:04:25 ith Exp $
+    $Id: cosmomodels.py,v 1.143 2008/10/20 16:55:00 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.142 $",
+                  "CVSRevision":"$Revision: 1.143 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -526,26 +526,45 @@ class BasicBgModel(CosmologicalModel):
         
         return
 
-class EfoldModel(CosmologicalModel):
-    """Base class for models which use efold time variable n.
-        Provides some of the functions needed to deal with this situation.
-        Need at least the following three variables:
-        y[0] - \phi_0 : Background inflaton
-        y[1] - d\phi_0/d\n : First deriv of \phi
-        y[2] - H: Hubble parameter
-        """
     
+class MalikModels(CosmologicalModel):
+    """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
     def __init__(self, *args, **kwargs):
-        """Inititialize vars using parent."""
-        super(EfoldModel, self).__init__(*args, **kwargs)
+        """Call superclass init method."""
+        super(MalikModels, self).__init__(*args, **kwargs)
+                    
+        #Set initial H value if None
+        if N.all(self.ystart[2] == 0.0):
+            U = self.potentials(self.ystart)[0]
+            self.ystart[2] = self.findH(U, self.ystart)
         
-    def potentials(self, y):
-        """Return value of potential at y, along with first and second derivs."""
-        pass       
-    
+        #Titles
+        self.plottitle = r"Malik Models in $n$"
+        self.tname = r"E-folds $n$"
+        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+        
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
-        pass
+        phidot = y[1]
+        
+        #Expression for H
+        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
+        return H
+    
+    def potentials(self, y):
+        """Return value of potential at y, along with first and second derivs."""
+        
+        #Use inflaton mass
+        mass2 = self.mass**2
+        
+        #potential U = 1/2 m^2 \phi^2
+        U = 0.5*(mass2)*(y[0]**2)
+        #deriv of potential wrt \phi
+        dUdphi =  (mass2)*y[0]
+        #2nd deriv
+        d2Udphi2 = mass2
+        
+        return U,dUdphi,d2Udphi2
     
     def findinflend(self):
         """Find the efold time where inflation ends,
@@ -602,45 +621,6 @@ class EfoldModel(CosmologicalModel):
                 
         P.show()
         return
-    
-class MalikModels(EfoldModel):
-    """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
-    def __init__(self, *args, **kwargs):
-        """Call superclass init method."""
-        super(MalikModels, self).__init__(*args, **kwargs)
-                    
-        #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-        
-        #Titles
-        self.plottitle = r"Malik Models in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
-        
-    def findH(self, U, y):
-        """Return value of Hubble variable, H at y for given potential."""
-        phidot = y[1]
-        
-        #Expression for H
-        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
-        return H
-    
-    def potentials(self, y):
-        """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2
     
 class MalikBg(MalikModels):
     """Basic model with background equations in terms of n
