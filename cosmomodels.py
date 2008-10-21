@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.150 2008/10/21 14:08:34 ith Exp $
+    $Id: cosmomodels.py,v 1.151 2008/10/21 17:25:09 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.150 $",
+                  "CVSRevision":"$Revision: 1.151 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -885,7 +885,7 @@ class TwoStageModel(CosmologicalModel):
         """Return model dependent setting of ystart""" 
         pass
     
-    def getdphi(self):
+    def getdeltaphi(self):
         """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
         pass
     
@@ -902,8 +902,8 @@ class TwoStageModel(CosmologicalModel):
         #Raise error if first order not run yet
         self.checkfirstordercomplete()
         
-        dphi = self.getdphi()
-        Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
+        deltaphi = self.getdeltaphi()
+        Pphi = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())
         return Pphi
      
     def findns(self, k=None, nefolds=3):
@@ -1061,7 +1061,7 @@ class CanonicalTwoStage(TwoStageModel):
         
         return foystart
     
-    def getdphi(self):
+    def getdeltaphi(self):
         """Find the spectrum of perturbations for each k. 
            Return Pr.
            """
@@ -1069,8 +1069,8 @@ class CanonicalTwoStage(TwoStageModel):
         self.checkfirstordercomplete()
         
         #Set nice variable names
-        dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex dphi
-        return dphi
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
+        return deltaphi
     
     def findPr(self):
         """Return the spectrum of curvature perturbations P_R for each k."""
@@ -1088,3 +1088,22 @@ class CanonicalTwoStage(TwoStageModel):
         Pgrav = 2*Pphi
         return Pgrav
     
+    def getzeta(self):
+        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
+        #Get needed variables
+        phidot = self.yresult[:,1,:]
+        a = self.ainit*N.exp(self.tresult)
+        H = self.yresult[:,2,:]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:])[1]
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
+        
+        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
+        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
+        
+        zeta = -H*deltarho/drhodt
+        return zeta, deltarho, drhodt
+        
+    def findzetasq(self):
+        """Return the spectrum of zeta."""
+        pass
