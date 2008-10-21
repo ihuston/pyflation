@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.152 2008/10/21 17:48:47 ith Exp $
+    $Id: cosmomodels.py,v 1.153 2008/10/21 18:03:50 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -239,7 +239,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.152 $",
+                  "CVSRevision":"$Revision: 1.153 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -760,7 +760,7 @@ class TwoStageModel(CosmologicalModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=120.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -1021,11 +1021,23 @@ class TwoStageModel(CosmologicalModel):
             raise ModelError("First order system must be run trying to find spectrum!")
         return
     
-    def plotpivotPr(self):
+    def plotpivotPr(self, nefolds=5):
         """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
         #Raise error if first order not run yet
         self.checkfirstordercomplete()
         
+        ts = self.findHorizoncrossings()[:,0] + nefolds/self.tstep_wanted #Take spectrum a few efolds after horizon crossing
+        Prs = self.findPr()[ts.astype(int)].diagonal()/WMAP_PR
+        
+        f = P.figure()
+        P.semilogx(self.k, Prs)
+        P.xlabel(r"$k$")
+        P.ylabel(r"$\mathcal{P}_{\mathcal{R}}/\mathcal{P}_*$")
+        P.title(r"Power spectrum of curvature perturbations normalized at $k=0.05 \,\mathrm{Mpc}^{-1} = "+ helpers.eto10(WMAP_PIVOT) + "\,\mathrm{M}_{\mathrm{PL}}$")
+        
+        P.show()
+        
+        return f
         
 
 class CanonicalTwoStage(TwoStageModel):
