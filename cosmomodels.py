@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.147 2008/10/21 13:05:21 ith Exp $
+    $Id: cosmomodels.py,v 1.148 2008/10/21 13:40:57 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.147 $",
+                  "CVSRevision":"$Revision: 1.148 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -991,13 +991,13 @@ class TwoStageModel(CosmologicalModel):
         
         return
 
-class RingevalTwoStage(TwoStageModel):
+class CanonicalTwoStage(TwoStageModel):
     """Implementation of Ringeval two stage model with standard initial conditions for phi.
     """                
     def __init__(self, *args, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
         #Call superclass
-        super(RingevalTwoStage, self).__init__(*args, **kwargs)
+        super(CanonicalTwoStage, self).__init__(*args, **kwargs)
         
     def getfoystart(self):
         """Model dependent setting of ystart"""
