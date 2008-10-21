@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.149 2008/10/21 14:05:02 ith Exp $
+    $Id: cosmomodels.py,v 1.150 2008/10/21 14:08:34 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.149 $",
+                  "CVSRevision":"$Revision: 1.150 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1073,7 +1073,7 @@ class CanonicalTwoStage(TwoStageModel):
         return dphi
     
     def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
+        """Return the spectrum of curvature perturbations P_R for each k."""
         #Raise error if first order not run yet
         self.checkfirstordercomplete()
         
@@ -1081,3 +1081,10 @@ class CanonicalTwoStage(TwoStageModel):
         phidot = self.yresult[:,1,:] #bg phidot
         Pr = Pphi/(phidot**2) #change if bg evol is different
         return Pr
+    
+    def findPgrav(self):
+        """Return the spectrum of tensor perturbations P_grav for each k."""
+        Pphi = self.findPphi()
+        Pgrav = 2*Pphi
+        return Pgrav
+    
