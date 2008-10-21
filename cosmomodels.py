@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.151 2008/10/21 17:25:09 ith Exp $
+    $Id: cosmomodels.py,v 1.152 2008/10/21 17:48:47 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -20,6 +20,9 @@ import helpers
 #debugging
 #from pdb import set_trace
 
+#WMAP pivot scale and Power spectrum
+WMAP_PIVOT = 1.3125e-58 #WMAP pivot scale in Mpl
+WMAP_PR = 2.06989278313e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -236,7 +239,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.151 $",
+                  "CVSRevision":"$Revision: 1.152 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1017,6 +1020,13 @@ class TwoStageModel(CosmologicalModel):
         if self.firstordermodel.runcount == 0:
             raise ModelError("First order system must be run trying to find spectrum!")
         return
+    
+    def plotpivotPr(self):
+        """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        
 
 class CanonicalTwoStage(TwoStageModel):
     """Implementation of Ringeval two stage model with standard initial conditions for phi.
