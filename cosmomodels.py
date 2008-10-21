@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.148 2008/10/21 13:40:57 ith Exp $
+    $Id: cosmomodels.py,v 1.149 2008/10/21 14:05:02 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -236,7 +236,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.148 $",
+                  "CVSRevision":"$Revision: 1.149 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -882,22 +882,42 @@ class TwoStageModel(CosmologicalModel):
         return
         
     def getfoystart(self):
-        """Model dependent setting of ystart""" 
+        """Return model dependent setting of ystart""" 
         pass
     
-    def findspectrum(self):
-        """Find the spectrum of perturbations for each k. Implemented model-by-model"""
+    def getdphi(self):
+        """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
         pass
+    
+    def findPr(self):
+        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
+        pass
+    
+    def findPgrav(self):
+        """Return the spectrum of tensor perturbations P_grav for each k. Implemented model-by-model."""
+        pass
+    
+    def findPphi(self):
+        """Return the spectrum of scalar perturbations P_phi for each k."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        dphi = self.getdphi()
+        Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
+        return Pphi
      
     def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
         #If k is not defined, get value at all self.k
         if k is None:
             k = self.k
         else:
             if k<self.k.min() and k>self.k.max():
                 print "Warning: Extrapolating to k value outside those used in spline!"
-        Pr = self.findspectrum()
+        Pr = self.findPr()
         ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
         #xp = N.zeros(len(ts))
         #for ix, t in enumerate(ts):
@@ -990,6 +1010,13 @@ class TwoStageModel(CosmologicalModel):
                 print er                
         
         return
+    
+    def checkfirstordercomplete(self):
+        """Raise an error if first order model has not been run."""
+        #Check if firstorder run is completed
+        if self.firstordermodel.runcount == 0:
+            raise ModelError("First order system must be run trying to find spectrum!")
+        return
 
 class CanonicalTwoStage(TwoStageModel):
     """Implementation of Ringeval two stage model with standard initial conditions for phi.
@@ -1034,18 +1061,23 @@ class CanonicalTwoStage(TwoStageModel):
         
         return foystart
     
-    def findspectrum(self):
+    def getdphi(self):
         """Find the spectrum of perturbations for each k. 
            Return Pr.
            """
-        #Check if bg run is completed
-        if self.firstordermodel.runcount == 0:
-            raise ModelError("First order system must be run trying to find spectrum!")
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
         
         #Set nice variable names
         dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex dphi
-        phidot = self.yresult[:,1,:] #bg phidot
+        return dphi
+    
+    def findPr(self):
+        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
         
-        Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
-        Pr = Pphi/(phidot**2) #change if bg evol is different  
+        Pphi = self.findPphi()
+        phidot = self.yresult[:,1,:] #bg phidot
+        Pr = Pphi/(phidot**2) #change if bg evol is different
         return Pr
