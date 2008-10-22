@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.153 2008/10/21 18:03:50 ith Exp $
+    $Id: cosmomodels.py,v 1.154 2008/10/22 13:13:36 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -16,6 +16,7 @@ from scipy.integrate import odeint as scipy_odeint
 from scipy import integrate
 from scipy import interpolate
 import helpers 
+import cmpotentials
 
 #debugging
 #from pdb import set_trace
@@ -41,7 +42,7 @@ class CosmologicalModel(object):
     """
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode"]
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint"):
+    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint", potential_func=None):
         """Initialize model variables, some with default values. Default solver is odeint."""
         self.ystart = ystart
         self.k = None #so we can test whether k is set
@@ -72,6 +73,11 @@ class CosmologicalModel(object):
             self.solver = solver
         else:
             raise ValueError, "Solver not recognized!"
+        
+        if potential_func is not None:
+            self.potentials = potential_func
+        else:
+            raise ModelError("Need to specify a function for potentials.")
         
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
@@ -239,7 +245,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.153 $",
+                  "CVSRevision":"$Revision: 1.154 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -556,18 +562,7 @@ class PhiModels(CosmologicalModel):
     
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
-        
-        #Use inflaton mass
-        mass2 = self.mass**2
-        
-        #potential U = 1/2 m^2 \phi^2
-        U = 0.5*(mass2)*(y[0]**2)
-        #deriv of potential wrt \phi
-        dUdphi =  (mass2)*y[0]
-        #2nd deriv
-        d2Udphi2 = mass2
-        
-        return U,dUdphi,d2Udphi2
+        pass
     
     def findinflend(self):
         """Find the efold time where inflation ends,
@@ -634,10 +629,10 @@ class CanonicalBackground(PhiModels):
        y[2] - H: Hubble parameter
     """
     
-    def __init__(self, ystart=N.array([15.0,-1.0,0.0]), tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, solver="scipy_odeint", mass=6.133e-6):
+    def __init__(self,  *args, **kwargs):
         """Initialize variables and call superclass"""
-        self.mass = mass #Set mass before calling superclass
-        super(CanonicalBackground, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        
+        super(CanonicalBackground, self).__init__(*args, **kwargs)
         
         
         #Titles
@@ -676,10 +671,10 @@ class CanonicalFirstOrder(PhiModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
-        """Initialize all variables and call ancestor's __init__ method."""
-        self.mass = mass
-        super(CanonicalFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalFirstOrder, self).__init__(*args, **kwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -760,7 +755,7 @@ class TwoStageModel(CosmologicalModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -770,6 +765,11 @@ class TwoStageModel(CosmologicalModel):
         
         #set noise level
         self.quiet=quiet
+        
+        #Change potentials to be right function
+        if potential_func is None:
+            potential_func = cmpotentials.msqphisq
+        
             
         #Initial conditions for each of the variables.
         if ystart is None:
@@ -785,16 +785,14 @@ class TwoStageModel(CosmologicalModel):
         else:
             self.ystart = ystart
         #Call superclass
-        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver, potential_func=potential_func)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
             self.ainit = 1
         else:
             self.ainit = ainit
-        
-        
-        
+                
         #Set constant factor for 1st order initial conditions
         self.cq = 50
         
@@ -812,6 +810,8 @@ class TwoStageModel(CosmologicalModel):
             self.foclass = CanonicalFirstOrder
         else:
             self.foclass = foclass
+        
+        #Setup model variables    
         self.bgmodel = self.firstordermodel = None
             
     def finda_end(self, Hend, Hreh=None):
@@ -950,7 +950,8 @@ class TwoStageModel(CosmologicalModel):
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
         self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
-                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver, mass=self.mass)
+                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
+                            potential_func=self.potentials)
         
         #Start background run
         if not self.quiet:
@@ -971,7 +972,7 @@ class TwoStageModel(CosmologicalModel):
         #Initialize first order model
         self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit, mass=self.mass)
+                                k=self.k, ainit=self.ainit, potential_func=self.potentials)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
