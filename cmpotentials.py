@@ -1,5 +1,5 @@
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.1 2008/10/22 12:46:04 ith Exp $
+    $Id: cmpotentials.py,v 1.2 2008/10/22 13:15:20 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -64,8 +64,8 @@ def lambdaphi4(y, params=None):
     if params is not None and "lambda" in params:
         l = params["lambda"]
     else:
-        #Use WMAP value of mass (in Mpl)
-        l = 6.133e-6
+        #Use WMAP value of lambda
+        l = 1 #Change!
     
     #potential U = 1/4 l \phi^4
     U = 0.25*l*(y[0]**4)
