@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.154 2008/10/22 13:13:36 ith Exp $
+    $Id: cosmomodels.py,v 1.155 2008/10/27 13:04:57 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -42,7 +42,8 @@ class CosmologicalModel(object):
     """
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode"]
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10, dxsav=0.0, solver="scipy_odeint", potential_func=None):
+    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10,
+                 dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
         """Initialize model variables, some with default values. Default solver is odeint."""
         self.ystart = ystart
         self.k = None #so we can test whether k is set
@@ -79,6 +80,12 @@ class CosmologicalModel(object):
         else:
             raise ModelError("Need to specify a function for potentials.")
         
+        #Set self.pot_params to argument
+        if not isinstance(pot_params, dict) and pot_params is not None:
+            raise ModelError("Need to provide pot_params as a dictionary of parameters.")
+        else:
+            self.pot_params = pot_params
+        
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
         self.runcount = 0 #How many times has the model been run?
@@ -93,7 +100,7 @@ class CosmologicalModel(object):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
         pass
     
-    def potentials(self, y):
+    def potentials(self, y, pot_params=None):
         """Return a 3-tuple of potential, 1st and 2nd derivs given y."""
         pass
     
@@ -245,7 +252,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.154 $",
+                  "CVSRevision":"$Revision: 1.155 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -544,7 +551,7 @@ class PhiModels(CosmologicalModel):
                     
         #Set initial H value if None
         if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart)[0]
+            U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
         
         #Titles
@@ -560,7 +567,7 @@ class PhiModels(CosmologicalModel):
         H = N.sqrt(U/(3.0-0.5*(phidot**2)))
         return H
     
-    def potentials(self, y):
+    def potentials(self, y, pot_params=None):
         """Return value of potential at y, along with first and second derivs."""
         pass
     
@@ -611,11 +618,11 @@ class PhiModels(CosmologicalModel):
         
         #First plot of phi
         P.subplot(121)
-        super(EfoldModel, self).plotresults(fig=f, show=False, varindex=0, saveplot=False)
+        super(PhiModels, self).plotresults(fig=f, show=False, varindex=0, saveplot=False)
         
         #Second plot of H
         P.subplot(122)
-        super(EfoldModel, self).plotresults(fig=f, show=False, varindex=2, saveplot=False)
+        super(PhiModels, self).plotresults(fig=f, show=False, varindex=2, saveplot=False)
                 
         P.show()
         return
@@ -645,7 +652,7 @@ class CanonicalBackground(PhiModels):
             dydx[0] = dy[0]/dn etc"""
         
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)        
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
         
         #Set derivatives
         dydx = N.zeros(3)
@@ -694,7 +701,7 @@ class CanonicalFirstOrder(PhiModels):
         
         #Set initial H value if None
         if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart)[0]
+            U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
             
         #Text for graphs
@@ -713,7 +720,7 @@ class CanonicalFirstOrder(PhiModels):
             dydx[0] = dy[0]/dn etc"""
         
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)        
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
         
         #Set derivatives taking care of k type
         if type(self.k) is N.ndarray or type(self.k) is list: 
@@ -755,7 +762,7 @@ class TwoStageModel(CosmologicalModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None, pot_params=None):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -785,7 +792,8 @@ class TwoStageModel(CosmologicalModel):
         else:
             self.ystart = ystart
         #Call superclass
-        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver, potential_func=potential_func)
+        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, 
+                tstep_min, solver=solver, potential_func=potential_func, pot_params=pot_params)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -951,7 +959,7 @@ class TwoStageModel(CosmologicalModel):
             ys = self.ystart[0:3,0]
         self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                            potential_func=self.potentials)
+                            potential_func=self.potentials, pot_params=self.pot_params)
         
         #Start background run
         if not self.quiet:
@@ -972,7 +980,7 @@ class TwoStageModel(CosmologicalModel):
         #Initialize first order model
         self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit, potential_func=self.potentials)
+                                k=self.k, ainit=self.ainit, potential_func=self.potentials, pot_params=self.pot_params)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
@@ -1117,7 +1125,7 @@ class CanonicalTwoStage(TwoStageModel):
         phidot = self.yresult[:,1,:]
         a = self.ainit*N.exp(self.tresult)
         H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:])[1]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
         deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
         
