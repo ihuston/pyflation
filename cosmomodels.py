@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.156 2008/10/28 15:34:56 ith Exp $
+    $Id: cosmomodels.py,v 1.157 2008/10/28 15:35:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -253,7 +253,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.156 $",
+                  "CVSRevision":"$Revision: 1.157 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -757,7 +757,9 @@ class CanonicalFirstOrder(PhiModels):
         dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((self.k/(a*y[2]))**2)*y[5]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
-        return dydx                
+        return dydx
+        
+                
 class TwoStageModel(CosmologicalModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
