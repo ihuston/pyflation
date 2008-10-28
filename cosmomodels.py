@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.157 2008/10/28 15:35:24 ith Exp $
+    $Id: cosmomodels.py,v 1.158 2008/10/28 15:44:16 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -253,7 +253,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.157 $",
+                  "CVSRevision":"$Revision: 1.158 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -1105,7 +1105,7 @@ class CanonicalTwoStage(TwoStageModel):
         pass
 
 
-class FOCanonicalTwoStage(TwoStageModel):
+class FOCanonicalTwoStage(CanonicalTwoStage):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
     """
                     
