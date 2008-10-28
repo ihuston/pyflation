@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.155 2008/10/27 13:04:57 ith Exp $
+    $Id: cosmomodels.py,v 1.156 2008/10/28 15:34:56 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -17,6 +17,7 @@ from scipy import integrate
 from scipy import interpolate
 import helpers 
 import cmpotentials
+import gzip
 
 #debugging
 #from pdb import set_trace
@@ -252,7 +253,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.155 $",
+                  "CVSRevision":"$Revision: 1.156 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -427,7 +428,7 @@ class CosmologicalModel(object):
             raise IOError("Directory 'results' does not exist")
         
         try:
-            resultsfile = open(filename, "w")
+            resultsfile = gzip.GzipFile(filename, "w")
             try:
                 pickle.dump(self.resultlist, resultsfile)
             finally:
@@ -1050,12 +1051,66 @@ class TwoStageModel(CosmologicalModel):
         
 
 class CanonicalTwoStage(TwoStageModel):
-    """Implementation of Ringeval two stage model with standard initial conditions for phi.
-    """                
+    """Implementation of generic two stage model with standard initial conditions for phi.
+    """
+                    
     def __init__(self, *args, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
         #Call superclass
         super(CanonicalTwoStage, self).__init__(*args, **kwargs)
+        
+     
+    def getdeltaphi(self):
+        """Find the spectrum of perturbations for each k. 
+           Return Pr.
+           """
+        pass
+    
+    def findPr(self):
+        """Return the spectrum of curvature perturbations P_R for each k."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        Pphi = self.findPphi()
+        phidot = self.yresult[:,1,:] #bg phidot
+        Pr = Pphi/(phidot**2) #change if bg evol is different
+        return Pr
+    
+    def findPgrav(self):
+        """Return the spectrum of tensor perturbations P_grav for each k."""
+        Pphi = self.findPphi()
+        Pgrav = 2*Pphi
+        return Pgrav
+    
+    def getzeta(self):
+        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
+        #Get needed variables
+        phidot = self.yresult[:,1,:]
+        a = self.ainit*N.exp(self.tresult)
+        H = self.yresult[:,2,:]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
+        
+        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
+        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
+        
+        zeta = -H*deltarho/drhodt
+        return zeta, deltarho, drhodt
+        
+    def findzetasq(self):
+        """Return the spectrum of zeta."""
+        pass
+
+
+class FOCanonicalTwoStage(TwoStageModel):
+    """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
+    """
+                    
+    def __init__(self, *args, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+        #Call superclass
+        super(FOCanonicalTwoStage, self).__init__(*args, **kwargs)
         
     def getfoystart(self):
         """Model dependent setting of ystart"""
@@ -1103,38 +1158,4 @@ class CanonicalTwoStage(TwoStageModel):
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return deltaphi
     
-    def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k."""
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        Pphi = self.findPphi()
-        phidot = self.yresult[:,1,:] #bg phidot
-        Pr = Pphi/(phidot**2) #change if bg evol is different
-        return Pr
     
-    def findPgrav(self):
-        """Return the spectrum of tensor perturbations P_grav for each k."""
-        Pphi = self.findPphi()
-        Pgrav = 2*Pphi
-        return Pgrav
-    
-    def getzeta(self):
-        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
-        #Get needed variables
-        phidot = self.yresult[:,1,:]
-        a = self.ainit*N.exp(self.tresult)
-        H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
-        
-        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
-        
-        zeta = -H*deltarho/drhodt
-        return zeta, deltarho, drhodt
-        
-    def findzetasq(self):
-        """Return the spectrum of zeta."""
-        pass
