@@ -1,5 +1,5 @@
 """Second Order Cosmological Model simulations by Ian Huston
-    $Id: secondorder.py,v 1.2 2008/10/28 15:44:27 ith Exp $
+    $Id: secondorder.py,v 1.3 2008/10/29 13:37:18 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -25,7 +25,7 @@ class CanonicalSecondOrder(PhiModels):
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
-        super(CanonicalFirstOrder, self).__init__(*args, **kwargs)
+        super(CanonicalSecondOrder, self).__init__(*args, **kwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -127,25 +127,29 @@ class SOCanonicalTwoStage(CanonicalTwoStage):
     """Implementation of Second Order Canonical two stage model with standard initial conditions for phi.
     """
                     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ystart=None, foclass=CanonicalSecondOrder, *args,**kwargs):
         """Initialize model and ensure initial conditions are sane."""
         
         #Initial conditions for each of the variables.
-        if kwargs["ystart"] is None:
+        if ystart is None:
             #Initial conditions for all variables
-            self.ystart = kwargs["ystart"] = N.array([18.0, # \phi_0
+            self.ystart = ystart = N.array([18.0, # \phi_0
                                    -0.1, # \dot{\phi_0}
                                     0.0, # H - leave as 0.0 to let program determine
                                     1.0, # Re\delta\phi_1
                                     0.0, # Re\dot{\delta\phi_1}
                                     1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
+                                    0.0, # Im\dot{\delta\phi_1}
+                                    0.0, # Re\delta\phi_2
+                                    0.0, # Re\dot{\delta\phi_2}
+                                    0.0, # Im\delta\phi_2
+                                    0.0  # Im\dot{\delta\phi_2}
                                     ])
         else:
-            self.ystart = kwargs["ystart"]
+            self.ystart = ystart
         
         #Call superclass
-        super(FOCanonicalTwoStage, self).__init__(*args, **kwargs)
+        super(SOCanonicalTwoStage, self).__init__(ystart=ystart, foclass=foclass, *args, **kwargs)
         
     def getfoystart(self):
         """Model dependent setting of ystart"""
@@ -183,12 +187,14 @@ class SOCanonicalTwoStage(CanonicalTwoStage):
         return foystart
     
     def getdeltaphi(self):
-        """Find the spectrum of perturbations for each k. 
-           Return Pr.
+        """Return the total perturbation \delta\phi taking into 
+            account up to second order perturbations.
            """
         #Raise error if first order not run yet
         self.checkfirstordercomplete()
         
         #Set nice variable names
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
+        deltaphi1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi1
+        deltaphi2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j #complex deltaphi2
+        deltaphi = deltaphi1 + 0.5*deltaphi2
         return deltaphi
