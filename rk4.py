@@ -1,12 +1,13 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.14 2008/09/18 14:27:56 ith Exp $
+#CVS: $Id: rk4.py,v 1.15 2008/11/04 12:44:38 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
+from pdb import set_trace
 
 #Constants
 #Cash Karp coefficients for Runge Kutta.
@@ -48,6 +49,36 @@ def rk4step(x, y, h, dydx, derivs):
     
     #Fourth step
     dyt = derivs(yt,x+h)
+    
+    #Accumulate increments with proper weights
+    yout = y + h6*(dydx + dyt + 2*dym)
+    
+    return yout
+
+def rk4stepks(x, y, h, dydx, ks, derivs):
+    '''Do one step of the classical 4th order Runge Kutta method,
+    starting from y at x with time step h and derivatives given by derivs'''
+    
+    hh = h*0.5 #Half time step
+    h6 = h/6.0 #Sixth of time step
+    xh = x + hh # Halfway point in x direction
+    
+    #First step, we already have derivatives from dydx
+    yt = y +hh*dydx
+    
+    #Second step, get new derivatives
+    dyt = derivs(yt, xh, ks)
+    
+    yt = y + hh*dyt
+    
+    #Third step
+    dym = derivs(yt, xh, ks)
+    
+    yt = y + h*dym
+    dym = dym + dyt
+    
+    #Fourth step
+    dyt = derivs(yt, x+h, ks)
     
     #Accumulate increments with proper weights
     yout = y + h6*(dydx + dyt + 2*dym)
@@ -106,6 +137,71 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
         x = xx[k+1] = x + h
         y.append(v)
     
+    return xx, y
+    
+def rkdriver_withks(vstart, ts, te, allks, h, derivs):
+    """Driver function for classical Runge Kutta 4th Order method. 
+    Starting at x1 and proceeding to x2 in nstep number of steps.
+    Copes with multiple start times for different ks if they are sorted in terms of starting time."""
+    set_trace()
+    
+    #Make sure h is specified
+    if h is None:
+        raise SimRunError("Need to specify h.")
+   
+    if allks is not None:
+        if not isinstance(ts, N.ndarray):
+                raise SimRunError("Need more than one start time for different k modes.")
+        #Set up x results
+        
+        x1 = min(ts) #Find earliest start time
+        if not all(ts[ts.argsort()] == ts):
+            raise SimRunError("ks not in order of start time.") #Sanity check
+        xx = []
+        xx.append(x1) #Start x value
+        #Set up end list for each section
+        xelist = N.empty_like(ts) #create empty array (which will be written over)
+        xelist[:-1] = ts[1:]
+        xelist[-1] = N.ceil(te)
+        
+        v = N.ones_like(vstart)*N.nan
+        y = [] #start results list
+        #First result is initial condition
+        firstkix = N.where(x1>=ts)[0]
+        for anix in firstkix:
+            if N.any(N.isnan(v[:,anix])):
+                v[:,anix] = vstart[:,anix]
+        y.append(v.copy()) #Add first result
+                    
+        #Need to start at different times for different k modes
+        for xstart, xend in zip(ts,xelist):
+            #Set up initial values
+            kix = N.where(xstart>=ts)[0]
+            ks = allks[kix]
+            for oneix in kix:
+                if N.any(N.isnan(v[:,oneix])):
+                    v[:,oneix] = vstart[:,oneix]
+                
+            for x in N.arange(xstart, xend, h):
+                dv = derivs(v[:,kix], x, ks)
+                v[:,kix] = rk4stepks(x, v[:,kix], h, dv, ks, derivs)
+                x = x + h
+                xx.append(x.copy())
+                y.append(v.copy())
+    else: #No ks to iterate over
+        nstep = N.ceil((te-ts)/h) #Total number of steps to take
+        xx = N.zeros(nstep+1) #initialize 1-dim array for x
+        xx[0] = x = ts # set both first xx and x to ts
+        
+        v = vstart
+        y = [v.copy()] #start results list
+        ks = None
+        for step in xrange(nstep):
+            dv = derivs(v, x, ks)
+            v = rk4stepks(x, v, h, dv, ks, derivs)
+            x = xx[step+1] = x + h
+            y.append(v.copy())
+        
     return xx, y
     
 def rkqs(y, dydx, x, htry, eps, yscal, derivs):
