@@ -1,5 +1,5 @@
 """Second Order Cosmological Model simulations by Ian Huston
-    $Id: secondorder.py,v 1.3 2008/10/29 13:37:18 ith Exp $
+    $Id: secondorder.py,v 1.4 2008/11/04 12:44:52 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -63,16 +63,19 @@ class CanonicalSecondOrder(PhiModels):
                         r"Imag $\delta\varphi_2$",
                         r"Imag $\dot{\delta\varphi_2}$"]
                     
-    def derivs(self, y, t):
+    def derivs(self, y, t, k=None):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        
+        #If k not given select all
+        if k is None:
+            k = self.k
+            
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
         
         #Set derivatives taking care of k type
-        if type(self.k) is N.ndarray or type(self.k) is list: 
-            dydx = N.zeros((11,len(self.k)))
+        if type(k) is N.ndarray or type(k) is list: 
+            dydx = N.zeros((11,len(k)))
         else:
             dydx = N.zeros(11)
             
@@ -93,7 +96,7 @@ class CanonicalSecondOrder(PhiModels):
         a = self.ainit*N.exp(t)
         
         #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3]
+        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
         #print dydx[4]
         
@@ -101,7 +104,7 @@ class CanonicalSecondOrder(PhiModels):
         dydx[5] = y[6]
         
         #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((self.k/(a*y[2]))**2)*y[5]
+        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         #
         #Second Order perturbations
@@ -110,14 +113,14 @@ class CanonicalSecondOrder(PhiModels):
         dydx[7] = y[8]
         
         #d\deltaphi_2^\prime/dn Real
-        dydx[8] = (-(3 + dydx[2]/y[2])*y[8] - ((self.k/(a*y[2]))**2)*y[7]
+        dydx[8] = (-(3 + dydx[2]/y[2])*y[8] - ((k/(a*y[2]))**2)*y[7]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[7]/(y[2]**2)))
         
         #d\deltaphi_2/dn Imag
         dydx[9] = y[10]
         
         #d\deltaphi_2^\prime/dn Imag
-        dydx[10] = (-(3 + dydx[2]/y[2])*y[10] - ((self.k/(a*y[2]))**2)*y[9]
+        dydx[10] = (-(3 + dydx[2]/y[2])*y[10] - ((k/(a*y[2]))**2)*y[9]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[9]/(y[2]**2)))
         
         return dydx
