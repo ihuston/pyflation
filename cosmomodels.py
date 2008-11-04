@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.160 2008/11/04 12:45:39 ith Exp $
+    $Id: cosmomodels.py,v 1.161 2008/11/04 17:39:08 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -145,16 +145,12 @@ class CosmologicalModel(object):
             #Loosely estimate number of steps based on requested step size
             
             try:
-                self.tresult, yreslist = rk4.rkdriver_withks(self.ystart, self.tstart, self.tend, self.k, self.tstep_wanted, self.derivs)
+                self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, self.tstart, self.tend, self.k, self.tstep_wanted, self.derivs)
             except StandardError, er:
                 merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
                 raise merror
-            #self.yresult = N.vstack(yreslist)
-            set_trace()
-            self.yresult = N.concatenate([yreslist],0)
             
         if self.solver == "scipy_odeint":
-            
             #Use scipy solver. Need to massage derivs into right form.
             #swap_derivs = lambda y, t : self.derivs(t,y)
                         
@@ -274,7 +270,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.160 $",
+                  "CVSRevision":"$Revision: 1.161 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
