@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.159 2008/11/03 14:42:17 ith Exp $
+    $Id: cosmomodels.py,v 1.160 2008/11/04 12:45:39 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -20,7 +20,7 @@ import cmpotentials
 import gzip
 
 #debugging
-#from pdb import set_trace
+from pdb import set_trace
 
 #WMAP pivot scale and Power spectrum
 WMAP_PIVOT = 1.3125e-58 #WMAP pivot scale in Mpl
@@ -41,7 +41,7 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode"]
+    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks"]
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10,
                  dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
@@ -109,7 +109,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True, rtol_wanted=None, atol_wanted=None):
+    def run(self, saveresults=True, **odeintkwargs):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -130,6 +130,7 @@ class CosmologicalModel(object):
                 raise
         
         if self.solver == "rkdriver_dumb":
+            #set_trace()
             #Loosely estimate number of steps based on requested step size
             nstep = N.ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
@@ -138,7 +139,20 @@ class CosmologicalModel(object):
                 merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
                 raise merror
             self.yresult = N.vstack(yreslist)
-        
+
+        if self.solver == "rkdriver_withks":
+            #set_trace()
+            #Loosely estimate number of steps based on requested step size
+            
+            try:
+                self.tresult, yreslist = rk4.rkdriver_withks(self.ystart, self.tstart, self.tend, self.k, self.tstep_wanted, self.derivs)
+            except StandardError, er:
+                merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
+                raise merror
+            #self.yresult = N.vstack(yreslist)
+            set_trace()
+            self.yresult = N.concatenate([yreslist],0)
+            
         if self.solver == "scipy_odeint":
             
             #Use scipy solver. Need to massage derivs into right form.
@@ -159,7 +173,7 @@ class CosmologicalModel(object):
                 
                 #Do calculation
                 #Compute list of ks in a row
-                yres = [scipy_odeint(self.derivs, ys, times[ts:], full_output=True, rtol=rtol_wanted, atol=atol_wanted) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                yres = [scipy_odeint(self.derivs, ys, times[ts:], **odeintkwargs) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 ylist = [yr[0] for yr in yres]
                 self.solverinfo = [yr[1] for yr in yres] #information about solving routine
                 ylistlengths = [len(ys) for ys in ylist]
@@ -171,7 +185,13 @@ class CosmologicalModel(object):
                 self.k = klist
             else:
                 times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                self.yresult = scipy_odeint(self.derivs, self.ystart, times)
+                yres = scipy_odeint(self.derivs, self.ystart, times, **odeintkwargs)
+                if "full_output" in odeintkwargs and odeintkwargs["full_output"] is True:
+                    self.solverinfo = yres[1]
+                    self.yresult = yres[0]
+                else:
+                    self.yresult = yres
+                
                 self.tresult = times
                 
         if self.solver == "scipy_vode":
@@ -254,7 +274,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.159 $",
+                  "CVSRevision":"$Revision: 1.160 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -649,10 +669,13 @@ class CanonicalBackground(PhiModels):
         self.tname = r"E-folds $n$"
         self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
-    def derivs(self, y, t):
+    def derivs(self, y, t, k=None):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        
+        #If k not given select all
+        if k is None:
+            k = self.k
+            
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
         
@@ -717,16 +740,19 @@ class CanonicalFirstOrder(PhiModels):
                         r"Imag $\delta\varphi_1$",
                         r"Imag $\dot{\delta\varphi_1}$"]
                     
-    def derivs(self, y, t):
+    def derivs(self, y, t, k=None):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        
+        #If k not given select all
+        if k is None:
+            k = self.k
+            
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
         
         #Set derivatives taking care of k type
-        if type(self.k) is N.ndarray or type(self.k) is list: 
-            dydx = N.zeros((7,len(self.k)))
+        if type(k) is N.ndarray or type(k) is list: 
+            dydx = N.zeros((7,len(k)))
         else:
             dydx = N.zeros(7)
             
@@ -747,7 +773,7 @@ class CanonicalFirstOrder(PhiModels):
         a = self.ainit*N.exp(t)
         
         #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3]
+        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
         #print dydx[4]
         
@@ -755,7 +781,7 @@ class CanonicalFirstOrder(PhiModels):
         dydx[5] = y[6]
         
         #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((self.k/(a*y[2]))**2)*y[5]
+        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
         return dydx
@@ -954,8 +980,9 @@ class TwoStageModel(CosmologicalModel):
         
         return nsunsort  
         
-    def runbg(self):
+    def runbg(self, odeintkwargs=None):
         """Run bg model after setting initial conditions."""
+
         #Check ystart is in right form (1-d array of three values)
         if self.ystart.ndim == 1:
             ys = self.ystart[0:3]
@@ -969,7 +996,7 @@ class TwoStageModel(CosmologicalModel):
         if not self.quiet:
             print("Running background model...\n")
         try:
-            self.bgmodel.run(saveresults=False)
+            self.bgmodel.run(saveresults=False, **odeintkwargs)
         except ModelError, er:
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
@@ -978,9 +1005,9 @@ class TwoStageModel(CosmologicalModel):
             print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
-    def runfo(self):
+    def runfo(self, odeintkwargs=None):
         """Run first order model after setting initial conditions."""
-                
+
         #Initialize first order model
         self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
@@ -991,25 +1018,32 @@ class TwoStageModel(CosmologicalModel):
         if not self.quiet:
             print("Beginning first order run...\n")
         try:
-            self.firstordermodel.run(saveresults=False)
+            self.firstordermodel.run(saveresults=False, **odeintkwargs)
         except ModelError, er:
-            print "Error in first order run, aborting! Message: " + er.message
+            raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
         #Set results to current object
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, odeintkwargs=None):
         """Run BgModelInN with initial conditions and then use the results
             to run ComplexModelInN."""
+        #Check if any odeint args passed
+        if odeintkwargs is None:
+            if self.solver is "scipy_odeint":
+                odeintkwargs = {"full_output":True, "rtol":None, "atol":None}
+            else:
+                odeintkwargs = {}
+            
         #Run bg model
-        self.runbg()
+        self.runbg(odeintkwargs=odeintkwargs)
         
         #Set initial conditions for first order model
         self.setfoics()
         
         #Run first order model
-        self.runfo()
+        self.runfo(odeintkwargs=odeintkwargs)
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
