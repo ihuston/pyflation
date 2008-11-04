@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.15 2008/11/04 12:44:38 ith Exp $
+#CVS: $Id: rk4.py,v 1.16 2008/11/04 17:39:28 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -143,7 +143,7 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    set_trace()
+    #set_trace()
     
     #Make sure h is specified
     if h is None:
@@ -188,6 +188,9 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
                 x = x + h
                 xx.append(x.copy())
                 y.append(v.copy())
+        #Get results in right shape
+        xx = N.array(xx)
+        y = N.concatenate([y], 0)
     else: #No ks to iterate over
         nstep = N.ceil((te-ts)/h) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
@@ -201,7 +204,8 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
             v = rk4stepks(x, v, h, dv, ks, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
-        
+        y = N.concatenate([y], 0)
+    #Return results    
     return xx, y
     
 def rkqs(y, dydx, x, htry, eps, yscal, derivs):
