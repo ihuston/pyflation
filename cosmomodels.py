@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.163 2008/11/07 13:00:34 ith Exp $
+    $Id: cosmomodels.py,v 1.164 2008/11/07 15:04:40 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -109,7 +109,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True, **odeintkwargs):
+    def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -169,7 +169,7 @@ class CosmologicalModel(object):
                 
                 #Do calculation
                 #Compute list of ks in a row
-                yres = [scipy_odeint(self.derivs, ys, times[ts:], **odeintkwargs) for self.k, ys, ts in zip(klist,yslist,startindices)]
+                yres = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 ylist = [yr[0] for yr in yres]
                 self.solverinfo = [yr[1] for yr in yres] #information about solving routine
                 ylistlengths = [len(ys) for ys in ylist]
@@ -181,12 +181,8 @@ class CosmologicalModel(object):
                 self.k = klist
             else:
                 times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                yres = scipy_odeint(self.derivs, self.ystart, times, **odeintkwargs)
-                if "full_output" in odeintkwargs and odeintkwargs["full_output"] is True:
-                    self.solverinfo = yres[1]
-                    self.yresult = yres[0]
-                else:
-                    self.yresult = yres
+                yres = scipy_odeint(self.derivs, self.ystart, times)
+                self.yresult = yres
                 
                 self.tresult = times
                 
@@ -270,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.163 $",
+                  "CVSRevision":"$Revision: 1.164 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -976,7 +972,7 @@ class TwoStageModel(CosmologicalModel):
         
         return nsunsort  
         
-    def runbg(self, odeintkwargs=None):
+    def runbg(self):
         """Run bg model after setting initial conditions."""
 
         #Check ystart is in right form (1-d array of three values)
@@ -992,7 +988,7 @@ class TwoStageModel(CosmologicalModel):
         if not self.quiet:
             print("Running background model...\n")
         try:
-            self.bgmodel.run(saveresults=False, **odeintkwargs)
+            self.bgmodel.run(saveresults=False)
         except ModelError, er:
             print "Error in background run, aborting! Message: " + er.message
         #Find end of inflation
@@ -1001,7 +997,7 @@ class TwoStageModel(CosmologicalModel):
             print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
-    def runfo(self, odeintkwargs=None):
+    def runfo(self):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
@@ -1014,7 +1010,7 @@ class TwoStageModel(CosmologicalModel):
         if not self.quiet:
             print("Beginning first order run...\n")
         try:
-            self.firstordermodel.run(saveresults=False, **odeintkwargs)
+            self.firstordermodel.run(saveresults=False)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
@@ -1022,24 +1018,18 @@ class TwoStageModel(CosmologicalModel):
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True, odeintkwargs=None):
+    def run(self, saveresults=True):
         """Run BgModelInN with initial conditions and then use the results
             to run ComplexModelInN."""
-        #Check if any odeint args passed
-        if odeintkwargs is None:
-            if self.solver is "scipy_odeint":
-                odeintkwargs = {"full_output":True, "rtol":None, "atol":None}
-            else:
-                odeintkwargs = {}
             
         #Run bg model
-        self.runbg(odeintkwargs=odeintkwargs)
+        self.runbg()
         
         #Set initial conditions for first order model
         self.setfoics()
         
         #Run first order model
-        self.runfo(odeintkwargs=odeintkwargs)
+        self.runfo()
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
