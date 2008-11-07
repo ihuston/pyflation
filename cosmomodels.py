@@ -1,12 +1,12 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.161 2008/11/04 17:39:08 ith Exp $
+    $Id: cosmomodels.py,v 1.162 2008/11/07 12:59:54 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import pylab as P
-from matplotlib import axes3d
+#from matplotlib import axes3d #Removed in update matplotlib package
 import rk4
 import sys
 import os.path
@@ -270,7 +270,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.161 $",
+                  "CVSRevision":"$Revision: 1.162 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
