@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.164 2008/11/07 15:04:40 ith Exp $
+    $Id: cosmomodels.py,v 1.165 2008/11/07 15:25:13 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.164 $",
+                  "CVSRevision":"$Revision: 1.165 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -876,7 +876,7 @@ class TwoStageModel(CosmologicalModel):
         """FInd horizon crossing for all ks"""
         return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
         
-    def setfoics(self):
+    def setfoics(self, fixedtstart=None):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
         #debug
@@ -899,18 +899,23 @@ class TwoStageModel(CosmologicalModel):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         
-        #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
-        kcrossefolds = kcrossings[:,1]
-                
-        #If mode crosses horizon before t=0 then we will not be able to propagate it
-        if any(kcrossefolds==0):
-            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
-        
-        #Find new start time from earliest kcrossing
-        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
-       
+        if fixedtstart is None:
+            #find k crossing indices
+            kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                                self.bgmodel.yresult[:self.fotendindex,2])
+            kcrossefolds = kcrossings[:,1]
+                    
+            #If mode crosses horizon before t=0 then we will not be able to propagate it
+            if any(kcrossefolds==0):
+                raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+            
+            #Find new start time from earliest kcrossing
+            self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
+        else:
+            self.fotstart = fixedtstart["fotstart"]
+            self.fotstartindex = fixedtstart["fotstartindex"]
+            if self.bgmodel.tresult[self.fotstartindex] != self.fotstart:
+                raise ModelError("Need to make sure that fotstartindex points to the same value as fotstart!")
         self.foystart = self.getfoystart()
         return
         
