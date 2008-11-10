@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.166 2008/11/10 11:38:20 ith Exp $
+    $Id: cosmomodels.py,v 1.167 2008/11/10 18:15:30 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -18,6 +18,7 @@ from scipy import interpolate
 import helpers 
 import cmpotentials
 import gzip
+import tables
 
 #debugging
 from pdb import set_trace
@@ -25,6 +26,9 @@ from pdb import set_trace
 #WMAP pivot scale and Power spectrum
 WMAP_PIVOT = 1.3125e-58 #WMAP pivot scale in Mpl
 WMAP_PR = 2.06989278313e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
+
+#Results directory
+RESULTS_PATH = "/misc/scratch/ith/numerics/results/"
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -250,10 +254,10 @@ class CosmologicalModel(object):
             self.k
         except (NameError, AttributeError):
             self.k=None
-        try:
-            self.mass
-        except (NameError, AttributeError):    
-            self.mass=None
+#         try:
+#             self.mass
+#         except (NameError, AttributeError):    
+#             self.mass=None
             
         #Form dictionary of inputs
         params = {"ystart":self.ystart, 
@@ -262,16 +266,35 @@ class CosmologicalModel(object):
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
                   "k":self.k, #model dependent params
-                  "mass":self.mass,
+                  #"mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.166 $",
-                  "datetime":datetime.datetime.now()
+                  "CVSRevision":"$Revision: 1.167 $",
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
-               
+    
+    def gethf5paramsdict(self):
+        """Describes the fields required to save the calling parameters."""
+        params = {
+        "solver" : tables.StringCol(50),
+        "classname" : tables.StringCol(255),
+        "CVSRevision" : tables.StringCol(255),
+        "k" : tables.Float64Col(self.k.shape),
+        "ystart" : tables.Float64Col(self.ystart.shape),
+        "tstart" : tables.Float64Col(N.shape(self.tstart)),
+        "simtstart" : tables.Float64Col(),
+        "tend" : tables.Float64Col(),
+        "tstep_wanted" : tables.Float64Col(),
+        "tstep_min" : tables.Float64Col(),
+        "eps" : tables.Float64Col(),
+        "dxsav" : tables.Float64Col(),
+        "datetime" : tables.Float64Col()
+        }
+        return params
+    
     def argstring(self):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
         a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
@@ -279,7 +302,7 @@ class CosmologicalModel(object):
     
     def saveplot(self, fig):
         """Save figure fig in directory graphs"""
-        time = self.lastparams["datetime"].strftime("%Y%m%d%H%M%S")
+        time = self.lastparams["datetime"]
         filename = "./graphs/run" + time + ".png"
             
         if os.path.isdir(os.path.dirname(filename)):
@@ -428,12 +451,12 @@ class CosmologicalModel(object):
             self.saveplot(fig)
         return fig
         
-    def saveallresults(self, filename=None):
+    def saveallresults(self, filename=None, filetype="gz"):
         """Tries to save file as a pickled object in directory 'results'."""
         
-        now = self.lastparams["datetime"].strftime("%Y%m%d%H%M%S")
+        now = self.lastparams["datetime"]
         if not filename:
-            filename = "./results/run" + now
+            filename = RESULTS_PATH + "run" + now + "." + filetype
             
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
@@ -441,14 +464,32 @@ class CosmologicalModel(object):
         else:
             raise IOError("Directory 'results' does not exist")
         
-        try:
-            resultsfile = gzip.GzipFile(filename, "w")
+        if filetype is "gz":
             try:
-                pickle.dump(self.resultlist, resultsfile)
-            finally:
-                resultsfile.close()
-        except IOError:
-            raise
+                resultsfile = gzip.GzipFile(filename, "w")
+                try:
+                    pickle.dump(self.resultlist, resultsfile)
+                finally:
+                    resultsfile.close()
+            except IOError:
+                raise
+        elif filetype is "hf5":
+            try:
+                rf = tables.openFile(filename, "w")
+                try:
+                    rf.createGroup(rf.root, "results", "Results of run" + now)
+                    rf.createArray(rf.root.results, "tresult", self.tresult)
+                    rf.createArray(rf.root.results, "yresult", self.yresult)
+                    tab = rf.createTable(rf.root.results, "parameters", self.gethf5paramsdict())
+                    tabrow = tab.row
+                    params = self.callingparams()
+                    for key in params:
+                        tabrow[key] = params[key]
+                    rf.flush()
+                finally:
+                    rf.close()
+            except IOError:
+                raise
         
         return filename
     
@@ -1052,6 +1093,62 @@ class TwoStageModel(CosmologicalModel):
                 print er                
         
         return
+    
+    def callingparams(self):
+        """Returns list of parameters to save with results."""
+        #Test whether k has been set
+        try:
+            self.k
+        except (NameError, AttributeError):
+            self.k=None
+#         try:
+#             self.mass
+#         except (NameError, AttributeError):    
+#             self.mass=None
+            
+        #Form dictionary of inputs
+        params = {"ystart":self.ystart, 
+                  "tstart":self.tstart,
+                  "fotstart":self.fotstart,
+                  "foystart":self.foystart,
+                  "ainit":self.ainit,
+                  "potential_func":self.potentials.__name__,
+                  "tend":self.tend,
+                  "tstep_wanted":self.tstep_wanted,
+                  "tstep_min":self.tstep_min,
+                  "k":self.k, #model dependent params
+                  #"mass":self.mass,
+                  "eps":self.eps,
+                  "dxsav":self.dxsav,
+                  "solver":self.solver,
+                  "classname":self.__class__.__name__,
+                  "CVSRevision":"$Revision: 1.167 $",
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  }
+        return params
+    
+    def gethf5paramsdict(self):
+        """Describes the fields required to save the calling parameters."""
+        params = {
+        "solver" : tables.StringCol(50),
+        "classname" : tables.StringCol(255),
+        "CVSRevision" : tables.StringCol(255),
+        "k" : tables.Float64Col(self.k.shape),
+        "ystart" : tables.Float64Col(self.ystart.shape),
+        "tstart" : tables.Float64Col(N.shape(self.tstart)),
+        "foystart" : tables.Float64Col(self.foystart.shape),
+        "fotstart" : tables.Float64Col(N.shape(self.fotstart)),
+        "simtstart" : tables.Float64Col(),
+        "ainit" : tables.Float64Col(),
+        "potential_func" : tables.StringCol(255),
+        "tend" : tables.Float64Col(),
+        "tstep_wanted" : tables.Float64Col(),
+        "tstep_min" : tables.Float64Col(),
+        "eps" : tables.Float64Col(),
+        "dxsav" : tables.Float64Col(),
+        "datetime" : tables.Float64Col()
+        }
+        return params
     
     def checkfirstordercomplete(self):
         """Raise an error if first order model has not been run."""
