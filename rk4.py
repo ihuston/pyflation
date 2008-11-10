@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.16 2008/11/04 17:39:28 ith Exp $
+#CVS: $Id: rk4.py,v 1.17 2008/11/10 11:38:50 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -139,11 +139,11 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     
     return xx, y
     
-def rkdriver_withks(vstart, ts, te, allks, h, derivs):
+def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    #set_trace()
+    set_trace()
     
     #Make sure h is specified
     if h is None:
@@ -154,14 +154,18 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
                 raise SimRunError("Need more than one start time for different k modes.")
         #Set up x results
         
-        x1 = min(ts) #Find earliest start time
+        x1 = simtstart #Find simulation start time
         if not all(ts[ts.argsort()] == ts):
             raise SimRunError("ks not in order of start time.") #Sanity check
         xx = []
         xx.append(x1) #Start x value
-        #Set up end list for each section
-        xelist = N.empty_like(ts) #create empty array (which will be written over)
-        xelist[:-1] = ts[1:]
+        
+        #Set up start and end list for each section
+        xslist = N.empty((len(ts)+1))
+        xslist[0] = simtstart
+        xslist[1:] = ts[:]
+        xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
+        xelist[:-1] = ts[:]
         xelist[-1] = N.ceil(te)
         
         v = N.ones_like(vstart)*N.nan
@@ -174,7 +178,7 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
         y.append(v.copy()) #Add first result
                     
         #Need to start at different times for different k modes
-        for xstart, xend in zip(ts,xelist):
+        for xstart, xend in zip(xslist,xelist):
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
@@ -192,7 +196,7 @@ def rkdriver_withks(vstart, ts, te, allks, h, derivs):
         xx = N.array(xx)
         y = N.concatenate([y], 0)
     else: #No ks to iterate over
-        nstep = N.ceil((te-ts)/h) #Total number of steps to take
+        nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
         xx[0] = x = ts # set both first xx and x to ts
         
