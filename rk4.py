@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.17 2008/11/10 11:38:50 ith Exp $
+#CVS: $Id: rk4.py,v 1.18 2008/11/10 18:15:43 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -143,7 +143,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    set_trace()
+    #set_trace()
     
     #Make sure h is specified
     if h is None:
