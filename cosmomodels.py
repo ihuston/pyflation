@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.165 2008/11/07 15:25:13 ith Exp $
+    $Id: cosmomodels.py,v 1.166 2008/11/10 11:38:20 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -109,7 +109,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, simtstart=None):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -145,7 +145,8 @@ class CosmologicalModel(object):
             #Loosely estimate number of steps based on requested step size
             
             try:
-                self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, self.tstart, self.tend, self.k, self.tstep_wanted, self.derivs)
+                self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, simtstart, self.tstart, self.tend, self.k, 
+                self.tstep_wanted, self.derivs)
             except StandardError, er:
                 merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
                 raise merror
@@ -266,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.165 $",
+                  "CVSRevision":"$Revision: 1.166 $",
                   "datetime":datetime.datetime.now()
                   }
         return params
@@ -784,7 +785,7 @@ class TwoStageModel(CosmologicalModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None, pot_params=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None, pot_params=None, simtstart=None):
         """Initialize model and ensure initial conditions are sane."""
         #Set mass as specified
         if mass is None:
@@ -799,7 +800,12 @@ class TwoStageModel(CosmologicalModel):
         if potential_func is None:
             potential_func = cmpotentials.msqphisq
         
-            
+        #Set simulation start time
+        if simtstart is None:
+            self.simtstart = 0
+        else:
+            self.simtstart = simtstart
+                    
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
@@ -876,7 +882,7 @@ class TwoStageModel(CosmologicalModel):
         """FInd horizon crossing for all ks"""
         return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
         
-    def setfoics(self, fixedtstart=None):
+    def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
         #debug
@@ -899,23 +905,18 @@ class TwoStageModel(CosmologicalModel):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         
-        if fixedtstart is None:
-            #find k crossing indices
-            kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                                self.bgmodel.yresult[:self.fotendindex,2])
-            kcrossefolds = kcrossings[:,1]
-                    
-            #If mode crosses horizon before t=0 then we will not be able to propagate it
-            if any(kcrossefolds==0):
-                raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
-            
-            #Find new start time from earliest kcrossing
-            self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
-        else:
-            self.fotstart = fixedtstart["fotstart"]
-            self.fotstartindex = fixedtstart["fotstartindex"]
-            if self.bgmodel.tresult[self.fotstartindex] != self.fotstart:
-                raise ModelError("Need to make sure that fotstartindex points to the same value as fotstart!")
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex,2])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
         self.foystart = self.getfoystart()
         return
         
@@ -1015,7 +1016,7 @@ class TwoStageModel(CosmologicalModel):
         if not self.quiet:
             print("Beginning first order run...\n")
         try:
-            self.firstordermodel.run(saveresults=False)
+            self.firstordermodel.run(saveresults=False, simtstart=self.simtstart)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
