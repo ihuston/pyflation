@@ -1,5 +1,5 @@
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.3 2008/10/27 13:04:36 ith Exp $
+    $Id: cmpotentials.py,v 1.4 2008/11/14 14:03:16 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -10,7 +10,7 @@ import numpy as N
 from pdb import set_trace
 
 def msqphisq(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2) for V=1/2 m^2 phi^2
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2
     where m is the mass of the inflaton field.
     
     Arguments:
@@ -40,11 +40,13 @@ def msqphisq(y, params=None):
     dUdphi =  (mass2)*y[0]
     #2nd deriv
     d2Udphi2 = mass2
+    #3rd deriv
+    d3Udphi3 = 0
     
-    return U,dUdphi,d2Udphi2
+    return U, dUdphi, d2Udphi2, d3Udphi3
 
 def lambdaphi4(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2) for V=1/4 lambda phi^4
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/4 lambda phi^4
     for a specified lambda.
     
     Arguments:
@@ -74,5 +76,7 @@ def lambdaphi4(y, params=None):
     dUdphi =  l*(y[0]**3)
     #2nd deriv
     d2Udphi2 = 3*l*(y[0]**2)
+    #3rd deriv
+    d3Udphi3 = 6*l*(y[0])
     
-    return U,dUdphi,d2Udphi2
+    return U, dUdphi, d2Udphi2, d3Udphi3
