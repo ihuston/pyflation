@@ -1,5 +1,5 @@
 """Second Order Cosmological Model simulations by Ian Huston
-    $Id: secondorder.py,v 1.6 2008/11/14 13:52:18 ith Exp $
+    $Id: secondorder.py,v 1.7 2008/11/14 17:28:51 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -154,23 +154,27 @@ class SOCanonicalTwoStage(CanonicalTwoStage):
         #Call superclass
         super(SOCanonicalTwoStage, self).__init__(ystart=ystart, foclass=foclass, *args, **kwargs)
         
-    def getfoystart(self):
+    def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
         #Reset starting conditions at new time
         foystart = N.zeros((len(self.ystart), len(self.k)))
         
         #set_trace()
         #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(self.fotstart)
-        Hstar = self.bgmodel.yresult[self.fotstartindex,2]
-        epsstar = self.bgepsilon[self.fotstartindex]
+        astar = self.ainit*N.exp(ts)
+        Hstar = self.bgmodel.yresult[tsix,2]
+        epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
-        etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
-        etadiff = etastar - etainit
+        
+        etadiff = etastar - self.etainit
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
-        foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
+        foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(N.sqrt(2*self.k)))
