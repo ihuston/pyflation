@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.167 2008/11/10 18:15:30 ith Exp $
+    $Id: cosmomodels.py,v 1.168 2008/11/14 14:03:34 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -106,7 +106,7 @@ class CosmologicalModel(object):
         pass
     
     def potentials(self, y, pot_params=None):
-        """Return a 3-tuple of potential, 1st and 2nd derivs given y."""
+        """Return a 4-tuple of potential, 1st, 2nd and 3rd derivs given y."""
         pass
     
     def findH(self,potential,y):
@@ -271,7 +271,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.167 $",
+                  "CVSRevision":"$Revision: 1.168 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -561,15 +561,17 @@ class BasicBgModel(CosmologicalModel):
         dUdphi =  (mass2)*y[0]
         #2nd deriv
         d2Udphi2 = mass2
+        #3rd deriv
+        d3Udphi3 = 0
         
-        return U,dUdphi,d2Udphi2
+        return U, dUdphi, d2Udphi2, d3Udphi3
     
     def derivs(self, y, t):
         """Basic background equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y)
+        U, dUdphi, d2Udphi2 = self.potentials(y)[0:3]
         
         #factor in eom [1/3 a^2 U_0]^{1/2}
         Ufactor = N.sqrt((1.0/3.0)*(y[2]**2)*U)
@@ -711,7 +713,7 @@ class CanonicalBackground(PhiModels):
             k = self.k
             
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
         #Set derivatives
         dydx = N.zeros(3)
@@ -782,7 +784,7 @@ class CanonicalFirstOrder(PhiModels):
             k = self.k
             
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
         if type(k) is N.ndarray or type(k) is list: 
@@ -1122,7 +1124,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.167 $",
+                  "CVSRevision":"$Revision: 1.168 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
