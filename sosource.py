@@ -1,4 +1,6 @@
-"""Second order helper functions to set up source term"""
+"""Second order helper functions to set up source term
+    $Id: sosource.py,v 1.2 2008/11/14 13:52:54 ith Exp $
+    """
 
 def getsourceterm(self):
     """Return source term (slow-roll for now), once first order system has been executed."""
