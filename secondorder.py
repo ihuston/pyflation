@@ -1,5 +1,5 @@
 """Second Order Cosmological Model simulations by Ian Huston
-    $Id: secondorder.py,v 1.5 2008/11/14 13:46:12 ith Exp $
+    $Id: secondorder.py,v 1.6 2008/11/14 13:52:18 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -201,4 +201,4 @@ class SOCanonicalTwoStage(CanonicalTwoStage):
         deltaphi2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j #complex deltaphi2
         deltaphi = deltaphi1 + 0.5*deltaphi2
         return deltaphi
-        
+
