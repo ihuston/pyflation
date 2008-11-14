@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.4 2008/08/28 12:53:38 ith Exp $
+    $Id: helpers.py,v 1.5 2008/11/14 17:28:03 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -33,4 +33,13 @@ def mpl2invmpc(x=1):
     """Convert from Mpl (reduced Planck Mass) to Mpc^-1"""
     return 3.8095e+56*x
 
+def ispower2(n):
+    """Returns the log base 2 of n if n is a power of 2, zero otherwise.
 
+    Note the potential ambiguity if n==1: 2**0==1, interpret accordingly."""
+
+    bin_n = N.binary_repr(n)[1:]
+    if '1' in bin_n:
+        return 0
+    else:
+        return len(bin_n)
