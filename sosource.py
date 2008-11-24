@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.6 2008/11/24 13:30:07 ith Exp $
+    $Id: sosource.py,v 1.7 2008/11/24 14:52:03 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -87,3 +87,42 @@ def getsource(m):
         raise AttributeError("Need to have 2**n + 1 different k values for integration.")
     msource = integrate.romb(getsourceintegrand(m))
     return msource
+
+def savetofile(filename, m, sourceterm=None):
+    """Save the source term to the hdf5 file with filename."""
+    if not filename or not m:
+        raise TypeError("Need to specify both filename and model variable.")
+    if sourceterm is None:
+        print "No source term given, calculating now..."
+        sourceterm = getsource(m)
+                
+    try:
+        rf = tables.openFile(filename, "a", "Source term result")
+        try:
+            if not "results" in rf.root:
+                rf.createGroup(rf.root, "results", "Results")
+            if not "sourceterm" in rf.root.results:
+                stab = rf.createTable(rf.root.results, "sourceterm", sourcetermdict(m, sourceterm))
+            else: 
+                stab = rf.root.results.sourceterm
+            #Fill roww with data
+            tabrow = stab.row
+            for kix, k in enumerate(m.k):
+                tabrow["k"] = k
+                tabrow["source"] = sourceterm[:,kix]
+                tabrow.append()
+            stab.flush()
+        finally:
+            rf.close()
+    except IOError:
+        raise
+
+def sourcetermdict(m, sourceterm):
+    """Return dictionary with source term table configuration for HDF5 file"""
+    if not m or sourceterm is None:
+        raise TypeError("Need to specify both model and sourceterm.")
+    sdict = {
+    "k" : tables.Float64Col(),
+    "source" : tables.Float64Col(sourceterm[:,0].shape)}
+    
+    return sdict
