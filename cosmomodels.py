@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.169 2008/11/14 17:27:47 ith Exp $
+    $Id: cosmomodels.py,v 1.170 2008/11/24 18:27:36 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -271,7 +271,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.169 $",
+                  "CVSRevision":"$Revision: 1.170 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -352,62 +352,6 @@ class CosmologicalModel(object):
         #Return the figure instance
         return fig
             
-#     def plot3dresults(self, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False, tstart=0, tend=None):
-#         """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
-#         #Test whether model has run yet
-#         if self.runcount == 0:
-#             raise ModelError("Model has not been run yet, cannot plot results!")
-#         
-#         #Test whether model has k variable dependence
-#         try:
-#             self.yresult[0,0,0] #Does this exist?
-#         except IndexError, er:
-#             raise ModelError("This model does not have any k variable to plot in third dimension! Got " + er.message)
-#         
-#         if varindex is None:
-#             varindex = 0 #Set variable to plot
-#         if klist is None:
-#             klist = N.arange(len(self.k)) #Plot all ks
-#         
-#         if fig is None:
-#             fig = P.figure() #Create figure
-#         else:
-#             P.figure(fig.number)
-#         
-#         if tend is None:
-#             tend = len(self.tresult) #Plot all times
-#             
-#         #Plot 3d figure
-#         
-#         x = self.tresult[tstart:tend]
-#         
-#         ax = axes3d.Axes3D(fig)
-#         #plot lines in reverse order
-#         for kindex in klist[::-1]:
-#             z = self.yresult[tstart:tend,varindex,kindex]
-#             #Do we need to change k by some function (e.g. log)?
-#             if kfunction is None:
-#                 y = self.k[kindex]*N.ones(len(x))
-#             else:
-#                 y = kfunction(self.k[kindex])*N.ones(len(x))
-#             #Plot the line
-#             ax.plot3D(x,y,z,color="b")
-#         ax.set_xlabel(self.tname)
-#         if kfunction is None:
-#             ax.set_ylabel(r"$k$")
-#         else:
-#             ax.set_ylabel(r"Function of k: " + kfunction.__name__)
-#         ax.set_zlabel(self.ynames[varindex])
-#         P.title(self.plottitle + self.argstring())
-#         
-#         #Should we show it now or just return it without showing?
-#         if show:
-#             P.show()
-#         #Should we save the plot somewhere?
-#         if saveplot:
-#             self.saveplot(fig)
-#         return fig
-            
     def plotkcrosssection(self, tindex=None, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
         """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
         #Test whether model has run yet
@@ -451,7 +395,7 @@ class CosmologicalModel(object):
             self.saveplot(fig)
         return fig
         
-    def saveallresults(self, filename=None, filetype="gz"):
+    def saveallresults(self, filename=None, filetype="hf5"):
         """Tries to save file as a pickled object in directory 'results'."""
         
         now = self.lastparams["datetime"]
@@ -1126,7 +1070,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.169 $",
+                  "CVSRevision":"$Revision: 1.170 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
