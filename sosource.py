@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.5 2008/11/14 17:34:32 ith Exp $
+    $Id: sosource.py,v 1.6 2008/11/24 13:30:07 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -68,9 +68,11 @@ def getsourceintegrand(m):
                 #First major term:
                 term1 = (1/(2*N.pi**2) * (1/H[nix,kix]**2) * (dU3[nix,kix] + 3*phidot[nix,kix]*dU2[nix,kix]) 
                             * q**2*dp1diff*dphi1[nix,qix])
-                #Second major term
-                term2 = (1/(2*N.pi**2) * ((1/(a*H[nix,kix]) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dp1dot[nix,qix])
-                term3 = 0
+                #Second major term:
+                term2 = (1/(2*N.pi**2) * ((1/(a*H[nix,kix]) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot[nix,qix])
+                #Third major term:
+                term3 = (1/(2*N.pi**2) * 1/(a*H[nix,kix])**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot[nix,kix] 
+                            * dp1diff * dphi1[nix,qix])
                 s1[qix] = term1 + term2 + term3
             #add sourceterm for each q
             s2[kix] = s1
