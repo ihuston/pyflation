@@ -1,13 +1,14 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.18 2008/11/10 18:15:43 ith Exp $
+#CVS: $Id: rk4.py,v 1.19 2008/11/24 18:27:53 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
 from pdb import set_trace
+from scitools.basics import seq #Proper sequencing of floats
 
 #Constants
 #Cash Karp coefficients for Runge Kutta.
@@ -165,8 +166,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xslist[0] = simtstart
         xslist[1:] = ts[:]
         xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
-        xelist[:-1] = ts[:]
-        xelist[-1] = N.ceil(te)
+        xelist[:-1] = ts[:] - h #End list is one time step before next start time
+        xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
         
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
@@ -179,6 +180,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
+            set_trace()
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
@@ -186,11 +188,11 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 if N.any(N.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
                 
-            for x in N.arange(xstart, xend, h):
+            for x in seq(xstart, xend, h):
+                xx.append(x.copy() + h)
                 dv = derivs(v[:,kix], x, ks)
                 v[:,kix] = rk4stepks(x, v[:,kix], h, dv, ks, derivs)
-                x = x + h
-                xx.append(x.copy())
+                #x = x + h
                 y.append(v.copy())
         #Get results in right shape
         xx = N.array(xx)
