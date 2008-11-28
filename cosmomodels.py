@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.173 2008/11/28 17:39:24 ith Exp $
+    $Id: cosmomodels.py,v 1.174 2008/11/28 18:02:15 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.173 $",
+                  "CVSRevision":"$Revision: 1.174 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1111,7 +1111,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.173 $",
+                  "CVSRevision":"$Revision: 1.174 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1236,7 +1236,10 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
+        try:
+            Hstar = self.bgmodel.yresult[tsix,2]
+        except AttributeError:
+            Hstar = self.yresult[tsix,2,0]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         etadiff = etastar - self.etainit
@@ -1279,8 +1282,8 @@ class FOModelWrapper(FOCanonicalTwoStage):
     def __init__(self, filename, *args, **kwargs):
         """Get results from file and instantiate variables.
            Opens file with handle saved as self._rf. File is closed in __del__"""
-        #Start logging
-        self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
+        #Call super class __init__ method
+        super(FOModelWrapper, self).__init__(*args, **kwargs)
         
         #Check file exists
         if not os.path.isfile(filename):
@@ -1314,3 +1317,4 @@ class FOModelWrapper(FOCanonicalTwoStage):
             raise
         #Call superclass __del__ method.
         super(FOModelWrapper, self).__del__()
+        
