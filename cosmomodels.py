@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.170 2008/11/24 18:27:36 ith Exp $
+    $Id: cosmomodels.py,v 1.171 2008/11/28 12:26:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -19,9 +19,13 @@ import helpers
 import cmpotentials
 import gzip
 import tables
+import logging
 
 #debugging
 from pdb import set_trace
+
+#Logging
+module_logger = logging.getLogger(__name__)
 
 #WMAP pivot scale and Power spectrum
 WMAP_PIVOT = 1.3125e-58 #WMAP pivot scale in Mpl
@@ -50,6 +54,9 @@ class CosmologicalModel(object):
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10,
                  dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
         """Initialize model variables, some with default values. Default solver is odeint."""
+        #Start logging
+        self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
+        
         self.ystart = ystart
         self.k = None #so we can test whether k is set
         
@@ -128,7 +135,7 @@ class CosmologicalModel(object):
             except rk4.SimRunError, er:
                 self.yresult = N.array(er.yresult)
                 self.tresult = N.array(er.tresult)
-                print "Error during run, but some results obtained: ", er.message
+                self._log.error("Error during run, but some results obtained: "+ er.message)
             except StandardError, er:
                 #raise ModelError("Error running odeint", self.tresult, self.yresult)
                 raise
@@ -147,7 +154,7 @@ class CosmologicalModel(object):
         if self.solver == "rkdriver_withks":
             #set_trace()
             #Loosely estimate number of steps based on requested step size
-            
+            self._log.debug("Starting simulation with rkdriver_withks.")
             try:
                 self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, simtstart, self.tstart, self.tend, self.k, 
                 self.tstep_wanted, self.derivs)
@@ -240,38 +247,25 @@ class CosmologicalModel(object):
         
         if saveresults:
             try:
-                print "Results saved in " + self.saveallresults()
+                fname = self.saveallresults()
+                self._log.info("Results saved in " + fname)
             except IOError, er:
-                print "Error trying to save results! Results NOT saved."
-                print er
-            
+                self._log.error("Error trying to save results! Results NOT saved.\n" + er)            
         return
     
     def callingparams(self):
-        """Returns list of parameters to save with results."""
-        #Test whether k has been set
-        try:
-            self.k
-        except (NameError, AttributeError):
-            self.k=None
-#         try:
-#             self.mass
-#         except (NameError, AttributeError):    
-#             self.mass=None
-            
+        """Returns list of parameters to save with results."""      
         #Form dictionary of inputs
         params = {"ystart":self.ystart, 
                   "tstart":self.tstart,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
-                  "k":self.k, #model dependent params
-                  #"mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.170 $",
+                  "CVSRevision":"$Revision: 1.171 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -282,7 +276,6 @@ class CosmologicalModel(object):
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
         "CVSRevision" : tables.StringCol(255),
-        "k" : tables.Float64Col(self.k.shape),
         "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(N.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
@@ -294,6 +287,16 @@ class CosmologicalModel(object):
         "datetime" : tables.Float64Col()
         }
         return params
+    
+    def gethf5yresultdict(self):
+        """Return dict describing fields for yresult table of hf5 file."""
+        yresdict = {
+        "yresult": tables.Float64Col(self.yresult[:,:,0].shape)}
+        if self.k is not None:
+            yresdict["k"] = tables.Float64Col()
+            yresdict["foystart"] = tables.Float64Col(self.foystart[:,0].shape)
+            yresdict["fotstart"] = tables.Float64Col()
+        return yresdict        
     
     def argstring(self):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
@@ -312,7 +315,7 @@ class CosmologicalModel(object):
             raise IOError("Directory 'graphs' does not exist")
         try:
             fig.savefig(filename)
-            print "Plot saved as " + filename
+            self._log.info("Plot saved as " + filename)
         except IOError:
             raise
         return
@@ -401,16 +404,21 @@ class CosmologicalModel(object):
         now = self.lastparams["datetime"]
         if not filename:
             filename = RESULTS_PATH + "run" + now + "." + filetype
+            self._log.info("Filename set to " + filename)
             
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
-               raise IOError("File already exists!")
+                self._log.debug("File already exists! Using append data mode.")
+                filemode = "a"
+            else:
+                self._log.debug("File does not exist, using write mode.")
+                filemode = "w" #Writing to new file
         else:
             raise IOError("Directory 'results' does not exist")
         
         if filetype is "gz":
             try:
-                resultsfile = gzip.GzipFile(filename, "w")
+                resultsfile = gzip.GzipFile(filename, filemode)
                 try:
                     pickle.dump(self.resultlist, resultsfile)
                 finally:
@@ -419,24 +427,75 @@ class CosmologicalModel(object):
                 raise
         elif filetype is "hf5":
             try:
-                rf = tables.openFile(filename, "w")
-                try:
-                    rf.createGroup(rf.root, "results", "Results of run" + now)
-                    rf.createArray(rf.root.results, "tresult", self.tresult)
-                    rf.createArray(rf.root.results, "yresult", self.yresult)
-                    tab = rf.createTable(rf.root.results, "parameters", self.gethf5paramsdict())
-                    tabrow = tab.row
-                    params = self.callingparams()
-                    for key in params:
-                        tabrow[key] = params[key]
-                    rf.flush()
-                finally:
-                    rf.close()
+                self.saveresultsinhdf5(filename, filemode)
             except IOError:
                 raise
-        
+        self.lastsavedfile = filename
         return filename
-    
+        
+    def saveresultsinhdf5(self, filename, filemode):
+        """Save simulation results in a HDF5 format file with filename.
+            filename - full path and name of file (should end in hf5 for consistency.
+            filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
+                        "a" specifies append to current file or create if does not exist.
+        """
+        #Check whether we should store ks and set group name accordingly
+        if self.k is None:
+            grpname = "bgresults"
+        else:
+            grpname = "results" 
+        try:
+            rf = tables.openFile(filename, filemode)
+            try:
+                if filemode is "w":
+                    #Create groups required
+                    resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
+                    tresarr = rf.createArray(resgroup, "tresult", self.tresult)
+                    yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
+                    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict())
+                    #Need to check if results are k dependent
+                    if grpname is "results":
+                        foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape)
+                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
+                        karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,))
+                elif filemode is "a":
+                    try:
+                        resgroup = rf.getNode(rf.root, grpname)
+                        paramstab = resgroup.parameters
+                        yresarr = resgroup.yresult
+                        tres = resgroup.tresult[:]
+                        if grpname is "results":
+                            foystarr = resgroup.foystart
+                            fotstarr = resgroup.fotstart
+                            karr = regroup.k
+                    except NoSuchNodeError:
+                        raise IOError("File is not in correct format! Correct results tables do not exist!")
+                    if N.shape(tres) != N.shape(self.tresult):
+                        raise IOError("Results file has different size of tresult!")
+                else:
+                    raise IOError("Can only write or append to files!")
+                #Now save data
+                #Save parameters
+                paramstabrow = paramstab.row
+                params = self.callingparams()
+                for key in params:
+                    paramstabrow[key] = params[key]
+                paramstabrow.append() #Add to table
+                paramstab.flush()
+                #Save yresults
+                yrestarr.append(self.yresult)
+                if grpname is "results":
+                    karr.append(self.k)
+                    foystarr.append(self.foystart)
+                    fotstarr.append(self.fotstart)
+                rf.flush()
+                #Log success
+                self._log.debug("Successfully wrote results to file " + filename)
+            finally:
+                rf.close()
+        except IOError:
+            raise
+        
     def loadresults(self, filename):
         """Loads results from a file and appends them to current results list."""
         
@@ -755,8 +814,7 @@ class CanonicalFirstOrder(PhiModels):
         #d\deltaphi_1^prime/dn  #
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-        #print dydx[4]
-        
+                
         #Complex parts
         dydx[5] = y[6]
         
@@ -944,12 +1002,9 @@ class TwoStageModel(CosmologicalModel):
             k = self.k
         else:
             if k<self.k.min() and k>self.k.max():
-                print "Warning: Extrapolating to k value outside those used in spline!"
+                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
         Pr = self.findPr()
         ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        #xp = N.zeros(len(ts))
-        #for ix, t in enumerate(ts):
-        #    xp[ix] = N.log(Pr[t, ix]) #get spectrum for each mode after horizon exit
         xp = N.log(Pr[ts.astype(int)].diagonal())
         lnk = N.log(k)
         
@@ -980,16 +1035,14 @@ class TwoStageModel(CosmologicalModel):
                             potential_func=self.potentials, pot_params=self.pot_params)
         
         #Start background run
-        if not self.quiet:
-            print("Running background model...\n")
+        self._log.info("Running background model...\n")
         try:
             self.bgmodel.run(saveresults=False)
         except ModelError, er:
-            print "Error in background run, aborting! Message: " + er.message
+            self._log.exception("Error in background run, aborting!")
         #Find end of inflation
         self.fotend, self.fotendindex = self.bgmodel.findinflend()
-        if not self.quiet:
-            print("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
     def runfo(self):
@@ -1002,8 +1055,7 @@ class TwoStageModel(CosmologicalModel):
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
-        if not self.quiet:
-            print("Beginning first order run...\n")
+        self._log.info("Beginning first order run...\n")
         try:
             self.firstordermodel.run(saveresults=False, simtstart=self.simtstart)
         except ModelError, er:
@@ -1035,11 +1087,9 @@ class TwoStageModel(CosmologicalModel):
         
         if saveresults:
             try:
-                print "Results saved in " + self.saveallresults()
+                self._log.info("Results saved in " + self.saveallresults())
             except IOError, er:
-                print "Error trying to save results! Results NOT saved."
-                print er                
-        
+                self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
     def callingparams(self):
@@ -1049,28 +1099,19 @@ class TwoStageModel(CosmologicalModel):
             self.k
         except (NameError, AttributeError):
             self.k=None
-#         try:
-#             self.mass
-#         except (NameError, AttributeError):    
-#             self.mass=None
-            
         #Form dictionary of inputs
         params = {"ystart":self.ystart, 
                   "tstart":self.tstart,
-                  "fotstart":self.fotstart,
-                  "foystart":self.foystart,
                   "ainit":self.ainit,
                   "potential_func":self.potentials.__name__,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
-                  "k":self.k, #model dependent params
-                  #"mass":self.mass,
                   "eps":self.eps,
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.170 $",
+                  "CVSRevision":"$Revision: 1.171 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1081,11 +1122,8 @@ class TwoStageModel(CosmologicalModel):
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
         "CVSRevision" : tables.StringCol(255),
-        "k" : tables.Float64Col(self.k.shape),
         "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(N.shape(self.tstart)),
-        "foystart" : tables.Float64Col(self.foystart.shape),
-        "fotstart" : tables.Float64Col(N.shape(self.fotstart)),
         "simtstart" : tables.Float64Col(),
         "ainit" : tables.Float64Col(),
         "potential_func" : tables.StringCol(255),
