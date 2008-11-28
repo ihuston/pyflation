@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.172 2008/11/28 17:25:36 ith Exp $
+    $Id: cosmomodels.py,v 1.173 2008/11/28 17:39:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.172 $",
+                  "CVSRevision":"$Revision: 1.173 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -456,7 +456,7 @@ class CosmologicalModel(object):
                     #Need to check if results are k dependent
                     if grpname is "results":
                         foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape)
-                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
+                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,))
                         karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,))
                 elif filemode is "a":
                     try:
@@ -483,7 +483,7 @@ class CosmologicalModel(object):
                 paramstabrow.append() #Add to table
                 paramstab.flush()
                 #Save yresults
-                yrestarr.append(self.yresult)
+                yresarr.append(self.yresult)
                 if grpname is "results":
                     karr.append(self.k)
                     foystarr.append(self.foystart)
@@ -1111,7 +1111,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.172 $",
+                  "CVSRevision":"$Revision: 1.173 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1273,7 +1273,7 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return deltaphi
     
-class FOModelWrapper(object):
+class FOModelWrapper(FOCanonicalTwoStage):
     """Wraps first order model using HDF5 file of results."""
     
     def __init__(self, filename, *args, **kwargs):
@@ -1293,6 +1293,7 @@ class FOModelWrapper(object):
                 self.tresult = self._rf.root.results.tresult
                 self.fotstart = self._rf.root.results.fotstart
                 self.foystart = self._rf.root.results.foystart
+                self.k = self._rf.root.results.k
                 params = self._rf.root.results.parameters
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain correct model data structure!")
@@ -1300,7 +1301,7 @@ class FOModelWrapper(object):
             for ix, val in enumerate(params[0]):
                 self.__setattr__(params.colnames[ix], val)
             #set correct potential function (only works with cmpotentials currently)
-            self.potentials = cmpotentials.__getattribute(self.potential_func)
+            self.potentials = cmpotentials.__getattribute__(self.potential_func)
         except IOError:
             raise
     
