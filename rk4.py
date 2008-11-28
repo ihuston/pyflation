@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.19 2008/11/24 18:27:53 ith Exp $
+#CVS: $Id: rk4.py,v 1.20 2008/11/28 12:26:49 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -180,7 +180,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
-            set_trace()
+            #set_trace()
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
