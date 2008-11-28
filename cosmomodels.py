@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.171 2008/11/28 12:26:24 ith Exp $
+    $Id: cosmomodels.py,v 1.172 2008/11/28 17:25:36 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.171 $",
+                  "CVSRevision":"$Revision: 1.172 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1111,7 +1111,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.171 $",
+                  "CVSRevision":"$Revision: 1.172 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1273,4 +1273,43 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return deltaphi
     
+class FOModelWrapper(object):
+    """Wraps first order model using HDF5 file of results."""
     
+    def __init__(self, filename, *args, **kwargs):
+        """Get results from file and instantiate variables.
+           Opens file with handle saved as self._rf. File is closed in __del__"""
+        #Start logging
+        self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
+        
+        #Check file exists
+        if not os.path.isfile(filename):
+            raise IOError("File does not exist!")
+        try:
+            self._log.debug("Opening file " + filename + " to read results.")
+            try:
+                self._rf = tables.openFile(filename, "r")
+                self.yresult = self._rf.root.results.yresult
+                self.tresult = self._rf.root.results.tresult
+                self.fotstart = self._rf.root.results.fotstart
+                self.foystart = self._rf.root.results.foystart
+                params = self._rf.root.results.parameters
+            except tables.NoSuchNodeError:
+                raise ModelError("File does not contain correct model data structure!")
+            #Put params in right slots
+            for ix, val in enumerate(params[0]):
+                self.__setattr__(params.colnames[ix], val)
+            #set correct potential function (only works with cmpotentials currently)
+            self.potentials = cmpotentials.__getattribute(self.potential_func)
+        except IOError:
+            raise
+    
+    def __del__(self):
+        """Close file when object destroyed."""
+        try:
+            self._log.debug("Trying to close file " + self._rf.filename)
+            self._rf.close()
+        except IOError:
+            raise
+        #Call superclass __del__ method.
+        super(FOModelWrapper, self).__del__()
