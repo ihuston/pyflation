@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.176 2008/11/28 18:27:50 ith Exp $
+    $Id: cosmomodels.py,v 1.177 2008/11/28 18:39:43 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.176 $",
+                  "CVSRevision":"$Revision: 1.177 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -451,13 +451,15 @@ class CosmologicalModel(object):
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
-                    yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
                     paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict())
                     #Need to check if results are k dependent
                     if grpname is "results":
+                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
                         foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape)
                         fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,))
                         karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,))
+                    else:
+                        yresarr = rf.createArray(resgroup, "yresult", self.yresult)
                 elif filemode is "a":
                     try:
                         resgroup = rf.getNode(rf.root, grpname)
@@ -482,9 +484,9 @@ class CosmologicalModel(object):
                     paramstabrow[key] = params[key]
                 paramstabrow.append() #Add to table
                 paramstab.flush()
-                #Save yresults
-                yresarr.append(self.yresult)
+                #Save first order results
                 if grpname is "results":
+                    yresarr.append(self.yresult)
                     karr.append(self.k)
                     foystarr.append(self.foystart)
                     fotstarr.append(self.fotstart)
@@ -1111,7 +1113,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.176 $",
+                  "CVSRevision":"$Revision: 1.177 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1319,8 +1321,12 @@ class FOModelWrapper(FOCanonicalTwoStage):
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
                             potential_func=self.potentials, pot_params=self.pot_params)
         #Put in data
-        self.bgmodel.tresult = self.tresult
-        self.bgmodel.yresult = self.yresult[:,0:3,0]
+        try:
+            self._log.debug("Trying to get background results...")
+            self.bgmodel.tresult = self._rf.root.bgresults.tresult[:]
+            self.bgmodel.yresult = self._rf.root.bgresults.yresult
+        except tables.NoSuchNodeError:
+            raise ModelError("File does not contain background results!")
         self.bgmodel.runcount = 1
         self.bgepsilon = self.bgmodel.getepsilon()
     
