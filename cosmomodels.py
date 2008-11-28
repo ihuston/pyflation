@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.175 2008/11/28 18:13:52 ith Exp $
+    $Id: cosmomodels.py,v 1.176 2008/11/28 18:27:50 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.175 $",
+                  "CVSRevision":"$Revision: 1.176 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1111,7 +1111,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.175 $",
+                  "CVSRevision":"$Revision: 1.176 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1226,20 +1226,18 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
+        self._log.debug("Entering getfoystart...")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
         foystart = N.zeros((len(self.ystart), len(self.k)))
-        
+        self._log.debug("foystart: " + str(foystart))
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(ts)
-        try:
-            Hstar = self.bgmodel.yresult[tsix,2]
-        except AttributeError:
-            Hstar = self.yresult[tsix,2,0]
+        Hstar = self.bgmodel.yresult[tsix,2]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         try:
