@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.7 2008/11/24 14:52:03 ith Exp $
+    $Id: sosource.py,v 1.8 2008/11/28 12:27:22 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -81,12 +81,32 @@ def getsourceintegrand(m):
     source = N.array(source)
     return source
             
-def getsource(m):
+def getsource(m, intmethod=None, fullinfo=False):
     """Return integrated source function for model m using romberg integration."""
-    if not helpers.ispower2(len(m.k)-1):
-        raise AttributeError("Need to have 2**n + 1 different k values for integration.")
-    msource = integrate.romb(getsourceintegrand(m))
-    return msource
+    #Choose integration method
+    if intmethod is None:
+        try:
+            if all(m.k[1:]-m.k[:-1] == m.k[1]-m.k[0]) and helpers.ispower2(len(m.k)-1):
+                intmethod = "romb"
+            else:
+                intmethod = "simps"
+        except IndexError:
+                raise IndexError("Need more than one k to calculate integral!")
+    #Now proceed with integration
+    if intmethod is "romb":
+        if not helpers.ispower2(len(m.k)-1):
+            raise AttributeError("Need to have 2**n + 1 different k values for integration.")
+        msource = integrate.romb(getsourceintegrand(m))
+    elif intmethod is "simps":
+        msource = integrate.simps(getsourceintegrand(m), m.k)
+    else:
+        raise ValueError("Need to specify correct integration method!")
+    #Check if we want data about integration
+    if fullinfo:
+        results = [msource, intmethod]
+    else:
+        results = msource
+    return results
 
 def savetofile(filename, m, sourceterm=None):
     """Save the source term to the hdf5 file with filename."""
