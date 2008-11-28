@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.174 2008/11/28 18:02:15 ith Exp $
+    $Id: cosmomodels.py,v 1.175 2008/11/28 18:13:52 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.174 $",
+                  "CVSRevision":"$Revision: 1.175 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1111,7 +1111,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.174 $",
+                  "CVSRevision":"$Revision: 1.175 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1242,7 +1242,10 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
             Hstar = self.yresult[tsix,2,0]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
-        etadiff = etastar - self.etainit
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
@@ -1296,7 +1299,7 @@ class FOModelWrapper(FOCanonicalTwoStage):
                 self.tresult = self._rf.root.results.tresult
                 self.fotstart = self._rf.root.results.fotstart
                 self.foystart = self._rf.root.results.foystart
-                self.k = self._rf.root.results.k
+                self.k = self._rf.root.results.k[:]
                 params = self._rf.root.results.parameters
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain correct model data structure!")
@@ -1307,6 +1310,21 @@ class FOModelWrapper(FOCanonicalTwoStage):
             self.potentials = cmpotentials.__getattribute__(self.potential_func)
         except IOError:
             raise
+        
+        #Fix bgmodel to actual instance
+        #Check ystart is in right form (1-d array of three values)
+        if self.ystart.ndim == 1:
+            ys = self.ystart[0:3]
+        elif self.ystart.ndim == 2:
+            ys = self.ystart[0:3,0]
+        self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
+                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
+                            potential_func=self.potentials, pot_params=self.pot_params)
+        #Put in data
+        self.bgmodel.tresult = self.tresult
+        self.bgmodel.yresult = self.yresult[:,0:3,0]
+        self.bgmodel.runcount = 1
+        self.bgepsilon = self.bgmodel.getepsilon()
     
     def __del__(self):
         """Close file when object destroyed."""
@@ -1316,5 +1334,5 @@ class FOModelWrapper(FOCanonicalTwoStage):
         except IOError:
             raise
         #Call superclass __del__ method.
-        super(FOModelWrapper, self).__del__()
+        #super(FOModelWrapper, self).__del__()
         
