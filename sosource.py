@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.10 2008/11/28 18:14:41 ith Exp $
+    $Id: sosource.py,v 1.11 2008/12/01 17:01:58 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -39,7 +39,7 @@ def getsourceintegrand(m, savefile=None):
             #Main loop over each time step
             for nix, n in enumerate(m.tresult):    
                 #Get first order ICs:
-                nanfiller = m.getfoystart(m.tresult[nix], [nix])
+                nanfiller = m.getfoystart(m.tresult[nix], N.array([nix]))
                 
                 #switch nans for ICs in m.yresult
                 myr = m.yresult[nix].copy()
@@ -50,7 +50,7 @@ def getsourceintegrand(m, savefile=None):
                 phi, phidot, H, dphi1real, dphi1dotreal, dphi1imag, dphi1dotimag = [myr[i,:] for i in range(7)]
                 dphi1 = dphi1real + dphi1imag*1j
                 dphi1dot = dphi1dotreal + dphi1dotimag*1j
-                pottuple = m.potentials(N.rollaxis(myr, 1))
+                pottuple = m.potentials(myr)
                 #Get potentials in right shape
                 pt = []
                 for p in pottuple:
