@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.177 2008/11/28 18:39:43 ith Exp $
+    $Id: cosmomodels.py,v 1.178 2008/12/01 17:01:26 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.177 $",
+                  "CVSRevision":"$Revision: 1.178 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -663,7 +663,7 @@ class PhiModels(CosmologicalModel):
             raise ModelError("Model has not been run yet, cannot plot results!")
 
         #Find Hdot
-        if self.yresult.ndim == 3:
+        if len(self.yresult.shape) == 3:
             Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
             epsilon = - Hdot/self.yresult[:,2,0]
         else:
@@ -1113,7 +1113,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.177 $",
+                  "CVSRevision":"$Revision: 1.178 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1249,7 +1249,10 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
-        foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+        try:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+        except ValueError:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(N.sqrt(2*self.k)))
