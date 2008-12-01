@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.178 2008/12/01 17:01:26 ith Exp $
+    $Id: cosmomodels.py,v 1.179 2008/12/01 18:36:40 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.178 $",
+                  "CVSRevision":"$Revision: 1.179 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -448,17 +448,25 @@ class CosmologicalModel(object):
             rf = tables.openFile(filename, filemode)
             try:
                 if filemode is "w":
+                    #Add compression
+                    filters = tables.Filters(complevel=1, complib="zlib")
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
-                    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict())
+                    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
                     #Need to check if results are k dependent
                     if grpname is "results":
-                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape)
-                        foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape)
-                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,))
-                        karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,))
+                        #Store bg results:
+                        bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
+                        bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
+                        bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
+                        #Save first order results
+                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, chunkshape=(10,7,10))
+                        foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
+                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
+                        karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
                     else:
+                        #Only save bg results
                         yresarr = rf.createArray(resgroup, "yresult", self.yresult)
                 elif filemode is "a":
                     try:
@@ -467,6 +475,7 @@ class CosmologicalModel(object):
                         yresarr = resgroup.yresult
                         tres = resgroup.tresult[:]
                         if grpname is "results":
+                            #Don't need to append bg results, only fo results
                             foystarr = resgroup.foystart
                             fotstarr = resgroup.fotstart
                             karr = regroup.k
@@ -1113,7 +1122,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.178 $",
+                  "CVSRevision":"$Revision: 1.179 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1228,14 +1237,13 @@ class FOCanonicalTwoStage(CanonicalTwoStage):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Entering getfoystart...")
+        self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
         foystart = N.zeros((len(self.ystart), len(self.k)))
-        self._log.debug("foystart: " + str(foystart))
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*N.exp(ts)
@@ -1331,7 +1339,11 @@ class FOModelWrapper(FOCanonicalTwoStage):
         except tables.NoSuchNodeError:
             raise ModelError("File does not contain background results!")
         self.bgmodel.runcount = 1
+        #Get epsilon
+        self._log.debug("Calculating self.bgepsilon...")
         self.bgepsilon = self.bgmodel.getepsilon()
+        #Success
+        self._log.info("Successfully imported data from file into model instance.")
     
     def __del__(self):
         """Close file when object destroyed."""
