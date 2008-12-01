@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.11 2008/12/01 17:01:58 ith Exp $
+    $Id: sosource.py,v 1.12 2008/12/01 18:36:56 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -28,18 +28,20 @@ def getsourceintegrand(m, savefile=None):
     
     #Set up file for results
     if not savefile or not os.path.isdir(os.path.dirname(savefile)):
-        date = time.strftime("%Y%m%d")
+        date = time.strftime("%Y%m%d%H%M%S")
         savefile = RESULTSDIR + "source" + date + ".hf5"
         source_logger.info("Saving source results in file " + savefile)
 
     #Main try block for file IO
     try:
         sf, sarr = opensourcefile(savefile, atomshape, sourcetype="int")
-        try:    
+        try:
+            source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix, n in enumerate(m.tresult):    
+                source_logger.debug("Starting n=" + str(n) + " sequence...")
                 #Get first order ICs:
-                nanfiller = m.getfoystart(m.tresult[nix], N.array([nix]))
+                nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
                 
                 #switch nans for ICs in m.yresult
                 myr = m.yresult[nix].copy()
@@ -135,6 +137,9 @@ def opensourcefile(filename, atomshape, sourcetype=None):
         source_logger.debug("Source array type: " + sarrname)
     else:
         raise TypeError("Incorrect source type specified!")
+    #Add compression to files and specify good chunkshape
+    filters = tables.Filters(complevel=1, complib="zlib") 
+    cshape = (10,10,10) #good mix of t, k, q values
     try:
         source_logger.debug("Trying to open source file " + filename)
         rf = tables.openFile(filename, "a", "Source term result")
@@ -143,11 +148,12 @@ def opensourcefile(filename, atomshape, sourcetype=None):
             rf.createGroup(rf.root, "results", "Results")
         if not sarrname in rf.root.results:
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
-            sarr = rf.createEArray(rf.root.results, sarrname, tables.Float64Atom(), atomshape)
-        else: 
+            sarr = rf.createEArray(rf.root.results, sarrname, tables.Float64Atom(), atomshape, filters=filters, chunkshape=cshape)
+        else:
+            source_logger.debug("Source file and node exist. Testing source node shape...")
             sarr = rf.getNode(rf.root.results, sarrname)
             if sarr.shape[1:] != atomshape[1:]:
-                raise ValueError("EArray on file is not correct shape!")
+                raise ValueError("Source node on file is not correct shape!")
     except IOError:
         raise
     return rf, sarr
