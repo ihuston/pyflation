@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.12 2008/12/01 18:36:56 ith Exp $
+    $Id: sosource.py,v 1.13 2008/12/02 13:22:13 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -39,7 +39,8 @@ def getsourceintegrand(m, savefile=None):
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix, n in enumerate(m.tresult):    
-                source_logger.debug("Starting n=" + str(n) + " sequence...")
+                if N.ceil(n) == n:
+                    source_logger.debug("Starting n=" + str(n) + " sequence...")
                 #Get first order ICs:
                 nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
                 
@@ -139,7 +140,7 @@ def opensourcefile(filename, atomshape, sourcetype=None):
         raise TypeError("Incorrect source type specified!")
     #Add compression to files and specify good chunkshape
     filters = tables.Filters(complevel=1, complib="zlib") 
-    cshape = (10,10,10) #good mix of t, k, q values
+    #cshape = (10,10,10) #good mix of t, k, q values
     try:
         source_logger.debug("Trying to open source file " + filename)
         rf = tables.openFile(filename, "a", "Source term result")
@@ -148,7 +149,7 @@ def opensourcefile(filename, atomshape, sourcetype=None):
             rf.createGroup(rf.root, "results", "Results")
         if not sarrname in rf.root.results:
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
-            sarr = rf.createEArray(rf.root.results, sarrname, tables.Float64Atom(), atomshape, filters=filters, chunkshape=cshape)
+            sarr = rf.createEArray(rf.root.results, sarrname, tables.Float64Atom(), atomshape, filters=filters)
         else:
             source_logger.debug("Source file and node exist. Testing source node shape...")
             sarr = rf.getNode(rf.root.results, sarrname)
