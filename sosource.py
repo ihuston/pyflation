@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.13 2008/12/02 13:22:13 ith Exp $
+    $Id: sosource.py,v 1.14 2008/12/02 13:29:28 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -18,7 +18,9 @@ source_logger = logging.getLogger(__name__)
   
 def getsourceintegrand(m, savefile=None):
     """Return source term (slow-roll for now), once first order system has been executed."""
-        
+    #Debugging
+    nixend = 5
+    
     #Initialize variables to store result
     lenmk = len(m.k)
     s2shape = (lenmk, lenmk)
@@ -38,21 +40,23 @@ def getsourceintegrand(m, savefile=None):
         try:
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
-            for nix, n in enumerate(m.tresult):    
+            for nix, n in enumerate(m.tresult[:nixend]):    
                 if N.ceil(n) == n:
                     source_logger.debug("Starting n=" + str(n) + " sequence...")
                 #Get first order ICs:
                 nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
-                
+                source_logger.debug("Left getfoystart. Filling nans...")
                 #switch nans for ICs in m.yresult
                 myr = m.yresult[nix].copy()
                 are_nan = N.isnan(myr)
                 myr[are_nan] = nanfiller[are_nan]
+                source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
                 #Get first order results (from file or variables)
                 phi, phidot, H, dphi1real, dphi1dotreal, dphi1imag, dphi1dotimag = [myr[i,:] for i in range(7)]
                 dphi1 = dphi1real + dphi1imag*1j
                 dphi1dot = dphi1dotreal + dphi1dotimag*1j
+                source_logger.debug("Variables set. Getting potentials for this timestep...")
                 pottuple = m.potentials(myr)
                 #Get potentials in right shape
                 pt = []
@@ -62,17 +66,20 @@ def getsourceintegrand(m, savefile=None):
                     else:
                         pt.append(p)
                 U, dU, dU2, dU3 = pt
-                
+                source_logger.debug("Potentials obtained. Setting a and making results array...")
                 #Single time step
                 a = m.ainit*N.exp(n)
                 
                 #Initialize result variable for k modes
                 s2 = N.empty(s2shape)
+                
+                source_logger.debug("Starting main k loop...")
                 for kix, k in enumerate(m.k):
                     #Single k mode
                     #Result variable for source
                     s1 = N.empty_like(m.k)
                     for qix, q in enumerate(m.k):
+                        source_logger.debug("Starting q loop...")
                         #Single q mode
                         #Check abs(qix-kix)-1 is not negative
                         dphi1ix = N.abs(qix-kix) -1
@@ -94,6 +101,7 @@ def getsourceintegrand(m, savefile=None):
                     #add sourceterm for each q
                     s2[kix] = s1
                 #save results for each q
+                source_logger.debug("End of k loop. Saving results... Shape of sarr is %d", sarr.shape)
                 sarr.append(s2[N.newaxis])
         finally:
             #source = N.array(source)
