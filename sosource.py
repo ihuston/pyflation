@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.20 2008/12/02 15:41:27 ith Exp $
+    $Id: sosource.py,v 1.21 2008/12/02 17:49:32 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -12,6 +12,7 @@ import time
 import os
 
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
+# RESULTSDIR = "/starpc34/scratch/ith/numerics/results/"
 
 #Start logging
 source_logger = logging.getLogger(__name__)
@@ -19,12 +20,12 @@ source_logger = logging.getLogger(__name__)
 def getsourceintegrand(m, savefile=None):
     """Return source term (slow-roll for now), once first order system has been executed."""
     #Debugging
-    nixend = 1
+    nixend = 10
     
     #Initialize variables to store result
     lenmk = len(m.k)
     s2shape = (lenmk, lenmk)
-    source_logger.debug("Shape of m.k is " + str(lenmk))
+    source_logger.debug("Shape of m.k is %s.", str(lenmk))
     #Get atom shape for savefile
     atomshape = (0, lenmk, lenmk)
     
@@ -77,8 +78,6 @@ def getsourceintegrand(m, savefile=None):
                 #Get k indices
                 kix = N.arange(lenmk)
                 qix = N.arange(lenmk)
-#                 for qix, q in enumerate(m.k):
-                #Single q mode
                 #Check abs(qix-kix)-1 is not negative
                 dphi1ix = N.abs(qix[:, N.newaxis]-kix) -1
                 dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
@@ -98,7 +97,7 @@ def getsourceintegrand(m, savefile=None):
                 #add sourceterm for each q
                 #s2[kix] = s1
                 #save results for each q
-                source_logger.debug("End of k loop. Saving results... Shape of sarr is %s", str(sarr.shape))
+                source_logger.debug("Saving results for this tstep...")
                 sarr.append(s2[N.newaxis])
                 source_logger.debug("Results for this tstep saved.")
         finally:
