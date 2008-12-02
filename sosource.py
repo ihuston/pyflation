@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.21 2008/12/02 17:49:32 ith Exp $
+    $Id: sosource.py,v 1.22 2008/12/02 17:57:28 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -86,16 +86,14 @@ def getsourceintegrand(m, savefile=None):
                 k = m.k[kix]
                 q = m.k[qix]
                 #First major term:
-                term1 = (1/(2*N.pi**2) * (1/H[kix]**2) * (dU3[kix] + 3*phidot[kix]*dU2[kix]) 
-                            * q**2*dp1diff*dphi1[qix])
+                s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) 
+                            * q**2*dp1diff*dphi1)
                 #Second major term:
-                term2 = (1/(2*N.pi**2) * ((1/(a*H[kix]) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot[qix])
+                s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
                 #Third major term:
-                term3 = (1/(2*N.pi**2) * 1/(a*H[kix])**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot[kix] 
-                            * dp1diff * dphi1[qix])
-                s2 = term1 + term2 + term3
-                #add sourceterm for each q
-                #s2[kix] = s1
+                s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot
+                                            * dp1diff * dphi1)
+#                 s2 = term1 + term2 + term3
                 #save results for each q
                 source_logger.debug("Saving results for this tstep...")
                 sarr.append(s2[N.newaxis])
