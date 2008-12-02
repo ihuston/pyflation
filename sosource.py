@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.14 2008/12/02 13:29:28 ith Exp $
+    $Id: sosource.py,v 1.15 2008/12/02 14:01:52 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -78,8 +78,9 @@ def getsourceintegrand(m, savefile=None):
                     #Single k mode
                     #Result variable for source
                     s1 = N.empty_like(m.k)
+                    #source_logger.debug("Starting q loop...")
                     for qix, q in enumerate(m.k):
-                        source_logger.debug("Starting q loop...")
+                        
                         #Single q mode
                         #Check abs(qix-kix)-1 is not negative
                         dphi1ix = N.abs(qix-kix) -1
@@ -101,8 +102,9 @@ def getsourceintegrand(m, savefile=None):
                     #add sourceterm for each q
                     s2[kix] = s1
                 #save results for each q
-                source_logger.debug("End of k loop. Saving results... Shape of sarr is %d", sarr.shape)
+                source_logger.debug("End of k loop. Saving results... Shape of sarr is %s", str(sarr.shape))
                 sarr.append(s2[N.newaxis])
+                source_logger.debug("Results for this tstep saved.")
         finally:
             #source = N.array(source)
             sf.close()
