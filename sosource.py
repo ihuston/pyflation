@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.16 2008/12/02 14:08:43 ith Exp $
+    $Id: sosource.py,v 1.17 2008/12/02 14:13:54 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -75,7 +75,7 @@ def getsourceintegrand(m, savefile=None):
                 
                 source_logger.debug("Starting main k loop...")
                 #Get indices
-                kix = arange(lenmk)
+                kix = N.arange(lenmk)
                 #Single k mode
                 #Result variable for source
                 #s1 = N.empty_like(m.k)
@@ -91,7 +91,8 @@ def getsourceintegrand(m, savefile=None):
 #                         dp1dotdiff = dphi1dot[dphi1ix]
                     dp1diff = N.where(dphi1ix < 0, 0, dphi1)
                     dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot)                    
-
+                    #temp k var
+                    k = m.k[kix]
                     #First major term:
                     term1 = (1/(2*N.pi**2) * (1/H[kix]**2) * (dU3[kix] + 3*phidot[kix]*dU2[kix]) 
                                 * q**2*dp1diff*dphi1[qix])
