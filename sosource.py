@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.22 2008/12/02 17:57:28 ith Exp $
+    $Id: sosource.py,v 1.23 2008/12/02 18:18:29 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -20,7 +20,7 @@ source_logger = logging.getLogger(__name__)
 def getsourceintegrand(m, savefile=None):
     """Return source term (slow-roll for now), once first order system has been executed."""
     #Debugging
-    nixend = 10
+#     nixend = 10
     
     #Initialize variables to store result
     lenmk = len(m.k)
@@ -41,9 +41,9 @@ def getsourceintegrand(m, savefile=None):
         try:
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
-            for nix, n in enumerate(m.tresult[:nixend]):    
+            for nix, n in enumerate(m.tresult):    
                 if N.ceil(n) == n:
-                    source_logger.debug("Starting n=" + str(n) + " sequence...")
+                    source_logger.info("Starting n=" + str(n) + " sequence...")
                 #Get first order ICs:
                 nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
                 source_logger.debug("Left getfoystart. Filling nans...")
