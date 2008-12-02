@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.179 2008/12/01 18:36:40 ith Exp $
+    $Id: cosmomodels.py,v 1.180 2008/12/02 13:21:19 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.179 $",
+                  "CVSRevision":"$Revision: 1.180 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -478,8 +478,8 @@ class CosmologicalModel(object):
                             #Don't need to append bg results, only fo results
                             foystarr = resgroup.foystart
                             fotstarr = resgroup.fotstart
-                            karr = regroup.k
-                    except NoSuchNodeError:
+                            karr = resgroup.k
+                    except tables.NoSuchNodeError:
                         raise IOError("File is not in correct format! Correct results tables do not exist!")
                     if N.shape(tres) != N.shape(self.tresult):
                         raise IOError("Results file has different size of tresult!")
@@ -1122,7 +1122,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.179 $",
+                  "CVSRevision":"$Revision: 1.180 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1348,7 +1348,7 @@ class FOModelWrapper(FOCanonicalTwoStage):
     def __del__(self):
         """Close file when object destroyed."""
         try:
-            self._log.debug("Trying to close file " + self._rf.filename)
+            self._log.debug("Trying to close file...")
             self._rf.close()
         except IOError:
             raise
