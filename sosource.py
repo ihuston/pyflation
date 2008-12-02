@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.17 2008/12/02 14:13:54 ith Exp $
+    $Id: sosource.py,v 1.18 2008/12/02 15:27:49 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -19,7 +19,7 @@ source_logger = logging.getLogger(__name__)
 def getsourceintegrand(m, savefile=None):
     """Return source term (slow-roll for now), once first order system has been executed."""
     #Debugging
-    nixend = 5
+    nixend = 1
     
     #Initialize variables to store result
     lenmk = len(m.k)
@@ -89,8 +89,8 @@ def getsourceintegrand(m, savefile=None):
 #                     else:
 #                         dp1diff = dphi1[dphi1ix]
 #                         dp1dotdiff = dphi1dot[dphi1ix]
-                    dp1diff = N.where(dphi1ix < 0, 0, dphi1)
-                    dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot)                    
+                    dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
+                    dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])                    
                     #temp k var
                     k = m.k[kix]
                     #First major term:
