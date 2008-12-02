@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.19 2008/12/02 15:32:34 ith Exp $
+    $Id: sosource.py,v 1.20 2008/12/02 15:41:27 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -76,23 +76,25 @@ def getsourceintegrand(m, savefile=None):
                 source_logger.debug("Starting main k loop...")
                 #Get k indices
                 kix = N.arange(lenmk)
-                for qix, q in enumerate(m.k):
-                    #Single q mode
-                    #Check abs(qix-kix)-1 is not negative
-                    dphi1ix = N.abs(qix-kix) -1
-                    dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
-                    dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])                    
-                    #temp k var
-                    k = m.k[kix]
-                    #First major term:
-                    term1 = (1/(2*N.pi**2) * (1/H[kix]**2) * (dU3[kix] + 3*phidot[kix]*dU2[kix]) 
-                                * q**2*dp1diff*dphi1[qix])
-                    #Second major term:
-                    term2 = (1/(2*N.pi**2) * ((1/(a*H[kix]) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot[qix])
-                    #Third major term:
-                    term3 = (1/(2*N.pi**2) * 1/(a*H[kix])**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot[kix] 
-                                * dp1diff * dphi1[qix])
-                    s2[kix, qix] = term1 + term2 + term3
+                qix = N.arange(lenmk)
+#                 for qix, q in enumerate(m.k):
+                #Single q mode
+                #Check abs(qix-kix)-1 is not negative
+                dphi1ix = N.abs(qix[:, N.newaxis]-kix) -1
+                dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
+                dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])                    
+                #temp k and q vars
+                k = m.k[kix]
+                q = m.k[qix]
+                #First major term:
+                term1 = (1/(2*N.pi**2) * (1/H[kix]**2) * (dU3[kix] + 3*phidot[kix]*dU2[kix]) 
+                            * q**2*dp1diff*dphi1[qix])
+                #Second major term:
+                term2 = (1/(2*N.pi**2) * ((1/(a*H[kix]) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot[qix])
+                #Third major term:
+                term3 = (1/(2*N.pi**2) * 1/(a*H[kix])**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot[kix] 
+                            * dp1diff * dphi1[qix])
+                s2 = term1 + term2 + term3
                 #add sourceterm for each q
                 #s2[kix] = s1
                 #save results for each q
