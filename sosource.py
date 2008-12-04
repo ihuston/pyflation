@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.23 2008/12/02 18:18:29 ith Exp $
+    $Id: sosource.py,v 1.24 2008/12/04 18:18:50 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -19,9 +19,6 @@ source_logger = logging.getLogger(__name__)
   
 def getsourceintegrand(m, savefile=None):
     """Return source term (slow-roll for now), once first order system has been executed."""
-    #Debugging
-#     nixend = 10
-    
     #Initialize variables to store result
     lenmk = len(m.k)
     s2shape = (lenmk, lenmk)
@@ -93,7 +90,6 @@ def getsourceintegrand(m, savefile=None):
                 #Third major term:
                 s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot
                                             * dp1diff * dphi1)
-#                 s2 = term1 + term2 + term3
                 #save results for each q
                 source_logger.debug("Saving results for this tstep...")
                 sarr.append(s2[N.newaxis])
@@ -105,32 +101,71 @@ def getsourceintegrand(m, savefile=None):
         raise
     return savefile
             
-def getsource(m, intmethod=None, fullinfo=False):
+def getsource(intfile=None, savefile=None, intmethod=None, fullinfo=False):
     """Return integrated source function for model m using romberg integration."""
-    #Choose integration method
-    if intmethod is None:
+    if intfile is None:
+        raise ValueError("Need to specify source file.")
+    #open integrand file
+    try:
+        intf = tables.openFile(intfile, "r")
         try:
-            if all(m.k[1:]-m.k[:-1] == m.k[1]-m.k[0]) and helpers.ispower2(len(m.k)-1):
-                intmethod = "romb"
-            else:
-                intmethod = "simps"
-        except IndexError:
-                raise IndexError("Need more than one k to calculate integral!")
-    #Now proceed with integration
-    if intmethod is "romb":
-        if not helpers.ispower2(len(m.k)-1):
-            raise AttributeError("Need to have 2**n + 1 different k values for integration.")
-        msource = integrate.romb(getsourceintegrand(m))
-    elif intmethod is "simps":
-        msource = integrate.simps(getsourceintegrand(m), m.k)
-    else:
-        raise ValueError("Need to specify correct integration method!")
-    #Check if we want data about integration
-    if fullinfo:
-        results = [msource, intmethod]
-    else:
-        results = msource
-    return results
+            try:
+                iarr = intf.root.results.sourceint
+                k = intf.root.results.k
+            except tables.NoSuchNodeError:
+                source_logger.exception("Integrand data file is not in the correct format!")
+                raise            
+            #Shape of results should be (0, len(k))
+            source_logger.debug("k shape is %s", str(len(k)))
+            atomshape = iarr[0:0].shape[:-1]
+            try:
+                #Open file to save to
+                source_logger.debug("Trying to open source term save file %s", savefile)
+                sf, sarr = opensourcefile(savefile, atomshape, sourcetype="term")
+                try:
+                    #Choose integration method
+                    if intmethod is None:
+                        try:
+                            if all(N.diff(k) == k[1]-k[0]) and helpers.ispower2(len(k)-1):
+                                intmethod = "romb"
+                            else:
+                                intmethod = "simps"
+                        except IndexError:
+                                raise IndexError("Need more than one k to calculate integral!")
+                    #Now proceed with integration
+                    if intmethod is "romb":
+                        if not helpers.ispower2(len(k)-1):
+                            raise AttributeError("Need to have 2**n + 1 different k values for integration.")
+                        intfunc = integrate.romb
+                        fnargs = []
+                    elif intmethod is "simps":
+                        intfunc = integrate.simps
+                        fnargs = [k]
+                    else:
+                        raise ValueError("Need to specify correct integration method!")
+                    #Log integration method
+                    source_logger.debug("Integration method chosen is %s.", intmethod)
+                    
+                    #Do main loop over rows
+                    source_logger.info("Starting main integration loop.")
+                    for row in iarr:
+                        sarr.append(intfunc(row, *fnargs)[N.newaxis,:])
+                    source_logger.info("Integration loop complete.")
+                finally:
+                    #Close savefile
+                    sf.close()
+                    source_logger.debug("Source (save) file closed.")
+            except IOError:
+                source_logger.exception("Error opening source term save file!")
+                raise
+        finally:
+            #Close integrand file
+            intf.close()
+            source_logger.debug("Integrand file closed.")
+    except IOError:
+        source_logger.exception("IO Error during process.")
+        raise
+    return savefile
 
 def opensourcefile(filename, atomshape, sourcetype=None):
     """Open the source term hdf5 file with filename."""
