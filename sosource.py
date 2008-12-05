@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.25 2008/12/05 11:09:35 ith Exp $
+    $Id: sosource.py,v 1.26 2008/12/05 11:52:23 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -164,6 +164,115 @@ def getsource(intfile=None, savefile=None, intmethod=None, fullinfo=False):
             source_logger.debug("Integrand file closed.")
     except IOError:
         source_logger.exception("IO Error during process.")
+        raise
+    return savefile
+
+def getsourceandintegrate(m, savefile=None, intmethod=None):
+    """Return source term (slow-roll for now), once first order system has been executed."""
+    #testing
+#     nixend = 10
+    #Initialize variables to store result
+    lenmk = len(m.k)
+    s2shape = (lenmk, lenmk)
+    source_logger.debug("Shape of m.k is %s.", str(lenmk))
+    #Get atom shape for savefile
+    atomshape = (0, lenmk)
+    
+    #Set up file for results
+    if not savefile or not os.path.isdir(os.path.dirname(savefile)):
+        date = time.strftime("%Y%m%d%H%M%S")
+        savefile = RESULTSDIR + "source" + date + ".hf5"
+        source_logger.info("Saving source results in file " + savefile)
+
+    #Main try block for file IO
+    try:
+        sf, sarr = opensourcefile(savefile, atomshape, sourcetype="term")
+        try:
+            #Choose integration method
+            if intmethod is None:
+                try:
+                    if all(N.diff(m.k) == m.k[1]-m.k[0]) and helpers.ispower2(len(m.k)-1):
+                        intmethod = "romb"
+                    else:
+                        intmethod = "simps"
+                except IndexError:
+                        raise IndexError("Need more than one k to calculate integral!")
+            #Now proceed with integration
+            if intmethod is "romb":
+                if not helpers.ispower2(len(m.k)-1):
+                    raise AttributeError("Need to have 2**n + 1 different k values for integration.")
+                intfunc = integrate.romb
+                fnargs = []
+            elif intmethod is "simps":
+                intfunc = integrate.simps
+                fnargs = [k]
+            else:
+                raise ValueError("Need to specify correct integration method!")
+            #Log integration method
+            source_logger.debug("Integration method chosen is %s.", intmethod)
+            # Begin calculation
+            source_logger.debug("Entering main time loop...")    
+            #Main loop over each time step
+            for nix, n in enumerate(m.tresult):    
+                if N.ceil(n) == n:
+                    source_logger.info("Starting n=" + str(n) + " sequence...")
+                #Get first order ICs:
+                nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
+                source_logger.debug("Left getfoystart. Filling nans...")
+                #switch nans for ICs in m.yresult
+                myr = m.yresult[nix].copy()
+                are_nan = N.isnan(myr)
+                myr[are_nan] = nanfiller[are_nan]
+                source_logger.debug("NaNs filled. Setting dynamical variables...")
+                
+                #Get first order results (from file or variables)
+                phi, phidot, H, dphi1real, dphi1dotreal, dphi1imag, dphi1dotimag = [myr[i,:] for i in range(7)]
+                dphi1 = dphi1real + dphi1imag*1j
+                dphi1dot = dphi1dotreal + dphi1dotimag*1j
+                source_logger.debug("Variables set. Getting potentials for this timestep...")
+                pottuple = m.potentials(myr)
+                #Get potentials in right shape
+                pt = []
+                for p in pottuple:
+                    if N.shape(p) != N.shape(pottuple[0]):
+                        pt.append(p*N.ones_like(pottuple[0]))
+                    else:
+                        pt.append(p)
+                U, dU, dU2, dU3 = pt
+                source_logger.debug("Potentials obtained. Setting a and making results array...")
+                #Single time step
+                a = m.ainit*N.exp(n)
+                
+                #Initialize result variable for k modes
+                s2 = N.empty(s2shape)
+                
+                source_logger.debug("Starting main k loop...")
+                #Get k indices
+                kix = N.arange(lenmk)
+                qix = N.arange(lenmk)
+                #Check abs(qix-kix)-1 is not negative
+                dphi1ix = N.abs(qix[:, N.newaxis]-kix) -1
+                dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
+                dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])                    
+                #temp k and q vars
+                k = m.k[kix]
+                q = m.k[qix]
+                #First major term:
+                s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) 
+                            * q**2*dp1diff*dphi1)
+                #Second major term:
+                s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
+                #Third major term:
+                s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot
+                                            * dp1diff * dphi1)
+                #save results for each q
+                source_logger.debug("Integrating source term for this tstep...")
+                sarr.append(intfunc(s2, *fnargs)[N.newaxis,:])
+                source_logger.debug("Results for this tstep saved.")
+        finally:
+            #source = N.array(source)
+            sf.close()
+    except IOError:
         raise
     return savefile
 
