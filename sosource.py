@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.24 2008/12/04 18:18:50 ith Exp $
+    $Id: sosource.py,v 1.25 2008/12/05 11:09:35 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -187,7 +187,7 @@ def opensourcefile(filename, atomshape, sourcetype=None):
             rf.createGroup(rf.root, "results", "Results")
         if not sarrname in rf.root.results:
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
-            sarr = rf.createEArray(rf.root.results, sarrname, tables.Float64Atom(), atomshape, filters=filters)
+            sarr = rf.createEArray(rf.root.results, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
         else:
             source_logger.debug("Source file and node exist. Testing source node shape...")
             sarr = rf.getNode(rf.root.results, sarrname)
@@ -227,6 +227,6 @@ def sourcetermdict(m, sourceterm):
         raise TypeError("Need to specify both model and sourceterm.")
     sdict = {
     "k" : tables.Float64Col(),
-    "source" : tables.Float64Col(sourceterm[:,0].shape)}
+    "source" : tables.ComplexCol(sourceterm[:,0].shape, itemsize=16)}
     
     return sdict
