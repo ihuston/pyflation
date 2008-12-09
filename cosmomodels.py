@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.183 2008/12/09 14:47:31 ith Exp $
+    $Id: cosmomodels.py,v 1.184 2008/12/09 14:52:17 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.183 $",
+                  "CVSRevision":"$Revision: 1.184 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -968,7 +968,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.183 $",
+                  "CVSRevision":"$Revision: 1.184 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1047,15 +1047,7 @@ class TwoStageModel(MultiStageModel):
     """                
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None, pot_params=None, simtstart=None):
         """Initialize model and ensure initial conditions are sane."""
-        #Set mass as specified
-        if mass is None:
-            self.mass = 6.133e-6
-        else:
-            self.mass = mass
-        
-        #set noise level
-        self.quiet=quiet
-        
+      
         #Change potentials to be right function
         if potential_func is None:
             potential_func = cmpotentials.msqphisq
@@ -1367,4 +1359,3 @@ class ThirdStageCanonical(CanonicalMultiStage):
         else:
             self.second_stage = second_stage
         
-    def 
