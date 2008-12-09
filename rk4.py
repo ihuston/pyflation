@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.21 2008/12/09 17:05:46 ith Exp $
+#CVS: $Id: rk4.py,v 1.22 2008/12/09 19:55:44 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -65,7 +65,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     xh = x + hh # Halfway point in x direction
     
     #First step, we already have derivatives from dydx
-    yt = y +hh*dydx
+    yt = y + hh*dydx
     
     #Second step, get new derivatives
     dyt = derivs(yt, xh, **dargs)
@@ -168,7 +168,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
         xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
-        
+        xix = 0 #Index of x in tresult
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
         #First result is initial condition
@@ -177,6 +177,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             if N.any(N.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
+        xix+=1
                     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
@@ -188,12 +189,13 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 if N.any(N.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
                 
-            for xix, x in enumerate(seq(xstart, xend, h)):
+            for x in seq(xstart, xend, h):
                 xx.append(x.copy() + h)
-                dargs = {"k": ks, "kix": kix, "tix": xix} 
-                dv = derivs(v[:,kix], x, **dargs)
-                v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
-                #x = x + h
+                if len(kix) != 0:
+                    dargs = {"k": ks, "kix": kix, "tix": xix} 
+                    dv = derivs(v[:,kix], x, **dargs)
+                    v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
+                xix+=1 #Increment x index counter
                 y.append(v.copy())
         #Get results in right shape
         xx = N.array(xx)
@@ -207,8 +209,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         y = [v.copy()] #start results list
         ks = None
         for step in xrange(nstep):
-            dv = derivs(v, x, ks)
-            dargs = {} 
+            dargs = {"k": ks}
+            dv = derivs(v, x, **dargs)
             v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
