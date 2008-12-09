@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.185 2008/12/09 15:35:21 ith Exp $
+    $Id: cosmomodels.py,v 1.186 2008/12/09 16:58:13 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.185 $",
+                  "CVSRevision":"$Revision: 1.186 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -834,6 +834,185 @@ class CanonicalFirstOrder(PhiModels):
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
         return dydx
+
+        
+class CanonicalFirstOrder(PhiModels):
+    """First order model using efold as time variable.
+       y[0] - \phi_0 : Background inflaton
+       y[1] - d\phi_0/d\eta : First deriv of \phi
+       y[2] - H : Hubble parameter
+       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
+       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
+       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
+       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
+       """
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalFirstOrder, self).__init__(*args, **kwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Let k roam for a start if not given
+        if k is None:
+            self.k = 10**(N.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+        
+        #Set initial H value if None
+        if N.all(self.ystart[2] == 0.0):
+            U = self.potentials(self.ystart, self.pot_params)[0]
+            self.ystart[2] = self.findH(U, self.ystart)
+            
+        #Text for graphs
+        self.plottitle = "Complex First Order Malik Model in Efold time"
+        self.tname = r"$n$"
+        self.ynames = [r"$\varphi_0$",
+                        r"$\dot{\varphi_0}$",
+                        r"$H$",
+                        r"Real $\delta\varphi_1$",
+                        r"Real $\dot{\delta\varphi_1}$",
+                        r"Imag $\delta\varphi_1$",
+                        r"Imag $\dot{\delta\varphi_1}$"]
+                    
+    def derivs(self, y, t, k=None):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        #If k not given select all
+        if k is None:
+            k = self.k
+            
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is N.ndarray or type(k) is list: 
+            dydx = N.zeros((7,len(k)))
+        else:
+            dydx = N.zeros(7)
+            
+        
+        #d\phi_0/dn = y_1
+        dydx[0] = y[1] 
+        
+        #dphi^prime/dn
+        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        
+        #dH/dn
+        dydx[2] = -0.5*(y[1]**2)*y[2]
+        
+        #d\deltaphi_1/dn = y[4]
+        dydx[3] = y[4]
+        
+        #Get a
+        a = self.ainit*N.exp(t)
+        
+        #d\deltaphi_1^prime/dn  #
+        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
+                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
+                
+        #Complex parts
+        dydx[5] = y[6]
+        
+        #
+        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
+                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
+        
+        return dydx
+
+
+class CanonicalSecondOrder(PhiModels):
+    """Second order model using efold as time variable.
+       y[0] - \delta\varphi_2 : Second order perturbation [Real Part]
+       y[1] - \delta\varphi_2^\prime : Derivative of second order perturbation [Real Part]
+       y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
+       y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
+       """
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalSecondOrder, self).__init__(*args, **kwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Let k roam for a start if not given
+        if k is None:
+            self.k = 10**(N.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart = N.array([0.0,0.0,0.0,0.0])   
+        
+        #Text for graphs
+        self.plottitle = "Complex Second Order Malik Model with source term in Efold time"
+        self.tname = r"$n$"
+        self.ynames = [r"Real $\delta\varphi_2$",
+                        r"Real $\dot{\delta\varphi_2}$",
+                        r"Imag $\delta\varphi_2$",
+                        r"Imag $\dot{\delta\varphi_2}$"]
+                    
+    def derivs(self, y, t, k=None, kix=None, tix=None):
+        """Equation of motion for second order perturbations including source term"""
+        #If k not given select all
+        if k is None:
+            k = self.k
+            kix = N.arange(len(k))
+        if kix is None:
+            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
+        #Need t index to use first order data
+        if tix is None:
+            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
+        #debug logging
+        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", (tix, t, self.second_stage.tresult[tix]))
+        #Get first order results for this time step
+        fovars = self.second_stage.yresult[tix].copy()[kix]
+        phi, phidot, H = fovars[0:3]
+        epsilon = self.second_stage.bgepsilon[tix]
+        #Get source terms
+        src = self.source[tix][kix]
+        srcreal, srcimag = src.real, src.imag
+        #get potential from function
+        U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is N.ndarray or type(k) is list: 
+            dydx = N.zeros((4,len(k)))
+        else:
+            dydx = N.zeros(4)
+            
+        #Get a
+        a = self.ainit*N.exp(t)
+        #Real parts
+        #d\deltaphi_2/dn = y[1]
+        dydx[0] = y[1]
+        
+        #d\deltaphi_2^prime/dn  #
+        dydx[1] = (-(3 - epsilon)*y[1] - ((k/(a*H))**2)*y[0]
+                    -(d2U/H**2 - 3*(phidot**2))*y[0] - srcreal)
+                
+        #Complex \deltaphi_2
+        dydx[2] = y[3]
+        
+        #Complex derivative
+        dydx[3] = (-(3 - epsilon)*y[3] - ((k/(a*H))**2)*y[2]
+                    -(d2U/H**2 - 3*(phidot**2))*y[2] - srcimag)
+        
+        return dydx
+        
         
 class MultiStageModel(CosmologicalModel):
     """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
@@ -968,7 +1147,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.185 $",
+                  "CVSRevision":"$Revision: 1.186 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1299,6 +1478,11 @@ class FOModelWrapper(FOCanonicalTwoStage):
                 params = self._rf.root.results.parameters
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain correct model data structure!")
+            try:
+                self.source = self._rf.root.results.sourceterm
+            except tables.NoSuchNodeError:
+                self._log.debug("First order file does not have a source term.")
+                self.source = None
             #Put params in right slots
             for ix, val in enumerate(params[0]):
                 self.__setattr__(params.colnames[ix], val)
@@ -1345,7 +1529,7 @@ class ThirdStageModel(MultiStageModel):
     a two stage model instance which could be wrapped from a file."""
     
     def __init__(self, second_stage, ystart=None):
-        """Initialiaze variables and check that tsmodel exists and is correct form."""
+        """Initialize variables and check that tsmodel exists and is correct form."""
         
         #Test whether tsmodel is of correct type
         if not isinstance(second_stage, TwoStageModel):
@@ -1357,13 +1541,28 @@ class ThirdStageModel(MultiStageModel):
             self.simtstart = self.second_stage.tresult[0]
             self.fotstart = self.second_stage.fotstart
             self.ainit = self.second_stage.ainit
+        
+        if ystart is None:
+            ystart = N.array([0.0,0.0])
         #Call superclass
         super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
         self.second_stage.tstep_wanted, self.second_stage.tstep_min, solver=self.second_stage.solver, 
         potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
+        
+        
+    def run(saveresults=True):
+        """Run third stage of simulation."""
+        pass
             
 class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
     """Concrete implementation of ThirdStageCanonical to include second order calculation including
     source term from a first order model."""
     
-    def __init__(self, 
+    def __init__(self, *args, **kwargs):
+        """Initialize variables and call super class __init__ method."""
+        super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
+        #try to set source term
+        self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source
+        if self.source is None:
+            raise ModelError("First order model does not have a source term!")
