@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.187 2008/12/09 17:49:25 ith Exp $
+    $Id: cosmomodels.py,v 1.188 2008/12/09 19:56:18 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -88,7 +88,7 @@ class CosmologicalModel(object):
             raise ValueError, "Solver not recognized!"
         
         if potential_func is not None:
-            self.potentials = potential_func
+            self.potentials = cmpotentials.__getattribute__(potential_func)
         else:
             raise ModelError("Need to specify a function for potentials.")
         
@@ -158,9 +158,9 @@ class CosmologicalModel(object):
             try:
                 self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, simtstart, self.tstart, self.tend, self.k, 
                 self.tstep_wanted, self.derivs)
-            except StandardError, er:
-                merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
-                raise merror
+            except StandardError:
+                self._log.exception("Error running rkdriver_withks!")
+                raise
             
         if self.solver == "scipy_odeint":
             #Use scipy solver. Need to massage derivs into right form.
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.187 $",
+                  "CVSRevision":"$Revision: 1.188 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -621,11 +621,6 @@ class PhiModels(CosmologicalModel):
         """Call superclass init method."""
         super(PhiModels, self).__init__(*args, **kwargs)
                     
-        #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-        
         #Titles
         self.plottitle = r"Malik Models in $n$"
         self.tname = r"E-folds $n$"
@@ -649,7 +644,7 @@ class PhiModels(CosmologicalModel):
             Returns tuple of endefold and endindex (in tresult)."""
         
         if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
+            raise ModelError("Model has not been run yet, cannot find inflation end!")
         
         self.epsilon = self.getepsilon()
         if not any(self.epsilon>1):
@@ -713,7 +708,10 @@ class CanonicalBackground(PhiModels):
         
         super(CanonicalBackground, self).__init__(*args, **kwargs)
         
-        
+        #Set initial H value if None
+        if N.all(self.ystart[2] == 0.0):
+            U = self.potentials(self.ystart, self.pot_params)[0]
+            self.ystart[2] = self.findH(U, self.ystart)
         #Titles
         self.plottitle = r"Background Malik model in $n$"
         self.tname = r"E-folds $n$"
@@ -722,12 +720,12 @@ class CanonicalBackground(PhiModels):
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        #If k not given select all
-        if kwargs["k"] is None:
-            k = self.k
-        else:
-            k = kwargs["k"]
-            
+#         #If k not given select all
+#         if kwargs["k"] is None:
+#             k = self.k
+#         else:
+#             k = kwargs["k"]
+#             
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
@@ -894,9 +892,9 @@ class CanonicalSecondOrder(PhiModels):
         else:
             tix = kwargs["tix"]
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", (tix, t, self.second_stage.tresult[tix]))
+        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
-        fovars = self.second_stage.yresult[tix].copy()[kix]
+        fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[tix]
         #Get source terms
@@ -1064,7 +1062,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.187 $",
+                  "CVSRevision":"$Revision: 1.188 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1146,7 +1144,8 @@ class TwoStageModel(MultiStageModel):
       
         #Change potentials to be right function
         if potential_func is None:
-            potential_func = cmpotentials.msqphisq
+            potential_func = "msqphisq"
+            self.potential_func = potential_func
         
         #Initial conditions for each of the variables.
         if ystart is None:
@@ -1240,7 +1239,7 @@ class TwoStageModel(MultiStageModel):
             ys = self.ystart[0:3,0]
         self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                            potential_func=self.potentials, pot_params=self.pot_params)
+                            potential_func=self.potential_func, pot_params=self.pot_params)
         
         #Start background run
         self._log.info("Running background model...\n")
@@ -1259,7 +1258,7 @@ class TwoStageModel(MultiStageModel):
         #Initialize first order model
         self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
                                 tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit, potential_func=self.potentials, pot_params=self.pot_params)
+                                k=self.k, ainit=self.ainit, potential_func=self.potential_func, pot_params=self.pot_params)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
@@ -1417,7 +1416,7 @@ class FOModelWrapper(FOCanonicalTwoStage):
             ys = self.ystart[0:3,0]
         self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                            potential_func=self.potentials, pot_params=self.pot_params)
+                            potential_func=self.potential_func, pot_params=self.pot_params)
         #Put in data
         try:
             self._log.debug("Trying to get background results...")
@@ -1455,13 +1454,15 @@ class ThirdStageModel(MultiStageModel):
         else:
             self.second_stage = second_stage
             #Set properties to be those of second stage model
-            self.k = self.second_stage.k
+            self.k = N.copy(self.second_stage.k)
             self.simtstart = self.second_stage.tresult[0]
-            self.fotstart = self.second_stage.fotstart
+            self.fotstart = N.copy(self.second_stage.fotstart)
             self.ainit = self.second_stage.ainit
+            self.potentials = self.second_stage.potentials
+            self.potential_func = self.second_stage.potential_func
         
         if ystart is None:
-            ystart = N.array([0.0,0.0])
+            ystart = N.zeros((4, len(self.k)))
         #Call superclass
         super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
         self.second_stage.tstep_wanted, self.second_stage.tstep_min, solver=self.second_stage.solver, 
@@ -1477,25 +1478,28 @@ class ThirdStageModel(MultiStageModel):
         """Run second order model."""
         kwargs = {
         "ystart": self.ystart,
-        "tstart": self.tstart,
+        "tstart": self.fotstart,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
         "tstep_min": self.tstep_min,
         "solver": self.solver,
         "k": self.k,
         "ainit": self.ainit,
-        "potential_func": self.potentials,
+        "potential_func": self.potential_func,
         "pot_params": self.pot_params}
         
         self.somodel = self.soclass(**kwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
-        
+        #Set second stage and source terms for somodel
+        self.somodel.source = self.source
+        self.somodel.second_stage = self.second_stage
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
             self.somodel.run(saveresults=False, simtstart=self.simtstart)
-        except ModelError, er:
-            raise ModelError("Error in second order run, aborting! " + er.message)
+        except ModelError:
+            self._log.exception("Error in second order run, aborting!")
+            raise
         
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
