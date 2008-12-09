@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.20 2008/11/28 12:26:49 ith Exp $
+#CVS: $Id: rk4.py,v 1.21 2008/12/09 17:05:46 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -56,7 +56,7 @@ def rk4step(x, y, h, dydx, derivs):
     
     return yout
 
-def rk4stepks(x, y, h, dydx, ks, derivs):
+def rk4stepks(x, y, h, dydx, dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
@@ -68,25 +68,25 @@ def rk4stepks(x, y, h, dydx, ks, derivs):
     yt = y +hh*dydx
     
     #Second step, get new derivatives
-    dyt = derivs(yt, xh, ks)
+    dyt = derivs(yt, xh, **dargs)
     
     yt = y + hh*dyt
     
     #Third step
-    dym = derivs(yt, xh, ks)
+    dym = derivs(yt, xh, **dargs)
     
     yt = y + h*dym
     dym = dym + dyt
     
     #Fourth step
-    dyt = derivs(yt, x+h, ks)
+    dyt = derivs(yt, x+h, **dargs)
     
     #Accumulate increments with proper weights
     yout = y + h6*(dydx + dyt + 2*dym)
     
     return yout
 
-def rkck(y, dydx, x, h,derivs):
+def rkck(y, dydx, x, h, derivs):
     """Take a Cash-Karp Runge-Kutta step."""
     
     global CKP
@@ -188,10 +188,11 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 if N.any(N.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
                 
-            for x in seq(xstart, xend, h):
+            for xix, x in enumerate(seq(xstart, xend, h)):
                 xx.append(x.copy() + h)
-                dv = derivs(v[:,kix], x, ks)
-                v[:,kix] = rk4stepks(x, v[:,kix], h, dv, ks, derivs)
+                dargs = {"k": ks, "kix": kix, "tix": xix} 
+                dv = derivs(v[:,kix], x, **dargs)
+                v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
                 #x = x + h
                 y.append(v.copy())
         #Get results in right shape
@@ -207,7 +208,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         ks = None
         for step in xrange(nstep):
             dv = derivs(v, x, ks)
-            v = rk4stepks(x, v, h, dv, ks, derivs)
+            dargs = {} 
+            v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
         y = N.concatenate([y], 0)
