@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.182 2008/12/09 14:31:56 ith Exp $
+    $Id: cosmomodels.py,v 1.183 2008/12/09 14:47:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.182 $",
+                  "CVSRevision":"$Revision: 1.183 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -946,12 +946,54 @@ class MultiStageModel(CosmologicalModel):
         P.xlabel(r"$k$")
         P.ylabel(r"$\mathcal{P}_{\mathcal{R}}/\mathcal{P}_*$")
         P.title(r"Power spectrum of curvature perturbations normalized at $k=0.05 \,\mathrm{Mpc}^{-1} = "+ helpers.eto10(WMAP_PIVOT) + "\,\mathrm{M}_{\mathrm{PL}}$")
-        
         P.show()
-        
         return f
-
-
+    
+    def callingparams(self):
+        """Returns list of parameters to save with results."""
+        #Test whether k has been set
+        try:
+            self.k
+        except (NameError, AttributeError):
+            self.k=None
+        #Form dictionary of inputs
+        params = {"ystart":self.ystart, 
+                  "tstart":self.tstart,
+                  "ainit":self.ainit,
+                  "potential_func":self.potentials.__name__,
+                  "tend":self.tend,
+                  "tstep_wanted":self.tstep_wanted,
+                  "tstep_min":self.tstep_min,
+                  "eps":self.eps,
+                  "dxsav":self.dxsav,
+                  "solver":self.solver,
+                  "classname":self.__class__.__name__,
+                  "CVSRevision":"$Revision: 1.183 $",
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  }
+        return params
+    
+    def gethf5paramsdict(self):
+        """Describes the fields required to save the calling parameters."""
+        params = {
+        "solver" : tables.StringCol(50),
+        "classname" : tables.StringCol(255),
+        "CVSRevision" : tables.StringCol(255),
+        "ystart" : tables.Float64Col(self.ystart.shape),
+        "tstart" : tables.Float64Col(N.shape(self.tstart)),
+        "simtstart" : tables.Float64Col(),
+        "ainit" : tables.Float64Col(),
+        "potential_func" : tables.StringCol(255),
+        "tend" : tables.Float64Col(),
+        "tstep_wanted" : tables.Float64Col(),
+        "tstep_min" : tables.Float64Col(),
+        "eps" : tables.Float64Col(),
+        "dxsav" : tables.Float64Col(),
+        "datetime" : tables.Float64Col()
+        }
+        return params
+    
+    
 class CanonicalMultiStage(MultiStageModel):
     """Implementation of generic two stage model with standard initial conditions for phi.
     """
@@ -1175,50 +1217,6 @@ class TwoStageModel(MultiStageModel):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    def callingparams(self):
-        """Returns list of parameters to save with results."""
-        #Test whether k has been set
-        try:
-            self.k
-        except (NameError, AttributeError):
-            self.k=None
-        #Form dictionary of inputs
-        params = {"ystart":self.ystart, 
-                  "tstart":self.tstart,
-                  "ainit":self.ainit,
-                  "potential_func":self.potentials.__name__,
-                  "tend":self.tend,
-                  "tstep_wanted":self.tstep_wanted,
-                  "tstep_min":self.tstep_min,
-                  "eps":self.eps,
-                  "dxsav":self.dxsav,
-                  "solver":self.solver,
-                  "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.182 $",
-                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                  }
-        return params
-    
-    def gethf5paramsdict(self):
-        """Describes the fields required to save the calling parameters."""
-        params = {
-        "solver" : tables.StringCol(50),
-        "classname" : tables.StringCol(255),
-        "CVSRevision" : tables.StringCol(255),
-        "ystart" : tables.Float64Col(self.ystart.shape),
-        "tstart" : tables.Float64Col(N.shape(self.tstart)),
-        "simtstart" : tables.Float64Col(),
-        "ainit" : tables.Float64Col(),
-        "potential_func" : tables.StringCol(255),
-        "tend" : tables.Float64Col(),
-        "tstep_wanted" : tables.Float64Col(),
-        "tstep_min" : tables.Float64Col(),
-        "eps" : tables.Float64Col(),
-        "dxsav" : tables.Float64Col(),
-        "datetime" : tables.Float64Col()
-        }
-        return params
-    
     def checkfirstordercomplete(self):
         """Raise an error if first order model has not been run."""
         #Check if firstorder run is completed
@@ -1356,3 +1354,17 @@ class FOModelWrapper(FOCanonicalTwoStage):
         #Call superclass __del__ method.
         #super(FOModelWrapper, self).__del__()
         
+class ThirdStageCanonical(CanonicalMultiStage):
+    """Runs third stage calculation (typically second order perturbations) using
+    a two stage model instance which could be wrapped from a file."""
+    
+    def __init__(self, second_stage, *args, **kwargs):
+        """Initialiaze variables and check that tsmodel exists and is correct form."""
+        super(ThirdStageCanonical, self).__init__(*args, **kwargs)
+        #Test whether tsmodel is of correct type
+        if not isinstance(second_stage, TwoStageModel):
+            raise ModelError("Need to provide a TwoStageModel instance to get first order results from!")
+        else:
+            self.second_stage = second_stage
+        
+    def 
