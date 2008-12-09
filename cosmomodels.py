@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.186 2008/12/09 16:58:13 ith Exp $
+    $Id: cosmomodels.py,v 1.187 2008/12/09 17:49:25 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.186 $",
+                  "CVSRevision":"$Revision: 1.187 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -580,7 +580,7 @@ class BasicBgModel(CosmologicalModel):
         
         return U, dUdphi, d2Udphi2, d3Udphi3
     
-    def derivs(self, y, t):
+    def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/d\eta etc"""
         
@@ -719,12 +719,14 @@ class CanonicalBackground(PhiModels):
         self.tname = r"E-folds $n$"
         self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
-    def derivs(self, y, t, k=None):
+    def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         #If k not given select all
-        if k is None:
+        if kwargs["k"] is None:
             k = self.k
+        else:
+            k = kwargs["k"]
             
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
@@ -790,12 +792,14 @@ class CanonicalFirstOrder(PhiModels):
                         r"Imag $\delta\varphi_1$",
                         r"Imag $\dot{\delta\varphi_1}$"]
                     
-    def derivs(self, y, t, k=None):
+    def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         #If k not given select all
-        if k is None:
+        if kwargs["k"] is None:
             k = self.k
+        else:
+            k = kwargs["k"]
             
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
@@ -834,100 +838,7 @@ class CanonicalFirstOrder(PhiModels):
                     -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
         
         return dydx
-
         
-class CanonicalFirstOrder(PhiModels):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
-       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
-       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
-       """
-    def __init__(self,  k=None, ainit=None, *args, **kwargs):
-        """Initialize variables and call superclass"""
-        
-        super(CanonicalFirstOrder, self).__init__(*args, **kwargs)
-        
-        if ainit is None:
-            #Don't know value of ainit yet so scale it to 1
-            self.ainit = 1
-        else:
-            self.ainit = ainit
-        
-        #Let k roam for a start if not given
-        if k is None:
-            self.k = 10**(N.arange(10.0)-8)
-        else:
-            self.k = k
-        
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
-        
-        #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-            
-        #Text for graphs
-        self.plottitle = "Complex First Order Malik Model in Efold time"
-        self.tname = r"$n$"
-        self.ynames = [r"$\varphi_0$",
-                        r"$\dot{\varphi_0}$",
-                        r"$H$",
-                        r"Real $\delta\varphi_1$",
-                        r"Real $\dot{\delta\varphi_1}$",
-                        r"Imag $\delta\varphi_1$",
-                        r"Imag $\dot{\delta\varphi_1}$"]
-                    
-    def derivs(self, y, t, k=None):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/dn etc"""
-        #If k not given select all
-        if k is None:
-            k = self.k
-            
-        #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
-        
-        #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((7,len(k)))
-        else:
-            dydx = N.zeros(7)
-            
-        
-        #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
-        
-        #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
-        
-        #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
-        
-        #Get a
-        a = self.ainit*N.exp(t)
-        
-        #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-                
-        #Complex parts
-        dydx[5] = y[6]
-        
-        #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
-        
-        return dydx
-
 
 class CanonicalSecondOrder(PhiModels):
     """Second order model using efold as time variable.
@@ -965,17 +876,23 @@ class CanonicalSecondOrder(PhiModels):
                         r"Imag $\delta\varphi_2$",
                         r"Imag $\dot{\delta\varphi_2}$"]
                     
-    def derivs(self, y, t, k=None, kix=None, tix=None):
+    def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
         #If k not given select all
-        if k is None:
+        if kwargs["k"] is None:
             k = self.k
             kix = N.arange(len(k))
+        else:
+            k = kwargs["k"]
+            kix = kwargs["kix"]
+        
         if kix is None:
             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
         #Need t index to use first order data
-        if tix is None:
+        if kwargs["tix"] is None:
             raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
+        else:
+            tix = kwargs["tix"]
         #debug logging
         self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", (tix, t, self.second_stage.tresult[tix]))
         #Get first order results for this time step
@@ -1076,7 +993,7 @@ class MultiStageModel(CosmologicalModel):
     def findPphi(self):
         """Return the spectrum of scalar perturbations P_phi for each k."""
         #Raise error if first order not run yet
-        self.checkfirstordercomplete()
+        self.checkruncomplete()
         
         deltaphi = self.getdeltaphi()
         Pphi = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())
@@ -1085,7 +1002,7 @@ class MultiStageModel(CosmologicalModel):
     def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode."""
         #Raise error if first order not run yet
-        self.checkfirstordercomplete()
+        self.checkruncomplete()
         
         #If k is not defined, get value at all self.k
         if k is None:
@@ -1115,7 +1032,7 @@ class MultiStageModel(CosmologicalModel):
     def plotpivotPr(self, nefolds=5):
         """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
         #Raise error if first order not run yet
-        self.checkfirstordercomplete()
+        self.checkruncomplete()
         
         ts = self.findHorizoncrossings()[:,0] + nefolds/self.tstep_wanted #Take spectrum a few efolds after horizon crossing
         Prs = self.findPr()[ts.astype(int)].diagonal()/WMAP_PR
@@ -1147,7 +1064,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.186 $",
+                  "CVSRevision":"$Revision: 1.187 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1185,7 +1102,7 @@ class CanonicalMultiStage(MultiStageModel):
     def findPr(self):
         """Return the spectrum of curvature perturbations P_R for each k."""
         #Raise error if first order not run yet
-        self.checkfirstordercomplete()
+        self.checkruncomplete()
         
         Pphi = self.findPphi()
         phidot = self.yresult[:,1,:] #bg phidot
@@ -1259,7 +1176,8 @@ class TwoStageModel(MultiStageModel):
             self.k = 10**(N.arange(7.0)-62)
         else:
             self.k = k
-        
+        self.simtstart = simtstart
+            
         if bgclass is None:
             self.bgclass = CanonicalBackground
         else:
@@ -1382,11 +1300,11 @@ class TwoStageModel(MultiStageModel):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    def checkfirstordercomplete(self):
+    def checkruncomplete(self):
         """Raise an error if first order model has not been run."""
         #Check if firstorder run is completed
         if self.firstordermodel.runcount == 0:
-            raise ModelError("First order system must be run trying to find spectrum!")
+            raise ModelError("First order system must be run before calculating spectrum or other observables!")
         return
             
 
@@ -1448,7 +1366,7 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
            Return Pr.
            """
         #Raise error if first order not run yet
-        self.checkfirstordercomplete()
+        self.checkruncomplete()
         
         #Set nice variable names
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
@@ -1528,7 +1446,7 @@ class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
     
-    def __init__(self, second_stage, ystart=None):
+    def __init__(self, second_stage, soclass=None, ystart=None):
         """Initialize variables and check that tsmodel exists and is correct form."""
         
         #Test whether tsmodel is of correct type
@@ -1549,10 +1467,63 @@ class ThirdStageModel(MultiStageModel):
         self.second_stage.tstep_wanted, self.second_stage.tstep_min, solver=self.second_stage.solver, 
         potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
         
+        if soclass is None:
+            self.soclass = CanonicalSecondOrder
+        else:
+            self.soclass = soclass
+        self.somodel = None
         
-    def run(saveresults=True):
-        """Run third stage of simulation."""
-        pass
+    def runso(self):
+        """Run second order model."""
+        kwargs = {
+        "ystart": self.ystart,
+        "tstart": self.tstart,
+        "tend": self.tend,
+        "tstep_wanted": self.tstep_wanted,
+        "tstep_min": self.tstep_min,
+        "solver": self.solver,
+        "k": self.k,
+        "ainit": self.ainit,
+        "potential_func": self.potentials,
+        "pot_params": self.pot_params}
+        
+        self.somodel = self.soclass(**kwargs)
+        self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
+        
+        #Start second order run
+        self._log.info("Beginning second order run...")
+        try:
+            self.somodel.run(saveresults=False, simtstart=self.simtstart)
+        except ModelError, er:
+            raise ModelError("Error in second order run, aborting! " + er.message)
+        
+        self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
+        return
+    
+    def run(self, saveresults=True):
+        """Run simulation and save results."""
+        #Run second order model
+        self.runso()
+        
+        #Save results in resultlist and file
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()
+        
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.runcount += 1
+        
+        if saveresults:
+            try:
+                self._log.info("Results saved in " + self.saveallresults())
+            except IOError, er:
+                self._log.exception("Error trying to save results! Results NOT saved.")        
+        return
+    
+    def checkruncomplete(self):
+        """Check if model run is complete."""
+        if self.somodel.runcount == 0:
+            raise ModelError("Second order system must be run before calculating spectrum or other observables!")
+        return
             
 class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
     """Concrete implementation of ThirdStageCanonical to include second order calculation including
@@ -1566,3 +1537,17 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         self.source = self.second_stage.source
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
+        
+    def getdeltaphi(self):
+        """Find the spectrum of perturbations for each k. 
+           Return Pr.
+           """
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        dp1real = self.second_stage.yresult[:,3,:]
+        dp1imag = self.second_stage.yresult[:,5,:]
+        #Set nice variable names
+        deltaphi = dp1real + dp1imag*1j + self.yresult[:,0,:] + self.yresult[:,2,:]*1j
+        return deltaphi
+        
