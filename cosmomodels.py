@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.184 2008/12/09 14:52:17 ith Exp $
+    $Id: cosmomodels.py,v 1.185 2008/12/09 15:35:21 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -58,7 +58,7 @@ class CosmologicalModel(object):
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
         
         self.ystart = ystart
-        self.k = None #so we can test whether k is set
+        self.k = getattr(self, "k", None) #so we can test whether k is set
         
         if N.all(tstart < tend): 
             self.tstart, self.tend = tstart, tend
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.184 $",
+                  "CVSRevision":"$Revision: 1.185 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -968,7 +968,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.184 $",
+                  "CVSRevision":"$Revision: 1.185 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1045,19 +1045,13 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=None, bgclass=None, foclass=None, quiet=False, potential_func=None, pot_params=None, simtstart=None):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0):
         """Initialize model and ensure initial conditions are sane."""
       
         #Change potentials to be right function
         if potential_func is None:
             potential_func = cmpotentials.msqphisq
         
-        #Set simulation start time
-        if simtstart is None:
-            self.simtstart = 0
-        else:
-            self.simtstart = simtstart
-                    
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
@@ -1346,16 +1340,30 @@ class FOModelWrapper(FOCanonicalTwoStage):
         #Call superclass __del__ method.
         #super(FOModelWrapper, self).__del__()
         
-class ThirdStageCanonical(CanonicalMultiStage):
+class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
     
-    def __init__(self, second_stage, *args, **kwargs):
+    def __init__(self, second_stage, ystart=None):
         """Initialiaze variables and check that tsmodel exists and is correct form."""
-        super(ThirdStageCanonical, self).__init__(*args, **kwargs)
+        
         #Test whether tsmodel is of correct type
         if not isinstance(second_stage, TwoStageModel):
             raise ModelError("Need to provide a TwoStageModel instance to get first order results from!")
         else:
             self.second_stage = second_stage
-        
+            #Set properties to be those of second stage model
+            self.k = self.second_stage.k
+            self.simtstart = self.second_stage.tresult[0]
+            self.fotstart = self.second_stage.fotstart
+            self.ainit = self.second_stage.ainit
+        #Call superclass
+        super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
+        self.second_stage.tstep_wanted, self.second_stage.tstep_min, solver=self.second_stage.solver, 
+        potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
+            
+class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
+    """Concrete implementation of ThirdStageCanonical to include second order calculation including
+    source term from a first order model."""
+    
+    def __init__(self, 
