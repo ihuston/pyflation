@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.180 2008/12/02 13:21:19 ith Exp $
+    $Id: cosmomodels.py,v 1.181 2008/12/09 09:51:01 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.180 $",
+                  "CVSRevision":"$Revision: 1.181 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -835,8 +835,50 @@ class CanonicalFirstOrder(PhiModels):
         
         return dydx
         
-                
-class TwoStageModel(CosmologicalModel):
+class MultiStageModel(CosmologicalModel):
+    """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
+    methods to find Pr that are implemented in children."""
+    
+    def __init__(self, *args, **kwargs):
+        """Initialize super class instance."""
+        super(MultiStageModel, self).__init__(*args, **kwargs)
+        #Set constant factor for 1st order initial conditions
+        self.cq = 50
+        
+        
+    def finda_end(self, Hend, Hreh=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating
+            calculate the scale factor at the end of inflation."""
+        if Hreh is None:
+            Hreh = Hend #Instantaneous reheating
+        a_0 = 1 # Normalize today
+        a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        return a_end
+        
+    def findkcrossing(self, k, t, H, factor=None):
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        #threshold
+        err = 1.0e-26
+        if factor is None:
+            factor = self.cq #time before horizon crossing
+        #get aHs
+        aH = self.ainit*N.exp(t)*H
+        try:
+            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
+        except IndexError, ex:
+            raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
+        kcrefold = t[kcrindex]
+        return kcrindex, kcrefold
+    
+    def findallkcrossings(self, t, H):
+        """Iterate over findkcrossing to get full list"""
+        return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+    
+    def findHorizoncrossings(self, factor=1):
+        """FInd horizon crossing for all ks"""
+        return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
+                        
+class TwoStageModel(MultiStageModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
@@ -885,9 +927,6 @@ class TwoStageModel(CosmologicalModel):
         else:
             self.ainit = ainit
                 
-        #Set constant factor for 1st order initial conditions
-        self.cq = 50
-        
         #Let k roam if we don't know correct ks
         if k is None:
             self.k = 10**(N.arange(7.0)-62)
@@ -905,39 +944,7 @@ class TwoStageModel(CosmologicalModel):
         
         #Setup model variables    
         self.bgmodel = self.firstordermodel = None
-            
-    def finda_end(self, Hend, Hreh=None):
-        """Given the Hubble parameter at the end of inflation and at the end of reheating
-            calculate the scale factor at the end of inflation."""
-        if Hreh is None:
-            Hreh = Hend #Instantaneous reheating
-        a_0 = 1 # Normalize today
-        a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
-        return a_end
-        
-    def findkcrossing(self, k, t, H, factor=None):
-        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
-        #threshold
-        err = 1.0e-26
-        if factor is None:
-            factor = self.cq #time before horizon crossing
-        #get aHs
-        aH = self.ainit*N.exp(t)*H
-        try:
-            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
-        except IndexError, ex:
-            raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
-        kcrefold = t[kcrindex]
-        return kcrindex, kcrefold
-    
-    def findallkcrossings(self, t, H):
-        """Iterate over findkcrossing to get full list"""
-        return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
-    
-    def findHorizoncrossings(self, factor=1):
-        """FInd horizon crossing for all ks"""
-        return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
-        
+                    
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
@@ -1122,7 +1129,7 @@ class TwoStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.180 $",
+                  "CVSRevision":"$Revision: 1.181 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
