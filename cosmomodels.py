@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.181 2008/12/09 09:51:01 ith Exp $
+    $Id: cosmomodels.py,v 1.182 2008/12/09 14:31:56 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -265,7 +265,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.181 $",
+                  "CVSRevision":"$Revision: 1.182 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -877,7 +877,127 @@ class MultiStageModel(CosmologicalModel):
     def findHorizoncrossings(self, factor=1):
         """FInd horizon crossing for all ks"""
         return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
-                        
+    
+    def getfoystart(self):
+        """Return model dependent setting of ystart""" 
+        pass
+    
+    def getdeltaphi(self):
+        """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
+        pass
+    
+    def findPr(self):
+        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
+        pass
+    
+    def findPgrav(self):
+        """Return the spectrum of tensor perturbations P_grav for each k. Implemented model-by-model."""
+        pass
+    
+    def findPphi(self):
+        """Return the spectrum of scalar perturbations P_phi for each k."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        deltaphi = self.getdeltaphi()
+        Pphi = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())
+        return Pphi
+     
+    def findns(self, k=None, nefolds=3):
+        """Return the value of n_s at the specified k mode."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        #If k is not defined, get value at all self.k
+        if k is None:
+            k = self.k
+        else:
+            if k<self.k.min() and k>self.k.max():
+                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
+        Pr = self.findPr()
+        ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
+        xp = N.log(Pr[ts.astype(int)].diagonal())
+        lnk = N.log(k)
+        
+        #Need to sort into ascending k
+        sortix = lnk.argsort()
+                
+        #Use cubic splines to find deriv
+        tck = interpolate.splrep(lnk[sortix], xp[sortix])
+        ders = interpolate.splev(lnk[sortix], tck, der=1)
+        
+        ns = 1 + ders
+        #Unorder the ks again
+        nsunsort = N.zeros(len(ns))
+        nsunsort[sortix] = ns
+        
+        return nsunsort
+    
+    def plotpivotPr(self, nefolds=5):
+        """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        ts = self.findHorizoncrossings()[:,0] + nefolds/self.tstep_wanted #Take spectrum a few efolds after horizon crossing
+        Prs = self.findPr()[ts.astype(int)].diagonal()/WMAP_PR
+        
+        f = P.figure()
+        P.semilogx(self.k, Prs)
+        P.xlabel(r"$k$")
+        P.ylabel(r"$\mathcal{P}_{\mathcal{R}}/\mathcal{P}_*$")
+        P.title(r"Power spectrum of curvature perturbations normalized at $k=0.05 \,\mathrm{Mpc}^{-1} = "+ helpers.eto10(WMAP_PIVOT) + "\,\mathrm{M}_{\mathrm{PL}}$")
+        
+        P.show()
+        
+        return f
+
+
+class CanonicalMultiStage(MultiStageModel):
+    """Implementation of generic two stage model with standard initial conditions for phi.
+    """
+                    
+    def __init__(self, *args, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+        #Call superclass
+        super(CanonicalMultiStage, self).__init__(*args, **kwargs)
+        
+    def findPr(self):
+        """Return the spectrum of curvature perturbations P_R for each k."""
+        #Raise error if first order not run yet
+        self.checkfirstordercomplete()
+        
+        Pphi = self.findPphi()
+        phidot = self.yresult[:,1,:] #bg phidot
+        Pr = Pphi/(phidot**2) #change if bg evol is different
+        return Pr
+    
+    def findPgrav(self):
+        """Return the spectrum of tensor perturbations P_grav for each k."""
+        Pphi = self.findPphi()
+        Pgrav = 2*Pphi
+        return Pgrav
+    
+    def getzeta(self):
+        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
+        #Get needed variables
+        phidot = self.yresult[:,1,:]
+        a = self.ainit*N.exp(self.tresult)
+        H = self.yresult[:,2,:]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
+        
+        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
+        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
+        
+        zeta = -H*deltarho/drhodt
+        return zeta, deltarho, drhodt
+        
+    def findzetasq(self):
+        """Return the spectrum of zeta."""
+        pass
+    
+                                        
 class TwoStageModel(MultiStageModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
@@ -983,62 +1103,7 @@ class TwoStageModel(MultiStageModel):
         #Find new start time from earliest kcrossing
         self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
         self.foystart = self.getfoystart()
-        return
-        
-    def getfoystart(self):
-        """Return model dependent setting of ystart""" 
-        pass
-    
-    def getdeltaphi(self):
-        """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
-        pass
-    
-    def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
-        pass
-    
-    def findPgrav(self):
-        """Return the spectrum of tensor perturbations P_grav for each k. Implemented model-by-model."""
-        pass
-    
-    def findPphi(self):
-        """Return the spectrum of scalar perturbations P_phi for each k."""
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        deltaphi = self.getdeltaphi()
-        Pphi = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())
-        return Pphi
-     
-    def findns(self, k=None, nefolds=3):
-        """Return the value of n_s at the specified k mode."""
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        #If k is not defined, get value at all self.k
-        if k is None:
-            k = self.k
-        else:
-            if k<self.k.min() and k>self.k.max():
-                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-        Pr = self.findPr()
-        ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = N.log(Pr[ts.astype(int)].diagonal())
-        lnk = N.log(k)
-        
-        #Need to sort into ascending k
-        sortix = lnk.argsort()
-                
-        #Use cubic splines to find deriv
-        tck = interpolate.splrep(lnk[sortix], xp[sortix])
-        ders = interpolate.splev(lnk[sortix], tck, der=1)
-        
-        ns = 1 + ders
-        #Unorder the ks again
-        nsunsort = N.zeros(len(ns))
-        nsunsort[sortix] = ns
-        
-        return nsunsort  
+        return  
         
     def runbg(self):
         """Run bg model after setting initial conditions."""
@@ -1129,7 +1194,7 @@ class TwoStageModel(MultiStageModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.181 $",
+                  "CVSRevision":"$Revision: 1.182 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1160,80 +1225,9 @@ class TwoStageModel(MultiStageModel):
         if self.firstordermodel.runcount == 0:
             raise ModelError("First order system must be run trying to find spectrum!")
         return
-    
-    def plotpivotPr(self, nefolds=5):
-        """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        ts = self.findHorizoncrossings()[:,0] + nefolds/self.tstep_wanted #Take spectrum a few efolds after horizon crossing
-        Prs = self.findPr()[ts.astype(int)].diagonal()/WMAP_PR
-        
-        f = P.figure()
-        P.semilogx(self.k, Prs)
-        P.xlabel(r"$k$")
-        P.ylabel(r"$\mathcal{P}_{\mathcal{R}}/\mathcal{P}_*$")
-        P.title(r"Power spectrum of curvature perturbations normalized at $k=0.05 \,\mathrm{Mpc}^{-1} = "+ helpers.eto10(WMAP_PIVOT) + "\,\mathrm{M}_{\mathrm{PL}}$")
-        
-        P.show()
-        
-        return f
-        
+            
 
-class CanonicalTwoStage(TwoStageModel):
-    """Implementation of generic two stage model with standard initial conditions for phi.
-    """
-                    
-    def __init__(self, *args, **kwargs):
-        """Initialize model and ensure initial conditions are sane."""
-        #Call superclass
-        super(CanonicalTwoStage, self).__init__(*args, **kwargs)
-        
-     
-    def getdeltaphi(self):
-        """Find the spectrum of perturbations for each k. 
-           Return Pr.
-           """
-        pass
-    
-    def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k."""
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        Pphi = self.findPphi()
-        phidot = self.yresult[:,1,:] #bg phidot
-        Pr = Pphi/(phidot**2) #change if bg evol is different
-        return Pr
-    
-    def findPgrav(self):
-        """Return the spectrum of tensor perturbations P_grav for each k."""
-        Pphi = self.findPphi()
-        Pgrav = 2*Pphi
-        return Pgrav
-    
-    def getzeta(self):
-        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
-        #Get needed variables
-        phidot = self.yresult[:,1,:]
-        a = self.ainit*N.exp(self.tresult)
-        H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
-        
-        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
-        
-        zeta = -H*deltarho/drhodt
-        return zeta, deltarho, drhodt
-        
-    def findzetasq(self):
-        """Return the spectrum of zeta."""
-        pass
-
-
-class FOCanonicalTwoStage(CanonicalTwoStage):
+class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
     """
                     
