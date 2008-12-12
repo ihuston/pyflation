@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.26 2008/12/12 13:29:05 ith Exp $
+#CVS: $Id: rk4.py,v 1.27 2008/12/12 13:33:00 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -227,7 +227,6 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
         xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
-        xix = 0 #Index of x in tresult
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
         #First result is initial condition
@@ -236,8 +235,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             if N.any(N.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
-        xix+=1
-                    
+    
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
@@ -251,9 +249,11 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             y[-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
                 xx.append(x.copy() + h)
-                dargs = {"k": ks}
-                dv = derivs(v[:,kix], x, **dargs)
-                v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
+                if len(kix) > 0:
+                    #Only complete if there is some k being calculated
+                    dargs = {"k": ks}
+                    dv = derivs(v[:,kix], x, **dargs)
+                    v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
                 y.append(v.copy())
         #Get results in right shape
         xx = N.array(xx)
