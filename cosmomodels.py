@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.189 2008/12/12 13:05:46 ith Exp $
+    $Id: cosmomodels.py,v 1.190 2008/12/12 14:38:01 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.189 $",
+                  "CVSRevision":"$Revision: 1.190 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -535,7 +535,7 @@ class TestModel(CosmologicalModel):
         self.tname = "Time"
         self.ynames = [r"Simple $y$", r"$\dot{y}$"]
     
-    def derivs(self, y, t):
+    def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
         dydx = N.zeros(2)
         
@@ -875,26 +875,26 @@ class CanonicalSecondOrder(PhiModels):
                         r"Imag $\delta\varphi_2$",
                         r"Imag $\dot{\delta\varphi_2}$"]
                     
-    def derivs(self, y, t, k, kix, tix):
+    def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %e, %f, %f", k, kix, tix)
-#         #If k not given select all
-#         if kwargs["k"] is None:
-#             k = self.k
-#             kix = N.arange(len(k))
-#         else:
-#             k = kwargs["k"]
-#             kix = kwargs["kix"]
-#         
-#         if kix is None:
-#             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-#         #Need t index to use first order data
-#         if kwargs["tix"] is None:
-#             raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
-#         else:
-#             tix = kwargs["tix"]
-#         #debug logging
-#         self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        self._log.debug("args: %s", str(kwargs))
+        #If k not given select all
+        if kwargs["k"] is None:
+            k = self.k
+            kix = N.arange(len(k))
+        else:
+            k = kwargs["k"]
+            kix = kwargs["kix"]
+        
+        if kix is None:
+            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
+        #Need t index to use first order data
+        if kwargs["tix"] is None:
+            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
+        else:
+            tix = kwargs["tix"]
+        #debug logging
+        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -1064,7 +1064,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.189 $",
+                  "CVSRevision":"$Revision: 1.190 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
