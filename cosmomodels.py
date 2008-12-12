@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.188 2008/12/09 19:56:18 ith Exp $
+    $Id: cosmomodels.py,v 1.189 2008/12/12 13:05:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -49,7 +49,7 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks"]
+    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks", "rkdriver_new"]
     
     def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10,
                  dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
@@ -151,15 +151,16 @@ class CosmologicalModel(object):
                 raise merror
             self.yresult = N.vstack(yreslist)
 
-        if self.solver == "rkdriver_withks":
+        if self.solver in ["rkdriver_withks", "rkdriver_new"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
-            self._log.debug("Starting simulation with rkdriver_withks.")
+            self._log.debug("Starting simulation with %s.", self.solver)
+            solver = rk4.__getattribute__(self.solver)
             try:
-                self.tresult, self.yresult = rk4.rkdriver_withks(self.ystart, simtstart, self.tstart, self.tend, self.k, 
+                self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstart, self.tend, self.k, 
                 self.tstep_wanted, self.derivs)
             except StandardError:
-                self._log.exception("Error running rkdriver_withks!")
+                self._log.exception("Error running %s!", self.solver)
                 raise
             
         if self.solver == "scipy_odeint":
@@ -265,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.188 $",
+                  "CVSRevision":"$Revision: 1.189 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -874,25 +875,26 @@ class CanonicalSecondOrder(PhiModels):
                         r"Imag $\delta\varphi_2$",
                         r"Imag $\dot{\delta\varphi_2}$"]
                     
-    def derivs(self, y, t, **kwargs):
+    def derivs(self, y, t, k, kix, tix):
         """Equation of motion for second order perturbations including source term"""
-        #If k not given select all
-        if kwargs["k"] is None:
-            k = self.k
-            kix = N.arange(len(k))
-        else:
-            k = kwargs["k"]
-            kix = kwargs["kix"]
-        
-        if kix is None:
-            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-        #Need t index to use first order data
-        if kwargs["tix"] is None:
-            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
-        else:
-            tix = kwargs["tix"]
-        #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        self._log.debug("args: %e, %f, %f", k, kix, tix)
+#         #If k not given select all
+#         if kwargs["k"] is None:
+#             k = self.k
+#             kix = N.arange(len(k))
+#         else:
+#             k = kwargs["k"]
+#             kix = kwargs["kix"]
+#         
+#         if kix is None:
+#             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
+#         #Need t index to use first order data
+#         if kwargs["tix"] is None:
+#             raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
+#         else:
+#             tix = kwargs["tix"]
+#         #debug logging
+#         self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -1062,7 +1064,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.188 $",
+                  "CVSRevision":"$Revision: 1.189 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1496,12 +1498,13 @@ class ThirdStageModel(MultiStageModel):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=False, simtstart=self.simtstart)
+            #self.somodel.run(saveresults=False, simtstart=self.simtstart)
+            pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
             raise
         
-        self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
+        #self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
     def run(self, saveresults=True):
