@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.26 2008/12/05 11:52:23 ith Exp $
+    $Id: sosource.py,v 1.27 2008/12/12 14:49:36 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -216,14 +216,17 @@ def getsourceandintegrate(m, savefile=None, intmethod=None):
             for nix, n in enumerate(m.tresult):    
                 if N.ceil(n) == n:
                     source_logger.info("Starting n=" + str(n) + " sequence...")
-                #Get first order ICs:
-                nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
-                source_logger.debug("Left getfoystart. Filling nans...")
-                #switch nans for ICs in m.yresult
+                #Copy of yresult
                 myr = m.yresult[nix].copy()
-                are_nan = N.isnan(myr)
-                myr[are_nan] = nanfiller[are_nan]
-                source_logger.debug("NaNs filled. Setting dynamical variables...")
+                if N.any(n < m.fotstart):
+                    #Get first order ICs:
+                    nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
+                    source_logger.debug("Left getfoystart. Filling nans...")
+                    #switch nans for ICs in m.yresult
+                    
+                    are_nan = N.isnan(myr)
+                    myr[are_nan] = nanfiller[are_nan]
+                    source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
                 #Get first order results (from file or variables)
                 phi, phidot, H, dphi1real, dphi1dotreal, dphi1imag, dphi1dotimag = [myr[i,:] for i in range(7)]
