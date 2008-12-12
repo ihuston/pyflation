@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.28 2008/12/12 13:40:11 ith Exp $
+#CVS: $Id: rk4.py,v 1.29 2008/12/12 14:37:38 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -86,42 +86,51 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     
     return yout
 
-# def rk4stepnix(x, y, h, dydx, dargs, derivs, xix):
-#     '''Do one step of the classical 4th order Runge Kutta method,
-#     starting from y at x with time step h and derivatives given by derivs.
-#     Send arguments tuple dargs to derivs and change xix as time step index accordingly'''
-#     
-#     hh = h*0.5 #Half time step
-#     h6 = h/6.0 #Sixth of time step
-#     xh = x + hh # Halfway point in x direction
-#     xixh = xix + 1 #Half step forward = +1 on x index
-#     
-#     #First step, we already have derivatives from dydx
-#     yt = y + hh*dydx
-#     
-#     #Second step, get new derivatives
-#     dyt = derivs(yt, xh, *dargs, xixh)
-#     
-#     yt = y + hh*dyt
-#     
-#     #Third step
-#     dym = derivs(yt, xh, *dargs, xixh)
-#     
-#     yt = y + h*dym
-#     dym = dym + dyt
-#     
-#     #Fourth step
-#     dyt = derivs(yt, x+h, *dargs, xix + 2)
-#     
-#     #Accumulate increments with proper weights
-#     yout = y + h6*(dydx + dyt + 2*dym)
-#     
-#     return yout
+def rk4stepxix(x, y, h, dargs, derivs):
+    '''Do one step of the classical 4th order Runge Kutta method,
+    starting from y at x with time step h and derivatives given by derivs'''
+    
+    hh = h*0.5 #Half time step
+    h6 = h/6.0 #Sixth of time step
+    xh = x + hh # Halfway point in x direction
+            
+    dydx = derivs(y, x, **dargs)
+    #First step, we already have derivatives from dydx
+    yt = y + hh*dydx
+    
+    if "tix" in dargs:
+        dargs["tix"] += 1
+    #Second step, get new derivatives
+    dyt = derivs(yt, xh, **dargs)
+    
+    yt = y + hh*dyt
+    
+    #Third step
+    dym = derivs(yt, xh, **dargs)
+    
+    yt = y + h*dym
+    dym = dym + dyt
+    
+    if "tix" in dargs:
+        dargs["tix"] += 1
+    #Fourth step
+    dyt = derivs(yt, x+h, **dargs)
+    
+    #Reset dargs["tix"]
+    if "tix" in dargs:
+        dargs["tix"] -= 2
+        
+    #Accumulate increments with proper weights
+    yout = y + h6*(dydx + dyt + 2*dym)
+    
+    return yout
 
 def rk4new(x, y, h, dargs, derivs, *args, **kwargs):
     """New implementation of rk4 with simple process."""
+    h2 = h/2 #half step
     xh = x + h #full step forward
-    xhh = x + h/2 #half step forward
+    xhh = x + h2 #half step forward
+    
     if "nix" in dargs:
         nixh = dargs["nix"] + 2 #Full step forward
         nixhh = dargs["nix"] + 1 #Half step forward
@@ -130,19 +139,19 @@ def rk4new(x, y, h, dargs, derivs, *args, **kwargs):
     
     if "nix" in dargs:
         dargs["nix"] = nixhh #Change index to half timestep
-    k2 = derivs(y + k1/2, xhh, **dargs)
+    k2 = derivs(y + h2*k1, xhh, **dargs)
     
-    k3 = derivs(y + k2/2, xhh, **dargs)
+    k3 = derivs(y + h2*k2, xhh, **dargs)
     
     if "nix" in dargs:
         dargs["nix"] = nixh
-    k4 = derivs(y + k3, xh, **dargs)
+    k4 = derivs(y + h*k3, xh, **dargs)
     
     #Return dargs to original state
     if "nix" in dargs:
         dargs["nix"] = nixh - 2
     
-    yout = y + (k1 + 2*(k2 + k3) + k4)*h/6
+    yout = y + (k1 + 2*(k2 + k3) + k4)*(h/6)
     return yout
 
 def rkck(y, dydx, x, h, derivs):
@@ -329,9 +338,8 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
             for x in seq(xstart, xend, h):
                 xx.append(x.copy() + h)
                 if len(kix) != 0:
-                    dargs = {"k": ks, "kix":kix, "nix":xix}  
-                    dv = derivs(v[:,kix], x, **dargs)
-                    v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
+                    dargs = {"k": ks, "kix":kix, "tix":xix}
+                    v[:,kix] = rk4stepxix(x, v[:,kix], h, dargs, derivs)
                 xix+=2 #Increment x index counter
                 y.append(v.copy())
         #Get results in right shape
