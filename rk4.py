@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.27 2008/12/12 13:33:00 ith Exp $
+#CVS: $Id: rk4.py,v 1.28 2008/12/12 13:40:11 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -330,8 +330,8 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
                 xx.append(x.copy() + h)
                 if len(kix) != 0:
                     dargs = {"k": ks, "kix":kix, "nix":xix}  
-#                     dv = derivs(v[:,kix], x, **dargs)
-                    v[:,kix] = rk4new(x, v[:,kix], h, dargs, derivs)
+                    dv = derivs(v[:,kix], x, **dargs)
+                    v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
                 xix+=2 #Increment x index counter
                 y.append(v.copy())
         #Get results in right shape
