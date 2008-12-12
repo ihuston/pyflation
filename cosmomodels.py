@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.190 2008/12/12 14:38:01 ith Exp $
+    $Id: cosmomodels.py,v 1.191 2008/12/12 17:37:22 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.190 $",
+                  "CVSRevision":"$Revision: 1.191 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -457,10 +457,11 @@ class CosmologicalModel(object):
                     paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
                     #Need to check if results are k dependent
                     if grpname is "results":
-                        #Store bg results:
-                        bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
-                        bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
-                        bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
+                        if hasattr(self, "bgmodel"):
+                            #Store bg results:
+                            bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
+                            bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
+                            bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
                         #Save first order results
                         yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, chunkshape=(10,7,10))
                         foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
@@ -1064,7 +1065,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.190 $",
+                  "CVSRevision":"$Revision: 1.191 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1467,7 +1468,7 @@ class ThirdStageModel(MultiStageModel):
             ystart = N.zeros((4, len(self.k)))
         #Call superclass
         super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
-        self.second_stage.tstep_wanted, self.second_stage.tstep_min, solver=self.second_stage.solver, 
+        self.second_stage.tstep_wanted*2, self.second_stage.tstep_min*2, solver="rkdriver_new", 
         potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
         
         if soclass is None:
@@ -1498,13 +1499,13 @@ class ThirdStageModel(MultiStageModel):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            #self.somodel.run(saveresults=False, simtstart=self.simtstart)
+            self.somodel.run(saveresults=False, simtstart=self.simtstart)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
             raise
         
-        #self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
+        self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
     def run(self, saveresults=True):

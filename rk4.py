@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.29 2008/12/12 14:37:38 ith Exp $
+#CVS: $Id: rk4.py,v 1.30 2008/12/12 17:37:27 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -9,6 +9,9 @@ import numpy as N
 import sys
 from pdb import set_trace
 from scitools.basics import seq #Proper sequencing of floats
+import logging
+
+rk_log = logging.getLogger(__name__)
 
 #Constants
 #Cash Karp coefficients for Runge Kutta.
@@ -307,12 +310,14 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         xx.append(x1) #Start x value
         
         #Set up start and end list for each section
+        ts = N.where(ts%h > h/2, ts, ts+h/2) #Put all start times on even steps
         xslist = N.empty((len(ts)+1))
         xslist[0] = simtstart
         xslist[1:] = ts[:]
+        
         xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
-        xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
+        xelist[-1] = N.floor(te.copy()/h)*h - h # end time can only be in steps of size h one before end
         xix = 0 #Index of x in tresult
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
@@ -322,7 +327,7 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
             if N.any(N.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
-        xix+=2
+#         xix+=2
                     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
@@ -335,7 +340,9 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
                     v[:,oneix] = vstart[:,oneix]
             #Change last y result to initial conditions
             y[-1][:,kix] = v[:,kix]    
+            rk_log.debug("xstart=%f, xend=%f", xstart, xend)
             for x in seq(xstart, xend, h):
+                rk_log.debug("x=%f, xix=%d", x, xix)
                 xx.append(x.copy() + h)
                 if len(kix) != 0:
                     dargs = {"k": ks, "kix":kix, "tix":xix}
