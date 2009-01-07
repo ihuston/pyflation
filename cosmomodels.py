@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.192 2009/01/07 16:12:17 ith Exp $
+    $Id: cosmomodels.py,v 1.193 2009/01/07 16:20:02 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.192 $",
+                  "CVSRevision":"$Revision: 1.193 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1068,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.192 $",
+                  "CVSRevision":"$Revision: 1.193 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1377,8 +1377,17 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return deltaphi
 
+    def findPphi(self):
+        """Return the spectrum of scalar perturbations P_phi for each k."""
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        deltaphi = self.getdeltaphi()
+        Pphi = deltaphi*deltaphi.conj()
+        return Pphi
+
     
-class FONewCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
+class FONewCanonicalTwoStage(FOCanonicalTwoStage):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
     """
                     
@@ -1415,7 +1424,7 @@ class FONewCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
             foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
         
         #Find 1/asqrt(2k)
-        arootk = 1/(astar*(N.sqrt(2*self.k)))
+        arootk = N.sqrt(self.k**3/(2*N.pi**2))/(astar*(N.sqrt(2*self.k)))
         #Find cos and sin(-keta)
         csketa = N.cos(-keta)
         snketa = N.sin(-keta)
