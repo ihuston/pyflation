@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.191 2008/12/12 17:37:22 ith Exp $
+    $Id: cosmomodels.py,v 1.192 2009/01/07 16:12:17 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.191 $",
+                  "CVSRevision":"$Revision: 1.192 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -462,11 +462,12 @@ class CosmologicalModel(object):
                             bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
                             bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
                             bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
-                        #Save first order results
+                        #Save results
                         yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, chunkshape=(10,7,10))
-                        foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
-                        fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
                         karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
+                        if hasattr(self, "foystart"):
+                            foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
+                            fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
                     else:
                         #Only save bg results
                         yresarr = rf.createArray(resgroup, "yresult", self.yresult)
@@ -478,8 +479,9 @@ class CosmologicalModel(object):
                         tres = resgroup.tresult[:]
                         if grpname is "results":
                             #Don't need to append bg results, only fo results
-                            foystarr = resgroup.foystart
-                            fotstarr = resgroup.fotstart
+                            if hasattr(self, "foystart"):
+                                foystarr = resgroup.foystart
+                                fotstarr = resgroup.fotstart
                             karr = resgroup.k
                     except tables.NoSuchNodeError:
                         raise IOError("File is not in correct format! Correct results tables do not exist!")
@@ -499,8 +501,9 @@ class CosmologicalModel(object):
                 if grpname is "results":
                     yresarr.append(self.yresult)
                     karr.append(self.k)
-                    foystarr.append(self.foystart)
-                    fotstarr.append(self.fotstart)
+                    if hasattr(self, "foystart"):
+                        foystarr.append(self.foystart)
+                        fotstarr.append(self.fotstart)
                 rf.flush()
                 #Log success
                 self._log.debug("Successfully wrote results to file " + filename)
@@ -1065,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.191 $",
+                  "CVSRevision":"$Revision: 1.192 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1373,7 +1376,62 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         #Set nice variable names
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return deltaphi
+
     
+class FONewCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
+    """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
+    """
+                    
+    def __init__(self, *args, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+        #Call superclass
+        super(FONewCanonicalTwoStage, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = N.zeros((len(self.ystart), len(self.k)))
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*N.exp(ts)
+        Hstar = self.bgmodel.yresult[tsix,2]
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+        except ValueError:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(N.sqrt(2*self.k)))
+        #Find cos and sin(-keta)
+        csketa = N.cos(-keta)
+        snketa = N.sin(-keta)
+        
+        #Set Re\delta\phi_1 initial condition
+        foystart[3,:] = csketa*arootk
+        #set Re\dot\delta\phi_1 ic
+        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
+        #Set Im\delta\phi_1
+        foystart[5,:] = snketa*arootk
+        #Set Im\dot\delta\phi_1
+        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
+        
+        return foystart
+        
+        
 class FOModelWrapper(FOCanonicalTwoStage):
     """Wraps first order model using HDF5 file of results."""
     
