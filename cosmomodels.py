@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.201 2009/01/08 15:24:55 ith Exp $
+    $Id: cosmomodels.py,v 1.202 2009/01/08 15:29:15 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.201 $",
+                  "CVSRevision":"$Revision: 1.202 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1068,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.201 $",
+                  "CVSRevision":"$Revision: 1.202 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1450,13 +1450,17 @@ def make_wrapper_model(modelfile, *args, **kwargs):
         try:
             try:
                 params = rf.root.results.parameters
-                modelclass = params[0]["classname"]
+                modelclassname = params[0]["classname"]
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain correct model data structure!")
         finally:
             rf.close()
     except IOError:
         raise
+    try:
+        modelclass = __getattribute__(modelclassname)
+    except AttributeError:
+        raise ModelError("Model class does not exist!")
                 
     class ModelWrapper(modelclass):
         """Wraps first order model using HDF5 file of results."""
