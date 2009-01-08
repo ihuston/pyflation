@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.196 2009/01/08 15:04:04 ith Exp $
+    $Id: cosmomodels.py,v 1.197 2009/01/08 15:20:04 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.196 $",
+                  "CVSRevision":"$Revision: 1.197 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1068,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.196 $",
+                  "CVSRevision":"$Revision: 1.197 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1440,9 +1440,25 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         
         return foystart
         
-def make_wrapper_class(modelclass):
+def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
-    
+    #Check file exists
+    if not os.path.isfile(modelfile):
+        raise IOError("File does not exist!")
+    try:
+        self._log.debug("Opening file " + modelfile + " to read class name.")
+        rf = tables.openFile(modelfile, "r")
+            try:
+                try:
+                    params = self._rf.root.results.params
+                    modelclass = params[0]["classname"]
+                except tables.NoSuchNodeError:
+                    raise ModelError("File does not contain correct model data structure!")
+            finally:
+                rf.close()
+    except IOError:
+        raise
+                
     class ModelWrapper(modelclass):
         """Wraps first order model using HDF5 file of results."""
         
@@ -1510,7 +1526,7 @@ def make_wrapper_class(modelclass):
                 self._rf.close()
             except IOError:
                 raise
-    return ModelWrapper
+    return ModelWrapper(modelfile, *args, **kwargs)
 
 class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
