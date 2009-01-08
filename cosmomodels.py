@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.194 2009/01/08 14:57:15 ith Exp $
+    $Id: cosmomodels.py,v 1.195 2009/01/08 14:59:38 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.194 $",
+                  "CVSRevision":"$Revision: 1.195 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1068,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.194 $",
+                  "CVSRevision":"$Revision: 1.195 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1454,7 +1454,7 @@ def make_wrapper_class(modelclass):
             
             #Check file exists
             if not os.path.isfile(filename):
-            raise IOError("File does not exist!")
+                raise IOError("File does not exist!")
             try:
                 self._log.debug("Opening file " + filename + " to read results.")
                 try:
