@@ -136,7 +136,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
     """Run source integrand calculation."""
     startlogging()
     try:
-        m = c.FOModelWrapper(modelfile)
+        m = c.make_wrapper_model(modelfile)
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
