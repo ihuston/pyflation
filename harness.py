@@ -79,7 +79,7 @@ def runsomodel(fofile, filename=None):
     #Start the logging module
     startlogging()
     try:
-        fomodel = c.FOModelWrapper(fofile)
+        fomodel = c.make_wrapper_model(fofile)
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
@@ -111,7 +111,7 @@ def runsourceint(modelfile, sourcefile=None):
     """Run source integrand calculation."""
     startlogging()
     try:
-        m = c.FOModelWrapper(modelfile)
+        m = c.make_wrapper_model(modelfile)
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
@@ -161,7 +161,7 @@ def integratesource(modelfile, sourcefile=None):
     """Run source integration calculation."""
     startlogging()
     try:
-        m = c.FOModelWrapper(modelfile)
+        m = c.make_wrapper_model(modelfile)
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
