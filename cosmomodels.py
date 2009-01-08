@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.199 2009/01/08 15:22:41 ith Exp $
+    $Id: cosmomodels.py,v 1.200 2009/01/08 15:23:26 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.199 $",
+                  "CVSRevision":"$Revision: 1.200 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1068,7 +1068,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.199 $",
+                  "CVSRevision":"$Revision: 1.200 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1449,7 +1449,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
         rf = tables.openFile(modelfile, "r")
         try:
             try:
-                params = self._rf.root.results.params
+                params = rf.root.results.params
                 modelclass = params[0]["classname"]
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain correct model data structure!")
