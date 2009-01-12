@@ -216,7 +216,7 @@ def main(args):
     if func == "model":
         #need to add these to command line options
         kinit = 1.00e-61
-        kend = 1.025e-58
+        kend = 3.00e-61
         deltak = 1.0e-61
         try:
             if not filename:
