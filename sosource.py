@@ -1,5 +1,5 @@
 """Second order helper functions to set up source term
-    $Id: sosource.py,v 1.27 2008/12/12 14:49:36 ith Exp $
+    $Id: sosource.py,v 1.28 2009/01/12 18:47:59 ith Exp $
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -39,8 +39,8 @@ def getsourceintegrand(m, savefile=None):
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix, n in enumerate(m.tresult):    
-                if N.ceil(n) == n:
-                    source_logger.info("Starting n=" + str(n) + " sequence...")
+                if nix%100 == 0:
+                    source_logger.info("Starting n=%f, nix=%f sequence...", n, nix)
                 #Get first order ICs:
                 nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
                 source_logger.debug("Left getfoystart. Filling nans...")
@@ -214,8 +214,8 @@ def getsourceandintegrate(m, savefile=None, intmethod=None):
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix, n in enumerate(m.tresult):    
-                if N.ceil(n) == n:
-                    source_logger.info("Starting n=" + str(n) + " sequence...")
+                if nix%1000 == 0:
+                    source_logger.info("Starting n=%f, nix=%f sequence...", n, nix)
                 #Copy of yresult
                 myr = m.yresult[nix].copy()
                 if N.any(n < m.fotstart):
