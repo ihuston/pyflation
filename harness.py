@@ -12,10 +12,11 @@ import logging
 import logging.handlers
 import sosource
 import getopt
+import sohelpers
 
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 LOGDIR = "/misc/scratch/ith/numerics/applogs/"
-LOGLEVEL = logging.DEBUG #Change to desired logging level
+LOGLEVEL = logging.INFO #Change to desired logging level
 #Get root logger
 if __name__ == "__main__":
     harness_logger = logging.getLogger()
@@ -29,7 +30,7 @@ def startlogging():
     date = time.strftime("%Y%m%d")
     #create file handler and set level to debug
     fh = logging.handlers.RotatingFileHandler(filename=LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
-    fh.setLevel(logging.INFO)
+    fh.setLevel(LOGLEVEL)
     #create console handler and set level to error
     ch = logging.StreamHandler()
     ch.setLevel(logging.ERROR)
@@ -47,9 +48,6 @@ def startlogging():
 
 def runmodel(kinit, kend, deltak, filename=None):
     """Run program from kinit to kend using deltak"""
-    #Start the logging module
-    startlogging()
-    
     model = c.FONewCanonicalTwoStage(solver="rkdriver_withks", k=stb.seq(kinit, kend, deltak))
     #model = c.SOCanonicalThreeStage(solver="rkdriver_withks")
     try:
@@ -76,8 +74,6 @@ def runmodel(kinit, kend, deltak, filename=None):
 
 def runsomodel(fofile, filename=None):
     """Run program from kinit to kend using deltak"""
-    #Start the logging module
-    startlogging()
     try:
         fomodel = c.make_wrapper_model(fofile)
     except:
@@ -109,7 +105,6 @@ def runsomodel(fofile, filename=None):
 
 def runsourceint(modelfile, sourcefile=None):
     """Run source integrand calculation."""
-    startlogging()
     try:
         m = c.make_wrapper_model(modelfile)
     except:
@@ -134,7 +129,6 @@ def runsourceint(modelfile, sourcefile=None):
 
 def runfullsourceintegration(modelfile, sourcefile=None):
     """Run source integrand calculation."""
-    startlogging()
     try:
         m = c.make_wrapper_model(modelfile)
     except:
@@ -159,7 +153,6 @@ def runfullsourceintegration(modelfile, sourcefile=None):
 
 def integratesource(modelfile, sourcefile=None):
     """Run source integration calculation."""
-    startlogging()
     try:
         m = c.make_wrapper_model(modelfile)
     except:
@@ -185,13 +178,14 @@ def integratesource(modelfile, sourcefile=None):
 def main(args):
     """Main function: deal with command line arguments and start calculation as reqd."""
     #arguments
-#     import psyco
+    import psyco
 # #     psyco.log()
 # #     psyco.profile()
-#     psyco.full()
-    
-    shortargs = "hf:msib"
-    longargs = ["help", "filename=", "model", "somodel", "integrand", "both"]
+    psyco.full()
+    #Start the logging module
+    startlogging()    
+    shortargs = "hf:msiba"
+    longargs = ["help", "filename=", "model", "somodel", "integrand", "both", "all"]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -212,12 +206,13 @@ def main(args):
             func = "integrand"
         elif opt in ("-b", "--both"):
             func = "both"
-    
+        elif opt in ("-a", "--all"):
+            func = "all"
+    #Standard params
+    kinit = 1.00e-61
+    kend = 3.00e-61
+    deltak = 1.0e-61
     if func == "model":
-        #need to add these to command line options
-        kinit = 1.00e-61
-        kend = 3.00e-61
-        deltak = 1.0e-61
         try:
             if not filename:
                 filename = None
@@ -243,6 +238,14 @@ def main(args):
             runfullsourceintegration(modelfile=filename)
         except Exception:
             harness_logger.error("Error getting source integral!") 
-
+    elif func == "all":
+        harness_logger.info("Starting full run through...")
+        fofile = runmodel(kinit, kend, deltak)
+        sourcefile = runfullsourceintegration(fofile)
+        sohelpers.copy_source_to_fofile(sourcefile, fofile)
+        sofile = runsomodel(fofile)
+        cfile = sohelpers.combine_results(fofile, sofile)
+        harness_logger.info("Combined results saved in %s.", cfile)
+        
 if __name__ == "__main__":
     main(sys.argv[1:])
