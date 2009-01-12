@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.5 2008/11/14 17:28:03 ith Exp $
+    $Id: helpers.py,v 1.6 2009/01/12 13:31:35 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -43,3 +43,11 @@ def ispower2(n):
         return 0
     else:
         return len(bin_n)
+
+def removedups(l):
+    """Return a list with duplicates removed but order retained. First of each duplicate is retained."""
+    retlist = []
+    for x in l:
+        if x not in retlist:
+            retlist.append(x)
+    return retlist
