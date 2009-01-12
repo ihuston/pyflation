@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.31 2009/01/12 13:31:08 ith Exp $
+#CVS: $Id: rk4.py,v 1.32 2009/01/12 17:30:06 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -311,20 +311,22 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         xx.append(x1) #Start x value
         
         #Set up start and end list for each section
-        ts = N.where(N.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
+        #ts = N.where(N.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
+        ts = N.around(ts/h)*h
         #Need to remove duplicates
-        ts = helpers.removedups(ts)
-        xslist = N.empty((len(ts)+1))
+        tsnd = helpers.removedups(ts)
+        xslist = N.empty((len(tsnd)+1))
         xslist[0] = simtstart
-        xslist[1:] = ts[:]
+        xslist[1:] = tsnd[:]
         
-        xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
-        xelist[:-1] = ts[:] - h #End list is one time step before next start time
+        xelist = N.empty((len(tsnd)+1)) #create empty array (which will be written over)
+        xelist[:-1] = tsnd[:] - h #End list is one time step before next start time
         xelist[-1] = N.floor(te.copy()/h)*h - h # end time can only be in steps of size h one before end
         xix = 0 #Index of x in tresult
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
         #First result is initial condition
+        #Need to use ts for kix tests to get all indices
         firstkix = N.where(x1>=ts)[0]
         for anix in firstkix:
             if N.any(N.isnan(v[:,anix])):
