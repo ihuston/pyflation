@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.32 2009/01/12 17:30:06 ith Exp $
+#CVS: $Id: rk4.py,v 1.33 2009/01/12 18:47:43 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -321,7 +321,7 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         
         xelist = N.empty((len(tsnd)+1)) #create empty array (which will be written over)
         xelist[:-1] = tsnd[:] - h #End list is one time step before next start time
-        xelist[-1] = N.floor(te.copy()/h)*h - h # end time can only be in steps of size h one before end
+        xelist[-1] = N.around(te.copy()/h)*h - h # end time can only be in steps of size h one before end
         xix = 0 #Index of x in tresult
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
