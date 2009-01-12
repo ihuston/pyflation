@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.30 2008/12/12 17:37:27 ith Exp $
+#CVS: $Id: rk4.py,v 1.31 2009/01/12 13:31:08 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -10,6 +10,7 @@ import sys
 from pdb import set_trace
 from scitools.basics import seq #Proper sequencing of floats
 import logging
+import helpers
 
 rk_log = logging.getLogger(__name__)
 
@@ -310,7 +311,9 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         xx.append(x1) #Start x value
         
         #Set up start and end list for each section
-        ts = N.where(ts%h > h/2, ts, ts+h/2) #Put all start times on even steps
+        ts = N.where(N.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
+        #Need to remove duplicates
+        ts = helpers.removedups(ts)
         xslist = N.empty((len(ts)+1))
         xslist[0] = simtstart
         xslist[1:] = ts[:]
