@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.208 2009/01/13 16:55:22 ith Exp $
+    $Id: cosmomodels.py,v 1.209 2009/01/13 16:58:24 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.208 $",
+                  "CVSRevision":"$Revision: 1.209 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.208 $",
+                  "CVSRevision":"$Revision: 1.209 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1092,7 +1092,16 @@ class CanonicalMultiStage(MultiStageModel):
         """Initialize model and ensure initial conditions are sane."""
         #Call superclass
         super(CanonicalMultiStage, self).__init__(*args, **kwargs)
+    
+    def findPphi(self):
+        """Return the spectrum of scalar perturbations P_phi for each k."""
+        #Raise error if first order not run yet
+        self.checkruncomplete()
         
+        deltaphi = self.getdeltaphi()
+        Pphi = deltaphi*deltaphi.conj()
+        return Pphi
+    
     def findPr(self):
         """Return the spectrum of curvature perturbations P_R for each k."""
         #Raise error if first order not run yet
@@ -1425,16 +1434,7 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
         
         return foystart
-        
-    def findPphi(self):
-        """Return the spectrum of scalar perturbations P_phi for each k."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
-        
-        deltaphi = self.getdeltaphi()
-        Pphi = deltaphi*deltaphi.conj()
-        return Pphi
-        
+                
     
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
