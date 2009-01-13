@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.2 2009/01/12 17:29:41 ith Exp $
+    $Id: sohelpers.py,v 1.3 2009/01/13 18:21:12 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -74,6 +74,10 @@ def combine_results(fofile, sofile, newfile=None):
         karr = nf.copyNode(sf.root.results.k, comgrp)
         foparams = nf.copyNode(ff.root.results.parameters, comgrp, newname="foparameters")
         soparams = nf.copyNode(sf.root.results.parameters, comgrp, newname="soparameters")
+        #Copy parameters and change classname for compatibility
+        params = nf.copyNode(sf.root.results.parameters, comgrp, newname="parameters")
+        params.cols.classname[0] = "CombinedCanonicalFromFile"
+        params.flush()
         tresarr = nf.copyNode(sf.root.results.tresult, comgrp)
         _log.debug("K array, first and second order parameters copied.")
         #Only copy foystart if it exists
@@ -90,6 +94,7 @@ def combine_results(fofile, sofile, newfile=None):
             nrow = N.concatenate((frow[:,::2], srow)).transpose()[..., N.newaxis]
             yresarr.append(nrow)
         _log.debug("Main combination loop finished.")
+        nf.flush()
     finally:
         sf.close()
         ff.close()
