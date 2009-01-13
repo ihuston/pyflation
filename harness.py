@@ -219,9 +219,9 @@ def main(args):
         elif opt in ("-a", "--all"):
             func = "all"
     #Standard params
-    kinit = 1.00e-60
-    kend = 3.00e-60
-    deltak = 1.0e-60
+    kinit = 1.00e-61
+    kend = 1.025e-58
+    deltak = 1.0e-61
     if func == "model":
         try:
             if not filename:
