@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.205 2009/01/13 12:00:45 ith Exp $
+    $Id: cosmomodels.py,v 1.206 2009/01/13 12:30:03 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.205 $",
+                  "CVSRevision":"$Revision: 1.206 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1062,7 +1062,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.205 $",
+                  "CVSRevision":"$Revision: 1.206 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1640,3 +1640,30 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         deltaphi = dp1real + dp1imag*1j + self.yresult[:,0,:] + self.yresult[:,2,:]*1j
         return deltaphi
         
+class CombinedCanonicalFromFile(CanonicalMultiStage):
+    """Model class for combined first and second order data, assumed to be used with a file wrapper."""
+    
+    def __init__(self, *args, **kwargs):
+        """Initialize vars and call super class."""
+        super(CombinedCanonicalFromFile, self).__init__(*args, **kwargs)
+    
+    def getdeltaphi(self):
+        """Return delta phi in model dependant way. Restricts to using only 20 k values."""
+        if len(self.k) > 20:
+            ksel = N.slice(None, None, len(k)/20) #Only get 20 k values
+        else:
+            ksel = N.slice(None) #get all k values
+        dp1 = self.yresult[:,3,ksel] + self.yresult[:,5,ksel]*1j
+        dp2 = self.yresult[:,7,ksel] + self.yresult[:,9,ksel]*1j
+        
+        dp = dp1 + 0.5*dp2
+        return dp
+    
+    def checkruncomplete(self):
+        """Check that model has been run"""
+        if not self.yresult:
+            raise ModelError("No yresult found, model run not complete.")
+        return
+    
+    
+            
