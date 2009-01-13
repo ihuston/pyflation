@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.207 2009/01/13 16:08:08 ith Exp $
+    $Id: cosmomodels.py,v 1.208 2009/01/13 16:55:22 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.207 $",
+                  "CVSRevision":"$Revision: 1.208 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -991,12 +991,7 @@ class MultiStageModel(CosmologicalModel):
     
     def findPphi(self):
         """Return the spectrum of scalar perturbations P_phi for each k."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
-        
-        deltaphi = self.getdeltaphi()
-        Pphi = (self.k**3/(2*N.pi**2))*(deltaphi*deltaphi.conj())
-        return Pphi
+        pass
      
     def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode."""
@@ -1063,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.207 $",
+                  "CVSRevision":"$Revision: 1.208 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1653,13 +1648,21 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
     def __init__(self, *args, **kwargs):
         """Initialize vars and call super class."""
         super(CombinedCanonicalFromFile, self).__init__(*args, **kwargs)
+        if "bgclass" not in kwargs or kwargs["bgclass"] is None:
+            self.bgclass = CanonicalBackground
+        else:
+            self.bgclass = bgclass
+        if "foclass" not in kwargs or kwargs["foclass"] is None:
+            self.foclass = CanonicalFirstOrder
+        else:
+            self.foclass = foclass
     
     def getdeltaphi(self):
         """Return delta phi in model dependant way. Restricts to using only 20 k values."""
         if len(self.k) > 20:
-            ksel = N.slice(None, None, len(k)/20) #Only get 20 k values
+            ksel = slice(None, None, int(len(self.k)/20)) #Only get 20 k values
         else:
-            ksel = N.slice(None) #get all k values
+            ksel = slice(None) #get all k values
         dp1 = self.yresult[:,3,ksel] + self.yresult[:,5,ksel]*1j
         dp2 = self.yresult[:,7,ksel] + self.yresult[:,9,ksel]*1j
         
