@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.204 2009/01/08 15:47:50 ith Exp $
+    $Id: cosmomodels.py,v 1.205 2009/01/13 12:00:45 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -266,7 +266,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.204 $",
+                  "CVSRevision":"$Revision: 1.205 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -725,12 +725,6 @@ class CanonicalBackground(PhiModels):
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-#         #If k not given select all
-#         if kwargs["k"] is None:
-#             k = self.k
-#         else:
-#             k = kwargs["k"]
-#             
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
@@ -1068,7 +1062,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.204 $",
+                  "CVSRevision":"$Revision: 1.205 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
