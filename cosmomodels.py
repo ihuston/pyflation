@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.206 2009/01/13 12:30:03 ith Exp $
+    $Id: cosmomodels.py,v 1.207 2009/01/13 16:08:08 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -51,7 +51,7 @@ class CosmologicalModel(object):
     """
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks", "rkdriver_new"]
     
-    def __init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, eps=1.0e-10,
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
@@ -87,11 +87,12 @@ class CosmologicalModel(object):
         else:
             raise ValueError, "Solver not recognized!"
         
-        if potential_func is not None:
-            self.potentials = cmpotentials.__getattribute__(potential_func)
-        else:
-            raise ModelError("Need to specify a function for potentials.")
-        
+        #Change potentials to be right function
+        if potential_func is None:
+            potential_func = "msqphisq"
+        self.potentials = cmpotentials.__getattribute__(potential_func)
+        self.potential_func = potential_func
+                
         #Set self.pot_params to argument
         if not isinstance(pot_params, dict) and pot_params is not None:
             raise ModelError("Need to provide pot_params as a dictionary of parameters.")
@@ -266,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.206 $",
+                  "CVSRevision":"$Revision: 1.207 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -793,7 +794,7 @@ class CanonicalFirstOrder(PhiModels):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         #If k not given select all
-        if kwargs["k"] is None:
+        if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
         else:
             k = kwargs["k"]
@@ -877,7 +878,7 @@ class CanonicalSecondOrder(PhiModels):
         """Equation of motion for second order perturbations including source term"""
         self._log.debug("args: %s", str(kwargs))
         #If k not given select all
-        if kwargs["k"] is None:
+        if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
             kix = N.arange(len(k))
         else:
@@ -1062,7 +1063,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.206 $",
+                  "CVSRevision":"$Revision: 1.207 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1142,11 +1143,7 @@ class TwoStageModel(MultiStageModel):
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0):
         """Initialize model and ensure initial conditions are sane."""
       
-        #Change potentials to be right function
-        if potential_func is None:
-            potential_func = "msqphisq"
-            self.potential_func = potential_func
-        
+               
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
@@ -1377,7 +1374,7 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         self.checkruncomplete()
         
         deltaphi = self.getdeltaphi()
-        Pphi = deltaphi*deltaphi.conj()
+        Pphi = (self.k**3/(2*N.pi**2))*deltaphi*deltaphi.conj()
         return Pphi
 
     
@@ -1434,6 +1431,16 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         
         return foystart
         
+    def findPphi(self):
+        """Return the spectrum of scalar perturbations P_phi for each k."""
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        deltaphi = self.getdeltaphi()
+        Pphi = deltaphi*deltaphi.conj()
+        return Pphi
+        
+    
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
     #Check file exists
