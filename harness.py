@@ -17,8 +17,8 @@ import sohelpers
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 LOGDIR = "/misc/scratch/ith/numerics/applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level
-POT_FUNC = "msqphisq"
-YSTART = N.array([18.0, # \phi_0
+POT_FUNC = "lambdaphi4"
+YSTART = N.array([25.0, # \phi_0
                 -0.1, # \dot{\phi_0}
                 0.0, # H - leave as 0.0 to let program determine
                 1.0, # Re\delta\phi_1
@@ -58,7 +58,7 @@ def startlogging():
 
 def runmodel(kinit, kend, deltak, filename=None):
     """Run program from kinit to kend using deltak"""
-    model = c.FONewCanonicalTwoStage(solver="rkdriver_withks", k=stb.seq(kinit, kend, deltak), potential_func=POT_FUNC)
+    model = c.FONewCanonicalTwoStage(solver="rkdriver_withks", k=stb.seq(kinit, kend, deltak), potential_func=POT_FUNC, ystart=YSTART)
     #model = c.SOCanonicalThreeStage(solver="rkdriver_withks")
     try:
         harness_logger.debug("Starting model run...")
