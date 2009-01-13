@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.210 2009/01/13 17:43:51 ith Exp $
+    $Id: cosmomodels.py,v 1.211 2009/01/13 18:00:54 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.210 $",
+                  "CVSRevision":"$Revision: 1.211 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -976,16 +976,7 @@ class MultiStageModel(CosmologicalModel):
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
-    
-    def __dpcaching(self, gdp):
-        """Check if deltaphi has already been retrieved and if so use that version."""
-        if not hasattr(self, "deltaphi"):
-            self.deltaphi = gdp()
-        def cacheddp():
-            return self.deltaphi
-        return cacheddp
-    
-    @__dpcaching
+
     def getdeltaphi(self):
         """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
         pass
@@ -1067,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.210 $",
+                  "CVSRevision":"$Revision: 1.211 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
