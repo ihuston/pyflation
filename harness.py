@@ -17,16 +17,16 @@ import sohelpers
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 LOGDIR = "/misc/scratch/ith/numerics/applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level
-POT_FUNC = "lambdaphi4"
-YSTART = N.array([25.0, # \phi_0
-                -0.1, # \dot{\phi_0}
-                0.0, # H - leave as 0.0 to let program determine
-                1.0, # Re\delta\phi_1
-                0.0, # Re\dot{\delta\phi_1}
-                1.0, # Im\delta\phi_1
-                0.0  # Im\dot{\delta\phi_1}
-                ])
-
+POT_FUNC = "msqphisq"
+#YSTART = N.array([25.0, # \phi_0
+#                -0.1, # \dot{\phi_0}
+#                0.0, # H - leave as 0.0 to let program determine
+#                1.0, # Re\delta\phi_1
+#                0.0, # Re\dot{\delta\phi_1}
+#                1.0, # Im\delta\phi_1
+#                0.0  # Im\dot{\delta\phi_1}
+#                ])
+YSTART=None
 #Get root logger
 if __name__ == "__main__":
     harness_logger = logging.getLogger()
@@ -219,9 +219,9 @@ def main(args):
         elif opt in ("-a", "--all"):
             func = "all"
     #Standard params
-    kinit = 1.00e-61
-    kend = 1.025e-58
-    deltak = 1.0e-61
+    kinit = 1.00e-62
+    kend = 1.025e-59
+    deltak = 1.0e-62
     if func == "model":
         try:
             if not filename:
