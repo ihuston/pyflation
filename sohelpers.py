@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.3 2009/01/13 18:21:12 ith Exp $
+    $Id: sohelpers.py,v 1.4 2009/01/15 17:08:54 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -29,7 +29,7 @@ def copy_source_to_fofile(sourcefile, fofile):
             raise
         fres = ff.root.results
         ff.copyNode(sterm, fres)
-        _log.debug("Source term successfully copied to first order file.")
+        _log.info("Source term successfully copied to first order file %s.", fofile)
     finally:
         sf.close()
         ff.close()
