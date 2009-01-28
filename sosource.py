@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.31 2009/01/28 12:18:58 ith Exp $
+$Id: sosource.py,v 1.32 2009/01/28 17:39:23 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -22,6 +22,25 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 
 #Start logging
 source_logger = logging.getLogger(__name__)
+
+def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
+    """Return unintegrated slow roll source term."""
+    #Unpack variables
+    phi, phidot, H = bgvars
+    U, dU, dU2, dU3 = potentials
+    dphi1, dphi1dot, dp1diff, dp1dotdiff = fovars
+    #Initialize result variable for k modes
+    s2 = N.empty(s2shape)
+                
+    #Calculate unintegrated source term
+    #First major term:
+    s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) * q**2*dp1diff*dphi1)
+    #Second major term:
+    s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
+    #Third major term:
+    s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot * dp1diff * dphi1)
+    
+    return s2
 
 def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrcterm):
     """Calculate and save integrated source term.
@@ -89,7 +108,7 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
                 fnargs = []
             elif intmethod is "simps":
                 intfunc = integrate.simps
-                fnargs = [k]
+                fnargs = [m.k]
             else:
                 raise ValueError("Need to specify correct integration method!")
             #Log integration method
@@ -154,26 +173,7 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
     except IOError:
         raise
     return savefile
-
-def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
-    """Return unintegrated slow roll source term."""
-    #Unpack variables
-    phi, phidot, H = bgvars
-    U, dU, dU2, dU3 = potentials
-    dphi1, dphi1dot, dp1diff, dp1dotdiff = fovars
-    #Initialize result variable for k modes
-    s2 = N.empty(s2shape)
-                
-    #Calculate unintegrated source term
-    #First major term:
-    s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) * q**2*dp1diff*dphi1)
-    #Second major term:
-    s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
-    #Third major term:
-    s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot * dp1diff * dphi1)
-    
-    return s2
-    
+ 
 def opensourcefile(filename, atomshape, sourcetype=None):
     """Open the source term hdf5 file with filename."""
     if not filename or not sourcetype:
