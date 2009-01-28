@@ -1,6 +1,12 @@
-"""Second order helper functions to set up source term
-    $Id: sosource.py,v 1.30 2009/01/28 11:50:12 ith Exp $
-    """
+"""sosource.py Second order source term calculation module.
+Author: Ian Huston
+$Id: sosource.py,v 1.31 2009/01/28 12:18:58 ith Exp $
+
+Provides the method getsourceandintegrate which uses an instance of a first
+order class from cosmomodels to calculate the source term required for second
+order models.
+
+"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import tables
@@ -11,13 +17,13 @@ import logging
 import time
 import os
 
+#This is the results directory which will be used if no filenames are specified
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
-# RESULTSDIR = "/starpc34/scratch/ith/numerics/results/"
 
 #Start logging
 source_logger = logging.getLogger(__name__)
 
-def getsourceandintegrate(m, savefile=None, intmethod=None):
+def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrcterm):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -37,6 +43,10 @@ def getsourceandintegrate(m, savefile=None, intmethod=None):
                specified the length of the `k` array is checked to see whether the preferred choice
                of romberg integration is possible. Integration methods are `numpy.integrate.romb` and
                `numpy.integrate.simps`.
+    
+    srcfunc: function, optional
+             Function which returns unintegrated source term. Defaults to slowrollsrcterm in this module.
+             Function signature is `srcfunc(k, q, a, potentials, bgvars, fovars, s2shape)`.
                
     Returns
     -------
@@ -103,45 +113,37 @@ def getsourceandintegrate(m, savefile=None, intmethod=None):
                     source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
                 #Get first order results (from file or variables)
-                phi, phidot, H, dphi1real, dphi1dotreal, dphi1imag, dphi1dotimag = [myr[i,:] for i in range(7)]
-                dphi1 = dphi1real + dphi1imag*1j
-                dphi1dot = dphi1dotreal + dphi1dotimag*1j
+                bgvars = myr[0:3,:]
+                dphi1 = myr[3,:] + myr[4,:]*1j
+                dphi1dot = myr[5,:] + myr[6,:]*1j
                 source_logger.debug("Variables set. Getting potentials for this timestep...")
-                pottuple = m.potentials(myr)
+                pottemp = m.potentials(myr)
                 #Get potentials in right shape
-                pt = []
-                for p in pottuple:
-                    if N.shape(p) != N.shape(pottuple[0]):
-                        pt.append(p*N.ones_like(pottuple[0]))
+                potentials = []
+                for p in pottemp:
+                    if N.shape(p) != N.shape(pottemp[0]):
+                        potentials.append(p*N.ones_like(pottemp[0]))
                     else:
-                        pt.append(p)
-                U, dU, dU2, dU3 = pt
+                        potentials.append(p)
                 source_logger.debug("Potentials obtained. Setting a and making results array...")
                 #Single time step
                 a = m.ainit*N.exp(n)
-                
-                #Initialize result variable for k modes
-                s2 = N.empty(s2shape)
-                
-                source_logger.debug("Starting main k loop...")
                 #Get k indices
                 kix = N.arange(lenmk)
                 qix = N.arange(lenmk)
-                #Check abs(qix-kix)-1 is not negative
+                #Check abs(qix-kix)-1 is not negative and get q-k variables
                 dphi1ix = N.abs(qix[:, N.newaxis]-kix) -1
                 dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
-                dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])                    
+                dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])
+                
+                fovars = (dphi1, dphi1dot, dp1diff, dp1dotdiff) #First order variables for src function                 
                 #temp k and q vars
                 k = m.k[kix]
                 q = m.k[qix]
-                #First major term:
-                s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) 
-                            * q**2*dp1diff*dphi1)
-                #Second major term:
-                s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
-                #Third major term:
-                s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot
-                                            * dp1diff * dphi1)
+                
+                #Get unintegrated source term
+                s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape)
+                
                 #save results for each q
                 source_logger.debug("Integrating source term for this tstep...")
                 sarr.append(intfunc(s2, *fnargs)[N.newaxis,:])
@@ -153,6 +155,25 @@ def getsourceandintegrate(m, savefile=None, intmethod=None):
         raise
     return savefile
 
+def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
+    """Return unintegrated slow roll source term."""
+    #Unpack variables
+    phi, phidot, H = bgvars
+    U, dU, dU2, dU3 = potentials
+    dphi1, dphi1dot, dp1diff, dp1dotdiff = fovars
+    #Initialize result variable for k modes
+    s2 = N.empty(s2shape)
+                
+    #Calculate unintegrated source term
+    #First major term:
+    s2 = (1/(2*N.pi**2) * (1/H**2) * (dU3 + 3*phidot*dU2) * q**2*dp1diff*dphi1)
+    #Second major term:
+    s2 += (1/(2*N.pi**2) * ((1/(a*H) + 0.5)*q**2 - 2*(q**4/k**2)) * dp1dotdiff * dphi1dot)
+    #Third major term:
+    s2 += (1/(2*N.pi**2) * 1/(a*H)**2 * (2*(q**6/k**2) + 2.5*q**4 + 2*(k*q)**2) * phidot * dp1diff * dphi1)
+    
+    return s2
+    
 def opensourcefile(filename, atomshape, sourcetype=None):
     """Open the source term hdf5 file with filename."""
     if not filename or not sourcetype:
