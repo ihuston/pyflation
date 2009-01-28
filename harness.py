@@ -27,6 +27,9 @@ POT_FUNC = "msqphisq"
 #                0.0  # Im\dot{\delta\phi_1}
 #                ])
 YSTART=None
+
+FOARGS = {"potential_func": POT_FUNC,
+            "ystart": YSTART}
 #Get root logger
 if __name__ == "__main__":
     harness_logger = logging.getLogger()
@@ -56,10 +59,16 @@ def startlogging():
     harness_logger.addHandler(ch)
     harness_logger.debug("Logging started.")
 
-def runmodel(kinit, kend, deltak, filename=None):
+def runmodel(kinit, kend, deltak, filename=None, foargs=None):
     """Run program from kinit to kend using deltak"""
-    model = c.FONewCanonicalTwoStage(solver="rkdriver_withks", k=stb.seq(kinit, kend, deltak), potential_func=POT_FUNC, ystart=YSTART)
-    #model = c.SOCanonicalThreeStage(solver="rkdriver_withks")
+    if foargs is None:
+        foargs = {}
+    if "k" not in foargs:
+        foargs["k"] = stb.seq(kinit, kend, deltak)
+    if "solver" not in foargs:
+        foargs["solver"] = "rkdriver_withks"
+        
+    model = c.FONewCanonicalTwoStage(**foargs)
     try:
         harness_logger.debug("Starting model run...")
         model.run(saveresults=False)
@@ -82,15 +91,16 @@ def runmodel(kinit, kend, deltak, filename=None):
     
     return filename
 
-def runsomodel(fofile, filename=None):
+def runsomodel(fofile, filename=None, soargs=None):
     """Run program from kinit to kend using deltak"""
     try:
         fomodel = c.make_wrapper_model(fofile)
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
-    
-    somodel = c.SOCanonicalThreeStage(fomodel)
+    if soargs is None:
+        soargs = {}
+    somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
     try:
         harness_logger.debug("Starting model run...")
         somodel.run(saveresults=False)
@@ -229,7 +239,7 @@ def main(args):
         except AttributeError:
             filename = None 
         #start model run
-        runmodel(kinit, kend, deltak, filename=filename)
+        runmodel(kinit, kend, deltak, filename=filename, foargs=FOARGS)
     elif func == "somodel":
         try:
             if not filename:
