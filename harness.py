@@ -35,13 +35,13 @@ FOARGS = {"potential_func": POT_FUNC,
 #Get root logger
 if __name__ == "__main__":
     harness_logger = logging.getLogger()
+    harness_logger.handlers = []
 else:
     harness_logger = logging.getLogger(__name__)
 
 def startlogging():
     """Start the logging system to store rotational log based on date."""
-    if __name__ == "__main__":
-        harness_logger.handlers = []
+
     harness_logger.setLevel(LOGLEVEL)
     #Get date for logfile
     date = time.strftime("%Y%m%d")
