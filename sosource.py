@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.33 2009/01/29 12:26:26 ith Exp $
+$Id: sosource.py,v 1.34 2009/01/29 12:35:04 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -24,7 +24,45 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 source_logger = logging.getLogger(__name__)
 
 def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
-    """Return unintegrated slow roll source term."""
+    """Return unintegrated slow roll source term.
+    
+    The source term before integration is calculated here using the slow roll
+    approximation. This function follows the revised version of Eq (5.8) in 
+    Malik 06 (astro-ph/0610864v5).
+    
+    Parameters
+    ----------
+    k: array_like
+       Array of mode numbers being calculated.
+    
+    q: array_like
+       Array of mode numbers which will be integrated over. 
+       (Should be the same as k, might remove later.)
+       
+    a: float
+       Scale factor at the current timestep, `a = ainit*exp(n)`
+    
+    potentials: tuple
+                Tuple of potential values in the form `(U, dU, dU2, dU3)`
+       
+    bgvars: tuple
+            Tuple of background field values in the form `(phi, phidot, H)`
+            
+    fovars: tuple
+            Tuple of first order field values in the form `(dphi1, dphi1dot, dp1diff, dp1dotdiff)`
+            
+    s2shape: tuple
+             Shape of the results array to return
+             
+    Returns
+    -------
+    s2: array_like
+        Array containing the unintegrated source terms for all k and q modes.
+        
+    References
+    ----------
+    Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+    """
     #Unpack variables
     phi, phidot, H = bgvars
     U, dU, dU2, dU3 = potentials
