@@ -14,8 +14,9 @@ import sosource
 import getopt
 import sohelpers
 
-RESULTSDIR = "/misc/scratch/ith/numerics/results/"
-LOGDIR = "/misc/scratch/ith/numerics/applogs/"
+BASEDIR = "/misc/scratch/ith/numerics/"
+RESULTSDIR = BASEDIR + "results/" + date.strftime("%Y%m%d") + "/"
+LOGDIR = BASEDIR + "applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level
 POT_FUNC = "msqphisq"
 #YSTART = N.array([25.0, # \phi_0
@@ -111,7 +112,7 @@ def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "batchrun" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "fo" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         model.saveallresults(filename=filename)
@@ -169,7 +170,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "batchrun" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "so" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         somodel.saveallresults(filename=filename)
@@ -181,30 +182,6 @@ def runsomodel(fofile, filename=None, soargs=None):
     #Success!
     harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
     return filename
-
-def runsourceint(modelfile, sourcefile=None):
-    """Run source integrand calculation."""
-    try:
-        m = c.make_wrapper_model(modelfile)
-    except:
-        harness_logger.exception("Error wrapping model file.")
-        raise
-    #get source integrand and save to file
-    try:
-        filesaved = sosource.getsourceintegrand(m, sourcefile)
-        harness_logger.info("Integrand saved as " + filesaved)
-    except Exception:
-        harness_logger.exception("Error getting source integrand.")
-        raise
-    #Destroy model instance to save memory
-    harness_logger.debug("Destroying model instance to reclaim memory...")
-    try:
-        del m
-    except IOError:
-        harness_logger.exception("Error closing model file!")
-        raise
-       
-    return filesaved
 
 def runfullsourceintegration(modelfile, sourcefile=None):
     """Run source integrand calculation."""
@@ -229,38 +206,22 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         raise
        
     return filesaved
-
-def integratesource(modelfile, sourcefile=None):
-    """Run source integration calculation."""
-    try:
-        m = c.make_wrapper_model(modelfile)
-    except:
-        harness_logger.exception("Error wrapping model file.")
-        raise
-    #get source integrand and save to file
-    try:
-        filesaved = sosource.getsource(m, sourcefile)
-        harness_logger.info("Integrand saved as " + filesaved)
-    except Exception:
-        harness_logger.exception("Error getting source integrand.")
-        raise
-    #Destroy model instance to save memory
-    harness_logger.debug("Destroying model instance to reclaim memory...")
-    try:
-        del m
-    except IOError:
-        harness_logger.exception("Error closing model file!")
-        raise
-       
-    return filesaved
+def dofullrun():
+    """Complete full model run of 1st, source and 2nd order calculations."""
+    harness_logger.info("Starting full run through...")
+    fofile = runfomodel(kinit, kend, deltak, foargs=FOARGS)
+    sourcefile = runfullsourceintegration(fofile)
+    sohelpers.copy_source_to_fofile(sourcefile, fofile)
+    sofile = runsomodel(fofile)
+    cfile = sohelpers.combine_results(fofile, sofile)
+    harness_logger.info("Combined results saved in %s.", cfile)
+    return cfile
 
 def main(args):
     """Main function: deal with command line arguments and start calculation as reqd."""
 
     #Start the logging module
-    startlogging()    
-    #Change results directory to todays date
-    RESULTSDIR = RESULTSDIR + date.strftime("%Y%m%d")
+    startlogging()
     
     #Set up arguments
     shortargs = "hf:msiba"
@@ -318,13 +279,10 @@ def main(args):
         except Exception:
             harness_logger.error("Error getting source integral!") 
     elif func == "all":
-        harness_logger.info("Starting full run through...")
-        fofile = runmodel(kinit, kend, deltak)
-        sourcefile = runfullsourceintegration(fofile)
-        sohelpers.copy_source_to_fofile(sourcefile, fofile)
-        sofile = runsomodel(fofile)
-        cfile = sohelpers.combine_results(fofile, sofile)
-        harness_logger.info("Combined results saved in %s.", cfile)
+        try:
+            dofullrun(kinit, kend, deltak)
+        except Exception:
+            harness_logger.error("Error doing full run!")
         
 if __name__ == "__main__":
     main(sys.argv[1:])
