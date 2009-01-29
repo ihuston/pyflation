@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.4 2009/01/15 17:08:54 ith Exp $
+    $Id: sohelpers.py,v 1.5 2009/01/29 19:16:41 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -38,7 +38,7 @@ def combine_results(fofile, sofile, newfile=None):
     """Combine the first and second order results from given files, and save in newfile."""
     if not newfile:
         now = time.strftime("%Y%m%d%H%M")
-        newfile = c.RESULTS_PATH + "combined" + now + ".hf5"
+        newfile = c.RESULTS_PATH + "cmb" + now + ".hf5"
         _log.info("Filename set to " + newfile)
         
     if os.path.isdir(os.path.dirname(newfile)):
