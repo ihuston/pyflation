@@ -190,6 +190,8 @@ def runfullsourceintegration(modelfile, sourcefile=None):
     except:
         harness_logger.exception("Error wrapping model file.")
         raise
+    if sourcefile is None:
+        sourcefile = RESULTSDIR + "src" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
         filesaved = sosource.getsourceandintegrate(m, sourcefile, intmethod="romb")
@@ -206,6 +208,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         raise
        
     return filesaved
+
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("Starting full run through...")
