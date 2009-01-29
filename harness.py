@@ -124,7 +124,7 @@ def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "fo-" + kinit + "-" + kend + "-" + deltak + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "fo-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -184,7 +184,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "so-" + kinit + "-" + kend + "-" + deltak + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "so-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -228,14 +228,14 @@ def runfullsourceintegration(modelfile, sourcefile=None):
 
 def dofullrun(kinit, kend, deltak):
     """Complete full model run of 1st, source and 2nd order calculations."""
-    harness_logger.info("Starting full run through...")
+    harness_logger.info("---------------------\n Starting full run through...")
     fofile = runfomodel(kinit, kend, deltak, foargs=FOARGS)
     sourcefile = runfullsourceintegration(fofile)
     sohelpers.copy_source_to_fofile(sourcefile, fofile)
     sofile = runsomodel(fofile)
     cfilename = sofile.replace("so", "cmb")
     cfile = sohelpers.combine_results(fofile, sofile, cfilename)
-    harness_logger.info("Combined results saved in %s.", cfile)
+    harness_logger.info("Combined results saved in %s. \n Full run finished! \n ---------------------", cfile)
     return cfile
 
 def main(args):
