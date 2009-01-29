@@ -226,7 +226,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
        
     return filesaved
 
-def dofullrun():
+def dofullrun(kinit, kend, deltak):
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("Starting full run through...")
     fofile = runfomodel(kinit, kend, deltak, foargs=FOARGS)
@@ -284,19 +284,19 @@ def main(args):
             if not filename:
                 raise AttributeError("Need to specify first order file!")
         except AttributeError:
-            raise
+            harness_logger.exception("Error starting second order model!")
         #start model run
         runsomodel(fofile=filename)
     elif func == "source":
         try:
             runfullsourceintegration(modelfile=filename)
         except Exception:
-            harness_logger.error("Error getting source integral!") 
+            harness_logger.exception("Error getting source integral!") 
     elif func == "all":
         try:
             dofullrun(kinit, kend, deltak)
         except Exception:
-            harness_logger.error("Error doing full run!")
+            harness_logger.exception("Error doing full run!")
         
 if __name__ == "__main__":
     main(sys.argv[1:])
