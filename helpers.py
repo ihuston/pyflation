@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.6 2009/01/12 13:31:35 ith Exp $
+    $Id: helpers.py,v 1.7 2009/01/29 15:38:24 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -45,9 +45,22 @@ def ispower2(n):
         return len(bin_n)
 
 def removedups(l):
-    """Return a list with duplicates removed but order retained. First of each duplicate is retained."""
-    retlist = []
+    """Return an array with duplicates removed but order retained. 
+    
+    An array is returned no matter what the input type. The first of each duplicate is retained.
+    
+    Parameters
+    ----------
+    l: array_like
+       Array (or list etc.) of values with duplicates that are to be removed.
+       
+    Returns
+    -------
+    retlist: ndarray
+             Array of values with duplicates removed but order intact.
+    """
+    retlist = N.array([])
     for x in l:
         if x not in retlist:
-            retlist.append(x)
+            N.append(retlist, x)
     return retlist
