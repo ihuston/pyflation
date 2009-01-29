@@ -113,7 +113,7 @@ def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
         
-    model = c.FONewCanonicalTwoStage(**foargs)
+    model = c.FOCanonicalTwoStage(**foargs)
     try:
         harness_logger.debug("Starting model run...")
         model.run(saveresults=False)
@@ -122,7 +122,7 @@ def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "fo" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "fo-" + kinit + "-" + kend + "-" + deltak + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -182,7 +182,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "so" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "so-" + kinit + "-" + kend + "-" + deltak + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -204,7 +204,8 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         harness_logger.exception("Error wrapping model file.")
         raise
     if sourcefile is None:
-        sourcefile = RESULTSDIR + "src" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
+        sourcefile = RESULTSDIR + "src-" + str(min(m.k)) + "-" + str(max(m.k))
+        sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
         ensureresultspath(sourcefile)
@@ -230,7 +231,8 @@ def dofullrun():
     sourcefile = runfullsourceintegration(fofile)
     sohelpers.copy_source_to_fofile(sourcefile, fofile)
     sofile = runsomodel(fofile)
-    cfile = sohelpers.combine_results(fofile, sofile)
+    cfilename = sofile.replace("so", "cmb")
+    cfile = sohelpers.combine_results(fofile, sofile, cfilename)
     harness_logger.info("Combined results saved in %s.", cfile)
     return cfile
 
