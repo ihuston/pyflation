@@ -13,9 +13,10 @@ import logging.handlers
 import sosource
 import getopt
 import sohelpers
+import os
 
 BASEDIR = "/misc/scratch/ith/numerics/"
-RESULTSDIR = BASEDIR + "results/" + date.strftime("%Y%m%d") + "/"
+RESULTSDIR = BASEDIR + "results/" + time.strftime("%Y%m%d") + "/"
 LOGDIR = BASEDIR + "applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level
 POT_FUNC = "msqphisq"
@@ -60,6 +61,15 @@ def startlogging():
     harness_logger.addHandler(ch)
     harness_logger.debug("Logging started.")
 
+def ensureresultspath(path):
+    """Check that the path for results directory exists and create it if not."""
+    #Does path exist?
+    if not os.path.isdir(os.path.dirname(path)):
+        try:
+            os.mkdir(os.path.dirname(path))
+        except OSError:
+            harness_logger.error("Error creating results directory!")
+    
 def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
     """Execute a FOCanonicalTwoStage model and save results.
     
@@ -115,14 +125,16 @@ def runfomodel(kinit, kend, deltak, filename=None, foargs=None):
         filename = RESULTSDIR + "fo" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
+        ensureresultspath(filename)
         model.saveallresults(filename=filename)
+        #Success!
+        harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:
         harness_logger.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
     harness_logger.debug("Destroying model instance...")
     del model
-    #Success!
-    harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
+    
     return filename
 
 def runsomodel(fofile, filename=None, soargs=None):
@@ -173,6 +185,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         filename = RESULTSDIR + "so" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
+        ensureresultspath(filename)
         somodel.saveallresults(filename=filename)
     except Exception:
         harness_logger.exception("IO error, nothing saved!")
@@ -194,6 +207,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         sourcefile = RESULTSDIR + "src" + time.strftime("%Y%m%d%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
+        ensureresultspath(sourcefile)
         filesaved = sosource.getsourceandintegrate(m, sourcefile, intmethod="romb")
         harness_logger.info("Source term saved as " + filesaved)
     except Exception:
@@ -227,8 +241,8 @@ def main(args):
     startlogging()
     
     #Set up arguments
-    shortargs = "hf:msiba"
-    longargs = ["help", "filename=", "fomodel", "somodel", "integrand", "both", "all"]
+    shortargs = "hf:msta"
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all"]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -242,18 +256,16 @@ def main(args):
         elif opt in ("-f", "--filename"):
             filename = arg
         elif opt in ("-m", "--fomodel"):
-            func = "model"
+            func = "fomodel"
         elif opt in ("-s", "--somodel"):
             func = "somodel"
-        elif opt in ("-i", "--integrand"):
-            func = "integrand"
-        elif opt in ("-b", "--both"):
-            func = "both"
+        elif opt in ("-t", "--source"):
+            func = "source"
         elif opt in ("-a", "--all"):
             func = "all"
     #Standard params
     kinit = 1.00e-62
-    kend = 1.025e-59
+    kend = 3.00e-62
     deltak = 1.0e-62
     if func == "fomodel":
         try:
@@ -271,12 +283,7 @@ def main(args):
             raise
         #start model run
         runsomodel(fofile=filename)
-    elif func == "integrand":
-        try:
-            runsourceint(filename)
-        except Exception:
-            harness_logger.error("Error getting source integral!") 
-    elif func == "both":
+    elif func == "source":
         try:
             runfullsourceintegration(modelfile=filename)
         except Exception:
