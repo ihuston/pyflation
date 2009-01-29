@@ -1,7 +1,7 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.34 2009/01/16 16:13:54 ith Exp $
+#CVS: $Id: rk4.py,v 1.35 2009/01/29 17:51:20 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -312,7 +312,7 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         
         #Set up start and end list for each section
         #ts = N.where(N.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
-        ts = N.around(ts/h)*h
+        ts = N.around(ts/h + h/2)*h
         #Need to remove duplicates
         tsnd = helpers.removedups(ts)
         xslist = N.empty((len(tsnd)+1))
