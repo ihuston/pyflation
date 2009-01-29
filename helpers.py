@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.7 2009/01/29 15:38:24 ith Exp $
+    $Id: helpers.py,v 1.8 2009/01/29 16:57:35 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -62,5 +62,5 @@ def removedups(l):
     retlist = N.array([])
     for x in l:
         if x not in retlist:
-            N.append(retlist, x)
+            retlist = N.append(retlist, x)
     return retlist
