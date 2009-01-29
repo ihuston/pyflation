@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.8 2009/01/29 16:57:35 ith Exp $
+    $Id: helpers.py,v 1.9 2009/01/29 17:02:22 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
