@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.34 2009/01/29 12:35:04 ith Exp $
+$Id: sosource.py,v 1.35 2009/01/29 15:42:35 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -124,7 +124,7 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
     #Set up file for results
     if not savefile or not os.path.isdir(os.path.dirname(savefile)):
         date = time.strftime("%Y%m%d%H%M%S")
-        savefile = RESULTSDIR + "source" + date + ".hf5"
+        savefile = RESULTSDIR + "src" + date + ".hf5"
         source_logger.info("Saving source results in file " + savefile)
 
     #Main try block for file IO
