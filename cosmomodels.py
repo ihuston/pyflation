@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.212 2009/01/29 18:53:50 ith Exp $
+    $Id: cosmomodels.py,v 1.213 2009/01/30 15:29:48 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.212 $",
+                  "CVSRevision":"$Revision: 1.213 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.212 $",
+                  "CVSRevision":"$Revision: 1.213 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1659,12 +1659,12 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
     
     def getdeltaphi(self):
         """Return delta phi in model dependant way. Restricts to using only 20 k values."""
-        if len(self.k) > 20:
-            ksel = slice(None, None, int(len(self.k)/20)) #Only get 20 k values
-        else:
-            ksel = slice(None) #get all k values
-        dp1 = self.yresult[:,3,ksel] + self.yresult[:,5,ksel]*1j
-        dp2 = self.yresult[:,7,ksel] + self.yresult[:,9,ksel]*1j
+#         if len(self.k) > 20:
+#             ksel = slice(None, None, int(len(self.k)/20)) #Only get 20 k values
+#         else:
+#             ksel = slice(None) #get all k values
+        dp1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
         
         dp = dp1 + 0.5*dp2
         return dp
