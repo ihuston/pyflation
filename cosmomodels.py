@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.213 2009/01/30 15:29:48 ith Exp $
+    $Id: cosmomodels.py,v 1.214 2009/02/04 12:19:34 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.213 $",
+                  "CVSRevision":"$Revision: 1.214 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.213 $",
+                  "CVSRevision":"$Revision: 1.214 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1093,30 +1093,73 @@ class CanonicalMultiStage(MultiStageModel):
         #Call superclass
         super(CanonicalMultiStage, self).__init__(*args, **kwargs)
     
-    def findPphi(self):
-        """Return the spectrum of scalar perturbations P_phi for each k."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
+    def findPphi(self, recompute=False):
+        """Return the spectrum of scalar perturbations P_phi for each k.
         
-        deltaphi = self.getdeltaphi()
-        Pphi = deltaphi*deltaphi.conj()
-        return Pphi
-    
-    def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
+        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
+        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
+        instance variable self.Pphi. 
         
-        Pphi = self.findPphi()
-        phidot = self.yresult[:,1,:] #bg phidot
-        Pr = Pphi/(phidot**2) #change if bg evol is different
-        return Pr
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+        
+        Returns
+        -------
+        Pphi: array_like
+              Array of Pphi values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "Pphi") or recompute:        
+            deltaphi = self.getdeltaphi()
+            self.Pphi = deltaphi*deltaphi.conj()
+        return self.Pphi
     
-    def findPgrav(self):
-        """Return the spectrum of tensor perturbations P_grav for each k."""
-        Pphi = self.findPphi()
-        Pgrav = 2*Pphi
-        return Pgrav
+    def findPr(self, recompute=False):
+        """Return the spectrum of curvature perturbations $P_R$ for each k.
+        
+        This is the unscaled version $P_R$ which is related to the scaled version by
+        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
+        self.Pr. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+                   
+        Returns
+        -------
+        Pr: array_like
+            Array of Pr values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "Pr") or recompute:        
+            Pphi = self.findPphi()
+            phidot = self.yresult[:,1,:] #bg phidot
+            self.Pr = Pphi/(phidot**2) #change if bg evol is different
+        return self.Pr
+    
+    def findPgrav(self, recompute=False):
+        """Return the spectrum of tensor perturbations $P_grav$ for each k.
+        
+        Note that result is stored as the instance variable self.Pgrav. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+                   
+        Returns
+        -------
+        Pgrav: array_like
+               Array of Pgrav values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "Pgrav") or recompute:        
+            Pphi = self.findPphi()
+            self.Pgrav = 2*Pphi
+        return self.Pgrav
     
     def getzeta(self):
         """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
