@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.214 2009/02/04 12:19:34 ith Exp $
+    $Id: cosmomodels.py,v 1.215 2009/02/04 12:25:46 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.214 $",
+                  "CVSRevision":"$Revision: 1.215 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.214 $",
+                  "CVSRevision":"$Revision: 1.215 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1404,27 +1404,30 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         
         return foystart
     
-    def getdeltaphi(self):
-        """Find the spectrum of perturbations for each k. 
-           Return Pr.
-           """
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
         #Raise error if first order not run yet
         self.checkruncomplete()
         
-        #Set nice variable names
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
-        return deltaphi
+        if not hasattr(self, "deltaphi") or recompute:
+            self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
+        return self.deltaphi
 
-    def findPphi(self):
-        """Return the spectrum of scalar perturbations P_phi for each k."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
-        deltaphi = self.getdeltaphi()
-        Pphi = (self.k**3/(2*N.pi**2))*deltaphi*deltaphi.conj()
-        return Pphi
-
-    
 class FONewCanonicalTwoStage(FOCanonicalTwoStage):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
     """
@@ -1477,6 +1480,29 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
         
         return foystart
+    
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        if not hasattr(self, "deltaphi") or recompute:
+            self.deltaphi = (2*N.pi**2)/(self.k**3) * (self.yresult[:,3,:] + self.yresult[:,5,:]*1j) #complex deltaphi
+        return self.deltaphi
                 
     
 def make_wrapper_model(modelfile, *args, **kwargs):
