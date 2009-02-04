@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.215 2009/02/04 12:25:46 ith Exp $
+    $Id: cosmomodels.py,v 1.216 2009/02/04 13:27:54 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.215 $",
+                  "CVSRevision":"$Revision: 1.216 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.215 $",
+                  "CVSRevision":"$Revision: 1.216 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1698,18 +1698,30 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
         
-    def getdeltaphi(self):
-        """Find the spectrum of perturbations for each k. 
-           Return Pr.
-           """
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
         #Raise error if first order not run yet
         self.checkruncomplete()
         
-        dp1real = self.second_stage.yresult[:,3,:]
-        dp1imag = self.second_stage.yresult[:,5,:]
-        #Set nice variable names
-        deltaphi = dp1real + dp1imag*1j + self.yresult[:,0,:] + self.yresult[:,2,:]*1j
-        return deltaphi
+        if not hasattr(self, "deltaphi") or recompute:
+            dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
+            dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
+            self.deltaphi = dp1 + 0.5*dp2
+        return self.deltaphi
         
 class CombinedCanonicalFromFile(CanonicalMultiStage):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
@@ -1726,17 +1738,30 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
         else:
             self.foclass = foclass
     
-    def getdeltaphi(self):
-        """Return delta phi in model dependant way. Restricts to using only 20 k values."""
-#         if len(self.k) > 20:
-#             ksel = slice(None, None, int(len(self.k)/20)) #Only get 20 k values
-#         else:
-#             ksel = slice(None) #get all k values
-        dp1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
         
-        dp = dp1 + 0.5*dp2
-        return dp
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        if not hasattr(self, "deltaphi") or recompute:
+            dp1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+            dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
+            self.deltaphi = dp1 + 0.5*dp2
+        return self.deltaphi
     
     def checkruncomplete(self):
         """Check that model has been run"""
