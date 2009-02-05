@@ -102,7 +102,7 @@ def runfomodel(filename=None, foargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        filename = RESULTSDIR + "fo-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
