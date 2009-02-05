@@ -90,8 +90,10 @@ def runfomodel(filename=None, foargs=None):
         foargs["k"] = stb.seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
-        
-    model = c.FOCanonicalTwoStage(**foargs)
+    
+    if not issubclass(foclass, c.TwoStageModel):
+        raise ValueError("Must use TwoStageModel class for first order run!")
+    model = foclass(**foargs)
     try:
         harness_logger.debug("Starting model run...")
         model.run(saveresults=False)
