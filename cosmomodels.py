@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.218 2009/02/05 22:35:25 ith Exp $
+    $Id: cosmomodels.py,v 1.219 2009/02/05 22:37:04 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.218 $",
+                  "CVSRevision":"$Revision: 1.219 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.218 $",
+                  "CVSRevision":"$Revision: 1.219 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1306,7 +1306,7 @@ class TwoStageModel(MultiStageModel):
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
-        self._log.info("Beginning first order run...\n")
+        self._log.info("Beginning first order run...")
         try:
             self.firstordermodel.run(saveresults=False, simtstart=self.simtstart)
         except ModelError, er:
