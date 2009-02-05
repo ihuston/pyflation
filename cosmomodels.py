@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.216 2009/02/04 13:27:54 ith Exp $
+    $Id: cosmomodels.py,v 1.217 2009/02/05 20:29:12 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -267,7 +267,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.216 $",
+                  "CVSRevision":"$Revision: 1.217 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1058,7 +1058,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.216 $",
+                  "CVSRevision":"$Revision: 1.217 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1317,9 +1317,22 @@ class TwoStageModel(MultiStageModel):
         return
     
     def run(self, saveresults=True):
-        """Run BgModelInN with initial conditions and then use the results
-            to run ComplexModelInN."""
-            
+        """Run the full model.
+        
+        The background model is first run to establish the end time of inflation and the start
+        times for the k modes. Then the initial conditions are set for the first order variables.
+        Finally the first order model is run and the results are saved if required.
+        
+        Parameters
+        ----------
+        saveresults: boolean, optional
+                     Should results be saved at the end of the run. Default is False.
+                     
+        Returns
+        -------
+        filename: string
+                  name of the results file if any
+        """
         #Run bg model
         self.runbg()
         
