@@ -1,10 +1,11 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.9 2009/01/29 17:02:22 ith Exp $
+    $Id: helpers.py,v 1.10 2009/02/09 13:31:23 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
+import re
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
@@ -19,10 +20,13 @@ def nanfillstart(a, l):
 
 def eto10(number):
     """Convert scientific notation e.g. 1e-5 to 1x10^{-5} for use in LaTeX, converting to string."""
-    s = str(number)
-    s = s.replace("e", r"\times10^{")
-    s = s + "}"
-    return s 
+    s = re.sub(r'e(\S\d+)', r'\\times 10^{\1}', str(number))
+    return s
+
+def klegend(ks):
+    """Return list of string representations of k modes for legend."""
+    klist = [r"$k=" + eto10(k) + r"M_{\mathrm{PL}} = " + eto10(mpl2invmpc(k)) + r" M\mathrm{pc}$" for k in ks]
+    return klist
 
 def invmpc2mpl(x=1):
     """Convert from Mpc^-1 to Mpl (reduced Planck Mass)"""
