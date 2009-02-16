@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.11 2009/02/16 16:46:39 ith Exp $
+    $Id: helpers.py,v 1.12 2009/02/16 18:14:09 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -92,7 +92,7 @@ def getintfunc(x):
     """
     if ispower2(len(x)-1):
         intfunc = integrate.romb
-        fnargs = {}
+        fnargs = {"dx":x[1]-x[0]}
     elif len(x) > 0:
         intfunc = integrate.simps
         fnargs = {"x":x}
