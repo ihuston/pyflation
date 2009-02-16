@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.40 2009/02/16 17:04:42 ith Exp $
+$Id: sosource.py,v 1.41 2009/02/16 17:32:22 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -80,13 +80,9 @@ def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
     #Multiply by prefactor
     s2 = s2 * (1/(2*N.pi**2))
     
-    #Get integration function
-    intfunc, intfnargs = helpers.getintfunc(m.k)
-    #Do integration
-    s2int=intfunc(
     return s2
 
-def calculatesource(m, nix, srcfunc=slowrollsrcterm):
+def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     """Return the integrated source term at this timestep.
     
     Given the first order model and the timestep calculate the 
@@ -99,6 +95,10 @@ def calculatesource(m, nix, srcfunc=slowrollsrcterm):
        
     nix: int
          Index of current timestep in m.tresult
+     
+    integrand_elements: tuple
+         Contains integrand arrays in order
+         integrand_elements = (k, q, theta, klessq)
          
     srcfunc: function, optional
              Funtion which contains expression for source integrand
@@ -109,6 +109,14 @@ def calculatesource(m, nix, srcfunc=slowrollsrcterm):
     s: array_like
        Integrated source term calculated using srcfunc.
     """
+        #testing
+#     nixend = 10
+    k, q, theta, klessq = integrand_elements
+    #Initialize variables to store result
+    lenmk = len(m.k)
+    s2shape = (lenmk, lenmk)
+    source_logger.debug("Shape of m.k is %s.", str(lenmk))
+    
     #Copy of yresult
     myr = m.yresult[nix].copy()
     if N.any(n < m.fotstart):
@@ -154,9 +162,14 @@ def calculatesource(m, nix, srcfunc=slowrollsrcterm):
     source_logger.debug("Integrating source term for this tstep...")
     #Get unintegrated source term
     s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape, intfunc)
-    return s2
+    
+    #Get integration function
+    intfunc, intfnargs = helpers.getintfunc(m.k)
+    #Do integration
+    s2int=intfunc(s2, **intfnargs)
+    return s2int
                 
-def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
+def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -180,15 +193,17 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
     savefile: String
               Filename where results have been saved.
     """
-    #testing
-#     nixend = 10
-    #Initialize variables to store result
-    lenmk = len(m.k)
-    s2shape = (lenmk, lenmk)
-    source_logger.debug("Shape of m.k is %s.", str(lenmk))
+    #Initialize variables for all timesteps
+    halfk = m.k[:len(m.k)/2] #Need N=len(m.k)/2 for case when q=-k
+    k = halfk[...,newaxis,newaxis]
+    q = halfk[newaxis,...,newaxis]
+    theta = N.linspace(0, N.pi, ntheta)[newaxis,newaxis,...]
+    #Main array of k^i - q^i values
+    klessq=sqrt(k**2+q**2-2*k*q*cos(theta2))
+    #Pack together in tuple
+    integrand_elements = (k, q, theta, klessq)
     #Get atom shape for savefile
-    atomshape = (0, lenmk)
-    
+    atomshape = (0, len(halfk))
     #Main try block for file IO
     try:
         sf, sarr = opensourcefile(atomshape, savefile, sourcetype="term")
@@ -196,18 +211,16 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
-            for nix, n in enumerate(m.tresult):    
+            for nix in xrange(len(m.tresult)):    
                 if nix%1000 == 0:
-                    source_logger.info("Starting n=%f, nix=%f sequence...", n, nix)
-                
-                
-                
-                #save results for each q
-                source_logger.debug("Integrating source term for this tstep...")
-                #Get unintegrated source term
-                s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape, intfunc)
-                sarr.append(s2[N.newaxis,:])
-                source_logger.debug("Results for this tstep saved.")
+                    source_logger.info("Starting n=%f, nix=%d sequence...", m.tresult[nix], nix)
+                #Only run calculation if one of the modes has started.
+                if any(m.tresult[nix+2] >= m.fotstart):
+                    src = calculatesource(m, nix, integrand_elements, srcfunc)
+                else:
+                    src = N.nan*N.ones_like(m.k)
+                sarr.append(src[N.newaxis,:])
+                source_logger.debug("Results for this timestep saved.")
         finally:
             #source = N.array(source)
             sf.close()
