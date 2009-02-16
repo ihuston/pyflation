@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.44 2009/02/16 18:23:22 ith Exp $
+$Id: sosource.py,v 1.45 2009/02/16 18:29:28 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -184,11 +184,10 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
     klessq=sqrt(k**2+q**2-2*k*q*cos(theta2))
     #Pack together in tuple
     integrand_elements = (k, q, theta, klessq)
-    #Get atom shape for savefile
-    atomshape = (0, len(halfk))
+    
     #Main try block for file IO
     try:
-        sf, sarr = opensourcefile(atomshape, savefile, sourcetype="term")
+        sf, sarr = opensourcefile(atomshape, halfk, savefile, sourcetype="term")
         try:
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
@@ -210,7 +209,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
         raise
     return savefile
 
-def opensourcefile(atomshape, filename=None, sourcetype=None):
+def opensourcefile(atomshape, k, filename=None, sourcetype=None):
     """Open the source term hdf5 file with filename."""
     #Set up file for results
     if not filename or not os.path.isdir(os.path.dirname(filename)):
@@ -227,18 +226,24 @@ def opensourcefile(atomshape, filename=None, sourcetype=None):
     #Add compression to files and specify good chunkshape
     filters = tables.Filters(complevel=1, complib="zlib") 
     #cshape = (10,10,10) #good mix of t, k, q values
+    #Get atom shape for earray
+    atomshape = (0, len(k))
     try:
         source_logger.debug("Trying to open source file " + filename)
         rf = tables.openFile(filename, "a", "Source term result")
         if not "results" in rf.root:
             source_logger.debug("Creating group 'results' in source file.")
-            rf.createGroup(rf.root, "results", "Results")
-        if not sarrname in rf.root.results:
+            resgrp = rf.createGroup(rf.root, "results", "Results")
+        else:
+            resgrp = rf.root.results
+        if not sarrname in resgrp:
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
-            sarr = rf.createEArray(rf.root.results, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
+            sarr = rf.createEArray(resgrp, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
+            karr = rf.createEArray(resgrp, "srck", tables.Float64Atom(), (0,), filters=filters)
+            karr.append(k)
         else:
             source_logger.debug("Source file and node exist. Testing source node shape...")
-            sarr = rf.getNode(rf.root.results, sarrname)
+            sarr = rf.getNode(resgrp, sarrname)
             if sarr.shape[1:] != atomshape[1:]:
                 raise ValueError("Source node on file is not correct shape!")
     except IOError:
