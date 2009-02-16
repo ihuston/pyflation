@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.38 2009/02/16 16:46:57 ith Exp $
+$Id: sosource.py,v 1.39 2009/02/16 16:52:50 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -119,15 +119,9 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
     #Get atom shape for savefile
     atomshape = (0, lenmk)
     
-    #Set up file for results
-    if not savefile or not os.path.isdir(os.path.dirname(savefile)):
-        date = time.strftime("%Y%m%d%H%M%S")
-        savefile = RESULTSDIR + "src" + date + ".hf5"
-        source_logger.info("Saving source results in file " + savefile)
-
     #Main try block for file IO
     try:
-        sf, sarr = opensourcefile(savefile, atomshape, sourcetype="term")
+        sf, sarr = opensourcefile(atomshape, savefile, sourcetype="term")
         try:
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
@@ -142,7 +136,6 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
                     nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
                     source_logger.debug("Left getfoystart. Filling nans...")
                     #switch nans for ICs in m.yresult
-                    
                     are_nan = N.isnan(myr)
                     myr[are_nan] = nanfiller[are_nan]
                     source_logger.debug("NaNs filled. Setting dynamical variables...")
@@ -189,9 +182,14 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
         raise
     return savefile
 
-def opensourcefile(filename, atomshape, sourcetype=None):
+def opensourcefile(atomshape, filename=None, sourcetype=None):
     """Open the source term hdf5 file with filename."""
-    if not filename or not sourcetype:
+    #Set up file for results
+    if not filename or not os.path.isdir(os.path.dirname(filename)):
+        date = time.strftime("%Y%m%d%H%M%S")
+        filename = RESULTSDIR + "src" + date + ".hf5"
+        source_logger.info("Saving source results in file " + filename)
+    if not sourcetype:
         raise TypeError("Need to specify filename and type of source data to store [int(egrand)|(full)term]!")
     if sourcetype in ["int", "term"]:
         sarrname = "source" + sourcetype
