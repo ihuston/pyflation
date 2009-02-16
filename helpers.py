@@ -1,11 +1,12 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.10 2009/02/09 13:31:23 ith Exp $
+    $Id: helpers.py,v 1.11 2009/02/16 16:46:39 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import re
+from scipy import integrate
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
@@ -68,3 +69,34 @@ def removedups(l):
         if x not in retlist:
             retlist = N.append(retlist, x)
     return retlist
+
+def getintfunc(x):
+    """Return the correct function to integrate with.
+    
+    Checks the given set of values and returns either scipy.integrate.romb 
+    or scipy.integrate.simps. This depends on whether the number of values is a
+    power of 2 + 1 as required by romb.
+    
+    Parameters
+    ----------
+    x: array_like
+       Array of x values to check
+    
+    Returns
+    -------
+    intfunc: function object
+             Correct integration function depending on length of x.
+             
+    fnargs: dictionary
+            Dictionary of arguments to integration function.
+    """
+    if ispower2(len(x)-1):
+        intfunc = integrate.romb
+        fnargs = {}
+    elif len(x) > 0:
+        intfunc = integrate.simps
+        fnargs = {"x":x}
+    else:
+        raise ValueError("Cannot integrate length 0 array!")
+    return intfunc, fnargs
+    
