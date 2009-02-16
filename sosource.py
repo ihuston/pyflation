@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.41 2009/02/16 17:32:22 ith Exp $
+$Id: sosource.py,v 1.42 2009/02/16 17:56:38 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -109,17 +109,13 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     s: array_like
        Integrated source term calculated using srcfunc.
     """
-        #testing
-#     nixend = 10
+    #Unpack important arrays
     k, q, theta, klessq = integrand_elements
-    #Initialize variables to store result
-    lenmk = len(m.k)
-    s2shape = (lenmk, lenmk)
-    source_logger.debug("Shape of m.k is %s.", str(lenmk))
     
     #Copy of yresult
     myr = m.yresult[nix].copy()
-    if N.any(n < m.fotstart):
+    #Fill nans with initial conditions
+    if N.any(m.tresult[nix] < m.fotstart):
         #Get first order ICs:
         nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
         source_logger.debug("Left getfoystart. Filling nans...")
@@ -128,45 +124,33 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
         myr[are_nan] = nanfiller[are_nan]
         source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
-    #Get first order results (from file or variables)
-    bgvars = myr[0:3,:]
+    #Get first order results
     dphi1 = myr[3,:] + myr[4,:]*1j
     dphi1dot = myr[5,:] + myr[6,:]*1j
+    #Setup interpolation
+    dp1func = interpolate.interp1d(m.k, dphi1)
+    dp1dotfunc = interpolate.interp1d(m.k, dphi1dot)
+    
     source_logger.debug("Variables set. Getting potentials for this timestep...")
-    pottemp = m.potentials(myr)
+    potentials = list(m.potentials(myr))
     #Get potentials in right shape
-    potentials = []
-    for p in pottemp:
-        if N.shape(p) != N.shape(pottemp[0]):
-            potentials.append(p*N.ones_like(pottemp[0]))
-        else:
-            potentials.append(p)
+    for pix, p in enumerate(potentials):
+        if N.shape(p) != N.shape(potentials[0]):
+            potentials[pix] = p*N.ones_like(potentials[0])
     source_logger.debug("Potentials obtained. Setting a and making results array...")
     #Single time step
-    a = m.ainit*N.exp(n)
-    #Get k indices
-    kix = N.arange(lenmk)
-    qix = N.arange(lenmk)
-    #Check abs(qix-kix)-1 is not negative and get q-k variables
-    dphi1ix = N.abs(kix-qix[:, N.newaxis]) -1
-    dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
-    dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])
-    
-    fovars = (dphi1, dphi1dot, dp1diff, dp1dotdiff) #First order variables for src function                 
-    #temp k and q vars
-    k = m.k[kix]
-    q = m.k[qix]
-    
-                
+    a = m.ainit*N.exp(m.tresult[nix])
+                        
     #save results for each q
-    source_logger.debug("Integrating source term for this tstep...")
+    source_logger.debug("Calculating source term integrand for this tstep...")
     #Get unintegrated source term
-    s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape, intfunc)
+    s2 = srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc)
     
     #Get integration function
+    source_logger.debug("Integrating source term...")
     intfunc, intfnargs = helpers.getintfunc(m.k)
     #Do integration
-    s2int=intfunc(s2, **intfnargs)
+    s2int=intfunc(s2, **intfnargs) #Do theta and q integrations
     return s2int
                 
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129):
