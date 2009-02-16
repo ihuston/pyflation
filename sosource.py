@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.42 2009/02/16 17:56:38 ith Exp $
+$Id: sosource.py,v 1.43 2009/02/16 18:00:32 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -23,7 +23,7 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 #Start logging
 source_logger = logging.getLogger(__name__)
 
-def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
+def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc):
     """Return unintegrated slow roll source term.
     
     The source term before integration is calculated here using the slow roll
@@ -32,31 +32,27 @@ def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
     
     Parameters
     ----------
-    k: array_like
-       Array of mode numbers being calculated.
+    bgvars: tuple
+            Tuple of background field values in the form `(phi, phidot, H)`
     
-    q: array_like
-       Array of mode numbers which will be integrated over. 
-       (Should be the same as k, might remove later.)
-       
     a: float
        Scale factor at the current timestep, `a = ainit*exp(n)`
     
     potentials: tuple
                 Tuple of potential values in the form `(U, dU, dU2, dU3)`
-       
-    bgvars: tuple
-            Tuple of background field values in the form `(phi, phidot, H)`
+    
+    integrand_elements: tuple 
+         Contains integrand arrays in order (k, q, theta, klessq)
             
-    fovars: tuple
-            Tuple of first order field values in the form `(dphi1, dphi1dot, dp1diff, dp1dotdiff)`
-            
-    s2shape: tuple
-             Shape of the results array to return
+    dp1func: function object
+             Interpolation function for \delta\phi_1
+             
+    dp1dotfunc: function object
+             Interpolation function for \dot{\delta\phi_1}
              
     Returns
     -------
-    s2: array_like
+    src_integrand: array_like
         Array containing the unintegrated source terms for all k and q modes.
         
     References
@@ -80,7 +76,7 @@ def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
     #Multiply by prefactor
     s2 = s2 * (1/(2*N.pi**2))
     
-    return s2
+    return src_integrand
 
 def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     """Return the integrated source term at this timestep.
@@ -125,6 +121,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
         source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
     #Get first order results
+    bgvars = myr[0:3,:]
     dphi1 = myr[3,:] + myr[4,:]*1j
     dphi1dot = myr[5,:] + myr[6,:]*1j
     #Setup interpolation
