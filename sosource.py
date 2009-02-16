@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.45 2009/02/16 18:29:28 ith Exp $
+$Id: sosource.py,v 1.46 2009/02/16 18:31:55 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -135,10 +135,9 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     for pix, p in enumerate(potentials):
         if N.shape(p) != N.shape(potentials[0]):
             potentials[pix] = p*N.ones_like(potentials[0])
-    source_logger.debug("Potentials obtained. Setting a and making results array...")
     #Value of a for this time step
     a = m.ainit*N.exp(m.tresult[nix])
-    source_logger.debug("Calculating source term integrand for this tstep...")
+    source_logger.debug("Calculating source term integrand for this timestep...")
     #Get unintegrated source term
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc)
     #Get integration function
@@ -239,7 +238,7 @@ def opensourcefile(atomshape, k, filename=None, sourcetype=None):
         if not sarrname in resgrp:
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
             sarr = rf.createEArray(resgrp, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
-            karr = rf.createEArray(resgrp, "srck", tables.Float64Atom(), (0,), filters=filters)
+            karr = rf.createEArray(resgrp, "k", tables.Float64Atom(), (0,), filters=filters)
             karr.append(k)
         else:
             source_logger.debug("Source file and node exist. Testing source node shape...")
