@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.39 2009/02/16 16:52:50 ith Exp $
+$Id: sosource.py,v 1.40 2009/02/16 17:04:42 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -86,6 +86,76 @@ def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
     s2int=intfunc(
     return s2
 
+def calculatesource(m, nix, srcfunc=slowrollsrcterm):
+    """Return the integrated source term at this timestep.
+    
+    Given the first order model and the timestep calculate the 
+    integrated source term at this time step.
+    
+    Parameters
+    ----------
+    m: Cosmomodels.TwoStageModel
+       First order model to be used.
+       
+    nix: int
+         Index of current timestep in m.tresult
+         
+    srcfunc: function, optional
+             Funtion which contains expression for source integrand
+             Default is slowrollsrcterm in this module.        
+         
+    Returns
+    -------
+    s: array_like
+       Integrated source term calculated using srcfunc.
+    """
+    #Copy of yresult
+    myr = m.yresult[nix].copy()
+    if N.any(n < m.fotstart):
+        #Get first order ICs:
+        nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
+        source_logger.debug("Left getfoystart. Filling nans...")
+        #switch nans for ICs in m.yresult
+        are_nan = N.isnan(myr)
+        myr[are_nan] = nanfiller[are_nan]
+        source_logger.debug("NaNs filled. Setting dynamical variables...")
+                
+    #Get first order results (from file or variables)
+    bgvars = myr[0:3,:]
+    dphi1 = myr[3,:] + myr[4,:]*1j
+    dphi1dot = myr[5,:] + myr[6,:]*1j
+    source_logger.debug("Variables set. Getting potentials for this timestep...")
+    pottemp = m.potentials(myr)
+    #Get potentials in right shape
+    potentials = []
+    for p in pottemp:
+        if N.shape(p) != N.shape(pottemp[0]):
+            potentials.append(p*N.ones_like(pottemp[0]))
+        else:
+            potentials.append(p)
+    source_logger.debug("Potentials obtained. Setting a and making results array...")
+    #Single time step
+    a = m.ainit*N.exp(n)
+    #Get k indices
+    kix = N.arange(lenmk)
+    qix = N.arange(lenmk)
+    #Check abs(qix-kix)-1 is not negative and get q-k variables
+    dphi1ix = N.abs(kix-qix[:, N.newaxis]) -1
+    dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
+    dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])
+    
+    fovars = (dphi1, dphi1dot, dp1diff, dp1dotdiff) #First order variables for src function                 
+    #temp k and q vars
+    k = m.k[kix]
+    q = m.k[qix]
+    
+                
+    #save results for each q
+    source_logger.debug("Integrating source term for this tstep...")
+    #Get unintegrated source term
+    s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape, intfunc)
+    return s2
+                
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
     """Calculate and save integrated source term.
     
@@ -129,45 +199,8 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
             for nix, n in enumerate(m.tresult):    
                 if nix%1000 == 0:
                     source_logger.info("Starting n=%f, nix=%f sequence...", n, nix)
-                #Copy of yresult
-                myr = m.yresult[nix].copy()
-                if N.any(n < m.fotstart):
-                    #Get first order ICs:
-                    nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
-                    source_logger.debug("Left getfoystart. Filling nans...")
-                    #switch nans for ICs in m.yresult
-                    are_nan = N.isnan(myr)
-                    myr[are_nan] = nanfiller[are_nan]
-                    source_logger.debug("NaNs filled. Setting dynamical variables...")
                 
-                #Get first order results (from file or variables)
-                bgvars = myr[0:3,:]
-                dphi1 = myr[3,:] + myr[4,:]*1j
-                dphi1dot = myr[5,:] + myr[6,:]*1j
-                source_logger.debug("Variables set. Getting potentials for this timestep...")
-                pottemp = m.potentials(myr)
-                #Get potentials in right shape
-                potentials = []
-                for p in pottemp:
-                    if N.shape(p) != N.shape(pottemp[0]):
-                        potentials.append(p*N.ones_like(pottemp[0]))
-                    else:
-                        potentials.append(p)
-                source_logger.debug("Potentials obtained. Setting a and making results array...")
-                #Single time step
-                a = m.ainit*N.exp(n)
-                #Get k indices
-                kix = N.arange(lenmk)
-                qix = N.arange(lenmk)
-                #Check abs(qix-kix)-1 is not negative and get q-k variables
-                dphi1ix = N.abs(kix-qix[:, N.newaxis]) -1
-                dp1diff = N.where(dphi1ix < 0, 0, dphi1[dphi1ix])
-                dp1dotdiff = N.where(dphi1ix <0, 0, dphi1dot[dphi1ix])
                 
-                fovars = (dphi1, dphi1dot, dp1diff, dp1dotdiff) #First order variables for src function                 
-                #temp k and q vars
-                k = m.k[kix]
-                q = m.k[qix]
                 
                 #save results for each q
                 source_logger.debug("Integrating source term for this tstep...")
