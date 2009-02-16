@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.37 2009/02/09 13:36:02 ith Exp $
+$Id: sosource.py,v 1.38 2009/02/16 16:46:57 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -79,10 +79,14 @@ def slowrollsrcterm(k, q, a, potentials, bgvars, fovars, s2shape):
     s2 += (1/((a*H)**2) * (2.5*q**4 + 2*(k*q)**2) * phidot * dp1diff * dphi1)
     #Multiply by prefactor
     s2 = s2 * (1/(2*N.pi**2))
-       
+    
+    #Get integration function
+    intfunc, intfnargs = helpers.getintfunc(m.k)
+    #Do integration
+    s2int=intfunc(
     return s2
 
-def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrcterm):
+def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -96,12 +100,6 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
     
     savefile: String, optional
               Filename where results should be saved.
-    
-    intmethod: {"romb", "simps"}
-               Two different integration methods to perform convolution integral with. If neither is
-               specified the length of the `k` array is checked to see whether the preferred choice
-               of romberg integration is possible. Integration methods are `numpy.integrate.romb` and
-               `numpy.integrate.simps`.
     
     srcfunc: function, optional
              Function which returns unintegrated source term. Defaults to slowrollsrcterm in this module.
@@ -131,28 +129,6 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
     try:
         sf, sarr = opensourcefile(savefile, atomshape, sourcetype="term")
         try:
-            #Choose integration method
-            if intmethod is None:
-                try:
-                    if all(N.diff(m.k) == m.k[1]-m.k[0]) and helpers.ispower2(len(m.k)-1):
-                        intmethod = "romb"
-                    else:
-                        intmethod = "simps"
-                except IndexError:
-                        raise IndexError("Need more than one k to calculate integral!")
-            #Now proceed with integration
-            if intmethod is "romb":
-                if not helpers.ispower2(len(m.k)-1):
-                    raise AttributeError("Need to have 2**n + 1 different k values for integration.")
-                intfunc = integrate.romb
-                fnargs = []
-            elif intmethod is "simps":
-                intfunc = integrate.simps
-                fnargs = [m.k]
-            else:
-                raise ValueError("Need to specify correct integration method!")
-            #Log integration method
-            source_logger.debug("Integration method chosen is %s.", intmethod)
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
@@ -200,12 +176,11 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
                 k = m.k[kix]
                 q = m.k[qix]
                 
-                #Get unintegrated source term
-                s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape)
-                
                 #save results for each q
                 source_logger.debug("Integrating source term for this tstep...")
-                sarr.append(intfunc(s2, *fnargs)[N.newaxis,:])
+                #Get unintegrated source term
+                s2 = srcfunc(k, q, a, potentials, bgvars, fovars, s2shape, intfunc)
+                sarr.append(s2[N.newaxis,:])
                 source_logger.debug("Results for this tstep saved.")
         finally:
             #source = N.array(source)
@@ -213,7 +188,7 @@ def getsourceandintegrate(m, savefile=None, intmethod=None, srcfunc=slowrollsrct
     except IOError:
         raise
     return savefile
- 
+
 def opensourcefile(filename, atomshape, sourcetype=None):
     """Open the source term hdf5 file with filename."""
     if not filename or not sourcetype:
