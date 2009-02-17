@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.46 2009/02/16 18:31:55 ith Exp $
+$Id: sosource.py,v 1.47 2009/02/17 15:30:16 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -23,6 +23,10 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 #Start logging
 source_logger = logging.getLogger(__name__)
 
+def klessq(k, q, theta):
+    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors."""
+    return sqrt(k**2+q**2-2*k*q*cos(theta))
+    
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc):
     """Return unintegrated slow roll source term.
     
