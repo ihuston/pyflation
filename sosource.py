@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.48 2009/02/17 15:33:39 ith Exp $
+$Id: sosource.py,v 1.49 2009/02/17 18:08:28 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -17,6 +17,10 @@ import logging
 import time
 import os
 
+#psyco
+import psyco
+psyco.full()
+
 #This is the results directory which will be used if no filenames are specified
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 
@@ -24,9 +28,69 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 source_logger = logging.getLogger(__name__)
 
 def klessq(k, q, theta):
-    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors."""
-    return sqrt(k**2+q**2-2*k*q*cos(theta))
+    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
+    Parameters
+    ----------
+    k: float
+       Single k value to compute array for.
+    
+    q: array_like
+       1-d array of q values to use
+     
+    theta: array_like
+           1-d array of theta values to use
+           
+    Returns
+    -------
+    klessq: array_like
+            len(q)*len(theta) array of values for
+            |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
+    """
+    return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
+
+def getthetaterms(integrand_elements, dp1func, dp1dotfunc):
+    """Return array of integrated values for specified theta function and dphi function.
+    
+    Parameters
+    ----------
+    integrand_elements: tuple
+            Contains integrand arrays in order (k, q, theta)
+             
+    dp1func: function object
+             Function of klessq for dphi1 e.g. interpolated function of dphi1 results.
+    
+    dp1dotfunc: function object
+             Function of klessq for dphi1dot e.g. interpolated function of dphi1dot results.
+                                  
+    Returns
+    -------
+    theta_terms: tuple
+                 Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                 (\int(sin(theta) dp1(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                  \int(sin(theta) dp1dot(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                 
+    """
+    k, q, theta = integrand_elements
+    dtheta = theta[1]-theta[0]
+    sinth = N.sin(theta)
+    cossinth = N.cos(theta)*N.sin(theta)
+    aterm, bterm, cterm, dterm = [],[],[],[] #Results lists
+    for onek in k:
+        klq = klessq(onek, q, theta)
+        dphi_klq = dp1func(klq)
+        dphidot_klq = dp1dotfunc(klq)
+        aterm.append(integrate.romb(sinth*dphi_klq, dtheta))
+        bterm.append(integrate.romb(cossinth*dphi_klq, dtheta))
+        cterm.append(integrate.romb(sinth*dphidot_klq, dtheta))
+        dterm.append(integrate.romb(cossinth*dphidot_klq, dtheta))
+    theta_terms = N.array(aterm), N.array(bterm), N.array(cterm), N.array(dterm)
+    return theta_terms     
+   
+    
+        
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc):
     """Return unintegrated slow roll source term.
     
@@ -46,7 +110,7 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfu
                 Tuple of potential values in the form `(U, dU, dU2, dU3)`
     
     integrand_elements: tuple 
-         Contains integrand arrays in order (k, q, theta, klessq)
+         Contains integrand arrays in order (k, q, theta)
             
     dp1func: function object
              Interpolation function for \delta\phi_1
@@ -149,8 +213,8 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     theta_intfn, theta_intfnargs = helpers.getintfunc(theta[0,0,:])
     q_intfn, q_intfnargs = helpers.getintfunc(q[0,:,0])
     #Do integrations
-    s2=theta_intfn(src_integrand, **theta_intfnargs, axis=-1) #Do theta integration
-    s3=q_intfn(s2, **q_intfnargs, axis=-1) #Do q integration
+#     s2=theta_intfn(src_integrand, **theta_intfnargs, axis=-1) #Do theta integration
+#     s3=q_intfn(s2, **q_intfnargs, axis=-1) #Do q integration
     source_logger.debug("Integration successful!")
     return s3
                 
