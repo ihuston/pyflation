@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.47 2009/02/17 15:30:16 ith Exp $
+$Id: sosource.py,v 1.48 2009/02/17 15:33:39 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -101,7 +101,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
      
     integrand_elements: tuple
          Contains integrand arrays in order
-         integrand_elements = (k, q, theta, klessq)
+         integrand_elements = (k, q, theta)
          
     srcfunc: function, optional
              Funtion which contains expression for source integrand
@@ -113,7 +113,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
        Integrated source term calculated using srcfunc.
     """
     #Unpack important arrays
-    k, q, theta, klessq = integrand_elements
+    k, q, theta = integrand_elements
     
     #Copy of yresult
     myr = m.yresult[nix].copy()
@@ -171,7 +171,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
     
     srcfunc: function, optional
              Function which returns unintegrated source term. Defaults to slowrollsrcterm in this module.
-             Function signature is `srcfunc(k, q, a, potentials, bgvars, fovars, s2shape)`.
+             Function signature is `srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc)`.
                
     Returns
     -------
@@ -179,14 +179,11 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
               Filename where results have been saved.
     """
     #Initialize variables for all timesteps
-    halfk = m.k[:len(m.k)/2] #Need N=len(m.k)/2 for case when q=-k
-    k = halfk[...,newaxis,newaxis]
-    q = halfk[newaxis,...,newaxis]
-    theta = N.linspace(0, N.pi, ntheta)[newaxis,newaxis,...]
-    #Main array of k^i - q^i values
-    klessq=sqrt(k**2+q**2-2*k*q*cos(theta2))
+    k = q = m.k[:len(m.k)/2] #Need N=len(m.k)/2 for case when q=-k
+    theta = N.linspace(0, N.pi, ntheta)
+   
     #Pack together in tuple
-    integrand_elements = (k, q, theta, klessq)
+    integrand_elements = (k, q, theta)
     
     #Main try block for file IO
     try:
