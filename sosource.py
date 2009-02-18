@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.51 2009/02/18 15:25:43 ith Exp $
+$Id: sosource.py,v 1.52 2009/02/18 18:37:09 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -11,7 +11,7 @@ order models.
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import tables
 import numpy as N
-from scipy import integrate
+from scipy import integrate, interpolate
 import helpers
 import logging
 import time
@@ -136,25 +136,29 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfu
     #Unpack variables
     phi, phidot, H = bgvars
     U, dU, dU2, dU3 = potentials
-    k, q, theta = integrand_elements
+    k = integrand_elements[0][...,N.newaxis]
+    q = integrand_elements[1][N.newaxis, ...]
     #Calculate dphi(q) and dphi(k-q)
-    dp1_q = dp1func(q)
-    dp1dot_q = dp1dotfunc(q)
+    dp1_q = dp1func(q)[N.newaxis,...]
+    dp1dot_q = dp1dotfunc(q)[N.newaxis,...]
     aterm, bterm, cterm, dterm = theta_terms
-                
+    
     #Calculate unintegrated source term
     #First major term:
-    s2 = ((1/H**2) * (dU3 + 3*phidot*dU2) * q**2*dp1diff*dphi1)
+    if dU3!=0.0:
+        src_integrand = ((1/H**2) * dU3 * q**2 * dp1_q * aterm)
+    else:
+        src_integrand = N.zeros_like(aterm)
     #Second major term:
-    s2 += ((-1.5*q**2) * phidot * dp1dotdiff * dphi1dot)
+    src_integrand += (phidot/((a*H)**2)) * ((3*dU2*(a*q)**2 + 3.5*q**4 + 2*(k**2)*(q**2))*aterm 
+                      + (-4.5 + (q/k)**2)* k * (q**3) * bterm) * dp1_q
     #Third major term:
-    s2 += (1/((a*H)**2) * (2.5*q**4 + 2*(k*q)**2) * phidot * dp1diff * dphi1)
+    src_integrand += (phidot * ((-1.5*q**2)*cterm + (2 - (q/k)**2)*dterm) * dp1dot_q)
     #Multiply by prefactor
-    s2 = s2 * (1/(2*N.pi**2))
+    src_integrand *= (1/(2*N.pi)**2)
     
     return src_integrand
 
-@psyco.proxy
 def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     """Return the integrated source term at this timestep.
     
@@ -194,7 +198,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
         myr[are_nan] = nanfiller[are_nan]
         source_logger.debug("NaNs filled. Setting dynamical variables...")
     #Get first order results
-    bgvars = myr[0:3,:]
+    bgvars = myr[0:3,0]
     dphi1 = myr[3,:] + myr[4,:]*1j
     dphi1dot = myr[5,:] + myr[6,:]*1j
     #Setup interpolation
@@ -205,8 +209,8 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
-        if N.shape(p) != N.shape(potentials[0]):
-            potentials[pix] = p*N.ones_like(potentials[0])
+        if N.shape(p) != N.shape(potentials[3]):
+            potentials[pix] = p[0]
     #Value of a for this time step
     a = m.ainit*N.exp(m.tresult[nix])
     source_logger.debug("Calculating source term integrand for this timestep...")
@@ -215,13 +219,9 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc, theta_terms)
     #Get integration function
     source_logger.debug("Integrating source term...")
-#     theta_intfn, theta_intfnargs = helpers.getintfunc(theta[0,0,:])
-#     q_intfn, q_intfnargs = helpers.getintfunc(q[0,:,0])
-#     #Do integrations
-# #     s2=theta_intfn(src_integrand, **theta_intfnargs, axis=-1) #Do theta integration
-# #     s3=q_intfn(s2, **q_intfnargs, axis=-1) #Do q integration
+    src = integrate.romb(src_integrand, dx=m.k[0])
     source_logger.debug("Integration successful!")
-    return s3
+    return src
                 
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129):
     """Calculate and save integrated source term.
@@ -247,8 +247,11 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
     savefile: String
               Filename where results have been saved.
     """
+    #Debug
+    n0 = 1500
+    n1 = 1800
     #Initialize variables for all timesteps
-    k = q = m.k[:len(m.k)/2] #Need N=len(m.k)/2 for case when q=-k
+    k = q = m.k[:513] #Need N=len(m.k)/2 for case when q=-k
     theta = N.linspace(0, N.pi, ntheta)
    
     #Pack together in tuple
@@ -256,19 +259,19 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
     
     #Main try block for file IO
     try:
-        sf, sarr = opensourcefile(atomshape, halfk, savefile, sourcetype="term")
+        sf, sarr = opensourcefile(k, savefile, sourcetype="term")
         try:
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
-            for nix in xrange(len(m.tresult)):    
+            for nix in xrange(n0, n1+1):    
                 if nix%1000 == 0:
                     source_logger.info("Starting n=%f, nix=%d sequence...", m.tresult[nix], nix)
                 #Only run calculation if one of the modes has started.
                 if any(m.tresult[nix+2] >= m.fotstart):
                     src = calculatesource(m, nix, integrand_elements, srcfunc)
                 else:
-                    src = N.nan*N.ones_like(m.k)
+                    src = N.nan*N.ones_like(k)
                 sarr.append(src[N.newaxis,:])
                 source_logger.debug("Results for this timestep saved.")
         finally:
@@ -278,7 +281,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
         raise
     return savefile
 
-def opensourcefile(atomshape, k, filename=None, sourcetype=None):
+def opensourcefile(k, filename=None, sourcetype=None):
     """Open the source term hdf5 file with filename."""
     #Set up file for results
     if not filename or not os.path.isdir(os.path.dirname(filename)):
