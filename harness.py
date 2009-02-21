@@ -189,7 +189,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
     #get source integrand and save to file
     try:
         ensureresultspath(sourcefile)
-        filesaved = sosource.getsourceandintegrate(m, sourcefile, intmethod="romb")
+        filesaved = sosource.getsourceandintegrate(m, sourcefile)
         harness_logger.info("Source term saved as " + filesaved)
     except Exception:
         harness_logger.exception("Error getting source term.")
