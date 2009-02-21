@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.52 2009/02/18 18:37:09 ith Exp $
+$Id: sosource.py,v 1.53 2009/02/21 18:49:13 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -16,6 +16,7 @@ import helpers
 import logging
 import time
 import os
+import srccython
 
 #psyco
 import psyco
@@ -50,7 +51,7 @@ def klessq(k, q, theta):
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
 @psyco.proxy
-def getthetaterms(integrand_elements, dp1func, dp1dotfunc):
+def getthetaterms(integrand_elements, dp1, dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
     Parameters
@@ -58,11 +59,11 @@ def getthetaterms(integrand_elements, dp1func, dp1dotfunc):
     integrand_elements: tuple
             Contains integrand arrays in order (k, q, theta)
              
-    dp1func: function object
-             Function of klessq for dphi1 e.g. interpolated function of dphi1 results.
+    dp1: array_like
+         Array of values for dphi1
     
-    dp1dotfunc: function object
-             Function of klessq for dphi1dot e.g. interpolated function of dphi1dot results.
+    dp1dot: array_like
+            Array of values for dphi1dot
                                   
     Returns
     -------
@@ -76,25 +77,27 @@ def getthetaterms(integrand_elements, dp1func, dp1dotfunc):
     """
     k, q, theta = integrand_elements
     dpshape = [q.shape[0], theta.shape[0]]
+    dpnew = N.array([dp1.real, dp1.imag])
+    dpdnew = N.array([dp1dot.real, dp1dot.imag])
     dtheta = theta[1]-theta[0]
     sinth = N.sin(theta)
     cossinth = N.cos(theta)*N.sin(theta)
-    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
+    theta_terms = N.empty([4, 2, k.shape[0], q.shape[0]])
     for n, onek in enumerate(k):
         klq = klessq(onek, q, theta)
-        dphi_klq = N.empty(dpshape)
-        dphidot_klq = N.empty(dpshape)
-        for r in xrange(len(q)):
-            oklq = klq[r]
-            dphi_klq[r] = dp1func(oklq)
-            dphidot_klq[r] = dp1dotfunc(oklq)
-        theta_terms[0,n] = integrate.romb(sinth*dphi_klq, dx=dtheta)
-        theta_terms[1,n] = integrate.romb(cossinth*dphi_klq, dx=dtheta)
-        theta_terms[2,n] = integrate.romb(sinth*dphidot_klq, dx=dtheta)
-        theta_terms[3,n] = integrate.romb(cossinth*dphidot_klq, dx=dtheta)
+        #dphi_tgther, dphidot_tgther = N.empty((2,2,q.shape[0],theta.shape[0]))
+        dphi_tgther, dphidot_tgther = srccython.interpdps(dpnew, dpdnew, k[0], klq)
+        #dphi_klq = dphi_tgther[0] + dphi_tgther[1]*1j
+        #dphidot_klq = dphidot_tgther[0] + dphidot_tgther[1]*1j
+        for z in range(2):
+            theta_terms[0,z,n] = integrate.romb(sinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[1,z,n] = integrate.romb(cossinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[2,z,n] = integrate.romb(sinth*dphidot_tgther[z], dx=dtheta)
+            theta_terms[3,z,n] = integrate.romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
         
-def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc, theta_terms):
+@psyco.proxy
+def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
     """Return unintegrated slow roll source term.
     
     The source term before integration is calculated here using the slow roll
@@ -115,11 +118,11 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfu
     integrand_elements: tuple 
          Contains integrand arrays in order (k, q, theta)
             
-    dp1func: function object
-             Interpolation function for \delta\phi_1
+    dp1: array_like
+         Array of known dp1 values
              
-    dp1dotfunc: function object
-             Interpolation function for \dot{\delta\phi_1}
+    dp1dot: array_like
+            Array of dpdot1 values
              
     theta_terms: array_like
                  3-d array of integrated theta terms of shape (4, len(k), len(q))
@@ -139,9 +142,13 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfu
     k = integrand_elements[0][...,N.newaxis]
     q = integrand_elements[1][N.newaxis, ...]
     #Calculate dphi(q) and dphi(k-q)
-    dp1_q = dp1func(q)[N.newaxis,...]
-    dp1dot_q = dp1dotfunc(q)[N.newaxis,...]
-    aterm, bterm, cterm, dterm = theta_terms
+    dp1_q = dp1[N.newaxis,:q.shape[-1]]
+    dp1dot_q = dp1dot[N.newaxis,q.shape[-1]]
+    atmp, btmp, ctmp, dtmp = theta_terms
+    aterm = atmp[0] + atmp[1]*1j
+    bterm = btmp[0] + btmp[1]*1j
+    cterm = ctmp[0] + ctmp[1]*1j
+    dterm = dtmp[0] + dtmp[1]*1j
     
     #Calculate unintegrated source term
     #First major term:
@@ -202,9 +209,6 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     dphi1 = myr[3,:] + myr[4,:]*1j
     dphi1dot = myr[5,:] + myr[6,:]*1j
     #Setup interpolation
-    source_logger.debug("Setting up interpolation functions...")
-    dp1func = interpolate.UnivariateSpline(m.k, dphi1, k=1)
-    dp1dotfunc = interpolate.UnivariateSpline(m.k, dphi1dot, k=1)
     source_logger.debug("Variables set. Getting potentials for this timestep...")
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
@@ -214,16 +218,16 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     #Value of a for this time step
     a = m.ainit*N.exp(m.tresult[nix])
     source_logger.debug("Calculating source term integrand for this timestep...")
-    theta_terms = getthetaterms(integrand_elements, dp1func, dp1dotfunc)
+    theta_terms = getthetaterms(integrand_elements, dphi1, dphi1dot)
     #Get unintegrated source term
-    src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc, theta_terms)
+    src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot, theta_terms)
     #Get integration function
     source_logger.debug("Integrating source term...")
     src = integrate.romb(src_integrand, dx=m.k[0])
     source_logger.debug("Integration successful!")
     return src
                 
-def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129):
+def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=129):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -247,11 +251,14 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
     savefile: String
               Filename where results have been saved.
     """
-    #Debug
-    n0 = 1500
-    n1 = 1800
+    #Check time limits
+    if ninit < 0:
+        ninit = 0
+    if nfinal > m.tresult.shape[0] or nfinal == -1:
+        nfinal = m.tresult.shape[0]
+    
     #Initialize variables for all timesteps
-    k = q = m.k[:513] #Need N=len(m.k)/2 for case when q=-k
+    k = q = m.k[:m.k.shape[0]//2] #Need N=len(m.k)/2 for case when q=-k
     theta = N.linspace(0, N.pi, ntheta)
    
     #Pack together in tuple
@@ -264,8 +271,8 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ntheta=129)
             # Begin calculation
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
-            for nix in xrange(n0, n1+1):    
-                if nix%1000 == 0:
+            for nix in xrange(ninit, nfinal):    
+                if nix%100 == 0:
                     source_logger.info("Starting n=%f, nix=%d sequence...", m.tresult[nix], nix)
                 #Only run calculation if one of the modes has started.
                 if any(m.tresult[nix+2] >= m.fotstart):
