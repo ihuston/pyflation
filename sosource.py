@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.54 2009/02/23 14:29:54 ith Exp $
+$Id: sosource.py,v 1.55 2009/02/24 13:44:00 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -282,6 +282,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
                 else:
                     src = N.nan*N.ones_like(k)
                 sarr.append(src[N.newaxis,:])
+                sarr.append(nix)
                 source_logger.debug("Results for this timestep saved.")
         finally:
             #source = N.array(source)
@@ -321,12 +322,14 @@ def opensourcefile(k, filename=None, sourcetype=None):
             source_logger.debug("Creating array '" + sarrname + "' in source file.")
             sarr = rf.createEArray(resgrp, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
             karr = rf.createEArray(resgrp, "k", tables.Float64Atom(), (0,), filters=filters)
+            narr = rf.createEArray(resgrp, "nix", tables.IntAtom(), (0,), filter=filters)
             karr.append(k)
         else:
             source_logger.debug("Source file and node exist. Testing source node shape...")
             sarr = rf.getNode(resgrp, sarrname)
+            narr = rf.getNode(resgrp, "nix")
             if sarr.shape[1:] != atomshape[1:]:
                 raise ValueError("Source node on file is not correct shape!")
     except IOError:
         raise
-    return rf, sarr
+    return rf, sarr, narr
