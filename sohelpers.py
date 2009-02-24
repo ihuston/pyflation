@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.5 2009/01/29 19:16:41 ith Exp $
+    $Id: sohelpers.py,v 1.6 2009/02/24 15:38:57 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -12,11 +12,15 @@ import os.path
 
 _log = logging.getLogger(__name__)
 
-def copy_source_to_fofile(sourcefile, fofile):
+def combine_source_and_fofile(sourcefile, fofile, newfile=None):
     """Copy source term to first order file in preparation for second order run."""
+    if not newfile or not os.path.isdir(os.path.dirname(newfile)):
+        newfile = sourcefile.replace("src", "foandsrc")
+        source_logger.info("Saving combined source and first order results in file %s.", newfile)
     try:
         sf = tables.openFile(sourcefile, "r")
-        ff = tables.openFile(fofile, "a")
+        ff = tables.openFile(fofile, "r")
+        nf = tables.openFile(newfile, "a")
     except IOError:
         _log.exception("Source or first order files not found!")
         raise
@@ -24,15 +28,28 @@ def copy_source_to_fofile(sourcefile, fofile):
     try:
         try:
             sterm = sf.root.results.sourceterm
+            srck = sf.root.results.k
+            srcnix = sf.root.results.nix
         except NoSuchNodeError:
-            _log.exception("Source term not found in file!")
+            _log.exception("Source term file not in correct format!")
             raise
         fres = ff.root.results
-        ff.copyNode(sterm, fres)
-        _log.info("Source term successfully copied to first order file %s.", fofile)
+        nres = nf.copyNode(ff.root.results, nf.root)
+        #Check that all time steps are calculated
+        if len(fres.tresult) != len(srcnix):
+            raise ValueError("Not all timesteps have had source term calculated!")
+        #Copy first order results
+        yres = fres.yresult.copy(nres, stop=len(srck))
+        #Copy source term
+        nf.copyNode(sterm, nres)
+        #Copy source k range
+        nf.copyNode(srck, nres)
+        _log.info("Source term successfully copied to new file %s.", newfile)
     finally:
         sf.close()
         ff.close()
+        nf.close()
+    return newfile
         
 def combine_results(fofile, sofile, newfile=None):
     """Combine the first and second order results from given files, and save in newfile."""
