@@ -5,11 +5,12 @@ import tables
 import numpy as np
 import os
 import logging
+import logging.handlers
 from hconfig import *
 
 def startlogging():
     """Start the logging system to store rotational log based on date."""
-    harness_logger.setLevel(LOGLEVEL)
+    logger.setLevel(LOGLEVEL)
     #Get date for logfile
     date = time.strftime("%Y%m%d")
     #create file handler and set level to debug
@@ -25,10 +26,10 @@ def startlogging():
     #add formatter to ch
     ch.setFormatter(formatter)
     #add fh to logger
-    harness_logger.addHandler(fh)
+    logger.addHandler(fh)
     #add ch to logger
-    harness_logger.addHandler(ch)
-    harness_logger.debug("Logging started.")
+    logger.addHandler(ch)
+    logger.debug("Logging started.")
     
 def mergefiles(newfile=None, dirname=None):
     """Merge sourceterms in `dirname` into one file `newfile`
@@ -95,6 +96,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.handlers = []
     startlogging()
+    mergefiles()
 else:
     logger = logging.getLogger(__name__)
     
