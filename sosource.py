@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.56 2009/02/24 14:39:29 ith Exp $
+$Id: sosource.py,v 1.57 2009/02/25 14:24:51 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -96,7 +96,7 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
             theta_terms[3,z,n] = integrate.romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
         
-@psyco.proxy
+# @psyco.proxy
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
     """Return unintegrated slow roll source term.
     
@@ -157,11 +157,12 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
     else:
         src_integrand = N.zeros_like(aterm)
     #Second major term:
-    src_integrand += (phidot/((a*H)**2)) * ((3*dU2*(a*q)**2 + 3.5*q**4 + 2*(k**2)*(q**2))*aterm 
+    src_integrand2 = (phidot/((a*H)**2)) * ((3*dU2*(a*q)**2 + 3.5*q**4 + 2*(k**2)*(q**2))*aterm 
                       + (-4.5 + (q/k)**2)* k * (q**3) * bterm) * dp1_q
     #Third major term:
-    src_integrand += (phidot * ((-1.5*q**2)*cterm + (2 - (q/k)**2)*dterm) * dp1dot_q)
+    src_integrand3 = (phidot * ((-1.5*q**2)*cterm + (2 - (q/k)**2)*k*q*dterm) * dp1dot_q)
     #Multiply by prefactor
+    src_integrand = src_integrand + src_integrand2 + src_integrand3
     src_integrand *= (1/(2*N.pi)**2)
     
     return src_integrand
