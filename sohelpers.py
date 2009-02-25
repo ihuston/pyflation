@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.6 2009/02/24 15:38:57 ith Exp $
+    $Id: sohelpers.py,v 1.7 2009/02/25 12:09:36 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -13,10 +13,29 @@ import os.path
 _log = logging.getLogger(__name__)
 
 def combine_source_and_fofile(sourcefile, fofile, newfile=None):
-    """Copy source term to first order file in preparation for second order run."""
+    """Copy source term to first order file in preparation for second order run.
+    
+    Parameters
+    ----------
+    sourcefile: String
+                Full path and filename of source file.
+                
+    fofile: String
+            Full path and filename of first order results file.
+            
+    newfile: String, optional
+             Full path and filename of combined file to be created.
+             Default is to place the new file in the same directory as the source
+             file with the filename having "src" replaced by "foandsrc".
+             
+    Returns
+    -------
+    newfile: String
+             Full path and filename of saved combined results file.
+    """
     if not newfile or not os.path.isdir(os.path.dirname(newfile)):
         newfile = sourcefile.replace("src", "foandsrc")
-        source_logger.info("Saving combined source and first order results in file %s.", newfile)
+        _log.info("Saving combined source and first order results in file %s.", newfile)
     try:
         sf = tables.openFile(sourcefile, "r")
         ff = tables.openFile(fofile, "r")
@@ -30,7 +49,7 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
             sterm = sf.root.results.sourceterm
             srck = sf.root.results.k
             srcnix = sf.root.results.nix
-        except NoSuchNodeError:
+        except tables.NoSuchNodeError:
             _log.exception("Source term file not in correct format!")
             raise
         fres = ff.root.results
@@ -39,7 +58,13 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
         if len(fres.tresult) != len(srcnix):
             raise ValueError("Not all timesteps have had source term calculated!")
         #Copy first order results
-        yres = fres.yresult.copy(nres, stop=len(srck))
+        numks = len(srck)
+        yres = fres.yresult.copy(nres, stop=numks)
+        tres = fres.tresult.copy(nres)
+        tstart = fres.fotstart.copy(nres, stop=numks)
+        ystart = fres.foystart.copy(nres, stop=numks)
+        params = fres.parameters.copy(nres)
+        bgres = nf.copyNode(ff.root.bgresults, nf.root, recursive=True)
         #Copy source term
         nf.copyNode(sterm, nres)
         #Copy source k range
@@ -119,11 +144,4 @@ def combine_results(fofile, sofile, newfile=None):
     #Successful execution
     _log.debug("First and second order files successfully combined in %s.", newfile)
     return newfile
-    
-    
-    
-       
-        
-        
-                    
     
