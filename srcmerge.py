@@ -7,6 +7,7 @@ import os
 import logging
 import logging.handlers
 from hconfig import *
+import time
 
 def startlogging():
     """Start the logging system to store rotational log based on date."""
@@ -50,7 +51,8 @@ def mergefiles(newfile=None, dirname=None):
     if not dirname:
         dirname = os.getcwd()
     if not newfile or not os.path.isdir(os.path.dirname(newfile)) or os.path.isfile(newfile):
-        newfile = "".join([dirname, os.path.sep, "src-combined.hf5"]) 
+        now = time.strftime("%Y%m%d%H%M")
+        newfile = "".join([dirname, os.path.sep, "src-combined-", now, ".hf5"]) 
     filenames = [f for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f)) and os.path.splitext(f)[1] == ".hf5" and "src" in f[:3]]
     try:
         #Open all hf5 files in directory
