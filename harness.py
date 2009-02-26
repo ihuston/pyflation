@@ -16,14 +16,6 @@ import sohelpers
 import os
 from hconfig import *
 
-
-#Get root logger
-if __name__ == "__main__":
-    harness_logger = logging.getLogger()
-    harness_logger.handlers = []
-else:
-    harness_logger = logging.getLogger(__name__)
-
 def startlogging():
     """Start the logging system to store rotational log based on date."""
 
@@ -224,8 +216,8 @@ def main(args):
     startlogging()
     
     #Set up arguments
-    shortargs = "hf:msta"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all"]
+    shortargs = "hf:mstad"
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug"]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -246,6 +238,8 @@ def main(args):
             func = "source"
         elif opt in ("-a", "--all"):
             func = "all"
+        elif opt in ("-d", "--debug"):
+            LOGLEVEL = logging.DEBUG
 
     if func == "fomodel":
         try:
@@ -275,4 +269,8 @@ def main(args):
             harness_logger.exception("Error doing full run!")
         
 if __name__ == "__main__":
+    harness_logger = logging.getLogger()
+    harness_logger.handlers = []
     main(sys.argv[1:])
+else:
+    harness_logger = logging.getLogger(__name__)
