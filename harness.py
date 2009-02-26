@@ -94,6 +94,7 @@ def runfomodel(filename=None, foargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
+        kinit, kend, deltak = model.k[0], model.k[-1], model.k[1]-model.k[0]
         filename = RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
@@ -154,6 +155,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
+        kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
         filename = RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
@@ -217,7 +219,7 @@ def main(args):
     
     #Set up arguments
     shortargs = "hf:mstad"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug"]
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -240,6 +242,12 @@ def main(args):
             func = "all"
         elif opt in ("-d", "--debug"):
             LOGLEVEL = logging.DEBUG
+        elif opt in ("--kinit",):
+            kinit = float(arg)
+        elif opt in ("--kend",):
+            kend = float(arg)
+        elif opt in ("--deltak",):
+            deltak = float(arg)
 
     if func == "fomodel":
         try:
@@ -248,6 +256,7 @@ def main(args):
         except AttributeError:
             filename = None 
         #start model run
+        FOARGS["k"] = stb.seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=FOARGS)
     elif func == "somodel":
         try:
