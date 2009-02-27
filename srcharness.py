@@ -109,8 +109,8 @@ def main(args):
     startlogging()
     
     #Set up arguments
-    shortargs = "hf:tb:e:"
-    longargs = ["help", "filename=", "source", "begin=", "end="]
+    shortargs = "hf:tpb:e:"
+    longargs = ["help", "filename=", "source", "parallel", "begin=", "end="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -128,6 +128,8 @@ def main(args):
             filename = arg
         elif opt in ("-t", "--source"):
             func = "source"
+        elif opt in ("-p", "--parallel"):
+            func = "parallel"
         elif opt in ("-b", "--begin"):
             ninit = int(arg)
         elif opt in ("-e", "--end"):
@@ -137,6 +139,11 @@ def main(args):
             runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
         except Exception:
             harness_logger.exception("Error getting source integral!")
+    elif func == "parallel":
+        try:
+            runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+        except Exception:
+            harness_logger.exception("Error getting source integral in parallel!")
     else:
         print __doc__
         sys.exit()
