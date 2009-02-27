@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.57 2009/02/25 14:24:51 ith Exp $
+$Id: sosource.py,v 1.58 2009/02/27 15:08:41 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -85,10 +85,7 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
     theta_terms = N.empty([4, 2, k.shape[0], q.shape[0]])
     for n, onek in enumerate(k):
         klq = klessq(onek, q, theta)
-        #dphi_tgther, dphidot_tgther = N.empty((2,2,q.shape[0],theta.shape[0]))
-        dphi_tgther, dphidot_tgther = srccython.interpdps(dpnew, dpdnew, k[0], klq)
-        #dphi_klq = dphi_tgther[0] + dphi_tgther[1]*1j
-        #dphidot_klq = dphidot_tgther[0] + dphidot_tgther[1]*1j
+        dphi_tgther, dphidot_tgther = srccython.interpdps(dpnew, dpdnew, k[0], k[1]-k[0], klq)
         for z in range(2):
             theta_terms[0,z,n] = integrate.romb(sinth*dphi_tgther[z], dx=dtheta)
             theta_terms[1,z,n] = integrate.romb(cossinth*dphi_tgther[z], dx=dtheta)
