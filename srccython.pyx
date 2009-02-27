@@ -1,9 +1,8 @@
 """srccython.pyx Second order source helper module for cython.
 Author: Ian Huston
 
-Provides the method getsourceandintegrate which uses an instance of a first
-order class from cosmomodels to calculate the source term required for second
-order models.
+$Id: srccython.pyx,v 1.2 2009/02/27 17:45:21 ith Exp $
+Provides the method interpdps which interpolates results in dp1 and dpdot1.
 
 """
 
