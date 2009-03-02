@@ -49,7 +49,7 @@ def ensureresultspath(path):
         except OSError:
             harness_logger.error("Error creating results directory!")
     
-def runfomodel(filename=None, foargs=None):
+def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     """Execute a FOCanonicalTwoStage model and save results.
     
     A new instance of FOCanonicalTwoStage is created, with the specified arguments.
