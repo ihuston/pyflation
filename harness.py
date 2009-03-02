@@ -14,17 +14,17 @@ import sosource
 import getopt
 import sohelpers
 import os
-from hconfig import *
+import hconfig 
 
 def startlogging():
     """Start the logging system to store rotational log based on date."""
 
-    harness_logger.setLevel(LOGLEVEL)
+    harness_logger.setLevel(hconfig.LOGLEVEL)
     #Get date for logfile
     date = time.strftime("%Y%m%d")
     #create file handler and set level to debug
-    fh = logging.handlers.RotatingFileHandler(filename=LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
-    fh.setLevel(LOGLEVEL)
+    fh = logging.handlers.RotatingFileHandler(filename=hconfig.LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
+    fh.setLevel(hconfig.LOGLEVEL)
     #create console handler and set level to error
     ch = logging.StreamHandler()
     ch.setLevel(logging.ERROR)
@@ -79,7 +79,7 @@ def runfomodel(filename=None, foargs=None):
     if foargs is None:
         foargs = {}
     if "k" not in foargs:
-        foargs["k"] = stb.seq(kinit, kend, deltak)
+        foargs["k"] = stb.seq(hconfig.kinit, hconfig.kend, hconfig.deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
     
@@ -95,7 +95,7 @@ def runfomodel(filename=None, foargs=None):
         sys.exit(1)
     if filename is None:
         kinit, kend, deltak = model.k[0], model.k[-1], model.k[1]-model.k[0]
-        filename = RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = hconfig.RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -156,7 +156,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         sys.exit(1)
     if filename is None:
         kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
-        filename = RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = hconfig.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
@@ -178,7 +178,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         harness_logger.exception("Error wrapping model file.")
         raise
     if sourcefile is None:
-        sourcefile = RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
+        sourcefile = hconfig.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
         sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
@@ -201,7 +201,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("---------------------Starting full run through...--------------------")
-    fofile = runfomodel(foargs=FOARGS)
+    fofile = runfomodel(foargs=hconfig.FOARGS)
     sourcefile = runfullsourceintegration(fofile)
     foandsrcfile = sohelpers.combine_source_and_fofile(sourcefile, fofile)
     sofile = runsomodel(foandsrcfile)
@@ -226,6 +226,7 @@ def main(args):
         print __doc__ 
         sys.exit(2)
     filename = None
+    kinit = kend = deltak = None
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             print __doc__
@@ -256,6 +257,11 @@ def main(args):
         except AttributeError:
             filename = None 
         #start model run
+        if kinit and deltak:
+            if not kend:
+                kend = 2*(hconfig.NUMSOKS*deltak + kinit)
+            elif kend < 2*(hconfig.NUMSOKS*deltak + kinit):
+                logging.info("Requested k range will not satisfy condition for second order run!")                
         FOARGS["k"] = stb.seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=FOARGS)
     elif func == "somodel":
