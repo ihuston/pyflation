@@ -262,8 +262,9 @@ def main(args):
                 kend = 2*(hconfig.NUMSOKS*deltak + kinit)
             elif kend < 2*(hconfig.NUMSOKS*deltak + kinit):
                 logging.info("Requested k range will not satisfy condition for second order run!")                
-        FOARGS["k"] = stb.seq(kinit, kend, deltak)
-        runfomodel(filename=filename, foargs=FOARGS)
+        foargs = hconfig.FOARGS
+        foargs["k"] = stb.seq(kinit, kend, deltak)
+        runfomodel(filename=filename, foargs=foargs)
     elif func == "somodel":
         try:
             if not filename:
