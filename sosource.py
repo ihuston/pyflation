@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.59 2009/02/27 15:11:12 ith Exp $
+$Id: sosource.py,v 1.60 2009/03/02 18:41:52 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -50,7 +50,7 @@ def klessq(k, q, theta):
     """
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
-@psyco.proxy
+# @psyco.proxy
 def getthetaterms(integrand_elements, dp1, dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
