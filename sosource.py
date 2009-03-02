@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.61 2009/03/02 18:44:28 ith Exp $
+$Id: sosource.py,v 1.62 2009/03/02 19:25:28 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -225,7 +225,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     source_logger.debug("Integration successful!")
     return src
                 
-def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=129):
+def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=129, numks=None):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -243,6 +243,20 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
     srcfunc: function, optional
              Function which returns unintegrated source term. Defaults to slowrollsrcterm in this module.
              Function signature is `srcfunc(bgvars, a, potentials, integrand_elements, dp1func, dp1dotfunc)`.
+             
+    ninit: int, optional
+           Start time index for source calculation. Default is 0 (start at beginning).
+    
+    nfinal: int, optional
+            End time index for source calculation. -1 signifies end of run (and is the default).
+    
+    ntheta: int, optional
+            Number of theta points to integrate. Should be a power of two + 1 for Romberg integration.
+            Default is 129.
+    
+    numks: int, optional
+           Number of k modes required for second order calculation. Must be small enough that largest first
+           order k mode is at least 2*(numks*deltak + kmin). Default is this limiting value.
                
     Returns
     -------
@@ -254,9 +268,10 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
         ninit = 0
     if nfinal > m.tresult.shape[0] or nfinal == -1:
         nfinal = m.tresult.shape[0]
-    
+    if not numks:
+        numks = N.ceil((m.k[-1]/2 - m.k[0])/(m.k[1]-m.k[0]))
     #Initialize variables for all timesteps
-    k = q = m.k[:m.k.shape[0]//2] #Need N=len(m.k)/2 for case when q=-k
+    k = q = m.k[:numks] #Need N=len(m.k)/2 for case when q=-k
     #Check consistency of first order k range
     if m.k[-1] < 2*k[-1]:
         raise ValueError("First order k range not sufficient!")
