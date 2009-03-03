@@ -295,7 +295,7 @@ def main(args):
     
     #Set up arguments
     shortargs = "hf:mstadpb:e:"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallel", "begin=", "end="]
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -348,7 +348,9 @@ def main(args):
                 kend = 2*(hconfig.NUMSOKS*deltak + kinit)
                 logging.info("Set kend to %d.", kend)
             elif kend < 2*(hconfig.NUMSOKS*deltak + kinit):
-                logging.info("Requested k range will not satisfy condition for second order run!")                
+                logging.info("Requested k range will not satisfy condition for second order run!")
+        else:
+            kinit, deltak, kend = hconfig.kinit, hconfig.deltak, hconfig.kend                
         foargs = hconfig.FOARGS
         foargs["k"] = stb.seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
