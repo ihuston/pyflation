@@ -1,5 +1,26 @@
 """Harness to run multiple simulations at different k
-    by Ian huston
+Author: Ian Huston
+
+This program will run Cosmomodels simulations in different stage or as a straight
+through run. For a full through or first order run no filename is required, but can be
+specified if desired. For a source or second order run you need to give the filename of a first order model's results. This tool will calculate
+the source term integral for the second order equation of motion but does not automatically
+combine the source term into the first order results file in preparation of a second order run. 
+See cosmomodels.py
+for the specification for each type of model. Configuration is done in hconfig.py.
+
+Usage
+-----
+python harness.py [-f filename] [options]
+
+Arguments
+---------
+-h, --help:                 Print this help text.
+-f file, --filename file:   First order file to use
+-t, --source:               Calculate source term (default)
+-b num, --begin num:        Begin sourceterm calculation at timestep num
+-e num, --end num:          End sourceterm calculation at timestep num (not inclusive)
+
     """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
@@ -173,8 +194,8 @@ def runsomodel(fofile, filename=None, soargs=None):
     #Success!
     harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
     return filename
-
-def runfullsourceintegration(modelfile, sourcefile=None):
+    
+def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
     """Run source integrand calculation."""
     try:
         m = c.make_wrapper_model(modelfile)
@@ -187,7 +208,7 @@ def runfullsourceintegration(modelfile, sourcefile=None):
     #get source integrand and save to file
     try:
         ensureresultspath(sourcefile)
-        filesaved = sosource.getsourceandintegrate(m, sourcefile)
+        filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=ninit, nfinal=nfinal)
         harness_logger.info("Source term saved as " + filesaved)
     except Exception:
         harness_logger.exception("Error getting source term.")
@@ -201,7 +222,6 @@ def runfullsourceintegration(modelfile, sourcefile=None):
         raise
        
     return filesaved
-
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("---------------------Starting full run through...--------------------")
