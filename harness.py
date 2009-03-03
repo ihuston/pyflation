@@ -242,8 +242,8 @@ def main(args):
     startlogging()
     
     #Set up arguments
-    shortargs = "hf:mstad"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak="]
+    shortargs = "hf:mstadpb:e:"
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallel", "begin=", "end="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -251,6 +251,8 @@ def main(args):
         sys.exit(2)
     filename = None
     kinit = kend = deltak = None
+    ninit = 0
+    nfinal = -1
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             print __doc__
@@ -273,6 +275,12 @@ def main(args):
             kend = float(arg)
         elif opt in ("--deltak",):
             deltak = float(arg)
+        elif opt in ("-p", "--parallel"):
+            func = "parallel"
+        elif opt in ("-b", "--begin"):
+            ninit = int(arg)
+        elif opt in ("-e", "--end"):
+            nfinal = int(arg)
 
     if func == "fomodel":
         logging.info("-----------First order run requested------------------")
@@ -303,14 +311,22 @@ def main(args):
     elif func == "source":
         logging.info("-----------Source integral run requested------------------")
         try:
-            runfullsourceintegration(modelfile=filename)
+            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
         except Exception:
-            harness_logger.exception("Error getting source integral!") 
+            harness_logger.exception("Error getting source integral!")
+    elif func == "parallel":
+        try:
+            runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+        except Exception:
+            harness_logger.exception("Error getting source integral in parallel!")
     elif func == "all":
         try:
             dofullrun()
         except Exception:
             harness_logger.exception("Error doing full run!")
+    else:
+        print __doc__
+        sys.exit()
         
 if __name__ == "__main__":
     harness_logger = logging.getLogger()
