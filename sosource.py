@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.62 2009/03/02 19:25:28 ith Exp $
+$Id: sosource.py,v 1.63 2009/03/03 12:19:21 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -18,8 +18,6 @@ import time
 import os
 import srccython
 
-#psyco
-import psyco
 
 #This is the results directory which will be used if no filenames are specified
 RESULTSDIR = "/misc/scratch/ith/numerics/results/"
@@ -27,7 +25,6 @@ RESULTSDIR = "/misc/scratch/ith/numerics/results/"
 #Start logging
 source_logger = logging.getLogger(__name__)
 
-@psyco.proxy
 def klessq(k, q, theta):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
@@ -50,7 +47,6 @@ def klessq(k, q, theta):
     """
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
-# @psyco.proxy
 def getthetaterms(integrand_elements, dp1, dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
@@ -93,7 +89,6 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
             theta_terms[3,z,n] = integrate.romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
         
-# @psyco.proxy
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
     """Return unintegrated slow roll source term.
     
