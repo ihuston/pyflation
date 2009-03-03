@@ -48,15 +48,16 @@ import sohelpers
 import os
 import hconfig 
 
-def startlogging():
+
+def startlogging(loglevel=hconfig.LOGLEVEL):
     """Start the logging system to store rotational log based on date."""
 
-    harness_logger.setLevel(hconfig.LOGLEVEL)
+    harness_logger.setLevel(loglevel)
     #Get date for logfile
     date = time.strftime("%Y%m%d")
     #create file handler and set level to debug
     fh = logging.handlers.RotatingFileHandler(filename=hconfig.LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
-    fh.setLevel(hconfig.LOGLEVEL)
+    fh.setLevel(loglevel)
     #create console handler and set level to error
     ch = logging.StreamHandler()
     ch.setLevel(logging.ERROR)
@@ -70,7 +71,7 @@ def startlogging():
     harness_logger.addHandler(fh)
     #add ch to logger
     harness_logger.addHandler(ch)
-    harness_logger.debug("Logging started.")
+    harness_logger.debug("Logging started at level %d", loglevel)
 
 def ensureresultspath(path):
     """Check that the path for results directory exists and create it if not."""
@@ -290,9 +291,6 @@ def dofullrun():
 def main(args):
     """Main function: deal with command line arguments and start calculation as reqd."""
 
-    #Start the logging module
-    startlogging()
-    
     #Set up arguments
     shortargs = "hf:mstadpb:e:"
     longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end="]
@@ -306,6 +304,7 @@ def main(args):
     kinit = kend = deltak = None
     ninit = 0
     nfinal = -1
+    loglevel = hconfig.LOGLEVEL
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             print __doc__
@@ -321,7 +320,7 @@ def main(args):
         elif opt in ("-a", "--all"):
             func = "all"
         elif opt in ("-d", "--debug"):
-            LOGLEVEL = logging.DEBUG
+            loglevel = logging.DEBUG
         elif opt in ("--kinit",):
             kinit = float(arg)
         elif opt in ("--kend",):
@@ -334,7 +333,9 @@ def main(args):
             ninit = int(arg)
         elif opt in ("-e", "--end"):
             nfinal = int(arg)
-
+    #Start the logging module
+    startlogging(loglevel)
+    
     if func == "fomodel":
         logging.info("-----------First order run requested------------------")
         try:
@@ -346,7 +347,7 @@ def main(args):
         if kinit and deltak:
             if not kend:
                 kend = 2*(hconfig.NUMSOKS*deltak + kinit)
-                logging.info("Set kend to %d.", kend)
+                logging.info("Set kend to %s.", str(kend))
             elif kend < 2*(hconfig.NUMSOKS*deltak + kinit):
                 logging.info("Requested k range will not satisfy condition for second order run!")
         else:
