@@ -1,13 +1,15 @@
-"""Harness to run multiple simulations at different k
+"""
+Harness to run multiple simulations at different k
 Author: Ian Huston
 
 This program will run Cosmomodels simulations in different stage or as a straight
 through run. For a full through or first order run no filename is required, but can be
-specified if desired. For a source or second order run you need to give the filename of a first order model's results. This tool will calculate
-the source term integral for the second order equation of motion but does not automatically
-combine the source term into the first order results file in preparation of a second order run. 
-See cosmomodels.py
-for the specification for each type of model. Configuration is done in hconfig.py.
+specified if desired. For a source or second order run you need to give the filename of
+a first order model's results. This tool will calculate the source term integral for the
+second order equation of motion but does not automatically combine the source term into
+the first order results file in preparation of a second order run. 
+See cosmomodels.py for the specification for each type of model. 
+Configuration is done in hconfig.py.
 
 Usage
 -----
@@ -17,11 +19,20 @@ Arguments
 ---------
 -h, --help:                 Print this help text.
 -f file, --filename file:   First order file to use
--t, --source:               Calculate source term (default)
+-a, --all:                  Run all stages of computation
+-m, --fomodel:              Run first order model
+-p, --parallelsrc:          Calculate source term in parallel (need first order filename)
+-t, --source:               Calculate source term (single process) (need first order filename)
+-s, --somodel:              Run second order model (need combined foandsrc filename)
 -b num, --begin num:        Begin sourceterm calculation at timestep num
 -e num, --end num:          End sourceterm calculation at timestep num (not inclusive)
+-d, --debug:                Change logging level to debug, dramatic increase in volume.
+--kinit num:                Initial k mode to use in k range
+--deltak num:               Difference between two k modes in k range
+--kend num:                 Final k mode to use in k range (Can be calculated from kinit, deltak)
 
-    """
+
+"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
@@ -220,8 +231,49 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
     except IOError:
         harness_logger.exception("Error closing model file!")
         raise
-       
     return filesaved
+
+def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
+    """Run parallel source integrand calculation."""
+    try:
+        from mpi4py import MPI
+    except ImportError:
+        raise
+    myrank = MPI.COMM_WORLD.Get_rank()
+    nprocs = MPI.COMM_WORLD.Get_size() - 1 #Don't include host
+    if myrank != 0:
+        #Do not include host node in execution
+        try:
+            m = c.make_wrapper_model(modelfile)
+        except:
+            harness_logger.exception("Error wrapping model file.")
+            raise
+        totalnrange = len(m.tresult[ninit:nfinal])
+        nrange = N.ceil(totalnrange/nprocs)
+        myninit = ninit + (myrank-1)*nrange
+        mynend = ninit + myrank*nrange - 1
+        if sourcefile is None:
+            sourcefile = hconfig.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
+            sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + "-" + str(myrank) + ".hf5"
+        #get source integrand and save to file
+        try:
+            ensureresultspath(sourcefile)
+            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend)
+            harness_logger.info("Source term saved as " + filesaved)
+        except Exception:
+            harness_logger.exception("Error getting source term.")
+            raise
+        #Destroy model instance to save memory
+        harness_logger.debug("Destroying model instance to reclaim memory...")
+        try:
+            del m
+        except IOError:
+            harness_logger.exception("Error closing model file!")
+            raise
+        return filesaved
+    else:
+        return
+          
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("---------------------Starting full run through...--------------------")
@@ -250,6 +302,7 @@ def main(args):
         print __doc__ 
         sys.exit(2)
     filename = None
+    func = None
     kinit = kend = deltak = None
     ninit = 0
     nfinal = -1
@@ -275,8 +328,8 @@ def main(args):
             kend = float(arg)
         elif opt in ("--deltak",):
             deltak = float(arg)
-        elif opt in ("-p", "--parallel"):
-            func = "parallel"
+        elif opt in ("-p", "--parallelsrc"):
+            func = "parallelsrc"
         elif opt in ("-b", "--begin"):
             ninit = int(arg)
         elif opt in ("-e", "--end"):
@@ -314,9 +367,13 @@ def main(args):
             runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
         except Exception:
             harness_logger.exception("Error getting source integral!")
-    elif func == "parallel":
+    elif func == "parallelsrc":
         try:
-            runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+            try:
+                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+            except ImportError:
+                harness_logger.exception("Parallel module not available!")
+                sys.exit(1)
         except Exception:
             harness_logger.exception("Error getting source integral in parallel!")
     elif func == "all":
