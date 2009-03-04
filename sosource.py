@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.64 2009/03/03 18:57:51 ith Exp $
+$Id: sosource.py,v 1.65 2009/03/04 11:33:02 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -269,7 +269,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
     if not numks:
         numks = round((m.k[-1]/2 - m.k[0])/(m.k[1]-m.k[0]))
     #Initialize variables for all timesteps
-    k = q = m.k[:numks] #Need N=len(m.k)/2 for case when q=-k
+    k = q = m.k[:numks+1] #Need N=len(m.k)/2 for case when q=-k
     #Check consistency of first order k range
     if m.k[-1] < 2*k[-1]:
         raise ValueError("First order k range not sufficient!")
