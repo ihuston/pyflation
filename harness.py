@@ -347,14 +347,14 @@ def main(args):
         except AttributeError:
             filename = None 
         #start model run
-        if kinit and deltak:
-            if not kend:
-                kend = 2*((numsoks-1)*deltak + kinit)
-                logging.info("Set kend to %s.", str(kend))
-            elif kend < 2*((numsoks-1)*deltak + kinit):
-                logging.info("Requested k range will not satisfy condition for second order run!")
-        else:
-            kinit, deltak, kend = hconfig.kinit, hconfig.deltak, hconfig.kend                
+        if not (kinit and deltak):
+            kinit, deltak, kend = hconfig.kinit, hconfig.deltak, hconfig.kend
+        if not kend:
+            kend = 2*((numsoks-1)*deltak + kinit)
+            logging.info("Set kend to %s.", str(kend))
+        elif kend < 2*((numsoks-1)*deltak + kinit):
+            logging.info("Requested k range will not satisfy condition for second order run!")
+                                    
         foargs = hconfig.FOARGS
         foargs["k"] = stb.seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
