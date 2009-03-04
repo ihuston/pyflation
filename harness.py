@@ -293,7 +293,7 @@ def main(args):
 
     #Set up arguments
     shortargs = "hf:mstadpb:e:"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end="]
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -304,6 +304,7 @@ def main(args):
     kinit = kend = deltak = None
     ninit = 0
     nfinal = -1
+    numsoks = hconfig.NUMSOKS
     loglevel = hconfig.LOGLEVEL
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -333,6 +334,8 @@ def main(args):
             ninit = int(arg)
         elif opt in ("-e", "--end"):
             nfinal = int(arg)
+        elif opt in ("--numsoks",):
+            numsoks = int(arg)
     #Start the logging module
     startlogging(loglevel)
     
@@ -346,9 +349,9 @@ def main(args):
         #start model run
         if kinit and deltak:
             if not kend:
-                kend = 2*(hconfig.NUMSOKS*deltak + kinit)
+                kend = 2*((numsoks-1)*deltak + kinit)
                 logging.info("Set kend to %s.", str(kend))
-            elif kend < 2*(hconfig.NUMSOKS*deltak + kinit):
+            elif kend < 2*((numsoks-1)*deltak + kinit):
                 logging.info("Requested k range will not satisfy condition for second order run!")
         else:
             kinit, deltak, kend = hconfig.kinit, hconfig.deltak, hconfig.kend                
