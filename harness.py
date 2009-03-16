@@ -262,7 +262,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         totalnrange = len(m.tresult[ninit:nfinal])
         nrange = N.ceil(totalnrange/nprocs)
         myninit = ninit + (myrank-1)*nrange
-        mynend = ninit + myrank*nrange - 1
+        mynend = ninit + myrank*nrange
         if sourcefile is None:
             sourcefile = hconfig.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
             sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + "-" + str(myrank) + ".hf5"
