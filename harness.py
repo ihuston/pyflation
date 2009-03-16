@@ -203,7 +203,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         sys.exit(1)
     if filename is None:
         kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
-        filename = hconfig.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = hconfig.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
