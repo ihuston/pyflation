@@ -78,7 +78,7 @@ def ensureresultspath(path):
     #Does path exist?
     if not os.path.isdir(os.path.dirname(path)):
         try:
-            os.mkdir(os.path.dirname(path))
+            os.makedirs(os.path.dirname(path))
         except OSError:
             harness_logger.error("Error creating results directory!")
     
@@ -264,8 +264,8 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         myninit = ninit + (myrank-1)*nrange
         mynend = ninit + myrank*nrange
         if sourcefile is None:
-            sourcefile = hconfig.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
-            sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + "-" + str(myrank) + ".hf5"
+            srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S")
+            sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
         #get source integrand and save to file
         try:
             ensureresultspath(sourcefile)
