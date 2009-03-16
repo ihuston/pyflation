@@ -123,6 +123,10 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     if not issubclass(foclass, c.TwoStageModel):
         raise ValueError("Must use TwoStageModel class for first order run!")
     model = foclass(**foargs)
+    
+    if filename is None:
+        kinit, kend, deltak = model.k[0], model.k[-1], model.k[1]-model.k[0]
+        filename = hconfig.RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Starting model run...")
         model.run(saveresults=False)
@@ -130,9 +134,6 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     except c.ModelError:
         harness_logger.exception("Something went wrong with model, quitting!")
         sys.exit(1)
-    if filename is None:
-        kinit, kend, deltak = model.k[0], model.k[-1], model.k[1]-model.k[0]
-        filename = hconfig.RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensureresultspath(filename)
