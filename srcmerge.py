@@ -53,7 +53,7 @@ def mergefiles(newfile=None, dirname=None):
     if not newfile or not os.path.isdir(os.path.dirname(newfile)) or os.path.isfile(newfile):
         now = time.strftime("%Y%m%d%H%M")
         newfile = "".join([dirname, os.path.sep, "src-combined-", now, ".hf5"]) 
-    filenames = [f for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f)) and os.path.splitext(f)[1] == ".hf5" and "src" in f[:3]]
+    filenames = [f for f in os.listdir(dirname) if os.path.isfile(os.path.join(dirname, f)) and os.path.splitext(f)[1] == ".hf5" and "src-part" in f[:8]]
     try:
         #Open all hf5 files in directory
         files = [tables.openFile("".join([dirname, os.path.sep, f])) for f in filenames]
@@ -78,7 +78,7 @@ def mergefiles(newfile=None, dirname=None):
         nendprev = indexlist[0][1] - 1
         for fres, ns, ne in indexlist:
             if ns != nendprev + 1:
-                raise ValueError("Source files do not cover entire range of time steps!")
+                raise ValueError("Source files do not cover entire range of time steps! ns=%d nendprev=%d" % (ns, nendprev))
             nendprev = ne
         #Copy first sourceterm, k and nix arrays
         nres = nf.copyNode(indexlist[0][0], nf.root, recursive=True)
