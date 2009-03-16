@@ -116,17 +116,26 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     if foargs is None:
         foargs = {}
     if "k" not in foargs:
-        foargs["k"] = stb.seq(hconfig.kinit, hconfig.kend, hconfig.deltak)
+        kinit, kend, deltak, numsoks = hconfig.kinit, hconfig.kend, hconfig.deltak, hconfig.NUMSOKS
+        if not kend:
+            kend = 2*((numsoks-1)*deltak + kinit)
+            harness_logger.info("Set kend to %s.", str(kend))
+        elif kend < 2*((numsoks-1)*deltak + kinit):
+            harness_logger.info("Requested k range will not satisfy condition for second order run!")
+        foargs["k"] = stb.seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
-    
+    if "potential_func" not in foargs:
+        foargs["potential_func"] = hconfig.POT_FUNC
+    if "ystart" not in foargs:
+        foargs["ystart"] = hconfig.YSTART
+    if filename is None:
+        kinit, kend, deltak = foargs["k"][0], foargs["k"][-1], foargs["k"][1]-foargs["k"][0]
+        filename = hconfig.RESULTSDIR + "fo-" + foclass.__name__ + "-" + foargs["potential_func"] + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     if not issubclass(foclass, c.TwoStageModel):
         raise ValueError("Must use TwoStageModel class for first order run!")
-    model = foclass(**foargs)
     
-    if filename is None:
-        kinit, kend, deltak = model.k[0], model.k[-1], model.k[1]-model.k[0]
-        filename = hconfig.RESULTSDIR + "fo-" + foclass.__name__ + "-" + model.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+    model = foclass(**foargs)
     try:
         harness_logger.debug("Starting model run...")
         model.run(saveresults=False)
@@ -341,7 +350,7 @@ def main(args):
     startlogging(loglevel)
     
     if func == "fomodel":
-        logging.info("-----------First order run requested------------------")
+        harness_logger.info("-----------First order run requested------------------")
         try:
             if not filename:
                 filename = None
@@ -352,15 +361,15 @@ def main(args):
             kinit, deltak, kend = hconfig.kinit, hconfig.deltak, hconfig.kend
         if not kend:
             kend = 2*((numsoks-1)*deltak + kinit)
-            logging.info("Set kend to %s.", str(kend))
+            harness_logger.info("Set kend to %s.", str(kend))
         elif kend < 2*((numsoks-1)*deltak + kinit):
-            logging.info("Requested k range will not satisfy condition for second order run!")
+            harness_logger.info("Requested k range will not satisfy condition for second order run!")
                                     
         foargs = hconfig.FOARGS
         foargs["k"] = stb.seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
     elif func == "somodel":
-        logging.info("-----------Second order run requested------------------")
+        harness_logger.info("-----------Second order run requested------------------")
         try:
             if not filename:
                 raise AttributeError("Need to specify first order file!")
@@ -369,7 +378,7 @@ def main(args):
         #start model run
         runsomodel(fofile=filename)
     elif func == "source":
-        logging.info("-----------Source integral run requested------------------")
+        harness_logger.info("-----------Source integral run requested------------------")
         try:
             runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
         except Exception:
