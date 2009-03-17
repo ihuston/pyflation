@@ -264,7 +264,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         myninit = ninit + (myrank-1)*nrange
         mynend = ninit + myrank*nrange
         if sourcefile is None:
-            srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S")
+            srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M")
             sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
         #get source integrand and save to file
         try:
