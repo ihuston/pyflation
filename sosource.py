@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.68 2009/03/06 17:35:55 ith Exp $
+$Id: sosource.py,v 1.69 2009/03/17 17:14:49 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -150,7 +150,7 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
         src_integrand = N.zeros_like(aterm)
     #Second major term:
     src_integrand2 = (phidot/((a*H)**2)) * ((3*dU2*(a*q)**2 + 3.5*q**4 + 2*(k**2)*(q**2))*aterm 
-                      + (-4.5 + (q/k)**2)* k * (q**3) * bterm) * dp1_q
+                      - (4.5 + (q/k)**2)* k * (q**3) * bterm) * dp1_q
     #Third major term:
     src_integrand3 = (phidot * ((-1.5*q**2)*cterm + (2 - (q/k)**2)*k*q*dterm) * dp1dot_q)
     #Multiply by prefactor
