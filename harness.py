@@ -46,7 +46,8 @@ import sosource
 import getopt
 import sohelpers
 import os
-import hconfig 
+import hconfig
+import srcmerge 
 
 
 def startlogging(loglevel=hconfig.LOGLEVEL):
@@ -250,22 +251,28 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         from mpi4py import MPI
     except ImportError:
         raise
-    myrank = MPI.COMM_WORLD.Get_rank()
-    nprocs = MPI.COMM_WORLD.Get_size() - 1 #Don't include host
+    comm = MPI.COMM_WORLD
+    myrank = comm.Get_rank()
+    nprocs = comm.Get_size() - 1 #Don't include host
+    status = 0
+    try:
+        m = c.make_wrapper_model(modelfile)
+    except:
+        harness_logger.exception("Error wrapping model file.")
+        if myrank != 0:
+            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
+        raise
+    if sourcefile is None:
+        srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%Y%m%d")
+        sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
     if myrank != 0:
         #Do not include host node in execution
-        try:
-            m = c.make_wrapper_model(modelfile)
-        except:
-            harness_logger.exception("Error wrapping model file.")
-            raise
+        
         totalnrange = len(m.tresult[ninit:nfinal])
         nrange = N.ceil(totalnrange/nprocs)
         myninit = ninit + (myrank-1)*nrange
         mynend = ninit + myrank*nrange
-        if sourcefile is None:
-            srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M")
-            sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
+        
         #get source integrand and save to file
         try:
             ensureresultspath(sourcefile)
@@ -273,6 +280,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
             harness_logger.info("Source term saved as " + filesaved)
         except Exception:
             harness_logger.exception("Error getting source term.")
+            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
             raise
         #Destroy model instance to save memory
         harness_logger.debug("Destroying model instance to reclaim memory...")
@@ -280,10 +288,28 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
             del m
         except IOError:
             harness_logger.exception("Error closing model file!")
+            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
             raise
+        comm.Send([{'rank':myrank, 'status':0}], dest=0, tag=0)
         return filesaved
     else:
-        return
+        #Get rid of model object
+        del m
+        process_list = range(1, nprocs+1)
+        status_list = []
+        while len(status_list) < len(process_list):
+            status = MPI.Status()
+            data = comm.Recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            status_list.append(data[0])
+            if status.tag > 0:
+                harness_logger.error("Error in subprocess %d!", status.source)
+                raise IOError("Error in subprocess %d!" % status.source)
+        harness_logger.info("All processes finished! Starting merger...")
+        srcdir = os.path.dirname(sourcefile)
+        newsrcfile = os.path.dirname(srcdir) + os.sep + srcstub + ".hf5" 
+        srcmergefile = srcmerge.mergefiles(newfile=newsrcfile, dirname=srcdir)
+        harness_logger.info("Merger complete. File saved as %s.", srcmergefile)
+        return srcmergefile
           
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
