@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.220 2009/03/03 12:15:34 ith Exp $
+    $Id: cosmomodels.py,v 1.221 2009/03/19 15:34:19 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -271,7 +271,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.220 $",
+                  "CVSRevision":"$Revision: 1.221 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -541,12 +541,14 @@ class CosmologicalModel(object):
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
+    #Names of variables
+    ynames = [r"Simple $y$", r"$\dot{y}$"]
+    
     def __init__(self, ystart=N.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
         self.plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
         self.tname = "Time"
-        self.ynames = [r"Simple $y$", r"$\dot{y}$"]
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
@@ -1070,7 +1072,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.220 $",
+                  "CVSRevision":"$Revision: 1.221 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1611,6 +1613,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             self.bgepsilon = self.bgmodel.getepsilon()
             #Success
             self._log.info("Successfully imported data from file into model instance.")
+            #Update model runcount
+            self.runcount = 1
         
         def __del__(self):
             """Close file when object destroyed."""
