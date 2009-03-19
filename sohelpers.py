@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.8 2009/03/17 18:42:26 ith Exp $
+    $Id: sohelpers.py,v 1.9 2009/03/19 15:17:34 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -36,10 +36,12 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
     if not newfile or not os.path.isdir(os.path.dirname(newfile)):
         newfile = os.path.dirname(fofile) + os.sep + os.path.basename(sourcefile).replace("src", "foandsrc")
         _log.info("Saving combined source and first order results in file %s.", newfile)
+    if os.path.isfile(newfile):
+        newfile = newfile.replace("foandsrc", "foandsrc_")
     try:
         sf = tables.openFile(sourcefile, "r")
         ff = tables.openFile(fofile, "r")
-        nf = tables.openFile(newfile, "a")
+        nf = tables.openFile(newfile, "w") #Write to new file, not append to old.
     except IOError:
         _log.exception("Source or first order files not found!")
         raise
