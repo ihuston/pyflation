@@ -82,6 +82,19 @@ def ensureresultspath(path):
             os.makedirs(os.path.dirname(path))
         except OSError:
             harness_logger.error("Error creating results directory!")
+
+def checkkend(kinit, kend, deltak, numsoks):
+    """Check whether kend has correct value for second order run.
+    
+    If it is None, then set it to a value that will satisfy requirements. 
+    If it is not the correct value then log a complaint and return it anyway.
+    """
+    if not kend:
+        kend = 2*((numsoks-1)*deltak + kinit)
+        harness_logger.info("Set kend to %s.", str(kend))
+    elif kend < 2*((numsoks-1)*deltak + kinit):
+        harness_logger.info("Requested k range will not satisfy condition for second order run!")
+    return kend
     
 def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     """Execute a TwoStageModel from cosmomodels and save results.
@@ -118,11 +131,7 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
         foargs = {}
     if "k" not in foargs:
         kinit, kend, deltak, numsoks = hconfig.kinit, hconfig.kend, hconfig.deltak, hconfig.NUMSOKS
-        if not kend:
-            kend = 2*((numsoks-1)*deltak + kinit)
-            harness_logger.info("Set kend to %s.", str(kend))
-        elif kend < 2*((numsoks-1)*deltak + kinit):
-            harness_logger.info("Requested k range will not satisfy condition for second order run!")
+        kend = checkkend(kinit, kend, deltak, numsoks)
         foargs["k"] = stb.seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
@@ -246,7 +255,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
     return filesaved
 
 def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
-    """Run parallel source integrand calculation."""
+    """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
     except ImportError:
@@ -309,7 +318,17 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         newsrcfile = os.path.dirname(srcdir) + os.sep + srcstub + ".hf5" 
         srcmergefile = srcmerge.mergefiles(newfile=newsrcfile, dirname=srcdir)
         harness_logger.info("Merger complete. File saved as %s.", srcmergefile)
-        return srcmergefile
+        #Start combination of first order and source files
+        harness_logger.info("Starting to combine first order and source files.")
+        foandsrcfile = sohelpers.combine_source_and_fofile(srcmergefile, modelfile)
+        harness_logger.info("Combination complete, saved in %s.", foandsrcfile)
+        harness_logger.info("Starting second order run...")
+        sofile = runsomodel(foandsrcfile)
+        harness_logger.info("Second order run complete. Starting to combine first and scond order results.")
+        cfilename = sofile.replace("so", "cmb")
+        cfile = sohelpers.combine_results(foandsrcfile, sofile, cfilename)
+        harness_logger.info("Combined results saved in %s.", cfile)
+        return cfile
           
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
