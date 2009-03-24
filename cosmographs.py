@@ -12,7 +12,15 @@ class CosmoGraphError(StandardError):
     """Generic error for graphing facilities."""
     pass
     
-
+def makeklegend(fig, k):
+    """Attach a legend to the figure specified outlining the k modes used."""
+    if not fig:
+        fig = P.gcf()
+    P.figure(fig.number)
+    l = P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in k])
+    P.draw()
+    return l
+    
 def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
     """Save figure in multiple formats at once.
     
@@ -84,7 +92,7 @@ def plotresults(m, fig=None, show=True, varindex=None, klist=None, saveplot=Fals
     P.xlabel(m.tname)
     P.ylabel(m.ynames[varindex])
     if klist is not None:
-        P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in m.k[klist]])
+        leg = makeklegend(fig, m.k[klist])
     #P.title(m.plottitle, figure=fig)
     
     #Should we show it now or just return it without showing?
