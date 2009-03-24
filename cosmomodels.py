@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.221 2009/03/19 15:34:19 ith Exp $
+    $Id: cosmomodels.py,v 1.222 2009/03/24 11:17:08 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -54,6 +54,9 @@ class CosmologicalModel(object):
        lastparams is formatted as in the function callingparams(self) below
     """
     solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks", "rkdriver_new"]
+    ynames = ["First dependent variable"]
+    tname = "Time"
+    plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
@@ -107,11 +110,6 @@ class CosmologicalModel(object):
         self.yresult = None #Will hold array of last y results
         self.runcount = 0 #How many times has the model been run?
         self.resultlist = [] #List of all completed results.
-        
-        
-        self.plottitle = "A generic Cosmological Model"
-        self.tname = "Time"
-        self.ynames = ["First dependent variable"]
         
     def derivs(self, yarray, t):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
@@ -271,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.221 $",
+                  "CVSRevision":"$Revision: 1.222 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -543,12 +541,13 @@ class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
     #Names of variables
     ynames = [r"Simple $y$", r"$\dot{y}$"]
-    
+    plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
+    tname = "Time"
+            
     def __init__(self, ystart=N.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
-        self.plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
-        self.tname = "Time"
+
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
@@ -566,18 +565,17 @@ class BasicBgModel(CosmologicalModel):
        y[1] - d\phi_0/d\eta : First deriv of \phi
        y[2] - a : Scale Factor
     """
+    #Graph variables
+    plottitle = "Basic Cosmological Model"
+    tname = "Conformal time"
+    ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
                     tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
         
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
-        
         #Mass of inflaton in Planck masses
         self.mass = 1.0
-        
-        self.plottitle = "Basic Cosmological Model"
-        self.tname = "Conformal time"
-        self.ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]
         
     def potentials(self, y):
         """Return value of potential at y, along with first and second derivs."""
@@ -593,7 +591,6 @@ class BasicBgModel(CosmologicalModel):
         d2Udphi2 = mass2
         #3rd deriv
         d3Udphi3 = 0
-        
         return U, dUdphi, d2Udphi2, d3Udphi3
     
     def derivs(self, y, t, **kwargs):
@@ -629,18 +626,17 @@ class BasicBgModel(CosmologicalModel):
         CosmologicalModel.plotresults(self, varindex=[0,2], saveplot=saveplot)
         
         return
-
     
 class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
+    #Graph titles
+    plottitle = r"Malik Models in $n$"
+    tname = r"E-folds $n$"
+    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+    
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
         super(PhiModels, self).__init__(*args, **kwargs)
-                    
-        #Titles
-        self.plottitle = r"Malik Models in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
         
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
@@ -720,7 +716,11 @@ class CanonicalBackground(PhiModels):
        y[1] - d\phi_0/d\n : First deriv of \phi
        y[2] - H: Hubble parameter
     """
-    
+    #Titles
+    plottitle = r"Background Malik model in $n$"
+    tname = r"E-folds $n$"
+    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
+        
     def __init__(self,  *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -730,10 +730,6 @@ class CanonicalBackground(PhiModels):
         if N.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
-        #Titles
-        self.plottitle = r"Background Malik model in $n$"
-        self.tname = r"E-folds $n$"
-        self.ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
@@ -765,6 +761,18 @@ class CanonicalFirstOrder(PhiModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
+       
+    #Text for graphs
+    plottitle = "Complex First Order Malik Model in Efold time"
+    tname = r"$n$"
+    ynames = [r"$\varphi_0$",
+                    r"$\dot{\varphi_0}$",
+                    r"$H$",
+                    r"Real $\delta\varphi_1$",
+                    r"Real $\dot{\delta\varphi_1}$",
+                    r"Imag $\delta\varphi_1$",
+                    r"Imag $\dot{\delta\varphi_1}$"]
+        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -790,18 +798,7 @@ class CanonicalFirstOrder(PhiModels):
         if N.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
-            
-        #Text for graphs
-        self.plottitle = "Complex First Order Malik Model in Efold time"
-        self.tname = r"$n$"
-        self.ynames = [r"$\varphi_0$",
-                        r"$\dot{\varphi_0}$",
-                        r"$H$",
-                        r"Real $\delta\varphi_1$",
-                        r"Real $\dot{\delta\varphi_1}$",
-                        r"Imag $\delta\varphi_1$",
-                        r"Imag $\dot{\delta\varphi_1}$"]
-                    
+                        
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
@@ -857,6 +854,14 @@ class CanonicalSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
+    #Text for graphs
+    plottitle = "Complex Second Order Malik Model with source term in Efold time"
+    tname = r"$n$"
+    ynames = [r"Real $\delta\varphi_2$",
+                    r"Real $\dot{\delta\varphi_2}$",
+                    r"Imag $\delta\varphi_2$",
+                    r"Imag $\dot{\delta\varphi_2}$"]
+                    
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -877,14 +882,6 @@ class CanonicalSecondOrder(PhiModels):
         #Initial conditions for each of the variables.
         if self.ystart is None:
             self.ystart = N.array([0.0,0.0,0.0,0.0])   
-        
-        #Text for graphs
-        self.plottitle = "Complex Second Order Malik Model with source term in Efold time"
-        self.tname = r"$n$"
-        self.ynames = [r"Real $\delta\varphi_2$",
-                        r"Real $\dot{\delta\varphi_2}$",
-                        r"Imag $\delta\varphi_2$",
-                        r"Imag $\dot{\delta\varphi_2}$"]
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
@@ -1072,7 +1069,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.221 $",
+                  "CVSRevision":"$Revision: 1.222 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1204,7 +1201,6 @@ class TwoStageModel(MultiStageModel):
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0):
         """Initialize model and ensure initial conditions are sane."""
       
-               
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
@@ -1381,7 +1377,17 @@ class TwoStageModel(MultiStageModel):
 class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
     """
-                    
+    #Text for graphs
+    plottitle = "FOCanonicalTwoStage Model in Efold Time"
+    tname = r"$n$" 
+    ynames = [r"$\varphi_0$",
+                    r"$\dot{\varphi_0}$",
+                    r"$H$",
+                    r"Real $\delta\varphi_1$",
+                    r"Real $\dot{\delta\varphi_1}$",
+                    r"Imag $\delta\varphi_1$",
+                    r"Imag $\dot{\delta\varphi_1}$"]
+                                                  
     def __init__(self, *args, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
         #Call superclass
@@ -1628,7 +1634,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
 class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
-    
+
     def __init__(self, second_stage, soclass=None, ystart=None):
         """Initialize variables and check that tsmodel exists and is correct form."""
         
@@ -1718,6 +1724,14 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
     """Concrete implementation of ThirdStageCanonical to include second order calculation including
     source term from a first order model."""
     
+    #Text for graphs
+    plottitle = "Complex Second Order Malik Model with source term in Efold time"
+    tname = r"$n$"
+    ynames = [r"Real $\delta\varphi_2$",
+                    r"Real $\dot{\delta\varphi_2}$",
+                    r"Imag $\delta\varphi_2$",
+                    r"Imag $\dot{\delta\varphi_2}$"]
+                    
     def __init__(self, *args, **kwargs):
         """Initialize variables and call super class __init__ method."""
         super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
@@ -1754,6 +1768,21 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         
 class CombinedCanonicalFromFile(CanonicalMultiStage):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
+    
+    #Text for graphs
+    plottitle = "Combined First and Second Order Canonical Model in Efold time"
+    tname = r"$n$"
+    ynames = [r"$\varphi_0$",
+                r"$\dot{\varphi_0}$",
+                r"$H$",
+                r"Real $\delta\varphi_1$",
+                r"Real $\dot{\delta\varphi_1}$",
+                r"Imag $\delta\varphi_1$",
+                r"Imag $\dot{\delta\varphi_1}$",
+                r"Real $\delta\varphi_2$",
+                r"Real $\dot{\delta\varphi_2}$",
+                r"Imag $\delta\varphi_2$",
+                r"Imag $\dot{\delta\varphi_2}$"]
     
     def __init__(self, *args, **kwargs):
         """Initialize vars and call super class."""
@@ -1858,3 +1887,61 @@ class OneZeroIcsTwoStage(TwoStageModel):
             self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
         return self.deltaphi 
         
+class NonPhysicalNoImagTwoStage(TwoStageModel):
+    """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
+    """
+                    
+    def __init__(self, *args, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+        #Call superclass
+        super(NonPhysicalNoImagTwoStage, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = N.zeros((len(self.ystart), len(self.k)))
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+        except ValueError:
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+        
+        #Set Re\delta\phi_1 initial condition
+        foystart[3,:] = 1.0
+        #set Re\dot\delta\phi_1 ic
+        foystart[4,:] = 0.0
+        #Set Im\delta\phi_1
+        foystart[5,:] = 0.0
+        #Set Im\dot\delta\phi_1
+        foystart[6,:] = 0.0
+        
+        return foystart
+    
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
+        #Raise error if first order not run yet
+        self.checkruncomplete()
+        
+        if not hasattr(self, "deltaphi") or recompute:
+            self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
+        return self.deltaphi 
