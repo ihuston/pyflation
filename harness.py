@@ -272,7 +272,10 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
             comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
         raise
     if sourcefile is None:
-        srcstub = "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k)) + "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%Y%m%d")
+        if "fo-" in modelfile:
+            srcstub = os.path.splitext(os.path.basename(modelfile))[0].replace("fo", "src")
+        else:
+            srcstub = "-".join(["src", m.potential_func, str(min(m.k)), str(max(m.k)), str(m.k[1]-m.k[0]), time.strftime("%Y%m%d")])
         sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
     if myrank != 0:
         #Do not include host node in execution
