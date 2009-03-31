@@ -37,7 +37,7 @@ Arguments
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import cosmomodels as c
-import scitools.basics as stb
+from scitools.basics import seq 
 import time
 import sys
 import logging
@@ -132,7 +132,7 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
     if "k" not in foargs:
         kinit, kend, deltak, numsoks = hconfig.kinit, hconfig.kend, hconfig.deltak, hconfig.NUMSOKS
         kend = checkkend(kinit, kend, deltak, numsoks)
-        foargs["k"] = stb.seq(kinit, kend, deltak)
+        foargs["k"] = seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
     if "potential_func" not in foargs:
@@ -292,7 +292,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
             harness_logger.info("Source term saved as " + filesaved)
         except Exception:
             harness_logger.exception("Error getting source term.")
-            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
+            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
             raise
         #Destroy model instance to save memory
         harness_logger.debug("Destroying model instance to reclaim memory...")
@@ -300,9 +300,9 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
             del m
         except IOError:
             harness_logger.exception("Error closing model file!")
-            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
+            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
             raise
-        comm.Send([{'rank':myrank, 'status':0}], dest=0, tag=0)
+        comm.Send([{'rank':myrank, 'status':0}], dest=0, tag=0) #Tag=0 signals success
         return filesaved
     else:
         #Get rid of model object
@@ -414,7 +414,7 @@ def main(args):
             harness_logger.info("Requested k range will not satisfy condition for second order run!")
                                     
         foargs = hconfig.FOARGS
-        foargs["k"] = stb.seq(kinit, kend, deltak)
+        foargs["k"] = seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
     elif func == "somodel":
         harness_logger.info("-----------Second order run requested------------------")
