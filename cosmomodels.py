@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.223 2009/03/31 11:29:34 ith Exp $
+    $Id: cosmomodels.py,v 1.224 2009/03/31 16:16:04 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.223 $",
+                  "CVSRevision":"$Revision: 1.224 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -475,6 +475,7 @@ class CosmologicalModel(object):
                         if hasattr(self, "foystart"):
                             foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
                             fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
+                            fotsxarr = rf.createEArray(resgroup, "fotstartindex", tables.Float64Atom(), (0,), filters=filters)
                     else:
                         #Only save bg results
                         yresarr = rf.createArray(resgroup, "yresult", self.yresult)
@@ -489,6 +490,7 @@ class CosmologicalModel(object):
                             if hasattr(self, "foystart"):
                                 foystarr = resgroup.foystart
                                 fotstarr = resgroup.fotstart
+                                fotsxarr = resgroup.fotstartindex
                             karr = resgroup.k
                     except tables.NoSuchNodeError:
                         raise IOError("File is not in correct format! Correct results tables do not exist!")
@@ -511,6 +513,7 @@ class CosmologicalModel(object):
                     if hasattr(self, "foystart"):
                         foystarr.append(self.foystart)
                         fotstarr.append(self.fotstart)
+                        fotsxarr.append(self.fotstartindex)
                 rf.flush()
                 #Log success
                 self._log.debug("Successfully wrote results to file " + filename)
@@ -1069,7 +1072,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.223 $",
+                  "CVSRevision":"$Revision: 1.224 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1581,6 +1584,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self.yresult = self._rf.root.results.yresult
                     self.tresult = self._rf.root.results.tresult
                     self.fotstart = self._rf.root.results.fotstart
+                    self.fotstartindex = self._rf.root.results.fotstartindex
                     self.foystart = self._rf.root.results.foystart
                     self.k = self._rf.root.results.k[:]
                     params = self._rf.root.results.parameters
