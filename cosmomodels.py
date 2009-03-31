@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.222 2009/03/24 11:17:08 ith Exp $
+    $Id: cosmomodels.py,v 1.223 2009/03/31 11:29:34 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.222 $",
+                  "CVSRevision":"$Revision: 1.223 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1069,7 +1069,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.222 $",
+                  "CVSRevision":"$Revision: 1.223 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1104,7 +1104,8 @@ class CanonicalMultiStage(MultiStageModel):
         #Call superclass
         super(CanonicalMultiStage, self).__init__(*args, **kwargs)
     
-    def findPphi(self, recompute=False):
+    @property
+    def Pphi(self, recompute=False):
         """Return the spectrum of scalar perturbations P_phi for each k.
         
         This is the unscaled version $P_{\phi}$ which is related to the scaled version by
@@ -1122,12 +1123,13 @@ class CanonicalMultiStage(MultiStageModel):
               Array of Pphi values for all timesteps and k modes
         """
         #Basic caching of result
-        if not hasattr(self, "Pphi") or recompute:        
-            deltaphi = self.getdeltaphi()
-            self.Pphi = deltaphi*deltaphi.conj()
-        return self.Pphi
+        if not hasattr(self, "_Pphi") or recompute:        
+            deltaphi = self.deltaphi
+            self._Pphi = deltaphi*deltaphi.conj()
+        return self._Pphi
     
-    def findPr(self, recompute=False):
+    @property            
+    def Pr(self, recompute=False):
         """Return the spectrum of curvature perturbations $P_R$ for each k.
         
         This is the unscaled version $P_R$ which is related to the scaled version by
@@ -1145,11 +1147,11 @@ class CanonicalMultiStage(MultiStageModel):
             Array of Pr values for all timesteps and k modes
         """
         #Basic caching of result
-        if not hasattr(self, "Pr") or recompute:        
-            Pphi = self.findPphi()
+        if not hasattr(self, "_Pr") or recompute:        
+            Pphi = self.Pphi
             phidot = self.yresult[:,1,:] #bg phidot
-            self.Pr = Pphi/(phidot**2) #change if bg evol is different
-        return self.Pr
+            self._Pr = Pphi/(phidot**2) #change if bg evol is different
+        return self._Pr
     
     def findPgrav(self, recompute=False):
         """Return the spectrum of tensor perturbations $P_grav$ for each k.
@@ -1796,7 +1798,8 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
         else:
             self.foclass = foclass
     
-    def getdeltaphi(self, recompute=False):
+    @property
+    def deltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times and modes.
         
         The result is stored as the instance variable self.deltaphi but will be recomputed
@@ -1816,11 +1819,29 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
         self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
+            dp1 = self.dp1
+            dp2 = self.dp2
+            self._dp = dp1 + 0.5*dp2
+        return self._dp
+        
+    @property
+    def dp1(self, recompute=False):
+        """Return (and save) the first order perturbation."""
+        self.checkruncomplete()
+        if not hasattr(self, "_dp1") or recompute:
             dp1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-            dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
-            self.deltaphi = dp1 + 0.5*dp2
-        return self.deltaphi
+            self._dp1 = dp1
+        return self._dp1
     
+    @property
+    def dp2(self, recompute=False):
+        """Return (and save) the first order perturbation."""
+        self.checkruncomplete()
+        if not hasattr(self, "_dp2") or recompute:
+            dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
+            self._dp2 = dp2
+        return self._dp2
+        
     def checkruncomplete(self):
         """Check that model has been run"""
         if not self.yresult:
