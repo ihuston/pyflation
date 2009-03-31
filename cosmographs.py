@@ -20,6 +20,13 @@ def makeklegend(fig, k):
     l = P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in k])
     P.draw()
     return l
+
+def reversexaxis(a=None):
+    """Reverse the direction of the x axis for the axes object a."""
+    if not a:
+        a = P.gca()
+    a.set_xlim(a.get_xlim()[::-1])
+    return
     
 def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
     """Save figure in multiple formats at once.
