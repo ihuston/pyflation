@@ -254,7 +254,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         raise
     return filesaved
 
-def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
+def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
     """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
@@ -280,10 +280,16 @@ def runparallelintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
     if myrank != 0:
         #Do not include host node in execution
         
-        totalnrange = len(m.tresult[ninit:nfinal])
+        nfostart = min(m.fotstartindex).astype(int)
+        nstar = max(nfostart, ninit)
+        totalnrange = len(m.tresult[nstar:nfinal])
         nrange = N.ceil(totalnrange/nprocs)
-        myninit = ninit + (myrank-1)*nrange
-        mynend = ninit + myrank*nrange
+        if myrank == 1:
+            myninit = ninit
+        else:
+            myninit = nstar + (myrank-1)*nrange
+        mynend = nstar + myrank*nrange
+        
         
         #get source integrand and save to file
         try:
