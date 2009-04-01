@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.224 2009/03/31 16:16:04 ith Exp $
+    $Id: cosmomodels.py,v 1.225 2009/04/01 14:57:30 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.224 $",
+                  "CVSRevision":"$Revision: 1.225 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1072,7 +1072,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.224 $",
+                  "CVSRevision":"$Revision: 1.225 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1584,7 +1584,9 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self.yresult = self._rf.root.results.yresult
                     self.tresult = self._rf.root.results.tresult
                     self.fotstart = self._rf.root.results.fotstart
-                    self.fotstartindex = self._rf.root.results.fotstartindex
+                    if "fotstartindex" in self._rf.root.results:
+                        #for backwards compatability only set if it exists
+                        self.fotstartindex = self._rf.root.results.fotstartindex
                     self.foystart = self._rf.root.results.foystart
                     self.k = self._rf.root.results.k[:]
                     params = self._rf.root.results.parameters
