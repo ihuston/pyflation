@@ -289,7 +289,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
         else:
             myninit = nstar + (myrank-1)*nrange
         mynend = nstar + myrank*nrange
-        
+        harness_logger.info("Process rank: %d, ninit: %d, nend: %d", myrank, myninit, mynend)
         
         #get source integrand and save to file
         try:
