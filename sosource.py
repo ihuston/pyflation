@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.69 2009/03/17 17:14:49 ith Exp $
+$Id: sosource.py,v 1.70 2009/04/03 13:44:43 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -288,8 +288,8 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
             source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix in xrange(ninit, nfinal):    
-                if nix%100 == 0:
-                    source_logger.info("Starting n=%f, nix=%d sequence...", m.tresult[nix], nix)
+                if nix%10 == 0:
+                    source_logger.info("Starting nix=%d/%d sequence...", nix, nfinal)
                 #Only run calculation if one of the modes has started.
                 if m.tresult[nix] > lastmodestart or m.tresult[nix+2] >= firstmodestart:
                     src = calculatesource(m, nix, integrand_elements, srcfunc)
