@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.225 2009/04/01 14:57:30 ith Exp $
+    $Id: cosmomodels.py,v 1.226 2009/04/03 11:35:13 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -59,7 +59,7 @@ class CosmologicalModel(object):
     plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
-                 dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None):
+                 dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.225 $",
+                  "CVSRevision":"$Revision: 1.226 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -950,7 +950,10 @@ class MultiStageModel(CosmologicalModel):
         """Initialize super class instance."""
         super(MultiStageModel, self).__init__(*args, **kwargs)
         #Set constant factor for 1st order initial conditions
-        self.cq = 50
+        if "cq" in kwargs:
+            self.cq = kwargs["cq"]
+        else:
+            self.cq = 50 #Default value as in Salopek et al.
         
         
     def finda_end(self, Hend, Hreh=None):
@@ -1072,7 +1075,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.225 $",
+                  "CVSRevision":"$Revision: 1.226 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1203,7 +1206,7 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
@@ -1221,7 +1224,7 @@ class TwoStageModel(MultiStageModel):
             self.ystart = ystart
         #Call superclass
         super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, 
-                tstep_min, solver=solver, potential_func=potential_func, pot_params=pot_params)
+                tstep_min, solver=solver, potential_func=potential_func, pot_params=pot_params, **kwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
