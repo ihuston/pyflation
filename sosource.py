@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.70 2009/04/03 13:44:43 ith Exp $
+$Id: sosource.py,v 1.71 2009/04/03 14:51:36 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -199,8 +199,8 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
         source_logger.debug("NaNs filled. Setting dynamical variables...")
     #Get first order results
     bgvars = myr[0:3,0]
-    dphi1 = myr[3,:] + myr[4,:]*1j
-    dphi1dot = myr[5,:] + myr[6,:]*1j
+    dphi1 = myr[3,:] + myr[5,:]*1j
+    dphi1dot = myr[4,:] + myr[6,:]*1j
     #Setup interpolation
     source_logger.debug("Variables set. Getting potentials for this timestep...")
     potentials = list(m.potentials(myr))
