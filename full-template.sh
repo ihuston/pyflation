@@ -1,10 +1,12 @@
-#!/bin/sh
-#PBS -l nodes=8:ppn=4
-#PBS -l walltime=03:00:00
-#PBS -N full-%(kinit)s-%(deltak)s
-#PBS -o /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.out
-#PBS -e /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.err
-#PBS -V
+#!/bin/bash
+#$ -pe orte 7
+#$ -l h_rt=03:00:00
+#$ -N full-%(kinit)s-%(deltak)s
+#$ -o /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.out
+#$ -e /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.err
+#$ -v PATH
+#$ -v PYTHONPATH
+#$ -S /bin/bash
 
 #Change first order file here
 FOFILE=%(fofile)s
@@ -12,17 +14,18 @@ KINIT=%(kinit)s
 DELTAK=%(deltak)s
 KEND=%(kend)s
 
+echo -----------------------------------------
 echo Start: host `hostname`, date `date`
-NPROCS=`wc -l < $PBS_NODEFILE`
-echo Number of nodes is $NPROCS
-echo PBS id is $PBS_JOBID
-echo Assigned nodes: `cat $PBS_NODEFILE`
+echo NSLOTS: $NSLOTS
+declare -i TOTNUMPROCS
+TOTNUMPROCS=4*$NSLOTS
+echo TOTNUMPROCS: $TOTNUMPROCS
 
 cd /home/ith/numerics
 
 echo Starting first order run:
-/usr/local/bin/mpiexec -n 1 --comm=pmi python harness.py -f $FOFILE -m --kinit $KINIT --deltak $DELTAK --kend $KEND
+mpirun -np 1 python harness.py -f $FOFILE -m --kinit $KINIT --deltak $DELTAK --kend $KEND
 echo First order run complete.
 echo Starting second order run:
-/usr/local/bin/mpiexec --comm=pmi python harness.py -f $FOFILE -p 
+mpirun -np $TOTNUMPROCS python harness.py -f $FOFILE -p 
 echo Second order run complete.
