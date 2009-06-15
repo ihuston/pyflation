@@ -269,7 +269,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
     except:
         harness_logger.exception("Error wrapping model file.")
         if myrank != 0:
-            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10)
+            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Send error msg
         raise
     if sourcefile is None:
         if "fo-" in modelfile:
@@ -306,9 +306,9 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
             del m
         except IOError:
             harness_logger.exception("Error closing model file!")
-            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
+            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
             raise
-        comm.Send([{'rank':myrank, 'status':0}], dest=0, tag=0) #Tag=0 signals success
+        comm.send([{'rank':myrank, 'status':0}], dest=0, tag=0) #Tag=0 signals success
         return filesaved
     else:
         #Get rid of model object
@@ -317,7 +317,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
         status_list = []
         while len(status_list) < len(process_list):
             status = MPI.Status()
-            data = comm.Recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
             status_list.append(data[0])
             if status.tag > 0:
                 harness_logger.error("Error in subprocess %d!", status.source)
