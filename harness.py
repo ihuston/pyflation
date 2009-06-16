@@ -333,7 +333,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
         harness_logger.info("Combination complete, saved in %s.", foandsrcfile)
         harness_logger.info("Starting second order run...")
         sofile = runsomodel(foandsrcfile)
-        harness_logger.info("Second order run complete. Starting to combine first and scond order results.")
+        harness_logger.info("Second order run complete. Starting to combine first and second order results.")
         cfilename = sofile.replace("so", "cmb")
         cfile = sohelpers.combine_results(foandsrcfile, sofile, cfilename)
         harness_logger.info("Combined results saved in %s.", cfile)
