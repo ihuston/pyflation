@@ -5,6 +5,7 @@ import os
 import hconfig
 import harness
 import time
+import sys
 
 templatefile = "/home/ith/numerics/fullsubs/full-template.sh"
 filestub = "/home/ith/numerics/fullsubs/full-"
