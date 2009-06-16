@@ -418,7 +418,6 @@ def main(args):
             harness_logger.info("Set kend to %s.", str(kend))
         elif kend < 2*((numsoks-1)*deltak + kinit):
             harness_logger.info("Requested k range will not satisfy condition for second order run!")
-                                    
         foargs = hconfig.FOARGS
         foargs["k"] = seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
