@@ -2,6 +2,8 @@
 
 Uses nosetest suite in numpy.testing
 """
+from __future__ import division 
+
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 import sosource
@@ -72,6 +74,6 @@ def get_convolution_envelope(fixture):
     
     envs =[]
     for analytic_term, calced_term in zip(analytic_terms, calced_terms):
-        envs.append(np.array([max(abs(analytic_term[:,i]-calced_term[:,i])/analytic_term[:,i])
+        envs.append(np.array([max(abs(analytic_term[:,i]-calced_term[:,i])/abs(analytic_term[:,i]))
                              for i in np.arange(len(analytic_term))]))
     return envs
