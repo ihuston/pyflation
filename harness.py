@@ -298,7 +298,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
             harness_logger.info("Source term saved as " + filesaved)
         except Exception:
             harness_logger.exception("Error getting source term.")
-            comm.Send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
+            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
             raise
         #Destroy model instance to save memory
         harness_logger.debug("Destroying model instance to reclaim memory...")
