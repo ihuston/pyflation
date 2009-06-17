@@ -8,7 +8,11 @@ import sosource
 
 fixtures = [
     {"kmin": 0.001, "fullkmax": 1.026, "deltak": 0.001, "numsoks": 513, "nthetas": 129, "A": 1, "B": 1},
-    {"kmin": 1.000, "fullkmax": 2.025, "deltak": 0.001, "numsoks": 513, "nthetas": 129, "A": 1, "B": 1}    
+    {"kmin": 0.001, "fullkmax": 1.026, "deltak": 0.001, "numsoks": 513, "nthetas": 257, "A": 1, "B": 1},
+    {"kmin": 0.001, "fullkmax": 1.026, "deltak": 0.001, "numsoks": 513, "nthetas": 513, "A": 1, "B": 1},
+    {"kmin": 0.001, "fullkmax": 1.026, "deltak": 0.001, "numsoks": 513, "nthetas": 65, "A": 1, "B": 1},
+    {"kmin": 1.000, "fullkmax": 2.025, "deltak": 0.001, "numsoks": 513, "nthetas": 129, "A": 1, "B": 1},
+    {"kmin": 1.000, "fullkmax": 2.025, "deltak": 0.001, "numsoks": 513, "nthetas": 257, "A": 1, "B": 1} 
 ]
 
 def check_klessq(fixture):
@@ -40,17 +44,34 @@ def get_convolution_envelope(fixture):
     k = q = fullk[:fixture["numsoks"]]
     km = k[..., np.newaxis]
     qm = q[np.newaxis, ...]
+    A = fixture["A"]
+    B = fixture["B"]
     theta = np.linspace(0, np.pi, fixture["nthetas"])
     ie = k, q, theta
     
-    dp1=A/sqrt(fullk)
-    dp1dot=-A/sqrt(fullk) -(A/B)*sqrt(fullk)*1j
+    dp1 = A/np.sqrt(fullk)
+    dp1dot = -A/np.sqrt(fullk) -(A/B)*np.sqrt(fullk)*1j
     
     #Get calculated array
     klq = np.array([sosource.klessq(onek, q, theta) for onek in k])
-    tterms=sosource.getthetaterms(ie, dp1, dp1dot)
     
-    ansoln= (2*A/(3*k2*q2)) * ((km+qm)**1.5-(abs(km-qm))**1.5)
-    aterm=tterms[0,0]+tterms[0,1]*1j
-    env=array([max(abs((ansoln[:,i]-aterm[:,i])/ansoln[:,i])) for i in arange(len(ansoln))])
-    return env
+    tterms = sosource.getthetaterms(ie, dp1, dp1dot)
+    aterm = tterms[0,0] + tterms[0,1]*1j
+    bterm = tterms[1,0] + tterms[1,1]*1j
+    cterm = tterms[2,0] + tterms[2,1]*1j
+    calced_terms = [aterm, bterm, cterm]
+    
+    aterm_analytic = (2*A/(3*km*qm)) * ((km+qm)**1.5-(abs(km-qm))**1.5)
+    
+    bterm_analytic = (-A/(km*qm)**2) * ((1/7)*((km+qm)**3.5-(abs(km-qm))**3.5)
+        - (1/3)*(km**2 + qm**2) * ((km+qm)**1.5-(abs(km-qm))**1.5))
+        
+    cterm_analytic = - aterm_analytic - (2*A/(5*B*km*qm)) * ((km+qm)**2.5-(abs(km-qm))**2.5) * 1j
+    
+    analytic_terms = [aterm_analytic, bterm_analytic, cterm_analytic]
+    
+    envs =[]
+    for analytic_term, calced_term in zip(analytic_terms, calced_terms):
+        envs.append(np.array([max(abs(analytic_term[:,i]-calced_term[:,i])/analytic_term[:,i])
+                             for i in np.arange(len(analytic_term))]))
+    return envs
