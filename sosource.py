@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.71 2009/04/03 14:51:36 ith Exp $
+$Id: sosource.py,v 1.72 2009/06/19 14:30:27 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -9,7 +9,7 @@ order models.
 """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import tables
+
 import numpy as N
 from scipy import integrate, interpolate
 import helpers
@@ -307,6 +307,7 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
 
 def opensourcefile(k, filename=None, sourcetype=None):
     """Open the source term hdf5 file with filename."""
+    import tables
     #Set up file for results
     if not filename or not os.path.isdir(os.path.dirname(filename)):
         date = time.strftime("%Y%m%d%H%M%S")
