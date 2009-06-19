@@ -254,7 +254,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         raise
     return filesaved
 
-def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
+def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=129):
     """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
@@ -294,7 +294,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None):
         #get source integrand and save to file
         try:
             ensureresultspath(sourcefile)
-            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend)
+            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend, ntheta=ntheta)
             harness_logger.info("Source term saved as " + filesaved)
         except Exception:
             harness_logger.exception("Error getting source term.")
@@ -357,7 +357,7 @@ def main(args):
 
     #Set up arguments
     shortargs = "hf:mstadpb:e:"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks="]
+    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks=", "ntheta="]
     try:                                
         opts, args = getopt.getopt(args, shortargs, longargs)
     except getopt.GetoptError:
@@ -369,6 +369,7 @@ def main(args):
     ninit = 0
     nfinal = -1
     numsoks = hconfig.NUMSOKS
+    ntheta = hconfig.ntheta
     loglevel = hconfig.LOGLEVEL
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -400,6 +401,8 @@ def main(args):
             nfinal = int(arg)
         elif opt in ("--numsoks",):
             numsoks = int(arg)
+        elif opt in ("--ntheta",):
+            ntheta = int(arg)
     #Start the logging module
     startlogging(loglevel)
     
@@ -433,7 +436,7 @@ def main(args):
     elif func == "source":
         harness_logger.info("-----------Source integral run requested------------------")
         try:
-            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta)
         except Exception:
             harness_logger.exception("Error getting source integral!")
     elif func == "parallelsrc":
