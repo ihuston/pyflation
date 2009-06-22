@@ -9,7 +9,6 @@ from sosource import getthetaterms
 import helpers
 from harness import checkkend
 
-
 kmins_default = [1e-61, 3e-61, 1e-60]
 deltaks_default = [1e-61, 3e-61, 1e-60]
 nthetas_default = [129, 257, 513]
