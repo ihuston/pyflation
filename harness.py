@@ -90,9 +90,10 @@ def checkkend(kinit, kend, deltak, numsoks):
     If it is not the correct value then log a complaint and return it anyway.
     """
     if not kend:
-        kend = 2*((numsoks-1)*deltak + kinit)
+        #Change from numsoks-1 to numsoks to include extra point when deltak!=kinit
+        kend = 2*((numsoks)*deltak + kinit)
         harness_logger.info("Set kend to %s.", str(kend))
-    elif kend < 2*((numsoks-1)*deltak + kinit):
+    elif kend < 2*((numsoks)*deltak + kinit):
         harness_logger.info("Requested k range will not satisfy condition for second order run!")
     return kend
     
