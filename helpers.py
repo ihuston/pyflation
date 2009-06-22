@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.12 2009/02/16 18:14:09 ith Exp $
+    $Id: helpers.py,v 1.13 2009/06/22 12:51:43 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -99,4 +99,15 @@ def getintfunc(x):
     else:
         raise ValueError("Cannot integrate length 0 array!")
     return intfunc, fnargs
-    
+
+def cartesian_product(lists, previous_elements = []):
+    """Generator of cartesian products of lists."""
+    if len(lists) == 1:
+        for elem in lists[0]:
+            yield previous_elements + [elem, ]
+    else:
+        for elem in lists[0]:
+            for x in cartesian_product(lists[1:], previous_elements + [elem, ]):
+                yield x
+
+  
