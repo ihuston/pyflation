@@ -145,7 +145,7 @@ def postconvolution_envelope(fixture):
     """Return envelope of errors in postconvolution calculated term versus analytic."""
     pass
 
-def run_postconvolution(fixturelist = fixtures):
+def run_postconvolution(fixturelist = generate_fixtures()):
     """Run post convolution tests over list of fixtures."""
     res_list = []
     for fx in fixturelist:
