@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.10 2009/06/26 14:43:33 ith Exp $
+    $Id: sohelpers.py,v 1.11 2009/06/26 16:21:44 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -10,6 +10,7 @@ import logging
 import time
 import os.path
 from sosource import getthetaterms
+from scipy.integrate import romb
 
 _log = logging.getLogger(__name__)
 
@@ -209,13 +210,13 @@ def get_selfconvolution(m, nix, nthetas=257, numsoks=1025):
     k = q = m.k[:numsoks]
     theta = N.linspace(0, N.pi, nthetas)
     ie = k, q, theta
-    dp1 = m.yresult[:,3] + m.yresult[:,5]*1j
-    dp1dot = m.yresult[:,4] + m.yresult[:,6]*1j
+    dp1 = m.yresult[nix,3] + m.yresult[nix,5]*1j
+    dp1dot = m.yresult[nix,4] + m.yresult[nix,6]*1j
     aterm = getthetaterms(ie, dp1, dp1dot)[0]
-    
+    at2 = aterm[0] + aterm[1]*1j
     qm = q[N.newaxis, ...]
-    dp1m = dp1[N,newaxis,...]
-    conv = 2*np.pi * qm**2 * dp1m * aterm
-    integrated = romb(aterm, k[1]-k[0])
+    dp1m = dp1[N.newaxis,:numsoks]
+    conv = 2*N.pi * qm**2 * dp1m * at2
+    integrated = romb(conv, k[1]-k[0])
     return integrated  
         
