@@ -6,7 +6,7 @@ from copy import deepcopy
 WMAP5PIVOT = N.array([5.25e-60])
 
 fixtures = {
-    "mass": {"name": "mass", "values":N.linspace(6e-6, 7e-6),
+    "mass": {"name": "mass", "values":N.linspace(6.3265e-6, 6.3427e-6),
              "pivotk":WMAP5PIVOT, "pot": "msqphisq",
              "ystart":N.array([18.0, # \phi_0
                         -0.1, # \dot{\phi_0}
