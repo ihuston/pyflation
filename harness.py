@@ -261,6 +261,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         from mpi4py import MPI
     except ImportError:
         raise
+
     comm = MPI.COMM_WORLD
     myrank = comm.Get_rank()
     nprocs = comm.Get_size() - 1 #Don't include host
@@ -280,7 +281,8 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
     if myrank != 0:
         #Do not include host node in execution
-        
+        if nfinal == -1:
+            nfinal = m.tresult.shape[0]
         nfostart = min(m.fotstartindex).astype(int)
         nstar = max(nfostart, ninit)
         totalnrange = len(m.tresult[nstar:nfinal])
@@ -436,6 +438,7 @@ def main(args):
         runsomodel(fofile=filename)
     elif func == "source":
         harness_logger.info("-----------Source integral run requested------------------")
+        harness_logger.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
         try:
             runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta)
         except Exception:
