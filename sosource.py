@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.72 2009/06/19 14:30:27 ith Exp $
+$Id: sosource.py,v 1.73 2009/06/30 18:24:48 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -223,7 +223,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     source_logger.debug("Integration successful!")
     return src
                 
-def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=129, numks=None):
+def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=513, numks=1025):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
