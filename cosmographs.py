@@ -110,4 +110,12 @@ def plotresults(m, fig=None, show=True, varindex=None, klist=None, saveplot=Fals
         m.saveplot(fig)   
     #Return the figure instance
     return fig
+
+def plot_errors(results, labels=None, fig=None):
+    if labels is None:
+        labels = ["" for r in results]
+    if fig is None:
+        fig = P.figure()
+    for e, l  in zip(results, labels):
+        P.plot(e.k, e.postconv["rel_err"], label=l)
     
