@@ -1,7 +1,7 @@
 #Run multiple cm2 models
 import cosmomodels as c
 import numpy as N
-WMAP5PIVOT = N.array([1.3125e-58])
+WMAP5PIVOT = N.array([5.25e-60])
 fixtures = {
     "mass": {"name": "mass", "values":N.logspace(N.log10(5e-6), N.log10(7e-6)),
              "pivotk":WMAP5PIVOT, "pot": "msqphisq",
@@ -35,19 +35,20 @@ def param_vs_spectrum(fixture, nefolds=5):
                                     pot_params={fixture["name"]: ps},
                                     tend=83, quiet=True)
         
-        print "Running model with %s=%s"%(fixture["name"], str(ps))
+        
         sim.run(saveresults=False)
-        Pr = sim.findspectrum()
+        scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
         tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
-        Pres = Pr[tres.astype(int)].diagonal()[0]
+        Pres = scaledPr[tres.astype(int)].diagonal()[0]
+        print "Running model with %s=%s gives scaledPr=%s"%(fixture["name"], str(ps), str(Pres))
         if results is not None:
             results = N.vstack((results, N.array([ps, Pres])))
         else:
-            results = N.array([ms, Pres])
+            results = N.array([ps, Pres])
         del sim
     
     return results
 
 
 if __name__ == "__main__":
-    param_vs_spectrum(fixtures["mass"])
+    print param_vs_spectrum(fixtures["mass"])
