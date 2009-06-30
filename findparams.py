@@ -1,9 +1,10 @@
 #Run multiple cm2 models
+from __future__ import division
 import cosmomodels as c
 import numpy as N
 WMAP5PIVOT = N.array([5.25e-60])
 fixtures = {
-    "mass": {"name": "mass", "values":N.logspace(N.log10(5e-6), N.log10(7e-6)),
+    "mass": {"name": "mass", "values":N.linspace(7e-6, 8e-6),
              "pivotk":WMAP5PIVOT, "pot": "msqphisq",
              "ystart":N.array([18.0, # \phi_0
                         -0.1, # \dot{\phi_0}
@@ -14,7 +15,7 @@ fixtures = {
                          0.0  # Im\dot{\delta\phi_1}
                          ])},
         #
-    "lambda": {"name":"lambda", "values": N.logspace(N.log10(1e-10), N.log10(1e-8)),
+    "lambda": {"name":"lambda", "values": N.linspace(1e-10, 1e-8),
                "pivotk":WMAP5PIVOT, "pot": "lambdaphi4",
                "ystart": N.array([25.0,
                                   -1.0,
@@ -27,7 +28,6 @@ fixtures = {
 
 def param_vs_spectrum(fixture, nefolds=5):
     """Run tests for a particular parameter, return mass used and spectrum after horizon exit"""
-    
     results = None        
     for ps in fixture["values"]:
         sim = c.FOCanonicalTwoStage(solver="rkdriver_withks", ystart=fixture["ystart"],
