@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.226 2009/04/03 11:35:13 ith Exp $
+    $Id: cosmomodels.py,v 1.227 2009/06/30 15:57:10 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.226 $",
+                  "CVSRevision":"$Revision: 1.227 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1075,7 +1075,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.226 $",
+                  "CVSRevision":"$Revision: 1.227 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1445,7 +1445,11 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         
         return foystart
     
-    def getdeltaphi(self, recompute=False):
+    def getdeltaphi(self):
+        return self.deltaphi
+    
+    @property
+    def deltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times and modes.
         
         The result is stored as the instance variable self.deltaphi but will be recomputed
@@ -1465,9 +1469,8 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
-            self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
-        return self.deltaphi
-
+            self._dp = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        return self._dp
         
 class FONewCanonicalTwoStage(FOCanonicalTwoStage):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
