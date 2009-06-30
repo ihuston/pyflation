@@ -255,7 +255,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         raise
     return filesaved
 
-def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=129):
+def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025):
     """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
@@ -297,7 +297,8 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         #get source integrand and save to file
         try:
             ensureresultspath(sourcefile)
-            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend, ntheta=ntheta)
+            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
+                                                       ntheta=ntheta, numks=numsoks)
             harness_logger.info("Source term saved as " + filesaved)
         except Exception:
             harness_logger.exception("Error getting source term.")
@@ -446,7 +447,7 @@ def main(args):
     elif func == "parallelsrc":
         try:
             try:
-                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal)
+                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
             except ImportError:
                 harness_logger.exception("Parallel module not available!")
                 sys.exit(1)
