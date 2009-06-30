@@ -13,7 +13,7 @@ class RingevalFirstOrder(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.3267e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(RingevalFirstOrder, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -160,7 +160,7 @@ class MalikFirstOrder2(MalikModels):
        y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
        y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
        """
-    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.133e-6):
+    def __init__(self, ystart=None, tstart=0.0, tend=80.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", mass=6.3267e-6):
         """Initialize all variables and call ancestor's __init__ method."""
         self.mass = mass
         super(MalikFirstOrder2, self).__init__(ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)

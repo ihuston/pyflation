@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.227 2009/06/30 15:57:10 ith Exp $
+    $Id: cosmomodels.py,v 1.228 2009/06/30 18:41:29 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -32,8 +32,8 @@ from pdb import set_trace
 module_logger = logging.getLogger(__name__)
 
 #WMAP pivot scale and Power spectrum
-WMAP_PIVOT = 1.3125e-58 #WMAP pivot scale in Mpl
-WMAP_PR = 2.06989278313e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
+WMAP_PIVOT = 5.25e-60 #WMAP pivot scale in Mpl
+WMAP_PR = 2.457e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
 
 #Results directory
 RESULTS_PATH = "/misc/scratch/ith/numerics/results/"
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.227 $",
+                  "CVSRevision":"$Revision: 1.228 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1075,7 +1075,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.227 $",
+                  "CVSRevision":"$Revision: 1.228 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params

@@ -1,5 +1,5 @@
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.5 2009/03/19 15:16:50 ith Exp $
+    $Id: cmpotentials.py,v 1.6 2009/06/30 18:37:02 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -31,7 +31,7 @@ def msqphisq(y, params=None):
         m = params["mass"]
     else:
         #Use WMAP value of mass (in Mpl)
-        m = 6.133e-6
+        m = 6.3267e-6
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
