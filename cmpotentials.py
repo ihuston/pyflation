@@ -1,5 +1,5 @@
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.6 2009/06/30 18:37:02 ith Exp $
+    $Id: cmpotentials.py,v 1.7 2009/06/30 18:57:25 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -24,7 +24,7 @@ def msqphisq(y, params=None):
              
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.07e-9 at the WMAP pivot scale of 0.05 Mpc^-1."""
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
     
     #Check if mass is specified in params
     if params is not None and "mass" in params:
@@ -61,7 +61,7 @@ def lambdaphi4(y, params=None):
              
     lambda can be specified in the dictionary params or otherwise
     it defaults to the value as normalized with the WMAP spectrum
-    Pr = 2.07e-9 at the WMAP pivot scale of 0.05 Mpc^-1."""
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
     #set_trace()
     #Check if mass is specified in params
     if params is not None and "lambda" in params:
