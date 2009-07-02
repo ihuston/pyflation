@@ -10,12 +10,9 @@ import sys
 templatefile = "/home/ith/numerics/fullsubs/full-template.sh"
 filestub = "/home/ith/numerics/fullsubs/full-"
 
-sublist = [ {"kinit": 1e-61, "deltak": 1e-61, "numsoks": 513},
-            {"kinit": 1e-60, "deltak": 1e-61, "numsoks": 513},
-            {"kinit": 1e-59, "deltak": 1e-61, "numsoks": 513},
-            {"kinit": 1e-58, "deltak": 1e-61, "numsoks": 513},
-            {"kinit": 1e-60, "deltak": 1e-60, "numsoks": 513},
-            {"kinit": 1e-59, "deltak": 1e-60, "numsoks": 513}]
+sublist = [ {"kinit": 0.5e-61, "deltak": 1e-61, "numsoks": 1025},
+            {"kinit": 1.5e-61, "deltak": 3e-61, "numsoks": 1025},
+            {"kinit": 0.25e-60, "deltak": 1e-60, "numsoks": 1025}]
             
 def genfullscripts(tfilename):
     numsoks = hconfig.NUMSOKS
