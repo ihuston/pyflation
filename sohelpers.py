@@ -1,5 +1,5 @@
 """Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.11 2009/06/26 16:21:44 ith Exp $
+    $Id: sohelpers.py,v 1.12 2009/07/02 10:00:08 ith Exp $
     
     Provides helper functions for second order data from cosmomodels.py"""
     
@@ -149,12 +149,12 @@ def combine_results(fofile, sofile, newfile=None):
     _log.debug("First and second order files successfully combined in %s.", newfile)
     return newfile
    
-def soderivs_magnitude(m, y, t, **kwargs):
+def soderivs_magnitude(m, **kwargs):
     """Equation of motion for second order perturbations including source term"""
     
     #Pick k from kwargs
-    k = kwargs["k"]
     kix = kwargs["kix"]
+    k = m.k[kix]
     
     if kix is None:
         raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
@@ -163,9 +163,11 @@ def soderivs_magnitude(m, y, t, **kwargs):
         raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
     else:
         tix = kwargs["tix"]
+    t = m.tresult[tix]
 
     #Get first order results for this time step
     fovars = m.yresult[tix,0:7].copy()[:,kix]
+    y = m.yresult[tix, 7:].copy()[:,kix]
     phi, phidot, H = fovars[0:3]
     epsilon = m.bgepsilon[tix]
     #get potential from function
@@ -198,10 +200,9 @@ def soderivs_magnitude(m, y, t, **kwargs):
 
 def find_soderiv_terms(m, kix=N.array([0])):
     """Run through all time steps finding second order derivative terms."""
-    k=m.k[kix]
     res = []
     for tix, t in enumerate(m.tresult):
-        terms = soderivs_magnitude(m, m.yresult[tix, 7:,kix], t, tix=tix, kix=kix, k=k)
+        terms = soderivs_magnitude(m, tix=tix, kix=kix)
         res.append(terms)
     return N.array(res)
     
