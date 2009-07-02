@@ -1,5 +1,5 @@
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.13 2009/06/22 12:51:43 ith Exp $
+    $Id: helpers.py,v 1.14 2009/07/02 17:18:51 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -24,9 +24,15 @@ def eto10(number):
     s = re.sub(r'e(\S\d+)', r'\\times 10^{\1}', str(number))
     return s
 
-def klegend(ks):
+def klegend(ks,mpc=False):
     """Return list of string representations of k modes for legend."""
-    klist = [r"$k=" + eto10(k) + r"M_{\mathrm{PL}} = " + eto10(mpl2invmpc(k)) + r" M\mathrm{pc}$" for k in ks]
+    klist = []
+    for k in ks:
+        if mpc:
+            str = r"$k=" + eto10(k) + r"M_{\mathrm{PL}} = " + eto10(mpl2invmpc(k)) + r" M\mathrm{pc}$"
+        else:
+            str = r"$k=" + eto10(k) + r"M_{\mathrm{PL}}$"
+        klist.append(str)
     return klist
 
 def invmpc2mpl(x=1):
