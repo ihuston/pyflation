@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Harness to run multiple simulations at different k
 Author: Ian Huston
@@ -255,7 +256,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         raise
     return filesaved
 
-def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025):
+def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025, soargs=None):
     """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
@@ -336,7 +337,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         foandsrcfile = sohelpers.combine_source_and_fofile(srcmergefile, modelfile)
         harness_logger.info("Combination complete, saved in %s.", foandsrcfile)
         harness_logger.info("Starting second order run...")
-        sofile = runsomodel(foandsrcfile)
+        sofile = runsomodel(foandsrcfile, soargs=soargs)
         harness_logger.info("Second order run complete. Starting to combine first and second order results.")
         cfilename = sofile.replace("so", "cmb")
         cfile = sohelpers.combine_results(foandsrcfile, sofile, cfilename)
@@ -375,6 +376,8 @@ def main(args):
     numsoks = hconfig.NUMSOKS
     ntheta = hconfig.ntheta
     loglevel = hconfig.LOGLEVEL
+    foargs = getattr(hconfig, "FOARGS", {})
+    soargs = getattr(hconfig, "SOARGS", {})
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             print __doc__
@@ -425,7 +428,7 @@ def main(args):
             harness_logger.info("Set kend to %s.", str(kend))
         elif kend < 2*((numsoks-1)*deltak + kinit):
             harness_logger.info("Requested k range will not satisfy condition for second order run!")
-        foargs = hconfig.FOARGS
+        
         foargs["k"] = seq(kinit, kend, deltak)
         runfomodel(filename=filename, foargs=foargs)
     elif func == "somodel":
@@ -436,7 +439,7 @@ def main(args):
         except AttributeError:
             harness_logger.exception("Error starting second order model!")
         #start model run
-        runsomodel(fofile=filename)
+        runsomodel(fofile=filename, soargs=soargs)
     elif func == "source":
         harness_logger.info("-----------Source integral run requested------------------")
         harness_logger.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
@@ -447,7 +450,7 @@ def main(args):
     elif func == "parallelsrc":
         try:
             try:
-                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
+                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks, soargs=soargs)
             except ImportError:
                 harness_logger.exception("Parallel module not available!")
                 sys.exit(1)
