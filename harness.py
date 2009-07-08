@@ -229,7 +229,7 @@ def runsomodel(fofile, filename=None, soargs=None):
     harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
     return filename
     
-def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
+def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, numsoks=1025, ntheta=513):
     """Run source integrand calculation."""
     try:
         m = c.make_wrapper_model(modelfile)
@@ -242,7 +242,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
     #get source integrand and save to file
     try:
         ensureresultspath(sourcefile)
-        filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=ninit, nfinal=nfinal)
+        filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
         harness_logger.info("Source term saved as " + filesaved)
     except Exception:
         harness_logger.exception("Error getting source term.")
@@ -444,7 +444,7 @@ def main(args):
         harness_logger.info("-----------Source integral run requested------------------")
         harness_logger.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
         try:
-            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta)
+            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
         except Exception:
             harness_logger.exception("Error getting source integral!")
     elif func == "parallelsrc":
