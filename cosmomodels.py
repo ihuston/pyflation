@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.228 2009/06/30 18:41:29 ith Exp $
+    $Id: cosmomodels.py,v 1.229 2009/07/09 10:25:31 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.228 $",
+                  "CVSRevision":"$Revision: 1.229 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1075,7 +1075,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.228 $",
+                  "CVSRevision":"$Revision: 1.229 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1690,7 +1690,8 @@ class ThirdStageModel(MultiStageModel):
         "k": self.k,
         "ainit": self.ainit,
         "potential_func": self.potential_func,
-        "pot_params": self.pot_params}
+        "pot_params": self.pot_params,
+        "cq": self.cq}
         
         self.somodel = self.soclass(**kwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
