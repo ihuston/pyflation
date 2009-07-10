@@ -8,7 +8,9 @@ from scipy.integrate import romb
 from sosource import getthetaterms
 import helpers
 from harness import checkkend
+import logging
 
+log = logging.getLogger(__name__)
 kmins_default = [1e-61, 3e-61, 1e-60]
 deltaks_default = [1e-61, 3e-61, 1e-60]
 nthetas_default = [129, 257, 513]
@@ -91,7 +93,8 @@ def preconvolution_calced(fixture):
     aterm = tterms[0,0] + tterms[0,1]*1j
     bterm = tterms[1,0] + tterms[1,1]*1j
     cterm = tterms[2,0] + tterms[2,1]*1j
-    calced_terms = [aterm, bterm, cterm]
+    dterm = tterms[3,0] + tterms[3,1]*1j
+    calced_terms = [aterm, bterm, cterm, dterm]
     return calced_terms
 
 def preconvolution_envelope(fixture):
@@ -157,3 +160,94 @@ def run_postconvolution(fixturelist = generate_fixtures()):
             print "Error using fixture:\n", str(fx)
             print ex.message
     return res_list
+
+def src_term_integrands(m, fixture, nix=0):
+    """Return source term integrands for the given fixture."""
+     #Init vars
+    fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
+    k = q = fullk[:fixture["numsoks"]]
+       
+    theta = np.linspace(0, np.pi, fixture["nthetas"])
+    ie = k, q, theta
+    bgvars = m.bgmodel.yresult[nix,0:3]
+    a = m.ainit*np.exp(m.bgmodel.tresult[nix])
+    A = (a*np.sqrt(2))**-1
+    B = a*bgvars[2]
+    dp1 = A/np.sqrt(fullk)
+    dp1dot = -A/np.sqrt(fullk) -(A/B)*np.sqrt(fullk)*1j
+    potentials = m.potentials(m.bgmodel.yresult[nix])
+    
+    log.info("Getting thetaterms...")
+    tterms = getthetaterms(ie, dp1, dp1dot)
+    log.info("Getting source term integrands...")
+    src_terms = get_all_src_terms(bgvars, a, potentials, ie, dp1, dp1dot, tterms)
+    return tterms, src_terms
+    
+def get_all_src_terms(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
+    """Return unintegrated slow roll source term.
+    
+    The source term before integration is calculated here using the slow roll
+    approximation. This function follows the revised version of Eq (5.8) in 
+    Malik 06 (astro-ph/0610864v5).
+    
+    Parameters
+    ----------
+    bgvars: tuple
+            Tuple of background field values in the form `(phi, phidot, H)`
+    
+    a: float
+       Scale factor at the current timestep, `a = ainit*exp(n)`
+    
+    potentials: tuple
+                Tuple of potential values in the form `(U, dU, dU2, dU3)`
+    
+    integrand_elements: tuple 
+         Contains integrand arrays in order (k, q, theta)
+            
+    dp1: array_like
+         Array of known dp1 values
+             
+    dp1dot: array_like
+            Array of dpdot1 values
+             
+    theta_terms: array_like
+                 3-d array of integrated theta terms of shape (4, len(k), len(q))
+             
+    Returns
+    -------
+    src_integrand: array_like
+        Array containing the unintegrated source terms for all k and q modes.
+        
+    References
+    ----------
+    Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+    """
+    #Unpack variables
+    phi, phidot, H = bgvars
+    U, dU, dU2, dU3 = potentials
+    k = integrand_elements[0][...,np.newaxis]
+    q = integrand_elements[1][np.newaxis, ...]
+    #Calculate dphi(q) and dphi(k-q)
+    dp1_q = dp1[np.newaxis,:q.shape[-1]]
+    dp1dot_q = dp1dot[np.newaxis,q.shape[-1]]
+    atmp, btmp, ctmp, dtmp = theta_terms
+    aterm = atmp[0] + atmp[1]*1j
+    bterm = btmp[0] + btmp[1]*1j
+    cterm = ctmp[0] + ctmp[1]*1j
+    dterm = dtmp[0] + dtmp[1]*1j
+    
+    #Calculate unintegrated source term
+    #First major term:
+    if dU3!=0.0:
+        src_integrand = (1/(2*np.pi)**2)*((1/H**2) * dU3 * q**2 * dp1_q * aterm)
+    else:
+        src_integrand = np.zeros_like(aterm)
+    #Second major term:
+    src_integrand2 = (1/(2*np.pi)**2) * (phidot/((a*H)**2)) * ((3*dU2*(a*q)**2 + 3.5*q**4 + 2*(k**2)*(q**2))*aterm 
+                      - (4.5 + (q/k)**2)* k * (q**3) * bterm) * dp1_q
+    #Third major term:
+    src_integrand3 = (1/(2*np.pi)**2) * (phidot * ((-1.5*q**2)*cterm + (2 - (q/k)**2)*k*q*dterm) * dp1dot_q)
+    #Multiply by prefactor
+    src_terms = src_integrand, src_integrand2, src_integrand3
+    
+    return src_terms
