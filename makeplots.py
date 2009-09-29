@@ -113,3 +113,37 @@ def bgepsilon(fname="bgepsilon", size="large"):
     ax.set_ylim((-0.1, 3.1))
     P.draw()
     return fig, fname
+    
+def pr_kwmap(fname="Pr-kwmap", size="small", horiz=True):
+    Pr = cmb.Pr
+    scPr = cmb.k[52]**3/(2*np.pi**2) * Pr[:,52]
+    fig = P.figure()
+    set_size(fig, size)
+    P.semilogy(cmb.tresult[-1]-cmb.tresult[865:], np.abs(scPr[865:]))
+    ax = P.gca()
+    if horiz:
+        ax.axvline(cmb.tresult[-1] - 21.24, ls="--", color="red")
+    cg.reversexaxis()
+    
+    P.xlabel(calN)
+    P.ylabel(r"$\mathcal{P}_{\mathcal{R}} (k_\mathrm{WMAP})$")
+    P.draw()
+    return fig, fname
+    
+def pphi_kwmap(fname="Pphi-kwmap", size="small", horiz=True):
+    Pphi = cmb.Pphi
+    scPphi = cmb.k[52]**3/(2*np.pi**2) * Pphi[:,52]
+    fig = P.figure()
+    set_size(fig, size)
+    P.semilogy(cmb.tresult[-1]-cmb.tresult[865:], np.abs(scPphi[865:]))
+    ax = P.gca()
+    if horiz:
+        ax.axvline(cmb.tresult[-1] - 21.24, ls="--", color="red")
+    cg.reversexaxis()
+    #Labels
+    P.xlabel(calN)
+    P.ylabel(r"$\mathcal{P}_{\delta\varphi} (k_\mathrm{WMAP})$")
+    ax.set_xlim((70, -3.0))
+    ax.set_ylim((2e-11, 2e-7))
+    P.draw()
+    return fig, fname
