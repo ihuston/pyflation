@@ -310,7 +310,11 @@ def src_mvl(fname="src-mvl", size="small", zoom=False):
     ax = P.gca()
     ax.lines[1].set_linestyle("--")
     P.legend([r"$U=\frac{1}{2}m^2 \varphi^2$", r"$U=\frac{1}{4} \lambda \varphi^4$"], loc=0, prop=prop)
-    
+    if zoom:
+        ax.set_ylim((2.6e-11, 845))
+        ax.set_xlim((65, 57))
+    else:
+        ax.set_xlim((70,-3))
     ax.set_yticks(ax.get_yticks()[::2])
     P.draw()
     return fig, fname
