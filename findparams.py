@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #Run multiple cm2 models
 from __future__ import division
 import cosmomodels as c
@@ -17,7 +18,7 @@ fixtures = {
                          0.0  # Im\dot{\delta\phi_1}
                          ])},
         #
-    "lambda": {"name":"lambda", "values": N.linspace(1e-10, 1e-8),
+    "lambda": {"name":"lambda", "values": N.linspace(1e-10, 1e-8), 
                "pivotk":WMAP5PIVOT, "pot": "lambdaphi4",
                "ystart": N.array([25.0,
                                   -1.0,
@@ -25,7 +26,27 @@ fixtures = {
                                   1.0,
                                   0,
                                   1.0,
-                                  0])}
+                                  0])},
+     #
+     "linde": {"name":"lambda", "values": N.linspace(1.54e-13, 1.57e-13), 
+               "pivotk":WMAP5PIVOT, "pot": "linde",
+               "ystart": N.array([25.0,
+                                   0.0,
+                                   0.0,
+                                   1.0,
+                                   0,
+                                   1.0,
+                                   0])},
+    #
+    "linde2": {"name":"mass", "values": N.linspace(4.9e-8, 1e-6),
+                "pivotk":WMAP5PIVOT, "pot": "linde",
+                "ystart": N.array([25.0,
+                                    0.0,
+                                    0.0,
+                                    1.0,
+                                    0,
+                                    1.0,
+                                    0])}
 }
 
 def param_vs_spectrum(fixture, nefolds=5):

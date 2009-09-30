@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.9 2009/09/30 16:55:38 ith Exp $
+    $Id: cmpotentials.py,v 1.10 2009/09/30 22:42:58 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -108,8 +109,8 @@ def linde(y, params=None):
     if params is not None and "mass" in params:
         m = params["mass"]
     else:
-        #Use WMAP value of mass (in Mpl)
-        m = 6.3267e-6
+        #Use Salopek et al value of mass (in Mpl)
+        m = 5e-8
     #Use inflaton mass
     mass2 = m**2
     #Check if mass is specified in params
@@ -117,7 +118,8 @@ def linde(y, params=None):
         l = params["lambda"]
     else:
         #Use WMAP value of lambda
-        l = 1.5506e-13 
+        #l = 1.5506e-13
+        l = 5e-14 
     
     if len(y.shape)>1:
         y = y[:,0]
