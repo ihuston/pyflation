@@ -34,7 +34,7 @@ def run_and_save_model(sf=None, fx=None, sd=None):
     
     try:
         rfile = tables.openFile(sd + sf, "w")
-        rfile.createArray(rfile.root, "params-results", results, "Model parameter search results")
+        rfile.createArray(rfile.root, "params_results", results, "Model parameter search results")
         print "Results saved in %s" % str(sd + sf)
     finally:
         rfile.close()
