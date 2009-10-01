@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """genfullruns.py - Generate bash scripts for qsub for multiple first order runs.
 Author: Ian Huston
 """
@@ -6,6 +7,7 @@ import hconfig
 import harness
 import time
 import sys
+from helpers import ensurepath
 
 templatefile = "/home/ith/numerics/fullsubs/full-template.sh"
 filestub = "/home/ith/numerics/fullsubs/full-"
@@ -28,7 +30,7 @@ def genfullscripts(tfilename):
             d["kend"] = kend
             nf = open(filestub + str(kinit) + "-" + str(deltak) + ".sh", "w")
             filename = hconfig.RESULTSDIR + "fo-" + hconfig.foclass.__name__ + "-" + hconfig.POT_FUNC + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
-            harness.ensureresultspath(filename)
+            ensurepath(filename)
             d["fofile"] = filename
             try:
                 nf.write(text%d)
