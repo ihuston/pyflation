@@ -29,6 +29,16 @@ fixtures = {
                                   0,
                                   1.0,
                                   0])},
+    #
+    "phi2over3": {"vars":["lambda"], "values": [N.linspace(1e-10, 1e-8)], 
+               "pivotk":WMAP5PIVOT, "pot": "phi2over3",
+               "ystart": N.array([10.0,
+                                  0.0,
+                                  0.0,
+                                  1.0,
+                                  0,
+                                  1.0,
+                                  0])},
      #
      "linde": {"vars":["mass","lambda"], "values": [N.linspace(4.9e-8,6e-8), N.linspace(1.54e-13, 1.57e-13)], 
                "pivotk":WMAP5PIVOT, "pot": "linde",
