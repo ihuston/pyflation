@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.15 2009/10/01 10:12:25 ith Exp $
+    $Id: helpers.py,v 1.16 2009/10/01 10:49:15 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -166,3 +166,12 @@ def cartesian(arrays, out=None):
         for j in xrange(1, arrays[0].size):
             out[j*m:(j+1)*m,1:] = out[0:m,1:]
     return out
+
+def ensurepath(path):
+    """Check that the path for given directory exists and create it if not."""
+    #Does path exist?
+    if not os.path.isdir(os.path.dirname(path)):
+        try:
+            os.makedirs(os.path.dirname(path))
+        except OSError:
+            harness_logger.error("Error creating results directory!")

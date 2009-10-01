@@ -49,6 +49,7 @@ import sohelpers
 import os
 import hconfig
 import srcmerge 
+from helpers import ensurepath
 
 
 def startlogging(loglevel=hconfig.LOGLEVEL):
@@ -75,14 +76,7 @@ def startlogging(loglevel=hconfig.LOGLEVEL):
     harness_logger.addHandler(ch)
     harness_logger.debug("Logging started at level %d", loglevel)
 
-def ensureresultspath(path):
-    """Check that the path for results directory exists and create it if not."""
-    #Does path exist?
-    if not os.path.isdir(os.path.dirname(path)):
-        try:
-            os.makedirs(os.path.dirname(path))
-        except OSError:
-            harness_logger.error("Error creating results directory!")
+
 
 def checkkend(kinit, kend, deltak, numsoks):
     """Check whether kend has correct value for second order run.
@@ -157,7 +151,7 @@ def runfomodel(filename=None, foargs=None, foclass=hconfig.foclass):
         sys.exit(1)
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
-        ensureresultspath(filename)
+        ensurepath(filename)
         model.saveallresults(filename=filename)
         #Success!
         harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
@@ -218,7 +212,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         filename = hconfig.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
-        ensureresultspath(filename)
+        ensurepath(filename)
         somodel.saveallresults(filename=filename)
     except Exception:
         harness_logger.exception("IO error, nothing saved!")
@@ -241,7 +235,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, num
         sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
-        ensureresultspath(sourcefile)
+        ensurepath(sourcefile)
         filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numks=numsoks)
         harness_logger.info("Source term saved as " + filesaved)
     except Exception:
@@ -297,7 +291,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         
         #get source integrand and save to file
         try:
-            ensureresultspath(sourcefile)
+            ensurepath(sourcefile)
             filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
                                                        ntheta=ntheta, numks=numsoks)
             harness_logger.info("Source term saved as " + filesaved)
