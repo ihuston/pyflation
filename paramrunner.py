@@ -20,19 +20,22 @@ lindefx = {"vars":["mass","lambda"], "values": [np.linspace(4.9e-8,6e-8), np.lin
                                    1.0,
                                    0])}
 
-def run_linde_model(sf=None):
+def run_and_save_model(sf=None, fx=None, sd=None):
     """Run linde model and save results."""
     if sf is None:
         sf = savefile
-    helpers.ensurepath(savedir)
-    fx = lindefx
+    if sd is None:
+        sd = savedir
+    helpers.ensurepath(sd)
+    if fx is None:
+        fx = lindefx
     
     results = findparams.param_vs_spectrum(fx)
     
     try:
-        rfile = tables.openFile(savedir + savefile, "w")
-        rfile.createArray(rfile.root, "linde-params", results, "Linde model parameter results")
-        print "Results saved in %s" % str(savedir + savefile)
+        rfile = tables.openFile(sd + sf, "w")
+        rfile.createArray(rfile.root, "params-results", results, "Model parameter search results")
+        print "Results saved in %s" % str(sd + sf)
     finally:
         rfile.close()
     
