@@ -362,3 +362,23 @@ def msqphisq_params(fname="msqphisq_params", size="large"):
     P.draw()
     return fig, fname
     
+def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
+    filename = "/home/network/ith/results/param-search/lambdaphi4-1.5e-13-1.6e-13"
+    try:
+        rf = tables.openFile(filename, "r")
+        pr = rf.root.params_results[:]
+    finally:
+        rf.close()
+    fig = P.figure()
+    set_size(fig, size)
+    P.plot(pr[:,0],pr[:,1], color="black")
+    ax = P.gca()
+    ax.set_xlim((1.49e-13,1.61e-13))
+    ax.set_ylim((2.35e-9,2.55e-9))
+    ax.axhline(2.457e-9, ls="--", color="black")
+    ax.ticklabel_format(style="sci", scilimits=(0,0))
+    P.xlabel(r"$m$")
+    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.draw()
+    return fig, fname
+     
