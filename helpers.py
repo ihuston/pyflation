@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.14 2009/07/02 17:18:51 ith Exp $
+    $Id: helpers.py,v 1.15 2009/10/01 10:12:25 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import numpy as N
+import numpy as np
 import re
 from scipy import integrate
 
@@ -13,10 +14,10 @@ def nanfillstart(a, l):
     if len(a) >= l:
         return a #Array already as long or longer than required
     else:
-        bshape = N.array(a.shape)
+        bshape = np.array(a.shape)
         bshape[0] = l - bshape[0]
-        b = N.ones(bshape)*N.NaN
-        c = N.concatenate((b,a))
+        b = np.ones(bshape)*np.NaN
+        c = np.concatenate((b,a))
         return c
 
 def eto10(number):
@@ -49,7 +50,7 @@ def ispower2(n):
 
     Note the potential ambiguity if n==1: 2**0==1, interpret accordingly."""
 
-    bin_n = N.binary_repr(n)[1:]
+    bin_n = np.binary_repr(n)[1:]
     if '1' in bin_n:
         return 0
     else:
@@ -70,10 +71,10 @@ def removedups(l):
     retlist: ndarray
              Array of values with duplicates removed but order intact.
     """
-    retlist = N.array([])
+    retlist = np.array([])
     for x in l:
         if x not in retlist:
-            retlist = N.append(retlist, x)
+            retlist = np.append(retlist, x)
     return retlist
 
 def getintfunc(x):
@@ -116,4 +117,52 @@ def cartesian_product(lists, previous_elements = []):
             for x in cartesian_product(lists[1:], previous_elements + [elem, ]):
                 yield x
 
-  
+def cartesian(arrays, out=None):
+    """
+    Generate a cartesian product of input arrays.
+
+    Parameters
+    ----------
+    arrays : list of array-like
+        1-D arrays to form the cartesian product of.
+    out : ndarray
+        Array to place the cartesian product in.
+
+    Returns
+    -------
+    out : ndarray
+        2-D array of shape (M, len(arrays)) containing cartesian products
+        formed of input arrays.
+
+    Examples
+    --------
+    >>> cartesian(([1, 2, 3], [4, 5], [6, 7]))
+    array([[1, 4, 6],
+           [1, 4, 7],
+           [1, 5, 6],
+           [1, 5, 7],
+           [2, 4, 6],
+           [2, 4, 7],
+           [2, 5, 6],
+           [2, 5, 7],
+           [3, 4, 6],
+           [3, 4, 7],
+           [3, 5, 6],
+           [3, 5, 7]])
+
+    """
+
+    arrays = [np.asarray(x) for x in arrays]
+    dtype = arrays[0].dtype
+
+    n = np.prod([x.size for x in arrays])
+    if out is None:
+        out = np.zeros([n, len(arrays)], dtype=dtype)
+
+    m = n / arrays[0].size
+    out[:,0] = np.repeat(arrays[0], m)
+    if arrays[1:]:
+        cartesian(arrays[1:], out=out[0:m,1:])
+        for j in xrange(1, arrays[0].size):
+            out[j*m:(j+1)*m,1:] = out[0:m,1:]
+    return out
