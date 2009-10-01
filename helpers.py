@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.17 2009/10/01 11:19:21 ith Exp $
+    $Id: helpers.py,v 1.18 2009/10/01 16:37:30 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -176,4 +176,4 @@ def ensurepath(path):
         try:
             os.makedirs(os.path.dirname(path))
         except OSError:
-            harness_logger.error("Error creating results directory!")
+            raise OSError("Error creating results directory!")
