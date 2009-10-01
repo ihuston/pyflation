@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import helpers
 import sohelpers
+import tables
 
 #
 graphdir = "./calN-graphs/"
@@ -316,5 +317,24 @@ def src_mvl(fname="src-mvl", size="small", zoom=False):
     else:
         ax.set_xlim((70,-3))
     ax.set_yticks(ax.get_yticks()[::2])
+    P.draw()
+    return fig, fname
+    
+def phi2over3_params(fname="phi2over3_params", size="large"):
+    filename = "/home/network/ith/results/param-search/phi2over3-3.5e-10-4e-10.hf5"
+    try:
+        rf = tables.openFile(filename, "r")
+        pr = rf.root.params_results[:]
+    finally:
+        rf.close()
+    fig = P.figure()
+    set_size(fig, size)
+    P.plot(pr[:,0],pr[:,1], color="black")
+    ax = P.gca()
+    ax.set_xlim((3.48e-10, 4.02e-10))
+    ax.set_ylim((2.23e-9, 2.6e-9))
+    ax.axhline(2.457e-9, ls="--", color="black")
+    P.xlabel(r"$\lambda$")
+    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
