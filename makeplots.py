@@ -9,13 +9,16 @@ import matplotlib
 import helpers
 import sohelpers
 import tables
+import os.path
 
 #
-graphdir = "./calN-graphs/"
 
+
+resdir = "/home/network/ith/results/analysis/newmass/"
+graphdir = os.path.join(resdir, "calN-graphs/")
 #files
-cmb=c.make_wrapper_model("./cmb-msqphisq-5e-62-1.0245e-58-1e-61.hf5")
-fo=c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-msqphisq-5e-62-2.051e-58-1e-61-195554.hf5")
+cmb=c.make_wrapper_model(os.path.join(resdir,"cmb-msqphisq-5e-62-1.0245e-58-1e-61.hf5"))
+fo=c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq-5e-62-2.051e-58-1e-61-195554.hf5"))
 #k coefficient
 kc = cmb.k**(1.5)/(np.sqrt(2)*np.pi)
 #texts
@@ -27,7 +30,7 @@ prop = matplotlib.font_manager.FontProperties(size=12)
 def save(fname, fig=None):
     if fig is None:
         fig = P.gcf()
-    cg.multi_format_save(graphdir + fname, fig, formats=["pdf", "png", "eps"])
+    cg.multi_format_save(os.path.join(graphdir, fname), fig, formats=["pdf", "png", "eps"])
 
 def save_with_prompt(fname):
     save = raw_input("Do you want to save the figure, filename:" + fname + "? (y/n) ")
@@ -338,3 +341,24 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
+   
+def msqphisq_params(fname="msqphisq_params", size="large"):
+    filename = "/home/network/ith/results/param-search/msqphisq-6e-6-6.5e-6.hf5"
+    try:
+        rf = tables.openFile(filename, "r")
+        pr = rf.root.params_results[:]
+    finally:
+        rf.close()
+    fig = P.figure()
+    set_size(fig, size)
+    P.plot(pr[:,0],pr[:,1], color="black")
+    ax = P.gca()
+    ax.set_xlim((5.98e-6, 6.52e-6))
+    ax.set_ylim((2.2e-9, 2.62e-9))
+    ax.axhline(2.457e-9, ls="--", color="black")
+    ax.ticklabel_format(style="sci", scilimits=(0,0))
+    P.xlabel(r"$m$")
+    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.draw()
+    return fig, fname
+    
