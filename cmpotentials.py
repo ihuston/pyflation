@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.11 2009/10/01 14:25:27 ith Exp $
+    $Id: cmpotentials.py,v 1.12 2009/10/01 16:37:17 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -157,7 +157,7 @@ def phi2over3(y, params=None):
         l = params["lambda"]
     else:
         #Use WMAP value of lambda
-        l = 1.5506e-13 
+        l = 3.81686e-10 
     if len(y.shape)>1:
         y = y[:,0]
     #potential U = 1/4 l \phi^4
