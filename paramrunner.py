@@ -4,7 +4,7 @@
 import helpers
 import findparams
 import tables
-import numpy as np
+import numpy as np 
 
 savedir = "/home/ith/results/"
 savefile = "linde-params.hf5"
