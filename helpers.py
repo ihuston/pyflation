@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.16 2009/10/01 10:49:15 ith Exp $
+    $Id: helpers.py,v 1.17 2009/10/01 11:19:21 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -8,6 +8,8 @@ from __future__ import division # Get rid of integer division problems, i.e. 1/2
 import numpy as np
 import re
 from scipy import integrate
+import os 
+import os.path
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
