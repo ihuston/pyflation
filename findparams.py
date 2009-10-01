@@ -30,7 +30,7 @@ fixtures = {
                                   1.0,
                                   0])},
      #
-     "linde": {"vars":["lambda"], "values": [N.linspace(1.54e-13, 1.57e-13)], 
+     "linde": {"vars":["mass","lambda"], "values": [N.linspace(4.9e-8,6e-8), N.linspace(1.54e-13, 1.57e-13)], 
                "pivotk":WMAP5PIVOT, "pot": "linde",
                "ystart": N.array([25.0,
                                    0.0,
@@ -38,17 +38,7 @@ fixtures = {
                                    1.0,
                                    0,
                                    1.0,
-                                   0])},
-    #
-    "linde2": {"vars":["mass"], "values": [N.linspace(4.9e-8, 1e-6)],
-                "pivotk":WMAP5PIVOT, "pot": "linde",
-                "ystart": N.array([25.0,
-                                    0.0,
-                                    0.0,
-                                    1.0,
-                                    0,
-                                    1.0,
-                                    0])}
+                                   0])}
 }
 
 def param_vs_spectrum(fixture, nefolds=5):
@@ -64,17 +54,20 @@ def param_vs_spectrum(fixture, nefolds=5):
                                     pot_params= dict(zip(fx["vars"], ps)),
                                     tend=83, quiet=True)
         
-        
-        sim.run(saveresults=False)
-        scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
-        tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
-        Pres = scaledPr[tres.astype(int)].diagonal()[0]
-        print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
-        if results is not None:
-            results = N.vstack((results, N.hstack([ps, Pres])))
-        else:
-            results = N.hstack([ps, Pres])
-        del sim, tres, Pres
+        try:
+            sim.run(saveresults=False)
+            scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
+            tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
+            Pres = scaledPr[tres.astype(int)].diagonal()[0]
+            print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
+            if results is not None:
+                results = N.vstack((results, N.hstack([ps, Pres])))
+            else:
+                results = N.hstack([ps, Pres])
+        except ModelError:
+            print "Error with %s." % str(dict(zip(fx["vars"], ps)))
+        finally:
+            del sim, tres, Pres
     
     return results
 
