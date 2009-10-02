@@ -274,6 +274,9 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         else:
             srcstub = "-".join(["src", m.potential_func, str(min(m.k)), str(max(m.k)), str(m.k[1]-m.k[0]), time.strftime("%Y%m%d")])
         sourcefile = hconfig.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
+    if myrank == 0:
+        #Check sourcefile directory exists:
+        ensurepath(os.path.dirname(sourcefile))
     if myrank != 0:
         #Do not include host node in execution
         if nfinal == -1:
@@ -291,7 +294,6 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         
         #get source integrand and save to file
         try:
-            ensurepath(sourcefile)
             filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
                                                        ntheta=ntheta, numks=numsoks)
             harness_logger.info("Source term saved as " + filesaved)
