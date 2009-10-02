@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.73 2009/06/30 18:24:48 ith Exp $
+$Id: sosource.py,v 1.74 2009/10/02 11:15:19 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -310,6 +310,7 @@ def opensourcefile(k, filename=None, sourcetype=None):
     import tables
     #Set up file for results
     if not filename or not os.path.isdir(os.path.dirname(filename)):
+        source_logger.info("File or path to file %s does not exist." % filename)
         date = time.strftime("%Y%m%d%H%M%S")
         filename = RESULTSDIR + "src" + date + ".hf5"
         source_logger.info("Saving source results in file " + filename)

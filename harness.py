@@ -277,6 +277,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
     if myrank == 0:
         #Check sourcefile directory exists:
         ensurepath(os.path.dirname(sourcefile))
+        harness_logger.info("Source file path is %s." %sourcefile)
     if myrank != 0:
         #Do not include host node in execution
         if nfinal == -1:

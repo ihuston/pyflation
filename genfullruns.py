@@ -3,6 +3,7 @@
 Author: Ian Huston
 """
 import os
+import os.path
 import hconfig
 import harness
 import time
@@ -29,8 +30,11 @@ def genfullscripts(tfilename):
             kend = harness.checkkend(kinit, None, deltak, numsoks)
             d["kend"] = kend
             nf = open(filestub + str(kinit) + "-" + str(deltak) + ".sh", "w")
-            filename = hconfig.RESULTSDIR + "fo-" + hconfig.foclass.__name__ + "-" + hconfig.POT_FUNC + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+            info = hconfig.foclass.__name__ + "-" + hconfig.POT_FUNC + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S")
+            filename = os.path.join(hconfig.RESULTSDIR , "fo-" + info + ".hf5")
+            srcdir = os.path.join(hconfig.RESULTSDIR, "src-" + info, "")
             ensurepath(filename)
+            ensurepath(srcdir)
             d["fofile"] = filename
             try:
                 nf.write(text%d)
