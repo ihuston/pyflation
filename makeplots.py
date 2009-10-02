@@ -382,3 +382,36 @@ def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
     P.draw()
     return fig, fname
      
+def msqphisq_potential(fname="msqphisq_potential", size="large"):
+    fig = P.figure()
+    set_size(fig, size)
+    if size=="small":
+        fig.subplots_adjust(top=0.93)
+    ym = cmb.bgmodel.yresult
+    vm = np.array([cmb.potentials(y) for y in ym])
+    P.plot(ym[:,0], vm[:,0])
+    ax=P.gca()
+    ax.set_ylim((-0.1e-9,7e-9))
+    ax.set_xlim((19,-1))
+    P.ylabel(r"$V(\varphi)$")
+    P.xlabel(r"$\varphi$")
+    P.draw()
+    return fig, fname
+    
+def lambdaphi4_potential(fname="lambdaphi4_potential", size="large"):
+    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
+    fig = P.figure()
+    set_size(fig, size)
+    if size=="small":
+        fig.subplots_adjust(top=0.93)
+    yl = lph.bgmodel.yresult
+    vl = np.array([lph.potentials(y) for y in yl])
+    P.plot(yl[:,0], vl[:,0])
+    ax=P.gca()
+    ax.set_ylim((-0.5e-9, 16e-9))
+    ax.set_xlim((26,-1))
+    P.ylabel(r"$V(\varphi)$")
+    P.xlabel(r"$\varphi$")
+    P.draw()
+    return fig, fname
+    
