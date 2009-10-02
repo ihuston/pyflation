@@ -74,10 +74,11 @@ def param_vs_spectrum(fixture, nefolds=5):
                 results = N.vstack((results, N.hstack([ps, Pres])))
             else:
                 results = N.hstack([ps, Pres])
-        except ModelError:
-            print "Error with %s." % str(dict(zip(fx["vars"], ps)))
-        finally:
             del sim, tres, Pres
+        except c.ModelError:
+            print "Error with %s." % str(dict(zip(fx["vars"], ps)))
+            del sim
+            
     
     return results
 
