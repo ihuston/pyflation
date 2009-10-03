@@ -48,6 +48,16 @@ fixtures = {
                                    1.0,
                                    0,
                                    1.0,
+                                   0])},
+                                   
+     "hybrid2and4": {"vars":["mass","lambda"], "values": [N.linspace(4.9e-8,6e-8), N.linspace(1.54e-13, 1.57e-13)], 
+               "pivotk":WMAP5PIVOT, "pot": "hybrid2and4",
+               "ystart": N.array([25.0,
+                                   0.0,
+                                   0.0,
+                                   1.0,
+                                   0,
+                                   1.0,
                                    0])}
 }
 
