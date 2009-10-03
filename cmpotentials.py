@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.12 2009/10/01 16:37:17 ith Exp $
+    $Id: cmpotentials.py,v 1.13 2009/10/03 17:56:50 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -124,11 +124,62 @@ def linde(y, params=None):
     if len(y.shape)>1:
         y = y[:,0]
         
-    U = -0.5*(mass2)*(y[0]**2) + 0.25*l*(y[0]**4) #+ (m**4)/(4*l)
+    U = -0.5*(mass2)*(y[0]**2) + 0.25*l*(y[0]**4) + (m**4)/(4*l)
     #deriv of potential wrt \phi
     dUdphi =  -(mass2)*y[0] + l*(y[0]**3)
     #2nd deriv
     d2Udphi2 = -mass2 + 3*l*(y[0]**2)
+    #3rd deriv
+    d3Udphi3 = 6*l*(y[0])
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
+    
+def hybrid2and4(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for hybrid potential
+    V = -m^2/2 \phi^2 +\lambda/4 \phi^4 
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameters "mass" and "lambda" which specifies 
+             the variables.
+             
+    lambda can be specified in the dictionary params or otherwise
+    it defaults to the value as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    
+    mass can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use Salopek et al value of mass (in Mpl)
+        m = 5e-8
+    #Use inflaton mass
+    mass2 = m**2
+    #Check if mass is specified in params
+    if params is not None and "lambda" in params:
+        l = params["lambda"]
+    else:
+        #Use WMAP value of lambda
+        l = 1.55123e-13
+        
+    
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+    U = 0.5*(mass2)*(y[0]**2) + 0.25*l*(y[0]**4)
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*y[0] + l*(y[0]**3)
+    #2nd deriv
+    d2Udphi2 = mass2 + 3*l*(y[0]**2)
     #3rd deriv
     d3Udphi3 = 6*l*(y[0])
     
