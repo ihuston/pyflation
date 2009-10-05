@@ -7,31 +7,55 @@ import logging
 import time
 import cosmomodels as c
 
+
+fixtures = {"msqphisq":    {"potential_func": "msqphisq",
+                            "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
+            "lambdaphi4":  {"potentials_func": "lambdaphi4",
+                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "hybrid2and4": {"potential_func": "hybrid2and4",
+                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "linde":       {"potential_func": "linde",
+                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "phi2over3":   {"potential_func": "phi2over3",
+                            "ystart": N.array([10.0, 0,0,0,0,0,0])}
+            }
+
+##############################
+# CHOOSE FIXTURE HERE
+fx = fixtures["linde"]
+##############################
+
+##############################
+# SOME OTHER CHANGEABLE VALUES
+##############################
 BASEDIR = "/home/ith/numerics/"
 RESULTSDIR = BASEDIR + "results/" + time.strftime("%Y%m%d") + "/"
 LOGDIR = BASEDIR + "applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level
-POT_FUNC = "hybrid2and4"
+
+##############################
+# IMPORTANT VALUES 
+# DO NOT CHANGE UNLESS SURE
+##############################
 NUMSOKS =1025  #Should be power of two + 1
 ntheta = 513
-YSTART = N.array([25.0, # \phi_0
-                0.0, # \dot{\phi_0}
-               0.0, # H - leave as 0.0 to let program determine
-               1.0, # Re\delta\phi_1
-                0.0, # Re\dot{\delta\phi_1}
-                1.0, # Im\delta\phi_1
-                0.0  # Im\dot{\delta\phi_1}
-                ])
-#YSTART=None
 foclass = c.FOCanonicalTwoStage
 cq = 50
 
+##############################
+# DO NOT CHANGE ANYTHING BELOW
+# THIS LINE
+##############################
+POT_FUNC = fx["potential_func"]
+YSTART = fx["ystart"]
 FOARGS = {"potential_func": POT_FUNC,
             "ystart": YSTART,
             "cq": cq}
 SOARGS = {}
 
-#Standard params
+##############################
+#Old params for compatibility
 kinit = 1.00e-61
 kend = None
 deltak = 1.0e-61
+##############################
