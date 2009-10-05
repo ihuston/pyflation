@@ -223,11 +223,11 @@ def src_3ks(fname="src-3ks", size="small", m=cmbmsq, fo=fomsq):
     P.draw()
     return fig, fname
 
-def src_vs_t_kwmap(fname="src-vs-t-kwmap", size="small"):
+def src_vs_t_kwmap(fname="src-vs-t-kwmap", size="small", m=cmbmsq, fo=fomsq):
     #Get tresult
-    tr52 = cmb.tresult[-1] - cmb.tresult[865:]
+    tr52 = m.tresult[-1] - m.tresult[865:]
     #Get t term
-    r = sohelpers.find_soderiv_terms(cmb, kix=np.array([52]))
+    r = sohelpers.find_soderiv_terms(m, kix=np.array([52]))
     #find t term for kwmap
     t52 = np.abs(r[:,0,0]+r[:,1,0]+(r[:,2,0]+r[:,3,0])*1j)
     #Get source for kwmap
@@ -248,12 +248,12 @@ def src_vs_t_kwmap(fname="src-vs-t-kwmap", size="small"):
     P.draw()
     return fig, fname
 
-def s_over_t_3ks(fname="s-over-t-3ks", size="small"):
+def s_over_t_3ks(fname="s-over-t-3ks", size="small", m=cmbmsq, fo=fomsq):
     #Initialise variables
-    tr0 = cmb.tresult[-1] - cmb.tresult[631:]
-    tr52 = cmb.tresult[-1] - cmb.tresult[865:]
-    tr1024 = cmb.tresult[-1] - cmb.tresult[1015:]
-    r = sohelpers.find_soderiv_terms(cmb, kix=np.array([0,52,1024]))
+    tr0 = m.tresult[-1] - m.tresult[631:]
+    tr52 = m.tresult[-1] - m.tresult[865:]
+    tr1024 = m.tresult[-1] - m.tresult[1015:]
+    r = sohelpers.find_soderiv_terms(m, kix=np.array([0,52,1024]))
     t0 = np.abs(r[:,0,0]+r[:,1,0]+(r[:,2,0]+r[:,3,0])*1j)
     t1024 = np.abs(r[:,0,2]+r[:,1,2]+(r[:,2,2]+r[:,3,2])*1j)
     t52 = np.abs(r[:,0,1]+r[:,1,1]+(r[:,2,1]+r[:,3,1])*1j)
@@ -277,7 +277,7 @@ def s_over_t_3ks(fname="s-over-t-3ks", size="small"):
     P.semilogy(tr1024, d1024)
     P.semilogy(tr52, d52)
     P.semilogy(tr0, d0)
-    l = helpers.klegend(cmb.k[:][[0,52,1024]])
+    l = helpers.klegend(m.k[:][[0,52,1024]])
     cg.reversexaxis()
     
     #Set attributes
@@ -415,40 +415,7 @@ def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
-     
-def msqphisq_potential(fname="msqphisq_potential", size="large"):
-    fig = P.figure()
-    set_size(fig, size)
-    if size=="small":
-        fig.subplots_adjust(top=0.93)
-    ym = cmb.bgmodel.yresult
-    vm = np.array([cmb.potentials(y) for y in ym])
-    P.plot(ym[:,0], vm[:,0])
-    ax=P.gca()
-    ax.set_ylim((-0.1e-9,7e-9))
-    ax.set_xlim((19,-1))
-    P.ylabel(r"$V(\varphi)$")
-    P.xlabel(r"$\varphi$")
-    P.draw()
-    return fig, fname
     
-def lambdaphi4_potential(fname="lambdaphi4_potential", size="large"):
-    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
-    fig = P.figure()
-    set_size(fig, size)
-    if size=="small":
-        fig.subplots_adjust(top=0.93)
-    yl = lph.bgmodel.yresult
-    vl = np.array([lph.potentials(y) for y in yl])
-    P.plot(yl[:,0], vl[:,0])
-    ax=P.gca()
-    ax.set_ylim((-0.5e-9, 16e-9))
-    ax.set_xlim((26,-1))
-    P.ylabel(r"$V(\varphi)$")
-    P.xlabel(r"$\varphi$")
-    P.draw()
-    return fig, fname
-
 def hybrid2and4_params(fname="hybrid2and4_params", size="large"):
     filename = "/home/network/ith/results/param-search/hybrid2and4-params.hf5"
     try:
@@ -468,20 +435,82 @@ def hybrid2and4_params(fname="hybrid2and4_params", size="large"):
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
-
-def hybrid2and4_potential(fname="hybrid2and4_potential", size="large"):
-    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
+    
+def linde_params(fname="linde_params", size="large"):
+    filename = "/home/network/ith/results/param-search/linde-params.hf5"
+    try:
+        rf = tables.openFile(filename, "r")
+        pr = rf.root.params_results[:]
+    finally:
+        rf.close()
     fig = P.figure()
     set_size(fig, size)
-    if size=="small":
-        fig.subplots_adjust(top=0.93)
-    yl = lph.bgmodel.yresult
-    vl = np.array([lph.potentials(y) for y in yl])
-    P.plot(yl[:,0], vl[:,0])
+    P.plot(pr[:,1],pr[:,2], color="black")
+    ax = P.gca()
+    ax.set_xlim((1.49e-13,1.61e-13))
+    ax.set_ylim((2.35e-9,2.55e-9))
+    ax.axhline(2.457e-9, ls="--", color="black")
+    ax.ticklabel_format(style="sci", scilimits=(0,0))
+    P.xlabel(r"$\lambda$")
+    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.draw()
+    return fig, fname
+     
+def plot_potential_phi(fname="plot_potential", size="large", m=cmbmsq):
+    #Get background results and potential
+    ym = m.bgmodel.yresult
+    vm = np.array([m.potentials(y) for y in ym])
+    fig = P.figure()
+    set_size(fig, size)
+    #Plot potential versus phi
+    P.plot(ym[:,0], vm[:,0])
     ax=P.gca()
-    ax.set_ylim((-0.5e-9, 16e-9))
-    ax.set_xlim((26,-1))
     P.ylabel(r"$V(\varphi)$")
     P.xlabel(r"$\varphi$")
+    P.draw()
+    return fig, fname
+    
+def msqphisq_potential(fname="msqphisq_potential", size="large"):
+    m = cmbmsq
+    fig, fname = plot_potential_phi(fname, size, m)
+    ax = fig.gca()
+    ax.set_ylim((-0.1e-9,7e-9))
+    ax.set_xlim((19,-1))
+    P.draw()
+    return fig, fname
+    
+def lambdaphi4_potential(fname="lambdaphi4_potential", size="large"):
+    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
+    fig, fname = plot_potential_phi(fname, size, lph)
+    ax = fig.gca()
+    ax.set_ylim((-0.5e-9, 16e-9))
+    ax.set_xlim((26,-1))
+    P.draw()
+    return fig, fname
+
+def hybrid2and4_potential(fname="hybrid2and4_potential", size="large"):
+    m = c.make_wrapper_model(os.path.join(resdir, "cmb-hybrid2and4-5e-62-1.0245e-58-1e-61.hf5"))
+    fig, fname = plot_potential_phi(fname, size, m)
+    ax = fig.gca()
+    ax.set_ylim((-0.5e-9, 16e-9))
+    ax.set_xlim((26,-1))
+    P.draw()
+    return fig, fname
+    
+def linde_potential(fname="linde_potential", size="large"):
+    m = c.make_wrapper_model(os.path.join(resdir, "cmb-linde-5e-62-1.0245e-58-1e-61.hf5"))
+    fig, fname = plot_potential_phi(fname, size, m)
+    ax = fig.gca()
+    ax.set_ylim((-0.5e-9, 16e-9))
+    ax.set_xlim((26,-1))
+    P.draw()
+    return fig, fname
+    
+def phi2over3_potential(fname="hybrid2and4_potential", size="large"):
+    m = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
+    fig, fname = plot_potential_phi(fname, size, m)
+    ax = fig.gca()
+    ax.set_ylim((-0.1e-9, 2e-9))
+    ax.set_xlim((10.5,-0.5))
     P.draw()
     return fig, fname
