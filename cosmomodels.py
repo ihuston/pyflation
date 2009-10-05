@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.229 2009/07/09 10:25:31 ith Exp $
+    $Id: cosmomodels.py,v 1.230 2009/10/05 19:31:23 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.229 $",
+                  "CVSRevision":"$Revision: 1.230 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1019,9 +1019,9 @@ class MultiStageModel(CosmologicalModel):
         else:
             if k<self.k.min() and k>self.k.max():
                 self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-        Pr = self.findPr()
+        
         ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = N.log(Pr[ts.astype(int)].diagonal())
+        xp = N.log(self.Pr[ts.astype(int)].diagonal())
         lnk = N.log(k)
         
         #Need to sort into ascending k
@@ -1075,7 +1075,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.229 $",
+                  "CVSRevision":"$Revision: 1.230 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
