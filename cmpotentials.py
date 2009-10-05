@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.13 2009/10/03 17:56:50 ith Exp $
+    $Id: cmpotentials.py,v 1.14 2009/10/05 16:31:31 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -119,7 +119,7 @@ def linde(y, params=None):
     else:
         #Use WMAP value of lambda
         #l = 1.5506e-13
-        l = 5e-14 
+        l = 1.55009e-13 
     
     if len(y.shape)>1:
         y = y[:,0]
