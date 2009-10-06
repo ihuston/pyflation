@@ -331,8 +331,8 @@ def compare_src(fname="compare_src", size="large", models=None, kix=52):
         msq = c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-msqphisq-1.5e-61-6.153e-58-3e-61-195554.hf5")
         lph = c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-lambdaphi4-1.5e-61-6.153e-58-3e-61-113146.hf5")
         models = [msq, lph]
-    ts = [m.tresult for m in models]
-    srcs = [np.abs(m.source[:,kix]) for m in models]
+    ts = [m.tresult[int(m.fotstart[kix]*100):] for m in models]
+    srcs = [np.abs(m.source[int(m.fotstart[kix]*100):,kix]) for m in models]
     #Setup figure
     fig = P.figure()
     set_size(fig, size)
