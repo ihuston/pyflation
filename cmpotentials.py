@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.14 2009/10/05 16:31:31 ith Exp $
+    $Id: cmpotentials.py,v 1.15 2009/10/06 16:48:17 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -221,3 +221,44 @@ def phi2over3(y, params=None):
     d3Udphi3 = (8.0/27)*l*(y[0]**(-7.0/3))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+    
+def msqphisq_withV0(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2 + V0
+    where m is the mass of the inflaton field.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             
+    m can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use WMAP value of mass (in Mpl)
+        m = 6.3267e-6
+    if params is not None and "V0" in params:
+        V0 = params["V0"]
+    else:
+        V0 = 0
+    #Use inflaton mass
+    mass2 = m**2
+    #potential U = 1/2 m^2 \phi^2
+    U = 0.5*(mass2)*(y[0]**2) + V0
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*y[0]
+    #2nd deriv
+    d2Udphi2 = mass2
+    #3rd deriv
+    d3Udphi3 = 0
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
+    
