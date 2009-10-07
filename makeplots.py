@@ -371,7 +371,7 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
     ax.set_xlim((3.48e-10, 4.02e-10))
     ax.set_ylim((2.23e-9, 2.6e-9))
     ax.axhline(2.457e-9, ls="--", color="black")
-    P.xlabel(r"$\lambda$")
+    P.xlabel(r"$\sigma$")
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname

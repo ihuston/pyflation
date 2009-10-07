@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.15 2009/10/06 16:48:17 ith Exp $
+    $Id: cmpotentials.py,v 1.16 2009/10/07 10:16:22 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -186,8 +186,8 @@ def hybrid2and4(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
     
 def phi2over3(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V= lambda phi^(2/3)
-    for a specified lambda.
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V= sigma phi^(2/3)
+    for a specified sigma.
     
     Arguments:
     y - Array of variables with background phi as y[0]
@@ -196,29 +196,29 @@ def phi2over3(y, params=None):
         variables, using newaxis if necessary.
     
     params - Dictionary of parameter values in this case should
-             hold the parameter "lambda" which specifies lambda
+             hold the parameter "sigma" which specifies lambda
              above.
              
-    lambda can be specified in the dictionary params or otherwise
+    sigma can be specified in the dictionary params or otherwise
     it defaults to the value as normalized with the WMAP spectrum
     Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
     #set_trace()
     #Check if mass is specified in params
-    if params is not None and "lambda" in params:
-        l = params["lambda"]
+    if params is not None and "sigma" in params:
+        s = params["sigma"]
     else:
         #Use WMAP value of lambda
-        l = 3.81686e-10 
+        s = 3.81686e-10 #Unit Mpl^{10/3}
     if len(y.shape)>1:
         y = y[:,0]
-    #potential U = 1/4 l \phi^4
-    U = l*(y[0]**(2.0/3))
+    #potential U = 1/4 s \phi^4
+    U = s*(y[0]**(2.0/3))
     #deriv of potential wrt \phi
-    dUdphi =  (2.0/3)*l*(y[0]**(-1.0/3))
+    dUdphi =  (2.0/3)*s*(y[0]**(-1.0/3))
     #2nd deriv
-    d2Udphi2 = -(2.0/9)*l*(y[0]**(-4.0/3))
+    d2Udphi2 = -(2.0/9)*s*(y[0]**(-4.0/3))
     #3rd deriv
-    d3Udphi3 = (8.0/27)*l*(y[0]**(-7.0/3))
+    d3Udphi3 = (8.0/27)*s*(y[0]**(-7.0/3))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
     

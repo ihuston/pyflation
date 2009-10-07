@@ -30,7 +30,7 @@ fixtures = {
                                   1.0,
                                   0])},
     #
-    "phi2over3": {"vars":["lambda"], "values": [N.linspace(1e-10, 1e-8)], 
+    "phi2over3": {"vars":["sigma"], "values": [N.linspace(1e-10, 1e-8)], 
                "pivotk":WMAP5PIVOT, "pot": "phi2over3",
                "ystart": N.array([10.0,
                                   0.0,
