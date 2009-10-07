@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.16 2009/10/07 10:16:22 ith Exp $
+    $Id: cmpotentials.py,v 1.17 2009/10/07 15:15:30 ith Exp $
     
     Provides functions which can be used with cosmomodels.py. 
     Default parameter values are included but can also be 
@@ -248,7 +248,7 @@ def msqphisq_withV0(y, params=None):
     if params is not None and "V0" in params:
         V0 = params["V0"]
     else:
-        V0 = 0
+        V0 = 5e-10 # Units Mpl^4
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
