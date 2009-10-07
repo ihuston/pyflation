@@ -91,6 +91,44 @@ def param_vs_spectrum(fixture, nefolds=5):
             
     
     return results
+    
+def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
+    """Run tests for a particular parameter, return mass used and spectrum after horizon exit"""
+    #Variable to store results
+    results = None
+    fx = deepcopy(fixture)
+    fxystart = fx["ystart"]
+    values_matrix = helpers.cartesian(fx["values"])
+    for ps in values_matrix:
+        sim = c.FOCanonicalTwoStage(solver="rkdriver_withks", ystart=fxystart.copy(),
+                                    k=fx["pivotk"], potential_func=fx["pot"],
+                                    pot_params= dict(zip(fx["vars"], ps)),
+                                    tend=tend, quiet=True)
+        
+        try:
+            try:
+                sim.runbg()
+            except c.ModelError:
+                pass
+            sim.fotend = N.float64(tend)
+            sim.fotendindex = N.int(sim.fotend/sim.tstep_wanted)
+            sim.setfoics()
+            sim.runfo()
+            scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
+            tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
+            Pres = scaledPr[tres.astype(int)].diagonal()[0]
+            print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
+            if results is not None:
+                results = N.vstack((results, N.hstack([ps, Pres])))
+            else:
+                results = N.hstack([ps, Pres])
+            del sim, tres, Pres
+        except c.ModelError:
+            print "Error with %s." % str(dict(zip(fx["vars"], ps)))
+            del sim
+            
+    
+    return results
 
 
 if __name__ == "__main__":

@@ -38,6 +38,25 @@ def run_and_save_model(sf=None, fx=None, sd=None):
         print "Results saved in %s" % str(sd + sf)
     finally:
         rfile.close()
+        
+def run_and_save_model_force_tend(sf=None, fx=None, sd=None, tend=200):
+    """Run linde model and save results."""
+    if sf is None:
+        sf = savefile
+    if sd is None:
+        sd = savedir
+    helpers.ensurepath(sd)
+    if fx is None:
+        fx = lindefx
+    
+    results = findparams.param_vs_spectrum_force_tend(fx, tend=200)
+    
+    try:
+        rfile = tables.openFile(sd + sf, "w")
+        rfile.createArray(rfile.root, "params_results", results, "Model parameter search results")
+        print "Results saved in %s" % str(sd + sf)
+    finally:
+        rfile.close()
     
 if __name__ == "__main__":
     run_linde_model()
