@@ -455,6 +455,26 @@ def linde_params(fname="linde_params", size="large"):
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
+    
+def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
+    filename = "/home/network/ith/results/param-search/msqphisq_withV0_params.hf5"
+    try:
+        rf = tables.openFile(filename, "r")
+        pr = rf.root.params_results[:]
+    finally:
+        rf.close()
+    fig = P.figure()
+    set_size(fig, size)
+    P.plot(pr[:,0],pr[:,2], color="black")
+    ax = P.gca()
+    ax.set_xlim((0.9e-6, 6.1e-6))
+    ax.set_ylim((0,1e-8))
+    ax.axhline(2.457e-9, ls="--", color="black")
+    ax.ticklabel_format(style="sci", scilimits=(0,0))
+    P.xlabel(r"$m$")
+    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.draw()
+    return fig, fname
      
 def plot_potential_phi(fname="plot_potential", size="large", m=cmbmsq):
     #Get background results and potential
