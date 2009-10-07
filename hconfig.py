@@ -8,21 +8,23 @@ import time
 import cosmomodels as c
 
 
-fixtures = {"msqphisq":    {"potential_func": "msqphisq",
-                            "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
-            "lambdaphi4":  {"potentials_func": "lambdaphi4",
-                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
-            "hybrid2and4": {"potential_func": "hybrid2and4",
-                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
-            "linde":       {"potential_func": "linde",
-                            "ystart": N.array([25.0, 0,0,0,0,0,0])},
-            "phi2over3":   {"potential_func": "phi2over3",
-                            "ystart": N.array([10.0, 0,0,0,0,0,0])}
+fixtures = {"msqphisq":        {"potential_func": "msqphisq",
+                                "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
+            "lambdaphi4":      {"potentials_func": "lambdaphi4",
+                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "hybrid2and4":     {"potential_func": "hybrid2and4",
+                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "linde":           {"potential_func": "linde",
+                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+            "phi2over3":       {"potential_func": "phi2over3",
+                                "ystart": N.array([10.0, 0,0,0,0,0,0])},
+            "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
+                                "ystart": N.array([18.0, 0,0,0,0,0,0])}
             }
 
 ##############################
 # CHOOSE FIXTURE HERE
-fx = fixtures["linde"]
+fx = fixtures["msqphisq_withV0"]
 ##############################
 
 ##############################
