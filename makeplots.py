@@ -515,7 +515,7 @@ def phi2over3_potential(fname="hybrid2and4_potential", size="large"):
     P.draw()
     return fig, fname
     
-def compare_potential_phi(fname="compare_potential_phi", size="large", models=None):
+def compare_potential_phi(fname="compare_potential_phi", size="large", models=None, models_legends=None, vix=0):
     if models is None:
         msq = cmbmsq
         lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
@@ -523,26 +523,31 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
         #lind = c.make_wrapper_model(os.path.join(resdir, "cmb-linde-5e-62-1.0245e-58-1e-61.hf5"))
         phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
         models = [lph, msq, phi23]
+        if models_legends is None:
+            models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                              r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"]
     #Get background results and potential
     yms = [m.bgmodel.yresult[int(m.fotstart[0]*100):] for m in models]
     vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
-    lines = [P.plot(ym[:,0], vm[:,0]) for ym, vm in zip(yms, vms)]
+    lines = [P.plot(ym[:,0], vm[:,vix]) for ym, vm in zip(yms, vms)]
     ax = P.gca()
     cg.reversexaxis()
     ax.set_xlim((26, -1))
-    ax.set_ylim((-0.1e-8, 1.3e-8))
-    P.legend([r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
-              r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
-              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"], prop=prop, loc=0)
-    P.ylabel(r"$V(\varphi)$")
+    if vix == 0:
+        ax.set_ylim((-0.1e-8, 1.3e-8))
+    P.legend(models_legends, prop=prop, loc=0)
+    vlabels = [r"$V(\varphi)$", r"$V_{,\varphi}$", 
+               r"$V_{,\varphi \varphi}$", r"$V_{,\varphi\varphi\varphi}$"]
+    P.ylabel(vlabels[vix])
     P.xlabel(r"$\varphi$")
     P.draw()
     return fig, fname
 
-def compare_potential_n(fname="compare_potential_n", size="large", models=None):
+def compare_potential_n(fname="compare_potential_n", size="large", models=None, models_legends=None, vix=0):
     if models is None:
         msq = cmbmsq
         lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
@@ -550,21 +555,26 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None):
         #lind = c.make_wrapper_model(os.path.join(resdir, "cmb-linde-5e-62-1.0245e-58-1e-61.hf5"))
         phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
         models = [lph, msq, phi23]
+        if models_legends is None:
+            models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                              r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"]
     #Get background results and potential
     yms = [m.bgmodel.yresult[int(m.fotstart[0]*100):int(m.tend*100)] for m in models]
     vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
-    lines = [P.plot(m.tend-m.bgmodel.tresult[int(m.fotstart[0]*100):int(m.tend*100)], vm[:,0]) for m, vm in zip(models, vms)]
+    lines = [P.plot(m.tend-m.bgmodel.tresult[int(m.fotstart[0]*100):int(m.tend*100)], vm[:,vix]) for m, vm in zip(models, vms)]
     ax = P.gca()
     cg.reversexaxis()
     ax.set_xlim((72, -3))
-    ax.set_ylim((-0.1e-8, 1.3e-8))
-    P.legend([r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
-              r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
-              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"], prop=prop, loc=0)
-    P.ylabel(r"$V(\varphi)$")
+    if vix == 0:
+        ax.set_ylim((-0.1e-8, 1.3e-8))
+    P.legend(models_legends, prop=prop, loc=0)
+    vlabels = [r"$V(\varphi)$", r"$V_{,\varphi}$", 
+               r"$V_{,\varphi \varphi}$", r"$V_{,\varphi\varphi\varphi}$"]
+    P.ylabel(vlabels[vix])
     P.xlabel(calN)
     P.draw()
     return fig, fname
