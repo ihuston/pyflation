@@ -10,7 +10,7 @@ import cosmomodels as c
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
-            "lambdaphi4":      {"potentials_func": "lambdaphi4",
+            "lambdaphi4":      {"potential_func": "lambdaphi4",
                                 "ystart": N.array([25.0, 0,0,0,0,0,0])},
             "hybrid2and4":     {"potential_func": "hybrid2and4",
                                 "ystart": N.array([25.0, 0,0,0,0,0,0])},
