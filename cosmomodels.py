@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.230 2009/10/05 19:31:23 ith Exp $
+    $Id: cosmomodels.py,v 1.231 2009/10/11 20:39:09 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.230 $",
+                  "CVSRevision":"$Revision: 1.231 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -963,6 +963,7 @@ class MultiStageModel(CosmologicalModel):
             Hreh = Hend #Instantaneous reheating
         a_0 = 1 # Normalize today
         a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        #a_end = a_0*N.exp(-71.49)*((Hreh/(Hend**4.0))**(1.0/6.0))
         return a_end
         
     def findkcrossing(self, k, t, H, factor=None):
@@ -1075,7 +1076,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.230 $",
+                  "CVSRevision":"$Revision: 1.231 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
