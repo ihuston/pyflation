@@ -366,7 +366,7 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,0],pr[:,1], color="black")
+    P.plot(pr[:,0],pr[:,1])
     ax = P.gca()
     ax.set_xlim((3.48e-10, 4.02e-10))
     ax.set_ylim((2.23e-9, 2.6e-9))
@@ -385,7 +385,7 @@ def msqphisq_params(fname="msqphisq_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,0],pr[:,1], color="black")
+    P.plot(pr[:,0],pr[:,1])
     ax = P.gca()
     ax.set_xlim((5.98e-6, 6.52e-6))
     ax.set_ylim((2.2e-9, 2.62e-9))
@@ -405,7 +405,7 @@ def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,0],pr[:,1], color="black")
+    P.plot(pr[:,0],pr[:,1])
     ax = P.gca()
     ax.set_xlim((1.49e-13,1.61e-13))
     ax.set_ylim((2.35e-9,2.55e-9))
@@ -425,7 +425,7 @@ def hybrid2and4_params(fname="hybrid2and4_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,1],pr[:,2], color="black")
+    P.plot(pr[:,1],pr[:,2])
     ax = P.gca()
     ax.set_xlim((1.49e-13,1.61e-13))
     ax.set_ylim((2.35e-9,2.55e-9))
@@ -445,7 +445,7 @@ def linde_params(fname="linde_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,1],pr[:,2], color="black")
+    P.plot(pr[:,1],pr[:,2])
     ax = P.gca()
     ax.set_xlim((1.49e-13,1.61e-13))
     ax.set_ylim((2.35e-9,2.55e-9))
@@ -465,13 +465,13 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
         rf.close()
     fig = P.figure()
     set_size(fig, size)
-    P.plot(pr[:,0],pr[:,2], color="black")
+    P.plot(pr[:,0],pr[:,2])
     ax = P.gca()
     ax.set_xlim((0.9e-6, 6.1e-6))
     ax.set_ylim((0,1e-8))
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
-    P.xlabel(r"$m$")
+    P.xlabel(r"$m_0$")
     P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
@@ -526,12 +526,21 @@ def linde_potential(fname="linde_potential", size="large"):
     P.draw()
     return fig, fname
     
-def phi2over3_potential(fname="hybrid2and4_potential", size="large"):
+def phi2over3_potential(fname="phi2over3_potential", size="large"):
     m = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
     fig, fname = plot_potential_phi(fname, size, m)
     ax = fig.gca()
     ax.set_ylim((-0.1e-9, 2e-9))
     ax.set_xlim((10.5,-0.5))
+    P.draw()
+    return fig, fname
+    
+def msqphisq_withV0_potential(fname="msqphisq_withV0_potential", size="large"):
+    m = c.make_wrapper_model(os.path.join(resdir, "cmb-msqphisq_withV0-5e-62-1.0245e-58-1e-61.hf5"))
+    fig, fname = plot_potential_phi(fname, size, m)
+    ax = fig.gca()
+    ax.set_ylim((5.7e-10, 1.03e-09))
+    ax.set_xlim((18.3, 7.7))
     P.draw()
     return fig, fname
     
@@ -542,13 +551,15 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
         #hyb = c.make_wrapper_model(os.path.join(resdir, "cmb-hybrid2and4-5e-62-1.0245e-58-1e-61.hf5"))
         #lind = c.make_wrapper_model(os.path.join(resdir, "cmb-linde-5e-62-1.0245e-58-1e-61.hf5"))
         phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
-        models = [lph, msq, phi23]
+        mv0 = c.make_wrapper_model(os.path.join(resdir, "cmb-msqphisq_withV0-5e-62-1.0245e-58-1e-61.hf5"))
+        models = [lph, msq, phi23, mv0]
         if models_legends is None:
             models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                               r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
-                              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"]
+                              r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                              r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
-    yms = [m.bgmodel.yresult[int(m.fotstart[0]*100):] for m in models]
+    yms = [m.bgmodel.yresult[:] for m in models]
     vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
@@ -558,7 +569,7 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
     cg.reversexaxis()
     ax.set_xlim((26, -1))
     if vix == 0:
-        ax.set_ylim((-0.1e-8, 1.3e-8))
+        ax.set_ylim((-0.1e-8, 1.6e-8))
     P.legend(models_legends, prop=prop, loc=0)
     vlabels = [r"$V(\varphi)$", r"$V_{,\varphi}$", 
                r"$V_{,\varphi \varphi}$", r"$V_{,\varphi\varphi\varphi}$"]
@@ -574,18 +585,22 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
         #hyb = c.make_wrapper_model(os.path.join(resdir, "cmb-hybrid2and4-5e-62-1.0245e-58-1e-61.hf5"))
         #lind = c.make_wrapper_model(os.path.join(resdir, "cmb-linde-5e-62-1.0245e-58-1e-61.hf5"))
         phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
-        models = [lph, msq, phi23]
+        mv0 = c.make_wrapper_model(os.path.join(resdir, "cmb-msqphisq_withV0-5e-62-1.0245e-58-1e-61.hf5"))
+        models = [lph, msq, phi23, mv0]
         if models_legends is None:
             models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                               r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
-                              r"$V(\varphi)=\lambda\varphi^{\frac{2}{3}}$"]
+                              r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                              r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
-    yms = [m.bgmodel.yresult[int(m.fotstart[0]*100):int(m.tend*100)] for m in models]
+    
+    yms = [m.bgmodel.yresult[int(m.tresult[0]/(m.tstep_wanted/2.0)):int((m.tend-m.tresult[0])/(m.tstep_wanted/2.0))] for m in models]
     vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
-    lines = [P.plot(m.tend-m.bgmodel.tresult[int(m.fotstart[0]*100):int(m.tend*100)], vm[:,vix]) for m, vm in zip(models, vms)]
+    lines = [P.plot(m.tend-m.bgmodel.tresult[int(m.tresult[0]/(m.tstep_wanted/2.0)):int((m.tend-m.tresult[0])/(m.tstep_wanted/2.0))], 
+                vm[:,vix]) for m, vm in zip(models, vms)]
     ax = P.gca()
     cg.reversexaxis()
     ax.set_xlim((72, -3))
