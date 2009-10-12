@@ -139,7 +139,7 @@ def pr_kwmap(fname="Pr-kwmap", size="small", horiz=True, m=cmbmsq):
     cg.reversexaxis()
     
     P.xlabel(calN)
-    P.ylabel(r"$\mathcal{P}_{\mathcal{R}} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -155,7 +155,7 @@ def pphi_kwmap(fname="Pphi-kwmap", size="small", horiz=True, m=cmbmsq):
     cg.reversexaxis()
     #Labels
     P.xlabel(calN)
-    P.ylabel(r"$\mathcal{P}_{\delta\varphi} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\delta\varphi} (k_\mathrm{WMAP})$")
     ax.set_xlim((70, -3.0))
     ax.set_ylim((2e-11, 2e-7))
     P.draw()
