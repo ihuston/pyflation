@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.231 2009/10/11 20:39:09 ith Exp $
+    $Id: cosmomodels.py,v 1.232 2009/10/12 20:56:01 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.231 $",
+                  "CVSRevision":"$Revision: 1.232 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1076,7 +1076,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.231 $",
+                  "CVSRevision":"$Revision: 1.232 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1466,8 +1466,6 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
             self._dp = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
