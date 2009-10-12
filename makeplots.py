@@ -51,7 +51,55 @@ def set_size(fig, size="large"):
         set_size_large(fig)
     else:
         raise ValueError("Variable size should be either \"large\" or \"small\"!")
+
+def get_fo_models():
+    fomsq = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq-1.5e-61-6.153e-58-3e-61-195554.hf5"))
+    folph = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-lambdaphi4-1.5e-61-6.153e-58-3e-61-171945.hf5"))
+    fop23 = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-phi2over3-1.5e-61-6.153e-58-3e-61-104701.hf5"))
+    fov0 = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq_withV0-1.5e-62-6.153e-58-3e-61-115900.hf5"))
+    models = [fomsq, folph, fop23, fov0]
+    models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                        r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                        r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+    return models, models_legends
     
+def get_fo_models_K1():
+    fomsq = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq-5e-62-2.051e-58-1e-61-195554.hf5"))
+    folph = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-lambdaphi4-5e-62-2.051e-58-1e-61-122042.hf5"))
+    fop23 = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-phi2over3-5e-62-2.051e-58-1e-61-120949.hf5"))
+    fov0 = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq_withV0-5e-62-2.051e-58-1e-61-095700.hf5"))
+    models = [fomsq, folph, fop23, fov0]
+    models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                        r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                        r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+    return models, models_legends
+    
+def get_cmb_models_K1():
+    msq = c.make_wrapper_model(os.path.join(resdir,"cmb-msqphisq-5e-62-1.0245e-58-1e-61.hf5"))
+    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-5e-62-1.0245e-58-1e-61.hf5"))
+    phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-5e-62-1.0245e-58-1e-61.hf5"))
+    mv0 = c.make_wrapper_model(os.path.join(resdir, "cmb-msqphisq_withV0-5e-62-1.0245e-58-1e-61.hf5"))
+    models = [msq,lph,phi23,mv0]
+    models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                        r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                        r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+    return models, models_legends
+
+def get_cmb_models_K2():
+    msq = c.make_wrapper_model(os.path.join(resdir,"cmb-msqphisq-1.5e-61-3.0735e-58-3e-61.hf5"))
+    lph = c.make_wrapper_model(os.path.join(resdir, "cmb-lambdaphi4-1.5e-61-3.0735e-58-3e-61.hf5"))
+    phi23 = c.make_wrapper_model(os.path.join(resdir, "cmb-phi2over3-1.5e-61-3.0735e-58-3e-61.hf5"))
+    mv0 = c.make_wrapper_model(os.path.join(resdir, "cmb-msqphisq_withV0-1.5e-61-3.0735e-58-3e-61.hf5"))
+    models = [msq,lph,phi23,mv0]
+    models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
+                        r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
+                        r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
+                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+    return models, models_legends
+
 def dp1_kwmap(fname="dp1_kwmap", size="large", m=cmbmsq):
     #k coefficient
     kc = m.k**(1.5)/(np.sqrt(2)*np.pi)
@@ -111,7 +159,27 @@ def src_kwmap(fname="src-kwmap", size="small", m=cmbmsq, fo=fomsq):
     ax.set_xlim((70.0, -3.0))
     P.draw()
     return fig, fname
-    
+
+def src_onek(fname="src_onek", size="large", fo=None, kix=17):
+    if fo is None:
+        fo = fomsq
+        kix = 52
+    #Create figure and set size
+    fig = P.figure()
+    set_size(fig, size)
+    #Plot graph
+    kstart = int(fo.fotstart[kix])
+    P.semilogy(fo.tresult[-1] - fo.tresult[kstart:], abs(fo.source[kstart:,kix]))
+    cg.reversexaxis()
+    P.xlabel(calN)
+    P.ylabel(r"$|S|$")
+    ax = P.gca()
+    ax.set_yticks(ax.get_yticks()[::2])
+    ax.set_xlim((70, -2.0))
+    P.draw()
+    return fig, fname
+
+
 def bgepsilon(fname="bgepsilon", size="large", m=cmbmsq):
     bgeps = m.bgepsilon
     fig = P.figure()
@@ -158,6 +226,8 @@ def pphi_kwmap(fname="Pphi-kwmap", size="small", horiz=True, m=cmbmsq):
     P.ylabel(r"$\mathcal{P}^2_{\delta\varphi} (k_\mathrm{WMAP})$")
     ax.set_xlim((70, -3.0))
     ax.set_ylim((2e-11, 2e-7))
+    if size == "small":
+        fig.subplots_adjust(left=0.18)
     P.draw()
     return fig, fname
     
@@ -331,17 +401,18 @@ def compare_src(fname="compare_src", size="large", models=None, kix=52):
         msq = c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-msqphisq-1.5e-61-6.153e-58-3e-61-195554.hf5")
         lph = c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-lambdaphi4-1.5e-61-6.153e-58-3e-61-113146.hf5")
         models = [msq, lph]
-    ts = [m.tresult[int(m.fotstart[kix]*100):] for m in models]
-    srcs = [np.abs(m.source[int(m.fotstart[kix]*100):,kix]) for m in models]
+    ts = [m.tresult[int(m.fotstart[kix]/m.tstep_wanted):] for m in models]
+    srcs = [np.abs(m.source[int(m.fotstart[kix]/m.tstep_wanted):,kix]) for m in models]
     #Setup figure
     fig = P.figure()
     set_size(fig, size)
-    lines = [P.semilogy(t[-1] - t, s) for t,s in zip(ts, srcs)]
-    cg.reversexaxis()
-    P.xlabel(calN)
+    lines = [P.semilogy(t - t[0], s) for t,s in zip(ts, srcs)]
+    #cg.reversexaxis()
+    P.xlabel(r"$\mathcal{N} - \mathcal{N}_\mathrm{~init}$")
     P.ylabel(r"$|S|$")
     ax = fig.gca()
     ax.set_yticks(ax.get_yticks()[::2])
+    ax.set_xlim((-3, max([t[-1]-t[0] for t in ts]) + 3))
     P.draw()
     return fig, fname
     
@@ -356,6 +427,22 @@ def comp_src_msq_phi23(fname="comp_src_msq_phi23", size="large"):
     ax.set_xlim((71,-1))
     P.draw()
     return fig, fname
+    
+def cmp_src_kwmap(fname="cmp_src_kwmap", size="large", models=None, models_legends=None, zoom=False):
+    if models is None:
+        models, models_legends = get_fo_models()
+    fig, fname = compare_src(fname, size, models)
+    ax = fig.gca()
+    if zoom:
+        ax.set_xlim((-0.2, 10))
+        if size == "large":
+            ax.legend(models_legends, loc=0, prop=prop)
+    else:
+        ax.legend(models_legends, loc=9, prop=prop)
+    
+    P.draw()
+    return fig, fname
+    
     
 def phi2over3_params(fname="phi2over3_params", size="large"):
     filename = "/home/network/ith/results/param-search/phi2over3-3.5e-10-4e-10.hf5"
@@ -614,3 +701,84 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
     P.draw()
     return fig, fname
     
+def src_3ns(fname="src_3ns", size="large"):
+    
+    fig = P.figure()
+    set_size(fig, size)
+    ax1 = P.subplot(211)
+    P.loglog(fomsq.k, abs(fomsq.source[1270,:]))
+    ax2 = P.subplot(212, sharex=ax1)
+    P.loglog(fomsq.k, abs(fomsq.source[2354,:]), color="green")
+    P.loglog(fomsq.k, abs(fomsq.source[3000,:]), ls="--", color="r")
+    P.setp(ax1.get_xticklabels(), visible=False)
+    P.xlabel(r"$k$")
+    fig.subplots_adjust(hspace=0.05)
+    P.draw()
+    ax1.set_xlim((4e-62, 1.5e-58))
+    ax1.set_ylim((5e4, 1.3e9))
+    ax2.set_ylim((3e-15, 3e-15*26000))
+    ax1.legend([r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 68.94$"], prop=prop)
+    ax2.legend([r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 58.1$", 
+                r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 51.64$"], prop=prop)
+    
+    P.draw()
+    return fig, fname
+
+def cmp_src_allks(fname="cmp_src_allks", size="large", nefolds=5, models=None, models_legends=None):
+    if models is None:
+        models, models_legends = get_fo_models()
+    fig = P.figure()
+    set_size(fig, size)
+    for m, mleg in zip(models, models_legends):
+        kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
+        tix = int(kcrossend + nefolds/m.tstep_wanted)
+        P.loglog(m.k, abs(m.source[tix,:]), label=mleg)
+    P.xlabel(r"$k$")
+    P.ylabel(r"$|S|$")
+    ax = fig.gca()
+    ax.legend(prop=prop, loc=0)
+    ax.set_xlim((1e-61, 4e-58))
+    P.draw()
+    return fig, fname
+    
+def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, models_legends=None):
+    if models is None:
+        models, models_legends = get_fo_models()
+    fig = P.figure()
+    set_size(fig, size)
+    for m, mleg in zip(models, models_legends):
+        kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
+        tix = int(kcrossend + nefolds/m.tstep_wanted)
+        m.runcount = 1
+        dp = m.yresult[tix,3,:] + m.yresult[tix,5,:]*1j
+        scPr = m.k**3/(2*np.pi**2) * (dp*dp.conj()) / (m.yresult[tix,1,:]**2)
+        P.semilogx(m.k, scPr, label=mleg)
+    P.xlabel(r"$k$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R}$")
+    ax = fig.gca()
+    if size == "large":
+        ax.legend(prop=prop, loc=0)
+    ax.set_xlim((1e-61, 4e-58))
+    P.draw()
+    return fig, fname
+    
+def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, models_legends=None):
+    if models is None:
+        models, models_legends = get_cmb_models_K2()
+    fig = P.figure()
+    set_size(fig, size)
+    for m, mleg in zip(models, models_legends):
+        kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
+        tix = int(kcrossend + nefolds/m.tstep_wanted)
+        m.runcount = 1
+        dp2 = m.yresult[tix,7,:] + m.yresult[tix,9,:]*1j
+        scdp = m.k**1.5/(np.sqrt(2)*np.pi) * abs(dp2) / (m.yresult[tix,1,:]**2)
+        P.loglog(m.k, scdp, label=mleg)
+    P.xlabel(r"$k$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R}$")
+    ax = fig.gca()
+    if size == "large":
+        ax.legend(prop=prop, loc=0)
+    ax.set_xlim((1e-61, 4e-58))
+    P.draw()
+    return fig, fname
