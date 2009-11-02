@@ -52,7 +52,8 @@ class ErrorResult(object):
         """Do post convolution tests."""
         self.postconv["analytic"]  = postconvolution_analytic(self.fixture)
         self.postconv["calced"] = postconvolution_calced(self.fixture)
-        self.postconv["rel_err"] = rel_error(self.postconv["analytic"], self.postconv["calced"])
+        self.postconv["rel_err_a"] = rel_error(self.postconv["analytic"][0], self.postconv["calced"][0])
+        self.postconv["rel_err_b"] = rel_error(self.postconv["analytic"][1], self.postconv["calced"][1])
     
 def rel_error(true_soln, est_soln):
     return np.abs(true_soln-est_soln)/np.abs(true_soln)
@@ -129,20 +130,37 @@ def postconvolution_analytic(fixture):
     
     aterm_analytic = (4*np.pi*A**2)/(3*24*k) * (a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9)
     
-    return aterm_analytic
+    b1a = ( np.log( (np.sqrt(kmax-k) + np.sqrt(kmax)) / ( np.sqrt(kmax+k) +np.sqrt(kmax) ) ) )
+    b1b = ( np.log( (np.sqrt(k+kmin) +np.sqrt(kmin)) / (np.sqrt(k)) ) + 0.5*np.pi)
+    b1c = ( -np.arctan(np.sqrt(kmin)/(np.sqrt(k-kmin))))
+    b1 = 1323 * k**4 * (b1a + b1b + b1c)
+    
+    b2 = np.sqrt(kmax) * (-(1877*k**3 + 472*k*kmax**2)*(np.sqrt(k+kmax) + np.sqrt(kmax-k) ) 
+                          +(626*k**2*kmax + 400*kmax**3)*(np.sqrt(kmax-k) - np.sqrt(k+kmax)))
+    b3 = np.sqrt(kmin) * ((1877*k**3 + 472*k*kmin**2)*(np.sqrt(k+kmin) - np.sqrt(k-kmin) ) 
+                          +(626*k**2*kmin + 400*kmin**3)*(np.sqrt(k+kmin) + np.sqrt(k-kmin)))
+                          
+    bterm_analytic = -(2*np.pi*A**2)/(1344*k**2) * (b1 + b2 + b3)
+    
+    return aterm_analytic, bterm_analytic, (b1,b2,b3)
 
 def postconvolution_calced(fixture):
     """Return calculated solution for post convolution terms."""
     preconv = preconvolution_calced(fixture)
     preaterm = preconv[0]
+    prebterm = preconv[1]
     
     fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
     q = fullk[np.newaxis, :fixture["numsoks"]]
     dp1 = fixture["A"]/np.sqrt(q)
     
     aterm = 2*np.pi * q**2 * dp1 * preaterm
-    integrated = romb(aterm, fixture["deltak"])
-    return integrated
+    integrated_a = romb(aterm, fixture["deltak"])
+    
+    bterm = 2*np.pi * q**2 * dp1 * prebterm
+    integrated_b = romb(bterm, fixture["deltak"])
+    
+    return integrated_a, integrated_b
     
 def postconvolution_envelope(fixture):
     """Return envelope of errors in postconvolution calculated term versus analytic."""
