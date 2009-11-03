@@ -52,8 +52,12 @@ class ErrorResult(object):
         """Do post convolution tests."""
         self.postconv["analytic"]  = postconvolution_analytic(self.fixture)
         self.postconv["calced"] = postconvolution_calced(self.fixture)
-        self.postconv["rel_err_a"] = rel_error(self.postconv["analytic"][0], self.postconv["calced"][0])
-        self.postconv["rel_err_b"] = rel_error(self.postconv["analytic"][1], self.postconv["calced"][1])
+        #calculate errors
+        errs = []
+        for aterm, cterm in zip(self.preconv["analytic"], self.preconv["calced"]):
+            errs.append(rel_error(aterm, cterm))
+        self.postconv["rel_err"] = errs
+
     
 def rel_error(true_soln, est_soln):
     return np.abs(true_soln-est_soln)/np.abs(true_soln)
