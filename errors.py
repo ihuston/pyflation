@@ -164,8 +164,8 @@ def cterm_analytic(A, B, k, kmin, kmax, aterm):
     c1c = ( + np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) ))
     
     c1 = 15*k**3 * (c1a + c1b + c1c)
-    c2 = np.sqrt(kmax)  * ( (15*k**2 + 136*kmin**2) * (np.sqrt(k+kmax) + np.sqrt(kmax-k))
-                           +(118*k*kmin +48*kmin**3/k) * (np.sqrt(k+kmax) - np.sqrt(kmax-k)))
+    c2 = np.sqrt(kmax)  * ( (15*k**2 + 136*kmax**2) * (np.sqrt(k+kmax) + np.sqrt(kmax-k))
+                           +(118*k*kmax +48*kmax**3/k) * (np.sqrt(k+kmax) - np.sqrt(kmax-k)))
     c3 = -np.sqrt(kmin) * ( (15*k**2 + 136*kmin**2) * (np.sqrt(k+kmin) + np.sqrt(k-kmin))
                            +(118*k*kmin +48*kmin**3/k) * (np.sqrt(k+kmin) - np.sqrt(k-kmin)) ) 
     
