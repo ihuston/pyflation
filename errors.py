@@ -152,7 +152,7 @@ def bterm_analytic(A, k, kmin, kmax):
     b2 = np.sqrt(kmax) * (-(260*k - 32*kmax**2/k)*(np.sqrt(k+kmax) + np.sqrt(kmax-k) ) 
                           +(-88*kmax + 64*kmax**3/k**2)*(np.sqrt(kmax-k) - np.sqrt(k+kmax)))
     b3 = np.sqrt(kmin) * ((260*k - 32*kmin**2/k)*(np.sqrt(k+kmin) - np.sqrt(k-kmin) ) 
-                          +(88*kmin + 64*kmin**3/k**2)*(np.sqrt(k+kmin) + np.sqrt(k-kmin)))
+                          +(-88*kmin + 64*kmin**3/k**2)*(np.sqrt(k+kmin) + np.sqrt(k-kmin)))
                           
     bterm_analytic = -(2*np.pi*A**2)/(1344) * (b1 + b2 + b3)
     return bterm_analytic
