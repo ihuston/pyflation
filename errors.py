@@ -88,7 +88,7 @@ def preconvolution_calced(fixture):
     ie = k, q, theta
     
     dp1 = A/np.sqrt(fullk)
-    dp1dot = -A/np.sqrt(fullk) -(A/B)*np.sqrt(fullk)*1j
+    dp1dot = -A/np.sqrt(fullk) -(A/B)*np.sqrt(fullk) * 1j
     
     tterms = getthetaterms(ie, dp1, dp1dot)
     aterm = tterms[0,0] + tterms[0,1]*1j
@@ -118,6 +118,14 @@ def postconvolution_analytic(fixture):
     kmin = k[0]
     kmax = k[-1]
     
+    aterm = aterm_analytic(A, k, kmin, kmax)
+    bterm = bterm_analytic(A, k, kmin, kmax)
+    cterm = cterm_analytic(A, B, k, kmin, kmax, aterm)
+    dterm = dterm_analytic(A, B, k, kmin, kmax, bterm)
+    
+    return aterm, bterm, cterm, dterm
+    
+def aterm_analytic(A, k, kmin, kmax):
     a1 = (-1.5*np.pi + 3*np.log(2*np.sqrt(k)))*k**3
     a2 = (np.sqrt(kmax)*np.sqrt(kmax-k) * (-3*k**2 + 14*k*kmax - 8*kmax**2))
     a3 = (np.sqrt(kmax)*np.sqrt(kmax+k) * (3*k**2 + 14*k*kmax + 8*kmax**2))
@@ -129,26 +137,57 @@ def postconvolution_analytic(fixture):
     a9 = -3*k**3 * (np.log(2*(np.sqrt(kmax) + np.sqrt(kmax-k))))
     
     aterm_analytic = (4*np.pi*A**2)/(3*24*k) * (a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9)
-    
+    return aterm_analytic
+
+def bterm_analytic(A, k, kmin, kmax):
     b1a = ( np.log( (np.sqrt(kmax-k) + np.sqrt(kmax)) / ( np.sqrt(kmax+k) +np.sqrt(kmax) ) ) )
     b1b = ( np.log( (np.sqrt(k+kmin) +np.sqrt(kmin)) / (np.sqrt(k)) ) + 0.5*np.pi)
     b1c = ( -np.arctan(np.sqrt(kmin)/(np.sqrt(k-kmin))))
-    b1 = 1323 * k**4 * (b1a + b1b + b1c)
+    b1 = 252 * k**2 * (b1a + b1b + b1c)
     
-    b2 = np.sqrt(kmax) * (-(1877*k**3 + 472*k*kmax**2)*(np.sqrt(k+kmax) + np.sqrt(kmax-k) ) 
-                          +(626*k**2*kmax + 400*kmax**3)*(np.sqrt(kmax-k) - np.sqrt(k+kmax)))
-    b3 = np.sqrt(kmin) * ((1877*k**3 + 472*k*kmin**2)*(np.sqrt(k+kmin) - np.sqrt(k-kmin) ) 
-                          +(626*k**2*kmin + 400*kmin**3)*(np.sqrt(k+kmin) + np.sqrt(k-kmin)))
+    b2 = np.sqrt(kmax) * (-(260*k - 32*kmax**2/k)*(np.sqrt(k+kmax) + np.sqrt(kmax-k) ) 
+                          +(-88*kmax + 64*kmax**3/k**2)*(np.sqrt(kmax-k) - np.sqrt(k+kmax)))
+    b3 = np.sqrt(kmin) * ((260*k - 32*kmin**2/k)*(np.sqrt(k+kmin) - np.sqrt(k-kmin) ) 
+                          +(88*kmin + 64*kmin**3/k**2)*(np.sqrt(k+kmin) + np.sqrt(k-kmin)))
                           
-    bterm_analytic = -(2*np.pi*A**2)/(1344*k**2) * (b1 + b2 + b3)
+    bterm_analytic = -(2*np.pi*A**2)/(1344) * (b1 + b2 + b3)
+    return bterm_analytic
     
-    return aterm_analytic, bterm_analytic, (b1,b2,b3)
+def cterm_analytic(A, B, k, kmin, kmax, aterm):
+    
+    c1a = ( np.log( (np.sqrt(kmax-k) + np.sqrt(kmax))/(np.sqrt(kmax+k) + np.sqrt(kmax)) ) )
+    c1b = ( np.log( (np.sqrt(k+kmin) + np.sqrt(kmin))/(np.sqrt(k)) )  -0.5*np.pi) 
+    c1c = ( + np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) ))
+    
+    c1 = 15*k**3 * (c1a + c1b + c1c)
+    c2 = np.sqrt(kmax)  * ( (15*k**2 + 136*kmin**2) * (np.sqrt(k+kmax) + np.sqrt(kmax-k))
+                           +(118*k*kmin +48*kmin**3/k) * (np.sqrt(k+kmax) - np.sqrt(kmax-k)))
+    c3 = -np.sqrt(kmin) * ( (15*k**2 + 136*kmin**2) * (np.sqrt(k+kmin) + np.sqrt(k-kmin))
+                           +(118*k*kmin +48*kmin**3/k) * (np.sqrt(k+kmin) - np.sqrt(k-kmin)) ) 
+    
+    chalf = -(4*np.pi*A**2)/(192*5*B) * 1j * (c1 + c2 + c3)
+    cterm = -aterm + chalf
+    return cterm
+
+def dterm_analytic(A, B, k, kmin, kmax, bterm):
+    d1a = ( np.log( (np.sqrt(k+kmax) + np.sqrt(kmax))/(np.sqrt(k+kmin) +np.sqrt(kmin)) ) )
+    d1b = ( np.log( (np.sqrt(kmax-k) + np.sqrt(kmax))/(np.sqrt(k)) ) -0.5*np.pi )
+    d1c = ( + np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) ) )    
+    
+    d1 = -135*k**3 * (d1a + d1b + d1c)
+    d2 = +np.sqrt(kmax) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k) * (np.sqrt(k+kmax) - np.sqrt(kmax-k))
+                           +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmax) + np.sqrt(kmax-k)) )
+    d3 = -np.sqrt(kmin) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k) * (np.sqrt(k+kmin) - np.sqrt(k-kmin))
+                           +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmin) + np.sqrt(k-kmin)) )
+    
+    dhalf = (np.pi*A**2)/(B*900) * 1j * (d1 + d2 + d3)
+    dterm = -bterm + dhalf
+    return dterm
 
 def postconvolution_calced(fixture):
     """Return calculated solution for post convolution terms."""
     preconv = preconvolution_calced(fixture)
-    preaterm = preconv[0]
-    prebterm = preconv[1]
+    preaterm, prebterm, precterm, predterm = preconv
     
     fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
     q = fullk[np.newaxis, :fixture["numsoks"]]
@@ -160,7 +199,13 @@ def postconvolution_calced(fixture):
     bterm = 2*np.pi * q**2 * dp1 * prebterm
     integrated_b = romb(bterm, fixture["deltak"])
     
-    return integrated_a, integrated_b
+    cterm = 2*np.pi * q**2 * dp1 * precterm
+    integrated_c = romb(cterm, fixture["deltak"])
+    
+    dterm = 2*np.pi * q**2 * dp1 * predterm
+    integrated_d = romb(dterm, fixture["deltak"])
+    
+    return integrated_a, integrated_b, integrated_c, integrated_d
     
 def postconvolution_envelope(fixture):
     """Return envelope of errors in postconvolution calculated term versus analytic."""
