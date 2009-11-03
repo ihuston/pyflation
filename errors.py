@@ -54,7 +54,7 @@ class ErrorResult(object):
         self.postconv["calced"] = postconvolution_calced(self.fixture)
         #calculate errors
         errs = []
-        for aterm, cterm in zip(self.preconv["analytic"], self.preconv["calced"]):
+        for aterm, cterm in zip(self.postconv["analytic"], self.postconv["calced"]):
             errs.append(rel_error(aterm, cterm))
         self.postconv["rel_err"] = errs
 
@@ -179,9 +179,9 @@ def dterm_analytic(A, B, k, kmin, kmax, bterm):
     d1c = ( + np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) ) )    
     
     d1 = -135*k**3 * (d1a + d1b + d1c)
-    d2 = +np.sqrt(kmax) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k) * (np.sqrt(k+kmax) - np.sqrt(kmax-k))
+    d2 = +np.sqrt(kmax) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k**2) * (np.sqrt(k+kmax) - np.sqrt(kmax-k))
                            +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmax) + np.sqrt(kmax-k)) )
-    d3 = -np.sqrt(kmin) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k) * (np.sqrt(k+kmin) - np.sqrt(k-kmin))
+    d3 = -np.sqrt(kmin) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k**2) * (np.sqrt(k+kmin) - np.sqrt(k-kmin))
                            +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmin) + np.sqrt(k-kmin)) )
     
     dhalf = (np.pi*A**2)/(B*900) * 1j * (d1 + d2 + d3)
