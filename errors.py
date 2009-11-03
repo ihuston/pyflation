@@ -179,8 +179,8 @@ def dterm_analytic(A, B, k, kmin, kmax, bterm):
     d1c = ( + np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) ) )    
     
     d1 = -135*k**3 * (d1a + d1b + d1c)
-    d2 = +np.sqrt(kmax) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k**2) * (np.sqrt(k+kmax) - np.sqrt(kmax-k))
-                           +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmax) + np.sqrt(kmax-k)) )
+    d2 = +np.sqrt(kmax) * ( (-185*k**2 + 168*kmax**2 -32*kmax**4/k**2) * (np.sqrt(k+kmax) - np.sqrt(kmax-k))
+                           +(70*k*kmax +16*kmax**3/k) * (np.sqrt(k+kmax) + np.sqrt(kmax-k)) )
     d3 = -np.sqrt(kmin) * ( (-185*k**2 + 168*kmin**2 -32*kmin**4/k**2) * (np.sqrt(k+kmin) - np.sqrt(k-kmin))
                            +(70*k*kmin +16*kmin**3/k) * (np.sqrt(k+kmin) + np.sqrt(k-kmin)) )
     
