@@ -157,6 +157,20 @@ def bterm_analytic(A, k, kmin, kmax):
     bterm_analytic = -(2*np.pi*A**2)/(1344) * (b1 + b2 + b3)
     return bterm_analytic
     
+def bterm_analytic2(A, k, kmin, kmax):
+    b1a = np.log( (np.sqrt(k))/(np.sqrt(k+kmin) + np.sqrt(kmin)) )
+    b1b = ( np.log( (np.sqrt(k+kmax) + np.sqrt(kmax))/(np.sqrt(kmax-k) + np.sqrt(kmax)) )  -0.5*np.pi )
+    b1c = np.arctan( (np.sqrt(kmin))/(np.sqrt(k-kmin)) )
+
+    b1 = -252*k**4 * (b1a + b1b + b1c)
+    b2 = np.sqrt(kmax)*( (-260*k**3 + 32*k*kmax**2) * (np.sqrt(k+kmax) + np.sqrt(kmax-k))
+                        +(88*k**2*kmax - 64*kmax**3) * (np.sqrt(k+kmax) - np.sqrt(kmax-k)) )
+    b3 = np.sqrt(kmin)*( (260*k**3 - 32*k*kmin**2) * (np.sqrt(k+kmin) - np.sqrt(k-kmin))
+                        +(-88*k**2*kmin + 64*kmin**3) * (np.sqrt(k+kmin) + np.sqrt(k-kmin)) )
+        
+    bterm_analytic = -(2*np.pi*A**2)/(1344*k**2) * (b1 + b2 + b3)
+    return bterm_analytic, (b1,b2,b3)
+    
 def cterm_analytic(A, B, k, kmin, kmax, aterm):
     
     c1a = ( np.log( (np.sqrt(kmax-k) + np.sqrt(kmax))/(np.sqrt(kmax+k) + np.sqrt(kmax)) ) )
