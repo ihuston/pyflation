@@ -10,7 +10,7 @@ import helpers
 import sohelpers
 import tables
 import os.path
-
+import cPickle
 #
 
 
@@ -43,14 +43,20 @@ def set_size_small(fig):
 def set_size_large(fig):
     fig.set_size_inches((6,4.5))
     fig.subplots_adjust(left=0.12, bottom=0.10, right=0.90, top=0.90)
+    
+def set_size_half(fig):
+    fig.set_size_inches((6,3))
+    fig.subplots_adjust(left=0.12, bottom=0.15, right=0.95, top=0.95)
 
 def set_size(fig, size="large"):
     if size=="small":
         set_size_small(fig)
     elif size=="large":
         set_size_large(fig)
+    elif size=="half":
+        set_size_half(fig)
     else:
-        raise ValueError("Variable size should be either \"large\" or \"small\"!")
+        raise ValueError("Variable size should be either \"large\", \"half\" or \"small\"!")
 
 def get_fo_models():
     fomsq = c.make_wrapper_model(os.path.join(resdir,"foandsrc-FOCanonicalTwoStage-msqphisq-1.5e-61-6.153e-58-3e-61-195554.hf5"))
@@ -61,7 +67,7 @@ def get_fo_models():
     models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                         r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                         r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                        r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     return models, models_legends
     
 def get_fo_models_K1():
@@ -73,7 +79,7 @@ def get_fo_models_K1():
     models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                         r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                         r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                        r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     return models, models_legends
     
 def get_cmb_models_K1():
@@ -85,7 +91,7 @@ def get_cmb_models_K1():
     models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                         r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                         r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                        r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     return models, models_legends
 
 def get_cmb_models_K2():
@@ -97,7 +103,7 @@ def get_cmb_models_K2():
     models_legends = [r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                         r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                         r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                        r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                        r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     return models, models_legends
 
 def dp1_kwmap(fname="dp1_kwmap", size="large", m=cmbmsq):
@@ -459,7 +465,7 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
     ax.set_ylim((2.23e-9, 2.6e-9))
     ax.axhline(2.457e-9, ls="--", color="black")
     P.xlabel(r"$\sigma$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
    
@@ -479,7 +485,7 @@ def msqphisq_params(fname="msqphisq_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$m$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -499,7 +505,7 @@ def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -519,7 +525,7 @@ def hybrid2and4_params(fname="hybrid2and4_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -539,7 +545,7 @@ def linde_params(fname="linde_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -559,7 +565,7 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$m_0$")
-    P.ylabel(r"$\mathcal{P}_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
      
@@ -644,7 +650,7 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
             models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                               r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                               r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                              r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                              r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
     yms = [m.bgmodel.yresult[:] for m in models]
     vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
@@ -678,7 +684,7 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
             models_legends = [r"$V(\varphi)=\frac{1}{4}\lambda\varphi^4$",
                               r"$V(\varphi)=\frac{1}{2}m^2\varphi^2$",
                               r"$V(\varphi)=\sigma\varphi^{\frac{2}{3}}$",
-                              r"$V(\varphi)=V_0 + \frac{1}{2}m_0^2\varphi^2$"]
+                              r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
     
     yms = [m.bgmodel.yresult[int(m.tresult[0]/(m.tstep_wanted/2.0)):int((m.tend-m.tresult[0])/(m.tstep_wanted/2.0))] for m in models]
@@ -760,7 +766,7 @@ def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, mod
         ax.legend(prop=prop, loc=0)
     ax.set_xlim((1e-61, 4e-58))
     P.draw()
-    return fig, fname
+    return fig, fname, models
     
 def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, models_legends=None):
     if models is None:
@@ -780,5 +786,51 @@ def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, m
     if size == "large":
         ax.legend(prop=prop, loc=0)
     ax.set_xlim((1e-61, 4e-58))
+    P.draw()
+    return fig, fname
+ 
+def errors_3ranges(fname="errors_3ranges", size="half", termix=0):
+    try:
+        err_file=open(os.path.join(resdir, "errors-3Ks-starpc34.dat"), "r")
+        results = cPickle.load(err_file)
+    except IOError:
+        raise
+    finally:
+        err_file.close()
+    #
+    fig = P.figure()
+    set_size(fig, size)
+    K_legends = [r"$k\in K_1$", r"$k\in K_2$", r"$k\in K_3$"]
+    ylims = [(3e-11,3e-6), (7e-10,1e-3), (1e-8,1e-7), (3e-8,1e-5)]
+    for err, K_legend in zip(results, K_legends):
+        P.loglog(err.k, err.postconv["rel_err"][termix], label=K_legend)
+    ax = fig.gca()
+    ax.set_xlim((3e-62, 3e-57))
+    ax.set_ylim(ylims[termix])
+    ax.legend(prop=prop, loc=3)
+    P.xlabel(r"$k$")
+    P.ylabel(r"$\epsilon_\mathrm{rel}$")
+    P.draw()
+    return fig, fname
+        
+def errors_analytic(fname="errors_aterm", size="large", termix=0, Kix=0):
+    try:
+        err_file=open(os.path.join(resdir, "errors-3Ks-starpc34.dat"), "r")
+        results = cPickle.load(err_file)
+    except IOError:
+        raise
+    finally:
+        err_file.close()
+    #
+    fig = P.figure()
+    set_size(fig, size)
+    K_legends = [r"$k\in K_1$", r"$k\in K_2$", r"$k\in K_3$"]
+    term_legends = [r"$I_{\mathcal{A}}(k)$", r"$|I_{\mathcal{B}}(k)|$", 
+                    r"$|I_{\widetilde{\mathcal{C}}}(k)|$", r"$|I_{\widetilde{\mathcal{D}}}(k)|$"]
+    err = results[Kix]
+    P.semilogx(err.k, abs(err.postconv["analytic"][termix]), label=K_legends[Kix])
+    ax = fig.gca()
+    P.xlabel(r"$k$")
+    P.ylabel(term_legends[termix])
     P.draw()
     return fig, fname
