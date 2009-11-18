@@ -464,7 +464,7 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
     ax.set_xlim((3.48e-10, 4.02e-10))
     ax.set_ylim((2.23e-9, 2.6e-9))
     ax.axhline(2.457e-9, ls="--", color="black")
-    P.xlabel(r"$\sigma$")
+    P.xlabel(r"$\sigma / M_{\mathrm{PL}}^{10/3}$")
     P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
@@ -484,7 +484,7 @@ def msqphisq_params(fname="msqphisq_params", size="large"):
     ax.set_ylim((2.2e-9, 2.62e-9))
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
-    P.xlabel(r"$m$")
+    P.xlabel(r"$m / M_{\mathrm{PL}}$")
     P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
@@ -564,7 +564,7 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
     ax.set_ylim((0,1e-8))
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
-    P.xlabel(r"$m_0$")
+    P.xlabel(r"$m_0 / M_{\mathrm{PL}}$")
     P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
@@ -578,8 +578,8 @@ def plot_potential_phi(fname="plot_potential", size="large", m=cmbmsq):
     #Plot potential versus phi
     P.plot(ym[:,0], vm[:,0])
     ax=P.gca()
-    P.ylabel(r"$V(\varphi)$")
-    P.xlabel(r"$\varphi$")
+    P.ylabel(r"$V(\varphi) / M_{\mathrm{PL}}^4$")
+    P.xlabel(r"$\varphi / M_{\mathrm{PL}}$")
     P.draw()
     return fig, fname
     
@@ -664,10 +664,10 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
     if vix == 0:
         ax.set_ylim((-0.1e-8, 1.6e-8))
     P.legend(models_legends, prop=prop, loc=0)
-    vlabels = [r"$V(\varphi)$", r"$V_{,\varphi}$", 
-               r"$V_{,\varphi \varphi}$", r"$V_{,\varphi\varphi\varphi}$"]
+    vlabels = [r"$V(\varphi) / M_{\mathrm{PL}}^4$", r"$V_{,\varphi} / M_{\mathrm{PL}}^3$", 
+               r"$V_{,\varphi \varphi} / M_{\mathrm{PL}}^2$", r"$V_{,\varphi\varphi\varphi} /M_{\mathrm{PL}}$"]
     P.ylabel(vlabels[vix])
-    P.xlabel(r"$\varphi$")
+    P.xlabel(r"$\varphi / M_{\mathrm{PL}}$")
     P.draw()
     return fig, fname
 
@@ -700,8 +700,8 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
     if vix == 0:
         ax.set_ylim((-0.1e-8, 1.3e-8))
     P.legend(models_legends, prop=prop, loc=0)
-    vlabels = [r"$V(\varphi)$", r"$V_{,\varphi}$", 
-               r"$V_{,\varphi \varphi}$", r"$V_{,\varphi\varphi\varphi}$"]
+    vlabels = [r"$V(\varphi) / M_{\mathrm{PL}}^4$", r"$V_{,\varphi} / M_{\mathrm{PL}}^3$", 
+               r"$V_{,\varphi \varphi} / M_{\mathrm{PL}}^2$", r"$V_{,\varphi\varphi\varphi} /M_{\mathrm{PL}}$"]
     P.ylabel(vlabels[vix])
     P.xlabel(calN)
     P.draw()
@@ -717,7 +717,7 @@ def src_3ns(fname="src_3ns", size="large"):
     P.loglog(fomsq.k, abs(fomsq.source[2354,:]), color="green")
     P.loglog(fomsq.k, abs(fomsq.source[3000,:]), ls="--", color="r")
     P.setp(ax1.get_xticklabels(), visible=False)
-    P.xlabel(r"$k$")
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
     fig.subplots_adjust(hspace=0.05)
     P.draw()
     ax1.set_xlim((4e-62, 1.5e-58))
@@ -739,7 +739,7 @@ def cmp_src_allks(fname="cmp_src_allks", size="large", nefolds=5, models=None, m
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
         P.loglog(m.k, abs(m.source[tix,:]), label=mleg)
-    P.xlabel(r"$k$")
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(r"$|S|$")
     ax = fig.gca()
     ax.legend(prop=prop, loc=0)
@@ -759,7 +759,7 @@ def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, mod
         dp = m.yresult[tix,3,:] + m.yresult[tix,5,:]*1j
         scPr = m.k**3/(2*np.pi**2) * (dp*dp.conj()) / (m.yresult[tix,1,:]**2)
         P.semilogx(m.k, scPr, label=mleg)
-    P.xlabel(r"$k$")
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(r"$\mathcal{P}^2_\mathcal{R}$")
     ax = fig.gca()
     if size == "large":
@@ -808,7 +808,7 @@ def errors_3ranges(fname="errors_3ranges", size="half", termix=0):
     ax.set_xlim((3e-62, 3e-57))
     ax.set_ylim(ylims[termix])
     ax.legend(prop=prop, loc=3)
-    P.xlabel(r"$k$")
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(r"$\epsilon_\mathrm{rel}$")
     P.draw()
     return fig, fname
@@ -825,12 +825,83 @@ def errors_analytic(fname="errors_aterm", size="large", termix=0, Kix=0):
     fig = P.figure()
     set_size(fig, size)
     K_legends = [r"$k\in K_1$", r"$k\in K_2$", r"$k\in K_3$"]
-    term_legends = [r"$I_{\mathcal{A}}(k)$", r"$|I_{\mathcal{B}}(k)|$", 
+    term_legends = [r"$I_{\mathcal{A}}(k) / M_{\mathrm{PL}}^2$", r"$|I_{\mathcal{B}}(k)|$", 
                     r"$|I_{\widetilde{\mathcal{C}}}(k)|$", r"$|I_{\widetilde{\mathcal{D}}}(k)|$"]
     err = results[Kix]
     P.semilogx(err.k, abs(err.postconv["analytic"][termix]), label=K_legends[Kix])
     ax = fig.gca()
-    P.xlabel(r"$k$")
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(term_legends[termix])
+    P.draw()
+    return fig, fname
+
+def errors_general(fname="errors_general", size="large", fixture_ixs=None, fx_labels=None):
+    if not fixture_ixs:
+        fixture_ins = [1]
+        fx_labels=[r""]
+    try:
+        err_file=open(os.path.join(resdir, "errors-results-virgo.dat"), "r")
+        results = np.array(cPickle.load(err_file))
+    except IOError:
+        raise
+    finally:
+        err_file.close()
+    #
+    fig = P.figure()
+    set_size(fig, size)
+    errors = results[fixture_ixs]
+    for eix, err in enumerate(errors):
+        P.loglog(err.k, abs(err.postconv["rel_err"]), label=fx_labels[eix])
+    ax = fig.gca()
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
+    P.ylabel(r"$\epsilon_\mathrm{rel}$")
+    P.draw()
+    return fig, fname
+    
+def err_nthetas(fname="err_nthetas", size="large"):
+    fxixs = [62, 71, 80]
+    fxls = ['$\\Delta k= 1\\times 10^{-61}M_\\mathrm{PL}$',
+            '$\\Delta k= 3\\times 10^{-61}M_\\mathrm{PL}$',
+            '$\\Delta k= 1\\times 10^{-60}M_\\mathrm{PL}$']
+            
+    fig, fname = errors_general(fname, size, fxixs, fxls)
+    ax = fig.gca()
+    ax.set_xlim((7e-61, 2e-57))
+    ax.legend(prop=prop, loc=0)
+    P.draw()
+    return fig, fname
+
+def err_deltak_kmin(fname="err_nthetas", size="large"):
+    fxixs = [8, 17, 26]
+    fxls = ['$\\Delta k= 1\\times 10^{-61}M_\\mathrm{PL}$',
+            '$\\Delta k= 3\\times 10^{-61}M_\\mathrm{PL}$',
+            '$\\Delta k= 1\\times 10^{-60}M_\\mathrm{PL}$']
+            
+    fig, fname = errors_general(fname, size, fxixs, fxls)
+    ax = fig.gca()
+    ax.set_xlim((7e-62, 2e-57))
+    ax.legend(prop=prop, loc=0)
+    P.draw()
+    return fig, fname
+
+def errors_nthetas(fname="errors_general", size="large"):
+    try:
+        err_file=open(os.path.join(resdir, "errors-nthetas-starpc34.dat"), "r")
+        results = np.array(cPickle.load(err_file))
+    except IOError:
+        raise
+    finally:
+        err_file.close()
+    #
+    fig = P.figure()
+    set_size(fig, size)
+    labels = [r"$N_\theta = " + str(t) + "$" for t in [129,257,513]]
+    for eix, err in enumerate(results):
+        P.loglog(err.k, abs(err.postconv["rel_err"][0]), label=labels[eix])
+    ax = fig.gca()
+    ax.set_xlim((1e-61, 2e-57))
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
+    P.ylabel(r"$\epsilon_\mathrm{rel}$")
+    ax.legend(prop=prop, loc=0)
     P.draw()
     return fig, fname
