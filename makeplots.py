@@ -229,7 +229,7 @@ def pphi_kwmap(fname="Pphi-kwmap", size="small", horiz=True, m=cmbmsq):
     cg.reversexaxis()
     #Labels
     P.xlabel(calN)
-    P.ylabel(r"$\mathcal{P}^2_{\delta\varphi} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\delta\varphi_1} (k_\mathrm{WMAP})$")
     ax.set_xlim((70, -3.0))
     ax.set_ylim((2e-11, 2e-7))
     if size == "small":
@@ -465,7 +465,7 @@ def phi2over3_params(fname="phi2over3_params", size="large"):
     ax.set_ylim((2.23e-9, 2.6e-9))
     ax.axhline(2.457e-9, ls="--", color="black")
     P.xlabel(r"$\sigma / M_{\mathrm{PL}}^{10/3}$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
    
@@ -485,7 +485,7 @@ def msqphisq_params(fname="msqphisq_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$m / M_{\mathrm{PL}}$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -505,7 +505,7 @@ def lambdaphi4_params(fname="lambdaphi4_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -525,7 +525,7 @@ def hybrid2and4_params(fname="hybrid2and4_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -545,7 +545,7 @@ def linde_params(fname="linde_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$\lambda$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
     
@@ -565,7 +565,7 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
     ax.axhline(2.457e-9, ls="--", color="black")
     ax.ticklabel_format(style="sci", scilimits=(0,0))
     P.xlabel(r"$m_0 / M_{\mathrm{PL}}$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R} (k_\mathrm{WMAP})$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1} (k_\mathrm{WMAP})$")
     P.draw()
     return fig, fname
      
@@ -760,7 +760,7 @@ def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, mod
         scPr = m.k**3/(2*np.pi**2) * (dp*dp.conj()) / (m.yresult[tix,1,:]**2)
         P.semilogx(m.k, scPr, label=mleg)
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
-    P.ylabel(r"$\mathcal{P}^2_\mathcal{R}$")
+    P.ylabel(r"$\mathcal{P}^2_{\mathcal{R}_1}$")
     ax = fig.gca()
     if size == "large":
         ax.legend(prop=prop, loc=0)
