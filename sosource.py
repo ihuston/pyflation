@@ -1,6 +1,6 @@
 """sosource.py Second order source term calculation module.
 Author: Ian Huston
-$Id: sosource.py,v 1.74 2009/10/02 11:15:19 ith Exp $
+$Id: sosource.py,v 1.75 2010/01/18 14:36:02 ith Exp $
 
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
@@ -88,6 +88,7 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
             theta_terms[2,z,n] = integrate.romb(sinth*dphidot_tgther[z], dx=dtheta)
             theta_terms[3,z,n] = integrate.romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
+
         
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
     """Return unintegrated slow roll source term.
