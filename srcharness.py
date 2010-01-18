@@ -22,10 +22,8 @@ Arguments
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import cosmomodels as c
-import scitools.basics as stb
 import time
 import sys
-import logging
 import logging.handlers
 import sosource
 import getopt
