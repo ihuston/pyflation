@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Helper functions by Ian Huston
-    $Id: helpers.py,v 1.18 2009/10/01 16:37:30 ith Exp $
+    $Id: helpers.py,v 1.19 2010/01/18 16:50:34 ith Exp $
     
     Provides helper functions for use elsewhere"""
 
@@ -177,3 +177,22 @@ def ensurepath(path):
             os.makedirs(os.path.dirname(path))
         except OSError:
             raise OSError("Error creating results directory!")
+        
+def seq(min=0.0, max=None, inc=1.0, type=float,
+        return_type='NumPyArray'):
+    """
+    Generate numbers from min to (and including!) max,
+    with increment of inc. Safe alternative to arange.
+    The return_type string governs the type of the returned
+    sequence of numbers ('NumPyArray', 'list', or 'tuple').
+    """
+    if max is None: # allow sequence(3) to be 0., 1., 2., 3.
+        # take 1st arg as max, min as 0, and inc=1
+        max = min; min = 0.0; inc = 1.0
+    r = np.arange(min, max + inc/2.0, inc, type)
+    if return_type == 'NumPyArray' or return_type == np.ndarray:
+        return r
+    elif return_type == 'list':
+        return r.tolist()
+    elif return_type == 'tuple':
+        return tuple(r.tolist())
