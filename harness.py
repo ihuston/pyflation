@@ -38,7 +38,7 @@ Arguments
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import cosmomodels as c
-from scitools.basics import seq 
+from helpers import seq 
 import time
 import sys
 import logging

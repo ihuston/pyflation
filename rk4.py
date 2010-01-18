@@ -1,14 +1,14 @@
 #
 #Runge-Kutta ODE solver
 #Author: Ian Huston
-#CVS: $Id: rk4.py,v 1.37 2009/02/10 16:58:26 ith Exp $
+#CVS: $Id: rk4.py,v 1.38 2010/01/18 16:57:02 ith Exp $
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
 from pdb import set_trace
-from scitools.basics import seq #Proper sequencing of floats
+from helpers import seq #Proper sequencing of floats
 import logging
 import helpers
 
