@@ -1,5 +1,5 @@
 """Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.232 2009/10/12 20:56:01 ith Exp $
+    $Id: cosmomodels.py,v 1.233 2010/01/18 16:50:57 ith Exp $
     
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
@@ -22,7 +22,7 @@ from scipy import interpolate
 import helpers 
 import cmpotentials
 import gzip
-import tables
+import tables #@UnresolvedImport
 import logging
 
 #debugging
@@ -269,7 +269,7 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.232 $",
+                  "CVSRevision":"$Revision: 1.233 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -1076,7 +1076,7 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.232 $",
+                  "CVSRevision":"$Revision: 1.233 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
