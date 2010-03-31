@@ -1021,14 +1021,14 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         
         #d\deltaphi_2^prime/dn  #
         dydx[1] = (-(3 - epsilon)*y[1] - ((k/(a*H))**2)*y[0]
-                    -(d2U/H**2 - 3*(phidot**2))*y[0] - srcreal)
+                    -(d2U/H**2 - 3*(phidot**2))*y[0] )
                 
         #Complex \deltaphi_2
         dydx[2] = y[3]
         
         #Complex derivative
         dydx[3] = (-(3 - epsilon)*y[3] - ((k/(a*H))**2)*y[2]
-                    -(d2U/H**2 - 3*(phidot**2))*y[2] - srcimag)
+                    -(d2U/H**2 - 3*(phidot**2))*y[2] )
         
         return dydx
         
