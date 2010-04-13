@@ -174,7 +174,7 @@ def src_onek(fname="src_onek", size="large", fo=None, kix=17):
     fig = P.figure()
     set_size(fig, size)
     #Plot graph
-    kstart = int(fo.fotstart[kix])
+    kstart = int(fo.fotstart[kix]/fo.tstep_wanted)
     P.semilogy(fo.tresult[-1] - fo.tresult[kstart:], abs(fo.source[kstart:,kix]))
     cg.reversexaxis()
     P.xlabel(calN)
@@ -711,22 +711,17 @@ def src_3ns(fname="src_3ns", size="large"):
     
     fig = P.figure()
     set_size(fig, size)
-    ax1 = P.subplot(211)
-    P.loglog(fomsq.k, abs(fomsq.source[1270,:]))
-    ax2 = P.subplot(212, sharex=ax1)
+    ax = fig.gca()
     P.loglog(fomsq.k, abs(fomsq.source[2354,:]), color="green")
     P.loglog(fomsq.k, abs(fomsq.source[3000,:]), ls="--", color="r")
-    P.setp(ax1.get_xticklabels(), visible=False)
-    P.xlabel(r"$k / M_{\mathrm{PL}}$")
-    fig.subplots_adjust(hspace=0.05)
-    P.draw()
-    ax1.set_xlim((4e-62, 1.5e-58))
-    ax1.set_ylim((5e4, 1.3e9))
-    ax2.set_ylim((3e-15, 3e-15*26000))
-    ax1.legend([r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 68.94$"], prop=prop)
-    ax2.legend([r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 58.1$", 
-                r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 51.64$"], prop=prop)
     
+    P.xlabel(r"$k / M_{\mathrm{PL}}$")
+    
+    P.draw()
+    ax.set_ylim((3e-15, 3e-15*26000))
+    ax.legend([r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 58.1$", 
+                r"$\mathcal{N}_\mathrm{end} - \mathcal{N} = 51.64$"], prop=prop)
+    ax.set_xlim((3e-62, 2e-58))
     P.draw()
     return fig, fname
 
