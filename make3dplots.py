@@ -30,7 +30,7 @@ def complex_dp1(fname="complex_dp1", size="large", kix=None, models=None):
     for m, l in zip(models, legends):
         ts = helpers.find_nearest_ix(m.tresult, m.fotstart[kix])
         te = helpers.find_nearest_ix(m.tresult, m.fotstart[kix]+10)
-        lines.append(ax.plot(m.tresult[ts:te]-m.tresult[ts], m.yresult[ts:te,3,kix], m.yresult[ts:te,5,kix]))
+        lines.append(ax.plot(m.tresult[ts:te]-m.tresult[ts], m.yresult[ts:te,3,kix], m.yresult[ts:te,5,kix], label=l))
     ax.set_xlabel(r"$\mathcal{N}$")
     ax.set_ylabel(r"$\Re \delta\varphi_1$")
     ax.set_zlabel(r"$\Im \delta\varphi_1$")
