@@ -900,3 +900,65 @@ def errors_nthetas(fname="errors_general", size="large"):
     ax.legend(prop=prop, loc=0)
     P.draw()
     return fig, fname
+
+def epsilon_slowroll(fname="epsilon_slowroll", size="large", models=None, kix=None, zoom=False):
+    if models is None:
+        models, legends = get_cmb_models_K2()
+        kix = 17
+    fig = P.figure()
+    set_size(fig, size)
+    lines = []
+    #Find starting time indexes of kix mode
+    for m,l in zip(models, legends):
+        ts = int(helpers.find_nearest_ix(m.bgmodel.tresult, m.fotstart[kix]))
+        te = int(helpers.find_nearest_ix(m.bgmodel.tresult, m.tend))
+        #Get epsilon
+        epsilon = m.bgepsilon[ts:te]
+        #Print epsilon line
+        lines.append(P.plot(m.bgmodel.tresult[ts:te] - m.bgmodel.tresult[ts], epsilon, label=l))
+    cg.reversexaxis()
+    P.xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
+    P.ylabel(r"$\epsilon_H$")
+    ax = fig.gca()
+    
+    ax.legend(prop=prop, loc=0)
+    if zoom:
+        ax.set_xlim((-0.2, 10))
+        ax.set_ylim((-0.01, 0.045))
+    else:
+        ax.set_xlim((-3, 67))
+        ax.set_ylim((-0.05, 1.05))
+    
+    P.draw()
+    return fig, fname
+    
+def eta_slowroll(fname="eta_slowroll", size="large", models=None, legends=None, kix=None, zoom=False):
+    if models is None:
+        models, legends = get_cmb_models_K2()
+        kix = 17
+    fig = P.figure()
+    set_size(fig, size)
+    lines = []
+    #get slow roll parameters
+    for m, l in zip(models, legends):
+        ts = int(helpers.find_nearest_ix(m.bgmodel.tresult, m.fotstart[kix]))
+        te = int(helpers.find_nearest_ix(m.bgmodel.tresult, m.tend))
+                #get slow roll parameters
+        ym = m.bgmodel.yresult[ts:te]
+        vm = np.array(map(m.potentials, ym))
+        eta = vm[:,2]/(3*m.bgmodel.yresult[ts:te,2]**2)
+        lines.append(P.plot(m.bgmodel.tresult[ts:te] - m.bgmodel.tresult[ts], eta, label=l))
+    cg.reversexaxis()
+    P.xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
+    P.ylabel(r"$\eta_H$")
+    ax = fig.gca()
+    ax.legend(prop=prop, loc=0)
+    if zoom:
+        ax.set_xlim((-0.2, 10))
+        ax.set_ylim((-0.01, 0.055))
+    else:
+        ax.set_xlim((-3, 67))
+#        ax.set_ylim((-0.05, 1.05))
+    
+    P.draw()    
+    return fig, fname    
