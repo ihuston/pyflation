@@ -204,3 +204,9 @@ def find_nearest(array,value):
     """
     idx=(np.abs(array-value)).argmin()
     return array[idx]
+
+def find_nearest_ix(array,value):
+    """
+    Find the index of the number in `array` which is nearest to `value`.
+    """
+    return (np.abs(array-value)).argmin()
