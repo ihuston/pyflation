@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import pylab as P
 import cosmographs as cg
 
-def complex_dp1(fname="complex_dp1", size="large", kix=None, models=None):
+def complex_dp1(fname="complex_dp1", size="large", kix=None, models=None, nefolds=None):
     """
     Plot complex values of dp1 in a 3d plot for all models.
     """
@@ -29,9 +29,12 @@ def complex_dp1(fname="complex_dp1", size="large", kix=None, models=None):
     ax = Axes3D(fig)
     for m, l in zip(models, legends):
         ts = helpers.find_nearest_ix(m.tresult, m.fotstart[kix])
-        te = helpers.find_nearest_ix(m.tresult, m.fotstart[kix]+10)
+        if not nefolds:
+            te = len(m.tresult)
+        else:
+            te = helpers.find_nearest_ix(m.tresult, m.fotstart[kix]+nefolds)
         lines.append(ax.plot(m.tresult[ts:te]-m.tresult[ts], m.yresult[ts:te,3,kix], m.yresult[ts:te,5,kix], label=l))
-    ax.set_xlabel(r"$\mathcal{N}$")
+    ax.set_xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
     ax.set_ylabel(r"$\Re \delta\varphi_1$")
     ax.set_zlabel(r"$\Im \delta\varphi_1$")
     P.draw()
