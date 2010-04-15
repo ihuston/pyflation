@@ -423,7 +423,7 @@ def preconv_analytic_withphase(fixture):
     
     aterm_analytic = (A/(km*qm)) * ( ( np.exp(0.75*clog(-1)) * sqrt(np.pi) / (2*np.exp(1.5*clog(eta))) ) * ( erfi( np.exp(0.75*clog(-1)) *sqrt(eta) *sqrt(km+qm)  ) 
                                                                                      - erfi( np.exp(0.75*clog(-1)) *sqrt(eta) *sqrt(km-qm)  ) ) 
-                                     + (1j/(2*eta)) * (sqrt(km+qm)*np.exp(-1*1j*eta*(km+qm))  - sqrt(km-qm)*np.exp(-1*1j*eta*(km-qm))) )
+                                     + (1j/(eta)) * (sqrt(km+qm)*np.exp(-1*1j*eta*(km+qm))  - sqrt(km-qm)*np.exp(-1*1j*eta*(km-qm))) )
     
     return aterm_analytic
     
