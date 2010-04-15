@@ -196,3 +196,17 @@ def seq(min=0.0, max=None, inc=1.0, type=float,
         return r.tolist()
     elif return_type == 'tuple':
         return tuple(r.tolist())
+    return
+
+def find_nearest(array,value):
+    """
+    Find the index of the number in `array` which is nearest to `value`.
+    """
+    idx=(np.abs(array-value)).argmin()
+    return array[idx]
+
+def find_nearest_ix(array,value):
+    """
+    Find the index of the number in `array` which is nearest to `value`.
+    """
+    return (np.abs(array-value)).argmin()
