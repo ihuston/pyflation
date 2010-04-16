@@ -75,16 +75,16 @@ def preconvolution_analytic(fixture):
     km = k[..., np.newaxis]
     qm = q[np.newaxis, ...]
     
-    aterm_analytic = (2*A/(3*km*qm)) * ((km+qm)**1.5-(abs(km-qm))**1.5)
+    aterm_analytic = (2*A/(3*km*qm)) * ((km+qm)**1.5-(np.abs(km-qm))**1.5)
     
-    bterm_analytic = (-A/(km*qm)**2) * ((1/7)*((km+qm)**3.5-(abs(km-qm))**3.5)
-        - (1/3)*(km**2 + qm**2) * ((km+qm)**1.5-(abs(km-qm))**1.5))
+    bterm_analytic = (-A/(km*qm)**2) * ((1/7)*((km+qm)**3.5-(np.abs(km-qm))**3.5)
+        - (1/3)*(km**2 + qm**2) * ((km+qm)**1.5-(np.abs(km-qm))**1.5))
         
-    cterm_analytic = - aterm_analytic - (2*A/(5*B*km*qm)) * ((km+qm)**2.5-(abs(km-qm))**2.5) * 1j
+    cterm_analytic = - aterm_analytic - (2*A/(5*B*km*qm)) * ((km+qm)**2.5-(np.abs(km-qm))**2.5) * 1j
     
-    dterm_analytic =  - bterm_analytic + (A/(B*(qm)**2)) * ( (km**2.5)/9.0*(((1+qm/km)**4.5-(abs(1-qm/km))**4.5) )
-                                                              -0.2*km**0.5*(km**2 + qm**2) *((1+qm/km)**2.5-(abs(1-qm/km))**2.5)) * 1j
-    
+    dterm_analytic =  - bterm_analytic + (A/(B*(qm)**2)) * ( (km**2.5)/9.0*(((1+qm/km)**4.5-(np.abs(1-qm/km))**4.5) )
+                                                              -0.2*km**0.5*(km**2 + qm**2) *((1+qm/km)**2.5-(np.abs(1-qm/km))**2.5)) * 1j
+    1/0
     analytic_terms = [aterm_analytic, bterm_analytic, cterm_analytic, dterm_analytic]
     return analytic_terms
 
