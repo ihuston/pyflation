@@ -918,7 +918,7 @@ def epsilon_slowroll(fname="epsilon_slowroll", size="large", models=None, kix=No
         lines.append(P.plot(m.bgmodel.tresult[ts:te] - m.bgmodel.tresult[ts], epsilon, label=l))
     cg.reversexaxis()
     P.xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
-    P.ylabel(r"$\epsilon_H$")
+    P.ylabel(r"$\varepsilon_H$")
     ax = fig.gca()
     
     ax.legend(prop=prop, loc=0)
@@ -962,3 +962,28 @@ def eta_slowroll(fname="eta_slowroll", size="large", models=None, legends=None, 
     
     P.draw()    
     return fig, fname    
+
+def cos_keta_kwmap(fname="cos_keta_kwmap", size="large", zoom=False, models=None, legends=None, kix=None):
+    if models is None:
+        models, legends = get_fo_models()
+        kix = 17
+    fig = P.figure()
+    set_size(fig, size)
+    lines = []
+    for m,l in zip(models,legends):
+        ts = helpers.find_nearest_ix(m.tresult, m.fotstart[kix])
+        te = len(m.tresult)-1
+        eta = 1/(m.ainit*np.exp(m.tresult[ts:te])*m.yresult[ts:te,2,kix]*(1-m.bgepsilon[ts:te]))
+        lines.append(P.plot(m.tresult[ts:te]-m.tresult[ts], np.cos(-m.k[kix]*eta), label=l))
+    P.xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
+    P.ylabel(r"$\cos(-k\eta)$")
+    ax = fig.gca()
+    ax.legend(prop=prop, loc=0)
+    if zoom:
+        ax.set_xlim((0.5, 1.0))
+        ax.set_ylim((-1.1, 1.1))
+    else:
+        ax.set_xlim((-3, 67))
+#        ax.set_ylim((-0.05, 1.05))
+    P.draw()    
+    return fig, fname       
