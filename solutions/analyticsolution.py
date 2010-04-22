@@ -14,6 +14,7 @@ Sqrt = scipy.sqrt
 ArcTan = scipy.arctan
 Pi = scipy.pi
 
+
 class AnalyticSolution(object):
     """Analytic Solution base class.
     """
