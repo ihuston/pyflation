@@ -7,6 +7,7 @@ Created on 22 Apr 2010
 from __future__ import division
 import numpy as np
 import scipy
+from generalsolution import GeneralSolution
 
 #Change to fortran names for compatability 
 Log = scipy.log 
@@ -15,21 +16,15 @@ ArcTan = scipy.arctan
 Pi = scipy.pi
 
 
-class AnalyticSolution(object):
+class AnalyticSolution(GeneralSolution):
     """Analytic Solution base class.
     """
     
-    def __init__(self, fixture, model):
+    def __init__(self, *args, **kwargs):
         """Given a fixture and a cosmomodels model instance, initialises an AnalyticSolution class instance.
         """
-        self.fx = fixture
-        
-        self.m = model
-        
+        super(AnalyticSolution, self).__init__(*args, **kwargs)
     
-    def full_source_term(self):
-        """Full source term after integration."""
-        pass
     
 class NoPhaseBunchDaviesSolution(AnalyticSolution):
     """Analytic solution using the Bunch Davies initial conditions as the first order 
@@ -39,8 +34,8 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
     \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
     """
     
-    def __init__(self, fixture, model):
-        super(NoPhaseBunchDaviesSolution, self).__init__(fixture, model)
+    def __init__(self, *args, **kwargs):
+        super(NoPhaseBunchDaviesSolution, self).__init__(*args, **kwargs)
         
     
     def full_source_term(self):
