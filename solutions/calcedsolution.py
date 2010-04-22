@@ -6,7 +6,6 @@ Created on 22 Apr 2010
 '''
 from __future__ import division
 import numpy as np
-from numpy import sqrt
 from generalsolution import GeneralSolution
 from sosource import getthetaterms
 from scipy.integrate import romb
@@ -14,19 +13,18 @@ from scipy.integrate import romb
 class CalcedSolution(GeneralSolution):
     """Calculated result using romberg integration."""
     
-    def __init__(self):
-        super(CalcedSolution, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(CalcedSolution, self).__init__(*args, **kwargs)
         
-    def preconvolution_calced(self, fixture, alpha, beta, dp1, dp1dot):
+    def preconvolution_calced(self, dp1_fullk, dp1dot_fullk):
         """Return calculates solution for pre-convolution terms."""
         #Init vars
-        fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
-        k = q = fullk[:fixture["numsoks"]]
+        fixture = self.fixture
          
         theta = np.linspace(0, np.pi, fixture["nthetas"])
-        ie = k, q, theta
+        ie = self.fullk, self.fullk, theta
                 
-        tterms = getthetaterms(ie, dp1, dp1dot)
+        tterms = getthetaterms(ie, dp1_fullk, dp1dot_fullk)
         aterm = tterms[0,0] + tterms[0,1]*1j
         bterm = tterms[1,0] + tterms[1,1]*1j
         cterm = tterms[2,0] + tterms[2,1]*1j
@@ -34,13 +32,13 @@ class CalcedSolution(GeneralSolution):
         calced_terms = [aterm, bterm, cterm, dterm]
         return calced_terms
     
-    def postconvolution_calced(self, fixture, dp1, dp1dot):
+    def postconvolution_calced(self, dp1, dp1dot):
         """Return calculated solution for post convolution terms."""
+        fixture = self.fixture
         preconv = self.preconvolution_calced(fixture)
         preaterm, prebterm, precterm, predterm = preconv
         
-        fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
-        q = fullk[np.newaxis, :fixture["numsoks"]]
+        q = self.k
         
         aterm = 2*np.pi * q**2 * dp1 * preaterm
         integrated_a = romb(aterm, fixture["deltak"])
@@ -61,3 +59,38 @@ class CalcedSolution(GeneralSolution):
     
     def get_dp1dot(self):
         pass
+    
+    def J_A(self, preaterm, dp1, C1, C2):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+                
+        q = self.k
+        aterm = (C1*q**2 + C2*q**4) * dp1 * preaterm
+        J_A = romb(aterm, self.fixture["deltak"])
+        return J_A
+    
+class NoPhaseBunchDaviesCalced(CalcedSolution):
+    """Calced solution using the Bunch Davies initial conditions as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = alpha/sqrt(k) 
+    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+    """
+        
+    def __init__(self, *args, **kwargs):
+        super(NoPhaseBunchDaviesCalced, self).__init__(*args, **kwargs)
+        
+    def get_dp1(self, k, alpha):
+        """Get dp1 for a certain value of alpha and beta."""
+        dp1 = alpha/np.sqrt(k)
+        return dp1
+    
+    def get_dp1dot(self, k, alpha, beta):
+        """Get dp1dot for a certain value of alpha and beta."""
+        dp1dot = -alpha/np.sqrt(k) -(alpha/beta)*np.sqrt(k) * 1j
+        return dp1dot
+    
+    def preconvolution_calced(self, alpha, beta):
+        """Return calculates solution for pre-convolution terms."""
+        dp1_fullk = self.get_dp1(self.fullk, alpha)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
+        return super(NoPhaseBunchDaviesCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
