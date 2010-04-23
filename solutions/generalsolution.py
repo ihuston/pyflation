@@ -14,7 +14,7 @@ class GeneralSolution(object):
     def __init__(self, fixture):
         """Create a GeneralSolution object."""
         self.fixture = fixture
-        self.fullk = np.arange(fixture["kmin"], fixture["fullkmax"]+fixture["deltak"], fixture["deltak"])
+        self.fullk = np.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
         self.k = self.fullk[:fixture["numsoks"]]
     
     def full_source_integrated(self):
