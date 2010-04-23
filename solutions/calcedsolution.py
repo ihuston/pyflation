@@ -22,7 +22,7 @@ class CalcedSolution(GeneralSolution):
         fixture = self.fixture
          
         theta = np.linspace(0, np.pi, fixture["nthetas"])
-        ie = self.fullk, self.fullk, theta
+        ie = self.k, self.k, theta
                 
         tterms = getthetaterms(ie, dp1_fullk, dp1dot_fullk)
         aterm = tterms[0,0] + tterms[0,1]*1j
@@ -67,6 +67,30 @@ class CalcedSolution(GeneralSolution):
         aterm = (C1*q**2 + C2*q**4) * dp1 * preaterm
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
+    
+    def J_B(self, prebterm, dp1, C3, C4):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+                
+        q = self.k
+        bterm = (C3*q**3 + C4*q**5) * dp1 * prebterm
+        J_B = romb(bterm, self.fixture["deltak"])
+        return J_B
+    
+    def J_C(self, precterm, dp1dot, C5):
+        """Solution for J_C which is the integral for C in terms of constants C5."""
+                
+        q = self.k
+        cterm = (C5*q**2) * dp1dot * precterm
+        J_C = romb(cterm, self.fixture["deltak"])
+        return J_C
+    
+    def J_D(self, predterm, dp1dot, C6, C7):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+                
+        q = self.k
+        dterm = (C6*q + C7*q**3) * dp1dot * predterm
+        J_D = romb(dterm, self.fixture["deltak"])
+        return J_D
     
 class NoPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
