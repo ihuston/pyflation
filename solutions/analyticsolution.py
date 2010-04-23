@@ -14,6 +14,7 @@ Log = scipy.log
 Sqrt = scipy.sqrt
 ArcTan = scipy.arctan
 Pi = scipy.pi
+ArcSinh = scipy.arcsinh
 
 
 class AnalyticSolution(GeneralSolution):
@@ -102,3 +103,29 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
             105 * k ** 5 * (112 * C3 + 27 * C4 * k ** 2) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (282240. * k ** 2))
         return J_B
     
+    def J_C(self, k, alpha, beta, C5):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        kmax = k[-1]
+        kmin = k[0]
+        
+        J_C = ((alpha ** 2 * C5 * (Sqrt(2) * k ** 3 * (-10000 * beta ** 2 - (0, 15360) * beta * k + 6363 * k ** 2) - 
+           Sqrt(kmax * (-k + kmax)) * (400 * beta ** 2 * (k - 4 * kmax) * (3 * k - 2 * kmax) + 
+              (0, 3840) * beta * (k - kmax) ** 2 * kmax + 
+              9 * (15 * k ** 4 + 10 * k ** 3 * kmax - 248 * k ** 2 * kmax ** 2 + 336 * k * kmax ** 3 - 128 * kmax ** 4)) + 
+           Sqrt(kmax * (k + kmax)) * ((0, 3840) * beta * kmax * (k + kmax) ** 2 + 
+              400 * beta ** 2 * (3 * k + 2 * kmax) * (k + 4 * kmax) - 
+              9 * (-15 * k ** 4 + 10 * k ** 3 * kmax + 248 * k ** 2 * kmax ** 2 + 336 * k * kmax ** 3 + 128 * kmax ** 4)) + 
+           Sqrt((k - kmin) * kmin) * (400 * beta ** 2 * (k - 4 * kmin) * (3 * k - 2 * kmin) + 
+              (0, 60) * beta * (15 * k ** 3 - 54 * k ** 2 * kmin + 8 * k * kmin ** 2 + 16 * kmin ** 3) - 
+              9 * (15 * k ** 4 + 10 * k ** 3 * kmin - 248 * k ** 2 * kmin ** 2 + 336 * k * kmin ** 3 - 128 * kmin ** 4)) + 
+           Sqrt(kmin) * Sqrt(k + kmin) * ((0, 3840) * beta * kmin * (k + kmin) ** 2 + 
+              400 * beta ** 2 * (3 * k + 2 * kmin) * (k + 4 * kmin) - 
+              9 * (-15 * k ** 4 + 10 * k ** 3 * kmin + 248 * k ** 2 * kmin ** 2 + 336 * k * kmin ** 3 + 128 * kmin ** 4)) + 
+           (15 * k ** 3 * (80 * beta ** 2 + (0, 60) * beta * k - 9 * k ** 2) * Pi) / 2. + 
+           15 * k ** 3 * (-80 * beta ** 2 - (0, 60) * beta * k + 9 * k ** 2) * ArcTan(Sqrt(kmin / (k - kmin))) + 
+           15 * k ** 3 * (80 * beta ** 2 + 9 * k ** 2) * (ArcSinh(1) + Log(2) + Log(k) / 2.) + 
+           k ** 3 * (Sqrt(2) * (-10000 * beta ** 2 - (0, 15360) * beta * k + 6363 * k ** 2) + 
+              15 * (80 * beta ** 2 + 9 * k ** 2) * (ArcSinh(1) + Log(4) + Log(k))) - 
+           15 * k ** 3 * (80 * beta ** 2 + 9 * k ** 2) * Log(8 * (Sqrt(kmax) + Sqrt(-k + kmax)) * (Sqrt(kmax) + Sqrt(k + kmax)) * 
+              (Sqrt(kmin) + Sqrt(k + kmin))))) / (14400. * beta ** 2 * k))
+        return J_C
