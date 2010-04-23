@@ -129,3 +129,60 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
            15 * k ** 3 * (80 * beta ** 2 + 9 * k ** 2) * Log(8 * (Sqrt(kmax) + Sqrt(-k + kmax)) * (Sqrt(kmax) + Sqrt(k + kmax)) * 
               (Sqrt(kmin) + Sqrt(k + kmin))))) / (14400. * beta ** 2 * k))
         return J_C
+
+    def J_D(self, k, alpha, beta, C6, C7):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        kmax = k[-1]
+        kmin = k[0]
+        
+        J_D = ((alpha ** 2 * (2 * Sqrt(2) * k ** 3 * (240 * beta ** 2 * (1240 * C6 - 299 * C7 * k ** 2) + 
+              (0, 10) * beta * (15432 * C6 * k - 1535 * C7 * k ** 3) - 3 * (4144 * C6 * k ** 2 + 6659 * C7 * k ** 4)) - 
+           (240 * beta ** 2 * (40 * C6 * (24 * k ** 3 + 9 * k ** 2 * kmax + 2 * k * kmax ** 2 - 4 * kmax ** 3) + 
+                 C7 * kmax * (-105 * k ** 4 - 250 * k ** 3 * kmax + 104 * k ** 2 * kmax ** 2 + 48 * k * kmax ** 3 - 96 * kmax ** 4)) + 
+              (0, 10) * beta * (24 * C6 * (448 * k ** 4 - 239 * k ** 3 * kmax + 522 * k ** 2 * kmax ** 2 + 88 * k * kmax ** 3 - 
+                    176 * kmax ** 4) + C7 * kmax * 
+                  (315 * k ** 5 - 3794 * k ** 4 * kmax - 2648 * k ** 3 * kmax ** 2 + 6000 * k ** 2 * kmax ** 3 + 1408 * k * kmax ** 4 - 
+                    2816 * kmax ** 5)) + 3 * kmax * 
+               (112 * C6 * (185 * k ** 4 - 70 * k ** 3 * kmax - 168 * k ** 2 * kmax ** 2 - 16 * k * kmax ** 3 + 32 * kmax ** 4) + 
+                 C7 * (-945 * k ** 6 + 630 * k ** 5 * kmax + 6664 * k ** 4 * kmax ** 2 - 3152 * k ** 3 * kmax ** 3 - 
+                    11136 * k ** 2 * kmax ** 4 - 1280 * k * kmax ** 5 + 2560 * kmax ** 6))) / Sqrt(kmax / (k + kmax)) + 
+           (-240 * beta ** 2 * (40 * C6 * (24 * k ** 3 - 9 * k ** 2 * kmax + 2 * k * kmax ** 2 + 4 * kmax ** 3) + 
+                 C7 * kmax * (105 * k ** 4 - 250 * k ** 3 * kmax - 104 * k ** 2 * kmax ** 2 + 48 * k * kmax ** 3 + 96 * kmax ** 4)) + 
+              (0, 10) * beta * (24 * C6 * (448 * k ** 4 + 239 * k ** 3 * kmax + 522 * k ** 2 * kmax ** 2 - 88 * k * kmax ** 3 - 
+                    176 * kmax ** 4) - C7 * kmax * 
+                  (315 * k ** 5 + 3794 * k ** 4 * kmax - 2648 * k ** 3 * kmax ** 2 - 6000 * k ** 2 * kmax ** 3 + 1408 * k * kmax ** 4 + 
+                    2816 * kmax ** 5)) + 3 * kmax * 
+               (112 * C6 * (185 * k ** 4 + 70 * k ** 3 * kmax - 168 * k ** 2 * kmax ** 2 + 16 * k * kmax ** 3 + 32 * kmax ** 4) + 
+                 C7 * (-945 * k ** 6 - 630 * k ** 5 * kmax + 6664 * k ** 4 * kmax ** 2 + 3152 * k ** 3 * kmax ** 3 - 
+                    11136 * k ** 2 * kmax ** 4 + 1280 * k * kmax ** 5 + 2560 * kmax ** 6))) / Sqrt(kmax / (-k + kmax)) - 
+           (240 * beta ** 2 * (40 * C6 * (24 * k ** 3 + 9 * k ** 2 * kmin + 2 * k * kmin ** 2 - 4 * kmin ** 3) + 
+                 C7 * kmin * (-105 * k ** 4 - 250 * k ** 3 * kmin + 104 * k ** 2 * kmin ** 2 + 48 * k * kmin ** 3 - 96 * kmin ** 4)) + 
+              (0, 10) * beta * (24 * C6 * (448 * k ** 4 - 239 * k ** 3 * kmin + 522 * k ** 2 * kmin ** 2 + 88 * k * kmin ** 3 - 
+                   176 * kmin ** 4) + C7 * kmin * 
+                  (315 * k ** 5 - 3794 * k ** 4 * kmin - 2648 * k ** 3 * kmin ** 2 + 6000 * k ** 2 * kmin ** 3 + 1408 * k * kmin ** 4 - 
+                    2816 * kmin ** 5)) + 3 * kmin * 
+               (112 * C6 * (185 * k ** 4 - 70 * k ** 3 * kmin - 168 * k ** 2 * kmin ** 2 - 16 * k * kmin ** 3 + 32 * kmin ** 4) + 
+                 C7 * (-945 * k ** 6 + 630 * k ** 5 * kmin + 6664 * k ** 4 * kmin ** 2 - 3152 * k ** 3 * kmin ** 3 - 
+                    11136 * k ** 2 * kmin ** 4 - 1280 * k * kmin ** 5 + 2560 * kmin ** 6))) / Sqrt(kmin / (k + kmin)) + 
+           (240 * beta ** 2 * (40 * C6 * (24 * k ** 3 - 9 * k ** 2 * kmin + 2 * k * kmin ** 2 + 4 * kmin ** 3) + 
+                 C7 * kmin * (105 * k ** 4 - 250 * k ** 3 * kmin - 104 * k ** 2 * kmin ** 2 + 48 * k * kmin ** 3 + 96 * kmin ** 4)) + 
+              (0, 20) * beta * (384 * C6 * (k - kmin) ** 2 * (14 * k ** 2 + 5 * k * kmin + 2 * kmin ** 2) + 
+                 C7 * kmin * (945 * k ** 5 - 1162 * k ** 4 * kmin - 2696 * k ** 3 * kmin ** 2 + 1200 * k ** 2 * kmin ** 3 + 
+                    256 * k * kmin ** 4 + 512 * kmin ** 5)) + 
+              3 * kmin * (112 * C6 * (185 * k ** 4 + 70 * k ** 3 * kmin - 168 * k ** 2 * kmin ** 2 + 16 * k * kmin ** 3 + 32 * kmin ** 4) + 
+                 C7 * (-945 * k ** 6 - 630 * k ** 5 * kmin + 6664 * k ** 4 * kmin ** 2 + 3152 * k ** 3 * kmin ** 3 - 
+                    11136 * k ** 2 * kmin ** 4 + 1280 * k * kmin ** 5 + 2560 * kmin ** 6))) / Sqrt(kmin / (k - kmin)) - 
+           (315 * k ** 3 * ((0, -60) * beta * C7 * k ** 3 + 80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2)) * Pi) / 
+            2. + 315 * k ** 3 * ((0, -60) * beta * C7 * k ** 3 + 80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2)) * 
+            ArcTan(Sqrt(kmin / (k - kmin))) + 
+           315 * k ** 3 * (-80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2) + 
+              (0, 10) * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * Sqrt(k)) + 
+           630 * k ** 3 * (-80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2) - 
+              (0, 10) * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * (1 + Sqrt(2)) * Sqrt(k)) - 
+           315 * k ** 3 * (-80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2) + 
+              (0, 10) * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * (Sqrt(kmax) + Sqrt(-k + kmax))) - 
+           315 * k ** 3 * (-80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2) - 
+              (0, 10) * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * (Sqrt(kmax) + Sqrt(k + kmax))) - 
+           315 * k ** 3 * (-80 * beta ** 2 * (8 * C6 - C7 * k ** 2) + 9 * k ** 2 * (16 * C6 + C7 * k ** 2) - 
+              (0, 10) * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (604800. * beta ** 2 * k ** 2))
+        return J_D
