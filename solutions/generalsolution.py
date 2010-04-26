@@ -17,7 +17,7 @@ class GeneralSolution(object):
         self.fullk = np.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
         self.k = self.fullk[:fixture["numsoks"]]
     
-    def full_source_integrated(self):
+    def full_source_from_model(self, m, nix):
         pass
     
     def J_A(self, C1, C2):

@@ -40,10 +40,6 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         super(NoPhaseBunchDaviesSolution, self).__init__(*args, **kwargs)
         
     
-    def full_source_term(self):
-        """Full source term after integration."""
-        pass
-    
     def J_A(self, k, alpha, C1, C2):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
@@ -122,7 +118,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         return J_B
     
     def J_C(self, k, alpha, beta, C5):
-        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        """Solution for J_C which is the integral for C in terms of constant C5."""
         kmax = k[-1]
         kmin = k[0]
         
@@ -152,7 +148,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         return J_C
 
     def J_D(self, k, alpha, beta, C6, C7):
-        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
         kmax = k[-1]
         kmin = k[0]
         
@@ -210,11 +206,11 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         try:
             #Get background values
             phi, phidot, H = m.yresult[nix, 0:3, 0]
-            a = m.ainit*exp(m.tresult[nix])
+            a = m.ainit*np.exp(m.tresult[nix])
         except AttributeError:
             raise
         
-        if any(np.is_nan(phi)):
+        if np.any(np.isnan(phi)):
             raise AttributeError("Background values not available for this timestep.")
         
         #Get potentials
@@ -242,3 +238,11 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         
         C7 = - phidot / self.k
         
+        #Get component integrals
+        J_A = self.J_A(self.k, alpha, C1, C2)
+        J_B = self.J_B(self.k, alpha, C3, C4)
+        J_C = self.J_C(self.k, alpha, beta, C5)
+        J_D = self.J_D(self.k, alpha, beta, C6, C7)
+        
+        src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
+        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta)

@@ -7,7 +7,8 @@ Created on 22 Apr 2010
 from __future__ import division
 import numpy as np
 from generalsolution import GeneralSolution
-from sosource import getthetaterms
+from sosource import getthetaterms, slowrollsrcterm
+
 from scipy.integrate import romb
 
 class CalcedSolution(GeneralSolution):
@@ -118,3 +119,34 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         dp1_fullk = self.get_dp1(self.fullk, alpha)
         dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
         return super(NoPhaseBunchDaviesCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
+        
+    def full_source_from_model(self, m, nix):
+        """Calculate full source term from model m at timestep nix."""
+        try:
+            #Get background values
+            bgvars = m.yresult[nix, 0:3, 0]
+            a = m.ainit*np.exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if np.any(np.isnan(bgvars)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        #Get potentials
+        potentials = m.potentials(bgvars)
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*bgvars[2]
+        
+        theta = np.linspace(0, np.pi, self.fixture["nthetas"])
+        ie = self.k, self.k, theta
+        
+        dp1_fullk = self.get_dp1(self.fullk, alpha)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
+        
+        theta_terms = getthetaterms(ie, dp1_fullk, dp1dot_fullk)
+        
+        src_integrand = slowrollsrcterm(bgvars, a, potentials, ie, dp1_fullk, dp1dot_fullk, theta_terms)
+        src = romb(src_integrand, dx=m.k[1]-m.k[0])
+        return src
