@@ -9,6 +9,7 @@ import numpy as np
 import scipy
 from generalsolution import GeneralSolution
 
+
 #Change to fortran names for compatability 
 Log = scipy.log 
 Sqrt = scipy.sqrt
@@ -203,3 +204,41 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
               10 * 1j * beta * (72 * C6 * k + C7 * k ** 3)) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (604800. * beta ** 2 * k ** 2))
 
         return J_D
+
+    def full_source_from_model(self, m, nix):
+        """Use the data from a model at a timestep nix to calculate the full source term S."""
+        try:
+            #Get background values
+            phi, phidot, H = m.yresult[nix, 0:3, 0]
+            a = m.ainit*exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if any(np.is_nan(phi)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        #Get potentials
+        V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*H
+        
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
+        
+        #Set C_i values
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        
+        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        
+        C3 = -4.5 / (a*H**2) * self.k
+        
+        C4 = -phidot/(a*H**2) / self.k
+        
+        C5 = -1.5 * phidot * onekshape
+        
+        C6 = 2 * phidot * self.k
+        
+        C7 = - phidot / self.k
+        
