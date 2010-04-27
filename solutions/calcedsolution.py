@@ -199,15 +199,17 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         dp1 = alpha*( 1/np.sqrt(k) - 1j/(k**1.5 * eta))
         return dp1
     
-    def get_dp1dot(self, k, alpha, beta):
+    def get_dp1dot(self, k, alpha, beta, eta):
         """Get dp1dot for a certain value of alpha and beta."""
-        dp1dot = None
+        dp1dot = -alpha/np.sqrt(k) * ( 1 + 1/(beta*eta))
+        dp1dot += 1j*alpha/(k**1.5) * (1/eta + 1/(beta*eta**2))
+        dp1dot -= 1j*alpha*np.sqrt(k)/beta 
         return dp1dot
     
-    def preconvolution_calced(self, alpha, beta):
+    def preconvolution_calced(self, alpha, beta, eta):
         """Return calculates solution for pre-convolution terms."""
-        dp1_fullk = self.get_dp1(self.fullk, alpha)
-        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
+        dp1_fullk = self.get_dp1(self.fullk, alpha, eta)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta, eta)
         return super(NoPhaseWithEtaCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
         
     def full_source_from_model(self, m, nix):
