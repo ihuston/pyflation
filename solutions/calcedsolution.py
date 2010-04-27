@@ -150,3 +150,64 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         src_integrand = slowrollsrcterm(bgvars, a, potentials, ie, dp1_fullk, dp1dot_fullk, theta_terms)
         src = romb(src_integrand, dx=m.k[1]-m.k[0])
         return src
+        
+class WithPhaseBunchDaviesCalced(CalcedSolution):
+    """Calced solution using the Bunch Davies initial conditions as the first order 
+    solution and with phase information.
+    
+    \delta\varphi_1 = alpha/sqrt(k) e^{-i*k*eta}
+    \dN{\delta\varphi_1} = (-alpha/sqrt(k) - alpha/beta *sqrt(k)*1j )*e^{-iketa}
+    """
+        
+    def __init__(self, *args, **kwargs):
+        super(WithPhaseBunchDaviesCalced, self).__init__(*args, **kwargs)
+        
+    def get_dp1(self, k, alpha, eta):
+        """Get dp1 for a certain value of alpha and beta."""
+        dp1 = alpha/np.sqrt(k) * np.exp(-k*eta*1j)
+        return dp1
+    
+    def get_dp1dot(self, k, alpha, beta, eta):
+        """Get dp1dot for a certain value of alpha and beta."""
+        dp1dot = (-alpha/np.sqrt(k) -(alpha/beta)*np.sqrt(k) * 1j)*np.exp(-k*eta*1j)
+        return dp1dot
+    
+    def preconvolution_calced(self, alpha, beta, eta):
+        """Return calculates solution for pre-convolution terms."""
+        dp1_fullk = self.get_dp1(self.fullk, alpha, eta)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta, eta)
+        return super(NoPhaseBunchDaviesCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
+        
+    def full_source_from_model(self, m, nix):
+        """Calculate full source term from model m at timestep nix."""
+        try:
+            #Get background values
+            bgvars = m.yresult[nix, 0:3, 0]
+            a = m.ainit*np.exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if np.any(np.isnan(bgvars)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        #Get potentials
+        potentials = m.potentials(bgvars)
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*bgvars[2]
+        
+        #Find eta using bgepsilon
+        eta = -1/(beta*(1-m.bgepsilon[nix]))
+        
+        theta = np.linspace(0, np.pi, self.fixture["nthetas"])
+        ie = self.k, self.k, theta
+        
+        dp1_fullk = self.get_dp1(self.fullk, alpha, eta)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta, eta)
+        
+        theta_terms = getthetaterms(ie, dp1_fullk, dp1dot_fullk)
+        
+        src_integrand = slowrollsrcterm(bgvars, a, potentials, ie, dp1_fullk, dp1dot_fullk, theta_terms)
+        src = romb(src_integrand, dx=m.k[1]-m.k[0])
+        return src
