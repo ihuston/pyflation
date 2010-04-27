@@ -181,7 +181,7 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
-        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta), (dp1, dp1dot)
+        return src
         
 class WithPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
