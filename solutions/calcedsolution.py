@@ -132,24 +132,49 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         if np.any(np.isnan(bgvars)):
             raise AttributeError("Background values not available for this timestep.")
         
-        #Get potentials
-        potentials = m.potentials(bgvars)
+        phi, phidot, H = bgvars
         
         #Set alpha and beta
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
-        theta = np.linspace(0, np.pi, self.fixture["nthetas"])
-        ie = self.k, self.k, theta
         
-        dp1_fullk = self.get_dp1(self.fullk, alpha)
-        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
+        dp1 = self.get_dp1(self.k, alpha)
+        dp1dot = self.get_dp1dot(self.k, alpha, beta)
         
-        theta_terms = getthetaterms(ie, dp1_fullk, dp1dot_fullk)
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
         
-        src_integrand = slowrollsrcterm(bgvars, a, potentials, ie, dp1_fullk, dp1dot_fullk, theta_terms)
-        src = romb(src_integrand, dx=m.k[1]-m.k[0])
-        return src
+        #Get potentials
+        V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
+        
+        #Get preterms
+        preterms = self.preconvolution_calced(alpha, beta)
+        
+        #Set C_i values
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        
+        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        
+        C3 = -4.5 / (a*H**2) * self.k
+        
+        C4 = -phidot/(a*H**2) / self.k
+        
+        C5 = -1.5 * phidot * onekshape
+        
+        C6 = 2 * phidot * self.k
+        
+        C7 = - phidot / self.k
+        
+        #Get component integrals
+        J_A = self.J_A(self.k, preterms[0], dp1, C1, C2)
+        J_B = self.J_B(self.k, preterms[1], dp1, C3, C4)
+        J_C = self.J_C(self.k, preterms[2], dp1dot, C5)
+        J_D = self.J_D(self.k, preterms[3], dp1dot, C6, C7)
+        
+        
+        src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
+        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta)
         
 class WithPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
