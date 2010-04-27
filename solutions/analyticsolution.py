@@ -206,6 +206,81 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_D
 
+    def J_D2(self, k, alpha, beta, C6, C7):
+        """Second go at J_D"""
+        kmax = k[-1]
+        kmin = k[0]
+        
+        j1 = ((alpha**2*(-240*Sqrt((k + kmax)/kmax)*
+             (40*C6*(24*k**3 + 9*k**2*kmax + 2*k*kmax**2 - 4*kmax**3) + 
+               C7*kmax*(-105*k**4 - 250*k**3*kmax + 104*k**2*kmax**2 + 48*k*kmax**3 - 
+                  96*kmax**4)) - 240*Sqrt(1 - k/kmax)*
+             (40*C6*(24*k**3 - 9*k**2*kmax + 2*k*kmax**2 + 4*kmax**3) + 
+               C7*kmax*(105*k**4 - 250*k**3*kmax - 104*k**2*kmax**2 + 48*k*kmax**3 + 
+                  96*kmax**4)) + 240*Sqrt((k + kmin)/kmin)*
+             (40*C6*(24*k**3 + 9*k**2*kmin + 2*k*kmin**2 - 4*kmin**3) + 
+               C7*kmin*(-105*k**4 - 250*k**3*kmin + 104*k**2*kmin**2 + 48*k*kmin**3 - 
+                  96*kmin**4)) - 240*Sqrt(-1 + k/kmin)*
+             (40*C6*(24*k**3 - 9*k**2*kmin + 2*k*kmin**2 + 4*kmin**3) + 
+               C7*kmin*(105*k**4 - 250*k**3*kmin - 104*k**2*kmin**2 + 48*k*kmin**3 + 
+                  96*kmin**4)) + 12600*k**3*(8*C6 - C7*k**2)*Pi - 
+            25200*k**3*(8*C6 - C7*k**2)*ArcTan(Sqrt(kmin/(k - kmin))) - 
+            25200*k**3*(8*C6 - C7*k**2)*Log(2*Sqrt(k)) + 
+            25200*k**3*(8*C6 - C7*k**2)*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+            25200*k**3*(8*C6 - C7*k**2)*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+            25200*k**3*(8*C6 - C7*k**2)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*k**2))
+            
+        j2 = ((alpha**2*(-3*kmax*Sqrt((k + kmax)/kmax)*
+             (112*C6*(185*k**4 - 70*k**3*kmax - 168*k**2*kmax**2 - 16*k*kmax**3 + 
+                  32*kmax**4) + C7*(-945*k**6 + 630*k**5*kmax + 6664*k**4*kmax**2 - 
+                  3152*k**3*kmax**3 - 11136*k**2*kmax**4 - 1280*k*kmax**5 + 2560*kmax**6)) + 
+            3*Sqrt(1 - k/kmax)*kmax*(112*C6*
+                (185*k**4 + 70*k**3*kmax - 168*k**2*kmax**2 + 16*k*kmax**3 + 32*kmax**4) + 
+               C7*(-945*k**6 - 630*k**5*kmax + 6664*k**4*kmax**2 + 3152*k**3*kmax**3 - 
+                  11136*k**2*kmax**4 + 1280*k*kmax**5 + 2560*kmax**6)) + 
+            3*kmin*Sqrt((k + kmin)/kmin)*
+             (112*C6*(185*k**4 - 70*k**3*kmin - 168*k**2*kmin**2 - 16*k*kmin**3 + 
+                  32*kmin**4) + C7*(-945*k**6 + 630*k**5*kmin + 6664*k**4*kmin**2 - 
+                  3152*k**3*kmin**3 - 11136*k**2*kmin**4 - 1280*k*kmin**5 + 2560*kmin**6)) - 
+            3*Sqrt(-1 + k/kmin)*kmin*(112*C6*
+                (185*k**4 + 70*k**3*kmin - 168*k**2*kmin**2 + 16*k*kmin**3 + 32*kmin**4) + 
+               C7*(-945*k**6 - 630*k**5*kmin + 6664*k**4*kmin**2 + 3152*k**3*kmin**3 - 
+                  11136*k**2*kmin**4 + 1280*k*kmin**5 + 2560*kmin**6)) + 
+            (2835*k**5*(16*C6 + C7*k**2)*Pi)/2. - 
+            2835*k**5*(16*C6 + C7*k**2)*ArcTan(Sqrt(kmin/(k - kmin))) + 
+            2835*k**5*(16*C6 + C7*k**2)*Log(2*Sqrt(k)) - 
+            2835*k**5*(16*C6 + C7*k**2)*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+            2835*k**5*(16*C6 + C7*k**2)*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+            2835*k**5*(16*C6 + C7*k**2)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/
+        (604800.*beta**2*k**2)) 
+        
+        j3 = ((alpha**2*
+          (-10*1j*Sqrt((k + kmax)/kmax)*
+             (24*C6*(448*k**4 - 239*k**3*kmax + 522*k**2*kmax**2 + 88*k*kmax**3 - 
+                  176*kmax**4) + C7*kmax*
+                (315*k**5 - 3794*k**4*kmax - 2648*k**3*kmax**2 + 6000*k**2*kmax**3 + 
+                  1408*k*kmax**4 - 2816*kmax**5)) + 
+            10*1j*Sqrt(1 - k/kmax)*(24*C6*
+                (448*k**4 + 239*k**3*kmax + 522*k**2*kmax**2 - 88*k*kmax**3 - 176*kmax**4) - 
+               C7*kmax*(315*k**5 + 3794*k**4*kmax - 2648*k**3*kmax**2 - 6000*k**2*kmax**3 + 
+                  1408*k*kmax**4 + 2816*kmax**5)) + 
+            10*1j*Sqrt((k + kmin)/kmin)*
+             (24*C6*(448*k**4 - 239*k**3*kmin + 522*k**2*kmin**2 + 88*k*kmin**3 - 
+                  176*kmin**4) + C7*kmin*
+                (315*k**5 - 3794*k**4*kmin - 2648*k**3*kmin**2 + 6000*k**2*kmin**3 + 
+                  1408*k*kmin**4 - 2816*kmin**5)) - 
+            20*1j*Sqrt(-1 + k/kmin)*(384*C6*(k - kmin)**2*(14*k**2 + 5*k*kmin + 2*kmin**2) + 
+               C7*kmin*(945*k**5 - 1162*k**4*kmin - 2696*k**3*kmin**2 + 1200*k**2*kmin**3 + 
+                  256*k*kmin**4 + 512*kmin**5)) - 9450*1j*C7*k**6*Pi + 
+            18900*1j*C7*k**6*ArcTan(Sqrt(kmin/(k - kmin))) + 
+            3150*1j*k**3*(72*C6*k + C7*k**3)*Log(2*Sqrt(k)) - 
+            3150*1j*k**3*(72*C6*k + C7*k**3)*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+            3150*1j*k**3*(72*C6*k + C7*k**3)*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+            3150*1j*k**3*(72*C6*k + C7*k**3)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/
+        (604800.*beta*k**2))
+        
+        return j1 + j2 + j3
+
     def full_source_from_model(self, m, nix):
         """Use the data from a model at a timestep nix to calculate the full source term S."""
         try:
