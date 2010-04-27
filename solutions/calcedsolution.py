@@ -182,6 +182,89 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
         return src
+    
+class NoPhaseWithEtaCalced(CalcedSolution):
+    """Calced solution using the Bunch Davies initial conditions as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = alpha/sqrt(k) 
+    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+    """
+        
+    def __init__(self, *args, **kwargs):
+        super(NoPhaseWithEtaCalced, self).__init__(*args, **kwargs)
+        
+    def get_dp1(self, k, alpha, eta):
+        """Get dp1 for a certain value of alpha and beta."""
+        dp1 = alpha*( 1/np.sqrt(k) - 1j/(k**1.5 * eta))
+        return dp1
+    
+    def get_dp1dot(self, k, alpha, beta):
+        """Get dp1dot for a certain value of alpha and beta."""
+        dp1dot = -alpha/np.sqrt(k) -(alpha/beta)*np.sqrt(k) * 1j
+        return dp1dot
+    
+    def preconvolution_calced(self, alpha, beta):
+        """Return calculates solution for pre-convolution terms."""
+        dp1_fullk = self.get_dp1(self.fullk, alpha)
+        dp1dot_fullk = self.get_dp1dot(self.fullk, alpha, beta)
+        return super(NoPhaseWithEtaCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
+        
+    def full_source_from_model(self, m, nix):
+        """Calculate full source term from model m at timestep nix."""
+        try:
+            #Get background values
+            bgvars = m.yresult[nix, 0:3, 0]
+            a = m.ainit*np.exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if np.any(np.isnan(bgvars)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        phi, phidot, H = bgvars
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*bgvars[2]
+        
+        
+        dp1 = self.get_dp1(self.k, alpha)
+        dp1dot = self.get_dp1dot(self.k, alpha, beta)
+        
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
+        
+        #Get potentials
+        V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
+        
+        #Get preterms
+        preterms = self.preconvolution_calced(alpha, beta)
+        
+        #Set C_i values
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        
+        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        
+        C3 = -4.5 / (a*H**2) * self.k
+        
+        C4 = -phidot/(a*H**2) / self.k
+        
+        C5 = -1.5 * phidot * onekshape
+        
+        C6 = 2 * phidot * self.k
+        
+        C7 = - phidot / self.k
+        
+        #Get component integrals
+        J_A = self.J_A(preterms[0], dp1, C1, C2)
+        J_B = self.J_B(preterms[1], dp1, C3, C4)
+        J_C = self.J_C(preterms[2], dp1dot, C5)
+        J_D = self.J_D(preterms[3], dp1dot, C6, C7)
+        
+        
+        src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
+        return src
         
 class WithPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
