@@ -65,7 +65,9 @@ class CalcedSolution(GeneralSolution):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
-        aterm = (C1*q**2 + C2*q**4) * dp1 * preaterm
+        C1k = C1[..., np.newaxis]
+        C2k = C2[..., np.newaxis]
+        aterm = (C1k*q**2 + C2k*q**4) * dp1 * preaterm
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
     
@@ -73,7 +75,9 @@ class CalcedSolution(GeneralSolution):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
-        bterm = (C3*q**3 + C4*q**5) * dp1 * prebterm
+        C3k = C3[..., np.newaxis]
+        C4k = C4[..., np.newaxis]
+        bterm = (C3k*q**3 + C4k*q**5) * dp1 * prebterm
         J_B = romb(bterm, self.fixture["deltak"])
         return J_B
     
@@ -81,7 +85,8 @@ class CalcedSolution(GeneralSolution):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
-        cterm = (C5*q**2) * dp1dot * precterm
+        C5k = C5[..., np.newaxis]
+        cterm = (C5k*q**2) * dp1dot * precterm
         J_C = romb(cterm, self.fixture["deltak"])
         return J_C
     
@@ -89,7 +94,9 @@ class CalcedSolution(GeneralSolution):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
-        dterm = (C6*q + C7*q**3) * dp1dot * predterm
+        C6k = C6[..., np.newaxis]
+        C7k = C7[..., np.newaxis]
+        dterm = (C6k*q + C7k*q**3) * dp1dot * predterm
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
     
@@ -174,7 +181,7 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
-        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta)
+        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta), (dp1, dp1dot)
         
 class WithPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
