@@ -201,7 +201,7 @@ class NoPhaseWithEtaCalced(CalcedSolution):
     
     def get_dp1dot(self, k, alpha, beta):
         """Get dp1dot for a certain value of alpha and beta."""
-        dp1dot = -alpha/np.sqrt(k) -(alpha/beta)*np.sqrt(k) * 1j
+        dp1dot = None
         return dp1dot
     
     def preconvolution_calced(self, alpha, beta):
