@@ -247,4 +247,80 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         J_D = self.J_D(self.k, alpha, beta, C6, C7)
         
         src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
-        return src, (C1,C2,C3,C4,C5,C6,C7), (J_A,J_B,J_C, J_D), (alpha, beta)
+        return src
+    
+class NoPhaseWithEtaSolution(AnalyticSolution):
+    """Analytic solution using the full eta solution as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = alpha*(1/sqrt(k) -i/(eta*k**(-3/2))) 
+    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super(NoPhaseWithEtaSolution, self).__init__(*args, **kwargs)
+        
+    
+    def J_A(self, k, alpha, C1, C2, eta):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+        #Set limits from k
+        kmin = k[0]
+        kmax = k[-1]
+        
+        j1 = (alpha**2*(-720*C2*k**2*Sqrt(kmax)*(Sqrt(-k + kmax) - Sqrt(k + kmax)) + 
+            1920*C2*kmax**2.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
+            5760*C1*Sqrt(kmax)*(-Sqrt(-k + kmax) + Sqrt(k + kmax)) - 
+            480*C2*k*kmax**1.5*(Sqrt(-k + kmax) + Sqrt(k + kmax)) - 
+            5760*C1*Sqrt(kmin)*(Sqrt(k - kmin) - Sqrt(k + kmin)) - 
+            1920*C2*kmin**2.5*(Sqrt(k - kmin) - Sqrt(k + kmin)) - 
+            720*C2*k**2*Sqrt(kmin)*(-Sqrt(k - kmin) + Sqrt(k + kmin)) + 
+            480*C2*k*kmin**1.5*(Sqrt(k - kmin) + Sqrt(k + kmin)) + 2880*C1*k*Pi + 360*C2*k**3*Pi - 
+            5760*C1*k*ArcTan(Sqrt(kmin/(k - kmin))) - 720*C2*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+            5760*C1*k*Log(2*Sqrt(k)) + 720*C2*k**3*Log(2*Sqrt(k)) - 
+            5760*C1*k*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+            720*C2*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+            5760*C1*k*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+            720*C2*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+            5760*C1*k*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+            720*C2*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2880.*eta**2*k) 
+        j2 = (alpha**2*(-240*1j*C2*k**2*kmax**1.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) + 
+            1920*1j*C2*kmax**3.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
+            360*1j*C2*k**3*Sqrt(kmax)*(Sqrt(-k + kmax) + Sqrt(k + kmax)) - 
+            960*1j*C2*k*kmax**2.5*(Sqrt(-k + kmax) + Sqrt(k + kmax)) - 
+            3840*1j*C1*Sqrt(kmax)*(kmax*(-Sqrt(-k + kmax) + Sqrt(k + kmax)) + 
+               k*(Sqrt(-k + kmax) + Sqrt(k + kmax))) - 
+            480*1j*C2*k*kmin**2.5*(Sqrt(k - kmin) - 2*Sqrt(k + kmin)) - 
+            960*1j*C2*kmin**3.5*(Sqrt(k - kmin) - 2*Sqrt(k + kmin)) + 
+            120*1j*C2*k**2*kmin**1.5*(3*Sqrt(k - kmin) - 2*Sqrt(k + kmin)) + 
+            180*1j*C2*k**3*Sqrt(kmin)*(3*Sqrt(k - kmin) + 2*Sqrt(k + kmin)) - 
+            960*1j*C1*Sqrt(kmin)*(k*(Sqrt(k - kmin) - 4*Sqrt(k + kmin)) + 
+               2*kmin*(Sqrt(k - kmin) - 2*Sqrt(k + kmin))) + 1440*1j*C1*k**2*Pi + 270*1j*C2*k**4*Pi - 
+            2880*1j*C1*k**2*ArcTan(Sqrt(kmin/(k - kmin))) - 
+            540*1j*C2*k**4*ArcTan(Sqrt(kmin/(k - kmin))) + 360*1j*C2*k**4*Log(2*Sqrt(k)) - 
+            360*1j*C2*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+            360*1j*C2*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+            360*1j*C2*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2880.*eta*k) 
+        j3 = (alpha**2*(-45*C2*k**4*Sqrt(kmax)*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
+            24*C2*k**2*kmax**2.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
+            384*C2*kmax**4.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
+            30*C2*k**3*kmax**1.5*(Sqrt(-k + kmax) + Sqrt(k + kmax)) + 
+            528*C2*k*kmax**3.5*(Sqrt(-k + kmax) + Sqrt(k + kmax)) - 
+            80*C1*Sqrt(kmax)*(3*k**2*(Sqrt(-k + kmax) - Sqrt(k + kmax)) + 
+               8*kmax**2*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 14*k*kmax*(Sqrt(-k + kmax) + Sqrt(k + kmax)))
+              - 30*C2*k**3*kmin**1.5*(Sqrt(k - kmin) - Sqrt(k + kmin)) + 
+            528*C2*k*kmin**3.5*(Sqrt(k - kmin) - Sqrt(k + kmin)) - 
+            45*C2*k**4*Sqrt(kmin)*(Sqrt(k - kmin) + Sqrt(k + kmin)) - 
+            24*C2*k**2*kmin**2.5*(Sqrt(k - kmin) + Sqrt(k + kmin)) - 
+            384*C2*kmin**4.5*(Sqrt(k - kmin) + Sqrt(k + kmin)) - 
+            80*C1*Sqrt(kmin)*(-14*k*kmin*(Sqrt(k - kmin) - Sqrt(k + kmin)) + 
+               3*k**2*(Sqrt(k - kmin) + Sqrt(k + kmin)) + 8*kmin**2*(Sqrt(k - kmin) + Sqrt(k + kmin))) - 
+            120*C1*k**3*Pi - (45*C2*k**5*Pi)/2. + 240*C1*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+            45*C2*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 240*C1*k**3*Log(2*Sqrt(k)) + 
+            45*C2*k**5*Log(2*Sqrt(k)) - 240*C1*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+            45*C2*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+            240*C1*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+            45*C2*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+            240*C1*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+            45*C2*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2880.*k)
+            
+        return j1 + j2 + j3
