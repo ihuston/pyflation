@@ -196,7 +196,7 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         
     def get_dp1(self, k, alpha, eta):
         """Get dp1 for a certain value of alpha and beta."""
-        dp1 = alpha*( 1/np.sqrt(k) - 1j/(k**1.5 * eta))
+        dp1 = alpha*( 1/np.sqrt(k) - 1/(k**1.5 * eta) *1j)
         return dp1
     
     def get_dp1dot(self, k, alpha, beta, eta):
