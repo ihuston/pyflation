@@ -429,3 +429,64 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
             28350*C4*k**7*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2.8224e6*k**2)
             
         return j1 + j2 + j3
+    
+    def J_B2(self, k, alpha, C3, C4, eta):
+        """Second attempt at J_B"""
+        kmax = k[-1]
+        kmin = k[0]
+        J_B = (alpha ** 2 * (-(Sqrt(kmax * (-k + kmax)) * 
+              (280 * C3 * (420 * eta ** 2 * k ** 4 - 5 * eta * k ** 3 * (303 * 1j + 200 * eta * kmax) + 
+                   k ** 2 * (11592 + 6414 * 1j * eta * kmax - 416 * eta ** 2 * kmax ** 2) + 
+                   48 * kmax ** 2 * (84 + 53 * 1j * eta * kmax + 8 * eta ** 2 * kmax ** 2) + 
+                   24 * k * kmax * (-126 - 87 * 1j * eta * kmax + 8 * eta ** 2 * kmax ** 2)) + 
+                C4 * (28350 * eta ** 2 * k ** 6 + 525 * eta * k ** 5 * (-749*1j + 36 * eta * kmax) + 
+                   70 * k ** 4 * (-7434 - 3745 * 1j * eta * kmax + 216 * eta ** 2 * kmax ** 2) + 
+                   256 * kmax ** 4 * (2646 + 1855 * 1j * eta * kmax + 300 * eta ** 2 * kmax ** 2) + 
+                   64 * k * kmax ** 3 * (-5733 - 5110 * 1j * eta * kmax + 600 * eta ** 2 * kmax ** 2) - 
+                   48 * k ** 2 * kmax ** 2 * (-22442 - 18655 * 1j * eta * kmax + 1360 * eta ** 2 * kmax ** 2) - 
+                   40 * k ** 3 * kmax * (8673 - 133 * 1j * eta * kmax + 3516 * eta ** 2 * kmax ** 2)))) + 
+           Sqrt(kmax * (k + kmax)) * (280 * C3 * (420 * eta ** 2 * k ** 4 + 5 * eta * k ** 3 * (303 * 1j + 200 * eta * kmax) + 
+                 k ** 2 * (11592 + 6414 * 1j * eta * kmax - 416 * eta ** 2 * kmax ** 2) + 
+                 48 * kmax ** 2 * (84 + 53 * 1j * eta * kmax + 8 * eta ** 2 * kmax ** 2) - 
+                 24 * k * kmax * (-126 - 87 * 1j * eta * kmax + 8 * eta ** 2 * kmax ** 2)) + 
+              C4 * (28350 * eta ** 2 * k ** 6 - 525 * eta * k ** 5 * (-749*1j + 36 * eta * kmax) + 
+                 70 * k ** 4 * (-7434 - 3745 * 1j * eta * kmax + 216 * eta ** 2 * kmax ** 2) + 
+                 256 * kmax ** 4 * (2646 + 1855 * 1j * eta * kmax + 300 * eta ** 2 * kmax ** 2) - 
+                 64 * k * kmax ** 3 * (-5733 - 5110 * 1j * eta * kmax + 600 * eta ** 2 * kmax ** 2) - 
+                 48 * k ** 2 * kmax ** 2 * (-22442 - 18655 * 1j * eta * kmax + 1360 * eta ** 2 * kmax ** 2) + 
+                 40 * k ** 3 * kmax * (8673 - 133 * 1j * eta * kmax + 3516 * eta ** 2 * kmax ** 2))) - 
+           Sqrt(kmin) * Sqrt(k + kmin) * (280 * C3 * 
+               (420 * eta ** 2 * k ** 4 + 5 * eta * k ** 3 * (303 * 1j + 200 * eta * kmin) + 
+                k ** 2 * (11592 + 6414 * 1j * eta * kmin - 416 * eta ** 2 * kmin ** 2) + 
+                 48 * kmin ** 2 * (84 + 53 * 1j * eta * kmin + 8 * eta ** 2 * kmin ** 2) - 
+                24 * k * kmin * (-126 - 87 * 1j * eta * kmin + 8 * eta ** 2 * kmin ** 2)) + 
+              C4 * (28350 * eta ** 2 * k ** 6 - 525 * eta * k ** 5 * (-749*1j + 36 * eta * kmin) + 
+                 70 * k ** 4 * (-7434 - 3745 * 1j * eta * kmin + 216 * eta ** 2 * kmin ** 2) + 
+                 256 * kmin ** 4 * (2646 + 1855 * 1j * eta * kmin + 300 * eta ** 2 * kmin ** 2) - 
+                 64 * k * kmin ** 3 * (-5733 - 5110 * 1j * eta * kmin + 600 * eta ** 2 * kmin ** 2) - 
+                 48 * k ** 2 * kmin ** 2 * (-22442 - 18655 * 1j * eta * kmin + 1360 * eta ** 2 * kmin ** 2) + 
+                 40 * k ** 3 * kmin * (8673 - 133 * 1j * eta * kmin + 3516 * eta ** 2 * kmin ** 2))) - 
+           Sqrt((k - kmin) * kmin) * (280 * C3 * (420 * eta ** 2 * k ** 4 + 5 * eta * k ** 3 * (1083 * 1j - 200 * eta * kmin) + 
+                 24 * k * kmin * (126 + 67 * 1j * eta * kmin + 8 * eta ** 2 * kmin ** 2) + 
+                 48 * kmin ** 2 * (-84 - 73 * 1j * eta * kmin + 8 * eta ** 2 * kmin ** 2) - 
+                 2 * k ** 2 * (5796 + 2547 * 1j * eta * kmin + 208 * eta ** 2 * kmin ** 2)) + 
+              C4 * (28350 * eta ** 2 * k ** 6 + 525 * eta * k ** 5 * (553 * 1j + 36 * eta * kmin) + 
+                 70 * k ** 4 * (7434 + 2765 * 1j * eta * kmin + 216 * eta ** 2 * kmin ** 2) + 
+                 256 * kmin ** 4 * (-2646 - 2555 * 1j * eta * kmin + 300 * eta ** 2 * kmin ** 2) + 
+                 64 * k * kmin ** 3 * (5733 + 3710 * 1j * eta * kmin + 600 * eta ** 2 * kmin ** 2) - 
+                 48 * k ** 2 * kmin ** 2 * (22442 + 15155 * 1j * eta * kmin + 1360 * eta ** 2 * kmin ** 2) - 
+                 40 * k ** 3 * kmin * (-8673 - 9247 * 1j * eta * kmin + 3516 * eta ** 2 * kmin ** 2))) - 
+           (105 * k ** 3 * (280 * C3 * (120 + 15 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+                C4 * k ** 2 * (4956 + 2765 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Pi) / 2. + 
+           105 * k ** 3 * (280 * C3 * (120 + 15 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+              C4 * k ** 2 * (4956 + 2765 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * ArcTan(Sqrt(kmin / (k - kmin))) + 
+           105 * k ** 3 * (280 * C3 * (-120 - 51 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+              C4 * k ** 2 * (-4956 - 3745 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Log(2 * Sqrt(k)) - 
+           105 * k ** 3 * (280 * C3 * (-120 - 51 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+              C4 * k ** 2 * (-4956 - 3745 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Log(2 * (Sqrt(kmax) + Sqrt(-k + kmax))) - 
+           105 * k ** 3 * (280 * C3 * (-120 + 51 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+              C4 * k ** 2 * (-4956 + 3745 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Log(2 * (Sqrt(kmax) + Sqrt(k + kmax))) + 
+           105 * k ** 3 * (280 * C3 * (-120 + 51 * 1j * eta * k + 4 * eta ** 2 * k ** 2) + 
+              C4 * k ** 2 * (-4956 + 3745 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (2.8224e6 * eta ** 2 * k ** 2)
+              
+        return J_B
