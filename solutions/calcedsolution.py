@@ -258,10 +258,10 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         C7 = - phidot / self.k
         
         #Get component integrals
-        J_A = self.J_A(preterms[0], dp1, C1, C2, eta)
-        J_B = self.J_B(preterms[1], dp1, C3, C4, eta)
-        J_C = self.J_C(preterms[2], dp1dot, C5, eta)
-        J_D = self.J_D(preterms[3], dp1dot, C6, C7, eta)
+        J_A = self.J_A(preterms[0], dp1, C1, C2)
+        J_B = self.J_B(preterms[1], dp1, C3, C4)
+        J_C = self.J_C(preterms[2], dp1dot, C5)
+        J_D = self.J_D(preterms[3], dp1dot, C6, C7)
         
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
