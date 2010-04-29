@@ -228,7 +228,7 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
-        eta = 1/(beta*(1-m.bgepsilon[nix]))
+        eta = -1/(beta*(1-m.bgepsilon[nix]))
         
         dp1 = self.get_dp1(self.k, alpha, eta)
         dp1dot = self.get_dp1dot(self.k, alpha, beta, eta)

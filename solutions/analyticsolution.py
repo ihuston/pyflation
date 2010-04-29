@@ -841,7 +841,7 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
         beta = a*H
         
         
-        eta = 1/(beta*(1-m.bgepsilon[nix]))
+        eta = -1/(beta*(1-m.bgepsilon[nix]))
         
         #Set ones array with same shape as self.k
         onekshape = np.ones(self.k.shape)
