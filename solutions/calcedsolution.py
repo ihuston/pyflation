@@ -196,14 +196,12 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         
     def get_dp1(self, k, alpha, eta):
         """Get dp1 for a certain value of alpha and beta."""
-        dp1 = alpha*( 1/np.sqrt(k) - 1/(k**1.5 * eta) *1j)
+        dp1 = alpha/np.sqrt(k) * ( 1 - 1/(k * eta) *1j)
         return dp1
     
     def get_dp1dot(self, k, alpha, beta, eta):
         """Get dp1dot for a certain value of alpha and beta."""
-        dp1dot = -alpha/np.sqrt(k) * ( 1 + 1/(beta*eta))
-        dp1dot += 1j*alpha/(k**1.5) * (1/eta + 1/(beta*eta**2))
-        dp1dot -= 1j*alpha*np.sqrt(k)/beta 
+        dp1dot = -(1 + 1/(beta*eta)) * alpha/np.sqrt(k) * ( 1 - 1/(k * eta) *1j) - alpha/beta * np.sqrt(k) * 1j
         return dp1dot
     
     def preconvolution_calced(self, alpha, beta, eta):
@@ -230,9 +228,10 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
+        eta = 1/(beta*(1-m.bgepsilon[nix]))
         
-        dp1 = self.get_dp1(self.k, alpha)
-        dp1dot = self.get_dp1dot(self.k, alpha, beta)
+        dp1 = self.get_dp1(self.k, alpha, eta)
+        dp1dot = self.get_dp1dot(self.k, alpha, beta, eta)
         
         #Set ones array with same shape as self.k
         onekshape = np.ones(self.k.shape)
@@ -241,7 +240,7 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
         
         #Get preterms
-        preterms = self.preconvolution_calced(alpha, beta)
+        preterms = self.preconvolution_calced(alpha, beta, eta)
         
         #Set C_i values
         C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
@@ -259,10 +258,10 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         C7 = - phidot / self.k
         
         #Get component integrals
-        J_A = self.J_A(preterms[0], dp1, C1, C2)
-        J_B = self.J_B(preterms[1], dp1, C3, C4)
-        J_C = self.J_C(preterms[2], dp1dot, C5)
-        J_D = self.J_D(preterms[3], dp1dot, C6, C7)
+        J_A = self.J_A(preterms[0], dp1, C1, C2, eta)
+        J_B = self.J_B(preterms[1], dp1, C3, C4, eta)
+        J_C = self.J_C(preterms[2], dp1dot, C5, eta)
+        J_D = self.J_D(preterms[3], dp1dot, C6, C7, eta)
         
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)

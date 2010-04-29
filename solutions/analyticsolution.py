@@ -542,3 +542,422 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
                80 * beta ** 2 * eta ** 2 * (24 + eta ** 2 * k ** 2)) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (14400. * beta ** 2 * eta ** 4 * k)
 
         return J_C
+    
+    def J_D(self, k, alpha, beta, C6, C7, eta):
+        """Solution for J_D"""
+        kmax = k[-1]
+        kmin = k[0]
+        
+        j1 = (alpha**2*((483840*C6*k**2*Sqrt(-k + kmax))/kmax**1.5 - (967680*C6*k*Sqrt(-k + kmax))/Sqrt(kmax) - 
+             725760*C6*Sqrt(kmax)*Sqrt(-k + kmax) - 695520*C7*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             181440*C7*k*kmax**1.5*Sqrt(-k + kmax) - 241920*C7*kmax**2.5*Sqrt(-k + kmax) - 
+             (483840*C6*k**2*Sqrt(k + kmax))/kmax**1.5 - (967680*C6*k*Sqrt(k + kmax))/Sqrt(kmax) + 
+             725760*C6*Sqrt(kmax)*Sqrt(k + kmax) + 695520*C7*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 
+             181440*C7*k*kmax**1.5*Sqrt(k + kmax) + 241920*C7*kmax**2.5*Sqrt(k + kmax) - 
+             (483840*C6*k**2*Sqrt(k - kmin))/kmin**1.5 + (967680*C6*k*Sqrt(k - kmin))/Sqrt(kmin) + 
+             725760*C6*Sqrt(k - kmin)*Sqrt(kmin) + 695520*C7*k**2*Sqrt(k - kmin)*Sqrt(kmin) - 
+             181440*C7*k*Sqrt(k - kmin)*kmin**1.5 + 241920*C7*Sqrt(k - kmin)*kmin**2.5 + 
+             (483840*C6*k**2*Sqrt(k + kmin))/kmin**1.5 + (967680*C6*k*Sqrt(k + kmin))/Sqrt(kmin) - 
+             725760*C6*Sqrt(kmin)*Sqrt(k + kmin) - 695520*C7*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 
+             181440*C7*k*kmin**1.5*Sqrt(k + kmin) - 241920*C7*kmin**2.5*Sqrt(k + kmin) - 604800*C6*k*Pi - 
+             378000*C7*k**3*Pi + 1209600*C6*k*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             756000*C7*k**3*ArcTan(Sqrt(kmin/(k - kmin))) - 1209600*C6*k*Log(2*Sqrt(k)) - 
+             756000*C7*k**3*Log(2*Sqrt(k)) + 1209600*C6*k*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             756000*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             1209600*C6*k*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             756000*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             1209600*C6*k*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             756000*C7*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*eta**4*k**2) 
+        j2 = (alpha**2*((967680*beta*C6*k**2*Sqrt(-k + kmax))/kmax**1.5 + 
+             (76800*1j*C6*k**3*Sqrt(-k + kmax))/kmax**1.5 - 
+             (1935360*beta*C6*k*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             (1489920*1j*C6*k**2*Sqrt(-k + kmax))/Sqrt(kmax) - 
+             1451520*beta*C6*Sqrt(kmax)*Sqrt(-k + kmax) + 452160*1j*C6*k*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             1391040*beta*C7*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             90900*1j*C7*k**3*Sqrt(kmax)*Sqrt(-k + kmax) - 305280*1j*C6*kmax**1.5*Sqrt(-k + kmax) + 
+             362880*beta*C7*k*kmax**1.5*Sqrt(-k + kmax) - 384840*1j*C7*k**2*kmax**1.5*Sqrt(-k + kmax) - 
+             483840*beta*C7*kmax**2.5*Sqrt(-k + kmax) + 125280*1j*C7*k*kmax**2.5*Sqrt(-k + kmax) - 
+             152640*1j*C7*kmax**3.5*Sqrt(-k + kmax) - (967680*beta*C6*k**2*Sqrt(k + kmax))/kmax**1.5 + 
+             (76800*1j*C6*k**3*Sqrt(k + kmax))/kmax**1.5 - (1935360*beta*C6*k*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (1489920*1j*C6*k**2*Sqrt(k + kmax))/Sqrt(kmax) + 1451520*beta*C6*Sqrt(kmax)*Sqrt(k + kmax) + 
+             452160*1j*C6*k*Sqrt(kmax)*Sqrt(k + kmax) + 1391040*beta*C7*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 
+             90900*1j*C7*k**3*Sqrt(kmax)*Sqrt(k + kmax) + 305280*1j*C6*kmax**1.5*Sqrt(k + kmax) + 
+             362880*beta*C7*k*kmax**1.5*Sqrt(k + kmax) + 384840*1j*C7*k**2*kmax**1.5*Sqrt(k + kmax) + 
+             483840*beta*C7*kmax**2.5*Sqrt(k + kmax) + 125280*1j*C7*k*kmax**2.5*Sqrt(k + kmax) + 
+             152640*1j*C7*kmax**3.5*Sqrt(k + kmax) - (967680*beta*C6*k**2*Sqrt(k - kmin))/kmin**1.5 + 
+             (76800*1j*C6*k**3*Sqrt(k - kmin))/kmin**1.5 + (1935360*beta*C6*k*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (1413120*1j*C6*k**2*Sqrt(k - kmin))/Sqrt(kmin) + 1451520*beta*C6*Sqrt(k - kmin)*Sqrt(kmin) - 
+             394560*1j*C6*k*Sqrt(k - kmin)*Sqrt(kmin) + 1391040*beta*C7*k**2*Sqrt(k - kmin)*Sqrt(kmin) - 
+             324900*1j*C7*k**3*Sqrt(k - kmin)*Sqrt(kmin) + 420480*1j*C6*Sqrt(k - kmin)*kmin**1.5 - 
+             362880*beta*C7*k*Sqrt(k - kmin)*kmin**1.5 + 305640*1j*C7*k**2*Sqrt(k - kmin)*kmin**1.5 + 
+             483840*beta*C7*Sqrt(k - kmin)*kmin**2.5 - 96480*1j*C7*k*Sqrt(k - kmin)*kmin**2.5 + 
+             210240*1j*C7*Sqrt(k - kmin)*kmin**3.5 + (967680*beta*C6*k**2*Sqrt(k + kmin))/kmin**1.5 - 
+             (76800*1j*C6*k**3*Sqrt(k + kmin))/kmin**1.5 + (1935360*beta*C6*k*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (1489920*1j*C6*k**2*Sqrt(k + kmin))/Sqrt(kmin) - 1451520*beta*C6*Sqrt(kmin)*Sqrt(k + kmin) - 
+             452160*1j*C6*k*Sqrt(kmin)*Sqrt(k + kmin) - 1391040*beta*C7*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 
+             90900*1j*C7*k**3*Sqrt(kmin)*Sqrt(k + kmin) - 305280*1j*C6*kmin**1.5*Sqrt(k + kmin) - 
+             362880*beta*C7*k*kmin**1.5*Sqrt(k + kmin) - 384840*1j*C7*k**2*kmin**1.5*Sqrt(k + kmin) - 
+             483840*beta*C7*kmin**2.5*Sqrt(k + kmin) - 125280*1j*C7*k*kmin**2.5*Sqrt(k + kmin) - 
+             152640*1j*C7*kmin**3.5*Sqrt(k + kmin) - 1209600*beta*C6*k*Pi + 655200*1j*C6*k**2*Pi - 
+             756000*beta*C7*k**3*Pi - 47250*1j*C7*k**4*Pi + 
+             2419200*beta*C6*k*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             1310400*1j*C6*k**2*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             1512000*beta*C7*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             94500*1j*C7*k**4*ArcTan(Sqrt(kmin/(k - kmin))) - 2419200*beta*C6*k*Log(2*Sqrt(k)) + 
+             1713600*1j*C6*k**2*Log(2*Sqrt(k)) - 1512000*beta*C7*k**3*Log(2*Sqrt(k)) - 
+             321300*1j*C7*k**4*Log(2*Sqrt(k)) + 2419200*beta*C6*k*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             1713600*1j*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             1512000*beta*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             321300*1j*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             2419200*beta*C6*k*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             1713600*1j*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             1512000*beta*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             321300*1j*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             2419200*beta*C6*k*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             1713600*1j*C6*k**2*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             1512000*beta*C7*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             321300*1j*C7*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*eta**3*k**2) 
+        j3 = (alpha**2*((483840*beta**2*C6*k**2*Sqrt(-k + kmax))/kmax**1.5 + 
+             (153600*1j*beta*C6*k**3*Sqrt(-k + kmax))/kmax**1.5 + 
+             (35840*C6*k**4*Sqrt(-k + kmax))/kmax**1.5 - (967680*beta**2*C6*k*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             (2979840*1j*beta*C6*k**2*Sqrt(-k + kmax))/Sqrt(kmax) - 
+             (212480*C6*k**3*Sqrt(-k + kmax))/Sqrt(kmax) - 725760*beta**2*C6*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             904320*1j*beta*C6*k*Sqrt(kmax)*Sqrt(-k + kmax) + 956640*C6*k**2*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             695520*beta**2*C7*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             181800*1j*beta*C7*k**3*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             198870*C7*k**4*Sqrt(kmax)*Sqrt(-k + kmax) - 610560*1j*beta*C6*kmax**1.5*Sqrt(-k + kmax) - 
+             209600*C6*k*kmax**1.5*Sqrt(-k + kmax) + 181440*beta**2*C7*k*kmax**1.5*Sqrt(-k + kmax) - 
+             769680*1j*beta*C7*k**2*kmax**1.5*Sqrt(-k + kmax) - 37860*C7*k**3*kmax**1.5*Sqrt(-k + kmax) + 
+             185600*C6*kmax**2.5*Sqrt(-k + kmax) - 241920*beta**2*C7*kmax**2.5*Sqrt(-k + kmax) + 
+             250560*1j*beta*C7*k*kmax**2.5*Sqrt(-k + kmax) + 312240*C7*k**2*kmax**2.5*Sqrt(-k + kmax) - 
+             305280*1j*beta*C7*kmax**3.5*Sqrt(-k + kmax) - 95520*C7*k*kmax**3.5*Sqrt(-k + kmax) + 
+             111360*C7*kmax**4.5*Sqrt(-k + kmax) - (483840*beta**2*C6*k**2*Sqrt(k + kmax))/kmax**1.5 + 
+             (153600*1j*beta*C6*k**3*Sqrt(k + kmax))/kmax**1.5 - 
+             (35840*C6*k**4*Sqrt(k + kmax))/kmax**1.5 - (967680*beta**2*C6*k*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (2979840*1j*beta*C6*k**2*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (212480*C6*k**3*Sqrt(k + kmax))/Sqrt(kmax) + 725760*beta**2*C6*Sqrt(kmax)*Sqrt(k + kmax) + 
+             904320*1j*beta*C6*k*Sqrt(kmax)*Sqrt(k + kmax) - 956640*C6*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 
+             695520*beta**2*C7*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 
+             181800*1j*beta*C7*k**3*Sqrt(kmax)*Sqrt(k + kmax) + 198870*C7*k**4*Sqrt(kmax)*Sqrt(k + kmax) + 
+             610560*1j*beta*C6*kmax**1.5*Sqrt(k + kmax) - 209600*C6*k*kmax**1.5*Sqrt(k + kmax) + 
+             181440*beta**2*C7*k*kmax**1.5*Sqrt(k + kmax) + 
+             769680*1j*beta*C7*k**2*kmax**1.5*Sqrt(k + kmax) - 37860*C7*k**3*kmax**1.5*Sqrt(k + kmax) - 
+             185600*C6*kmax**2.5*Sqrt(k + kmax) + 241920*beta**2*C7*kmax**2.5*Sqrt(k + kmax) + 
+             250560*1j*beta*C7*k*kmax**2.5*Sqrt(k + kmax) - 312240*C7*k**2*kmax**2.5*Sqrt(k + kmax) + 
+             305280*1j*beta*C7*kmax**3.5*Sqrt(k + kmax) - 95520*C7*k*kmax**3.5*Sqrt(k + kmax) - 
+             111360*C7*kmax**4.5*Sqrt(k + kmax) - (483840*beta**2*C6*k**2*Sqrt(k - kmin))/kmin**1.5 + 
+             (153600*1j*beta*C6*k**3*Sqrt(k - kmin))/kmin**1.5 - 
+             (35840*C6*k**4*Sqrt(k - kmin))/kmin**1.5 + (967680*beta**2*C6*k*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (2826240*1j*beta*C6*k**2*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (248320*C6*k**3*Sqrt(k - kmin))/Sqrt(kmin) + 725760*beta**2*C6*Sqrt(k - kmin)*Sqrt(kmin) - 
+             789120*1j*beta*C6*k*Sqrt(k - kmin)*Sqrt(kmin) - 783840*C6*k**2*Sqrt(k - kmin)*Sqrt(kmin) + 
+             695520*beta**2*C7*k**2*Sqrt(k - kmin)*Sqrt(kmin) - 
+             649800*1j*beta*C7*k**3*Sqrt(k - kmin)*Sqrt(kmin) + 148470*C7*k**4*Sqrt(k - kmin)*Sqrt(kmin) + 
+             840960*1j*beta*C6*Sqrt(k - kmin)*kmin**1.5 + 171200*C6*k*Sqrt(k - kmin)*kmin**1.5 - 
+             181440*beta**2*C7*k*Sqrt(k - kmin)*kmin**1.5 + 
+             611280*1j*beta*C7*k**2*Sqrt(k - kmin)*kmin**1.5 + 157860*C7*k**3*Sqrt(k - kmin)*kmin**1.5 - 
+             262400*C6*Sqrt(k - kmin)*kmin**2.5 + 241920*beta**2*C7*Sqrt(k - kmin)*kmin**2.5 - 
+             192960*1j*beta*C7*k*Sqrt(k - kmin)*kmin**2.5 - 262320*C7*k**2*Sqrt(k - kmin)*kmin**2.5 + 
+             420480*1j*beta*C7*Sqrt(k - kmin)*kmin**3.5 + 72480*C7*k*Sqrt(k - kmin)*kmin**3.5 - 
+             157440*C7*Sqrt(k - kmin)*kmin**4.5 + (483840*beta**2*C6*k**2*Sqrt(k + kmin))/kmin**1.5 - 
+             (153600*1j*beta*C6*k**3*Sqrt(k + kmin))/kmin**1.5 + 
+             (35840*C6*k**4*Sqrt(k + kmin))/kmin**1.5 + (967680*beta**2*C6*k*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (2979840*1j*beta*C6*k**2*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (212480*C6*k**3*Sqrt(k + kmin))/Sqrt(kmin) - 725760*beta**2*C6*Sqrt(kmin)*Sqrt(k + kmin) - 
+             904320*1j*beta*C6*k*Sqrt(kmin)*Sqrt(k + kmin) + 956640*C6*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 
+             695520*beta**2*C7*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 
+             181800*1j*beta*C7*k**3*Sqrt(kmin)*Sqrt(k + kmin) - 198870*C7*k**4*Sqrt(kmin)*Sqrt(k + kmin) - 
+             610560*1j*beta*C6*kmin**1.5*Sqrt(k + kmin) + 209600*C6*k*kmin**1.5*Sqrt(k + kmin) - 
+             181440*beta**2*C7*k*kmin**1.5*Sqrt(k + kmin) - 
+             769680*1j*beta*C7*k**2*kmin**1.5*Sqrt(k + kmin) + 37860*C7*k**3*kmin**1.5*Sqrt(k + kmin) + 
+             185600*C6*kmin**2.5*Sqrt(k + kmin) - 241920*beta**2*C7*kmin**2.5*Sqrt(k + kmin) - 
+             250560*1j*beta*C7*k*kmin**2.5*Sqrt(k + kmin) + 312240*C7*k**2*kmin**2.5*Sqrt(k + kmin) - 
+             305280*1j*beta*C7*kmin**3.5*Sqrt(k + kmin) + 95520*C7*k*kmin**3.5*Sqrt(k + kmin) + 
+             111360*C7*kmin**4.5*Sqrt(k + kmin) - 604800*beta**2*C6*k*Pi + 1310400*1j*beta*C6*k**2*Pi + 
+             579600*C6*k**3*Pi - 378000*beta**2*C7*k**3*Pi - 94500*1j*beta*C7*k**4*Pi + 20475*C7*k**5*Pi + 
+             1209600*beta**2*C6*k*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             2620800*1j*beta*C6*k**2*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             1159200*C6*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             756000*beta**2*C7*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             189000*1j*beta*C7*k**4*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             40950*C7*k**5*ArcTan(Sqrt(kmin/(k - kmin))) - 1209600*beta**2*C6*k*Log(2*Sqrt(k)) + 
+             3427200*1j*beta*C6*k**2*Log(2*Sqrt(k)) + 756000*C6*k**3*Log(2*Sqrt(k)) - 
+             756000*beta**2*C7*k**3*Log(2*Sqrt(k)) - 642600*1j*beta*C7*k**4*Log(2*Sqrt(k)) + 
+             91350*C7*k**5*Log(2*Sqrt(k)) + 1209600*beta**2*C6*k*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             3427200*1j*beta*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             756000*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             756000*beta**2*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             642600*1j*beta*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             91350*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             1209600*beta**2*C6*k*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             3427200*1j*beta*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             756000*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             756000*beta**2*C7*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             642600*1j*beta*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             91350*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             1209600*beta**2*C6*k*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             3427200*1j*beta*C6*k**2*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             756000*C6*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             756000*beta**2*C7*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             642600*1j*beta*C7*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             91350*C7*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*eta**2*k**2) 
+        j4= (alpha**2*((76800*1j*beta**2*C6*k**3*Sqrt(-k + kmax))/kmax**1.5 + 
+             (35840*beta*C6*k**4*Sqrt(-k + kmax))/kmax**1.5 + 
+             (1489920*1j*beta**2*C6*k**2*Sqrt(-k + kmax))/Sqrt(kmax) - 
+             (442880*beta*C6*k**3*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             (107520*1j*C6*k**4*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             452160*1j*beta**2*C6*k*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             1043040*beta*C6*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             57360*1j*C6*k**3*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             90900*1j*beta**2*C7*k**3*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             224070*beta*C7*k**4*Sqrt(kmax)*Sqrt(-k + kmax) - 3150*1j*C7*k**5*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             305280*1j*beta**2*C6*kmax**1.5*Sqrt(-k + kmax) - 228800*beta*C6*k*kmax**1.5*Sqrt(-k + kmax) + 
+             125280*1j*C6*k**2*kmax**1.5*Sqrt(-k + kmax) - 
+             384840*1j*beta**2*C7*k**2*kmax**1.5*Sqrt(-k + kmax) + 
+             22140*beta*C7*k**3*kmax**1.5*Sqrt(-k + kmax) - 37940*1j*C7*k**4*kmax**1.5*Sqrt(-k + kmax) + 
+             147200*beta*C6*kmax**2.5*Sqrt(-k + kmax) - 21120*1j*C6*k*kmax**2.5*Sqrt(-k + kmax) + 
+             125280*1j*beta**2*C7*k*kmax**2.5*Sqrt(-k + kmax) + 
+             337200*beta*C7*k**2*kmax**2.5*Sqrt(-k + kmax) + 26480*1j*C7*k**3*kmax**2.5*Sqrt(-k + kmax) - 
+             42240*1j*C6*kmax**3.5*Sqrt(-k + kmax) - 152640*1j*beta**2*C7*kmax**3.5*Sqrt(-k + kmax) - 
+             107040*beta*C7*k*kmax**3.5*Sqrt(-k + kmax) + 60000*1j*C7*k**2*kmax**3.5*Sqrt(-k + kmax) + 
+             88320*beta*C7*kmax**4.5*Sqrt(-k + kmax) - 14080*1j*C7*k*kmax**4.5*Sqrt(-k + kmax) - 
+             28160*1j*C7*kmax**5.5*Sqrt(-k + kmax) + 
+             (76800*1j*beta**2*C6*k**3*Sqrt(k + kmax))/kmax**1.5 - 
+             (35840*beta*C6*k**4*Sqrt(k + kmax))/kmax**1.5 - 
+             (1489920*1j*beta**2*C6*k**2*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (442880*beta*C6*k**3*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (107520*1j*C6*k**4*Sqrt(k + kmax))/Sqrt(kmax) + 
+             452160*1j*beta**2*C6*k*Sqrt(kmax)*Sqrt(k + kmax) - 
+             1043040*beta*C6*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 57360*1j*C6*k**3*Sqrt(kmax)*Sqrt(k + kmax) + 
+             90900*1j*beta**2*C7*k**3*Sqrt(kmax)*Sqrt(k + kmax) + 
+             224070*beta*C7*k**4*Sqrt(kmax)*Sqrt(k + kmax) - 3150*1j*C7*k**5*Sqrt(kmax)*Sqrt(k + kmax) + 
+             305280*1j*beta**2*C6*kmax**1.5*Sqrt(k + kmax) - 228800*beta*C6*k*kmax**1.5*Sqrt(k + kmax) - 
+             125280*1j*C6*k**2*kmax**1.5*Sqrt(k + kmax) + 
+             384840*1j*beta**2*C7*k**2*kmax**1.5*Sqrt(k + kmax) + 
+             22140*beta*C7*k**3*kmax**1.5*Sqrt(k + kmax) + 37940*1j*C7*k**4*kmax**1.5*Sqrt(k + kmax) - 
+             147200*beta*C6*kmax**2.5*Sqrt(k + kmax) - 21120*1j*C6*k*kmax**2.5*Sqrt(k + kmax) + 
+             125280*1j*beta**2*C7*k*kmax**2.5*Sqrt(k + kmax) - 
+             337200*beta*C7*k**2*kmax**2.5*Sqrt(k + kmax) + 26480*1j*C7*k**3*kmax**2.5*Sqrt(k + kmax) + 
+             42240*1j*C6*kmax**3.5*Sqrt(k + kmax) + 152640*1j*beta**2*C7*kmax**3.5*Sqrt(k + kmax) - 
+             107040*beta*C7*k*kmax**3.5*Sqrt(k + kmax) - 60000*1j*C7*k**2*kmax**3.5*Sqrt(k + kmax) - 
+             88320*beta*C7*kmax**4.5*Sqrt(k + kmax) - 14080*1j*C7*k*kmax**4.5*Sqrt(k + kmax) + 
+             28160*1j*C7*kmax**5.5*Sqrt(k + kmax) + (76800*1j*beta**2*C6*k**3*Sqrt(k - kmin))/kmin**1.5 - 
+             (35840*beta*C6*k**4*Sqrt(k - kmin))/kmin**1.5 - 
+             (1413120*1j*beta**2*C6*k**2*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (478720*beta*C6*k**3*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (107520*1j*C6*k**4*Sqrt(k - kmin))/Sqrt(kmin) - 
+             394560*1j*beta**2*C6*k*Sqrt(k - kmin)*Sqrt(kmin) - 
+             697440*beta*C6*k**2*Sqrt(k - kmin)*Sqrt(kmin) + 176640*1j*C6*k**3*Sqrt(k - kmin)*Sqrt(kmin) - 
+             324900*1j*beta**2*C7*k**3*Sqrt(k - kmin)*Sqrt(kmin) + 
+             123270*beta*C7*k**4*Sqrt(k - kmin)*Sqrt(kmin) - 18900*1j*C7*k**5*Sqrt(k - kmin)*Sqrt(kmin) + 
+             420480*1j*beta**2*C6*Sqrt(k - kmin)*kmin**1.5 + 152000*beta*C6*k*Sqrt(k - kmin)*kmin**1.5 - 
+             46080*1j*C6*k**2*Sqrt(k - kmin)*kmin**1.5 + 
+             305640*1j*beta**2*C7*k**2*Sqrt(k - kmin)*kmin**1.5 + 
+             217860*beta*C7*k**3*Sqrt(k - kmin)*kmin**1.5 + 23240*1j*C7*k**4*Sqrt(k - kmin)*kmin**1.5 - 
+             300800*beta*C6*Sqrt(k - kmin)*kmin**2.5 - 7680*1j*C6*k*Sqrt(k - kmin)*kmin**2.5 - 
+             96480*1j*beta**2*C7*k*Sqrt(k - kmin)*kmin**2.5 - 
+             237360*beta*C7*k**2*Sqrt(k - kmin)*kmin**2.5 + 53920*1j*C7*k**3*Sqrt(k - kmin)*kmin**2.5 - 
+             15360*1j*C6*Sqrt(k - kmin)*kmin**3.5 + 210240*1j*beta**2*C7*Sqrt(k - kmin)*kmin**3.5 + 
+             60960*beta*C7*k*Sqrt(k - kmin)*kmin**3.5 - 24000*1j*C7*k**2*Sqrt(k - kmin)*kmin**3.5 - 
+             180480*beta*C7*Sqrt(k - kmin)*kmin**4.5 - 5120*1j*C7*k*Sqrt(k - kmin)*kmin**4.5 - 
+             10240*1j*C7*Sqrt(k - kmin)*kmin**5.5 - (76800*1j*beta**2*C6*k**3*Sqrt(k + kmin))/kmin**1.5 + 
+             (35840*beta*C6*k**4*Sqrt(k + kmin))/kmin**1.5 + 
+             (1489920*1j*beta**2*C6*k**2*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (442880*beta*C6*k**3*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (107520*1j*C6*k**4*Sqrt(k + kmin))/Sqrt(kmin) - 
+             452160*1j*beta**2*C6*k*Sqrt(kmin)*Sqrt(k + kmin) + 
+             1043040*beta*C6*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 57360*1j*C6*k**3*Sqrt(kmin)*Sqrt(k + kmin) - 
+             90900*1j*beta**2*C7*k**3*Sqrt(kmin)*Sqrt(k + kmin) - 
+             224070*beta*C7*k**4*Sqrt(kmin)*Sqrt(k + kmin) + 3150*1j*C7*k**5*Sqrt(kmin)*Sqrt(k + kmin) - 
+             305280*1j*beta**2*C6*kmin**1.5*Sqrt(k + kmin) + 228800*beta*C6*k*kmin**1.5*Sqrt(k + kmin) + 
+             125280*1j*C6*k**2*kmin**1.5*Sqrt(k + kmin) - 
+             384840*1j*beta**2*C7*k**2*kmin**1.5*Sqrt(k + kmin) - 
+             22140*beta*C7*k**3*kmin**1.5*Sqrt(k + kmin) - 37940*1j*C7*k**4*kmin**1.5*Sqrt(k + kmin) + 
+             147200*beta*C6*kmin**2.5*Sqrt(k + kmin) + 21120*1j*C6*k*kmin**2.5*Sqrt(k + kmin) - 
+             125280*1j*beta**2*C7*k*kmin**2.5*Sqrt(k + kmin) + 
+             337200*beta*C7*k**2*kmin**2.5*Sqrt(k + kmin) - 26480*1j*C7*k**3*kmin**2.5*Sqrt(k + kmin) - 
+             42240*1j*C6*kmin**3.5*Sqrt(k + kmin) - 152640*1j*beta**2*C7*kmin**3.5*Sqrt(k + kmin) + 
+             107040*beta*C7*k*kmin**3.5*Sqrt(k + kmin) + 60000*1j*C7*k**2*kmin**3.5*Sqrt(k + kmin) + 
+             88320*beta*C7*kmin**4.5*Sqrt(k + kmin) + 14080*1j*C7*k*kmin**4.5*Sqrt(k + kmin) - 
+             28160*1j*C7*kmin**5.5*Sqrt(k + kmin) + 655200*1j*beta**2*C6*k**2*Pi + 
+             680400*beta*C6*k**3*Pi - 47250*1j*beta**2*C7*k**4*Pi + 7875*beta*C7*k**5*Pi - 
+             9450*1j*C7*k**6*Pi - 1310400*1j*beta**2*C6*k**2*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             1360800*beta*C6*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             94500*1j*beta**2*C7*k**4*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             15750*beta*C7*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             18900*1j*C7*k**6*ArcTan(Sqrt(kmin/(k - kmin))) + 1713600*1j*beta**2*C6*k**2*Log(2*Sqrt(k)) + 
+             554400*beta*C6*k**3*Log(2*Sqrt(k)) + 226800*1j*C6*k**4*Log(2*Sqrt(k)) - 
+             321300*1j*beta**2*C7*k**4*Log(2*Sqrt(k)) + 116550*beta*C7*k**5*Log(2*Sqrt(k)) + 
+             3150*1j*C7*k**6*Log(2*Sqrt(k)) - 
+             1713600*1j*beta**2*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             554400*beta*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             226800*1j*C6*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             321300*1j*beta**2*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             116550*beta*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             3150*1j*C7*k**6*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             1713600*1j*beta**2*C6*k**2*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             554400*beta*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             226800*1j*C6*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             321300*1j*beta**2*C7*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             116550*beta*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             3150*1j*C7*k**6*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             1713600*1j*beta**2*C6*k**2*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             554400*beta*C6*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             226800*1j*C6*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             321300*1j*beta**2*C7*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             116550*beta*C7*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             3150*1j*C7*k**6*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*eta*k**2) 
+        j5 = (alpha**2*((-230400*beta**2*C6*k**3*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             (107520*1j*beta*C6*k**4*Sqrt(-k + kmax))/Sqrt(kmax) + 
+             86400*beta**2*C6*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
+             57360*1j*beta*C6*k**3*Sqrt(kmax)*Sqrt(-k + kmax) + 62160*C6*k**4*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             25200*beta**2*C7*k**4*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             3150*1j*beta*C7*k**5*Sqrt(kmax)*Sqrt(-k + kmax) - 2835*C7*k**6*Sqrt(kmax)*Sqrt(-k + kmax) - 
+             19200*beta**2*C6*k*kmax**1.5*Sqrt(-k + kmax) + 
+             125280*1j*beta*C6*k**2*kmax**1.5*Sqrt(-k + kmax) + 23520*C6*k**3*kmax**1.5*Sqrt(-k + kmax) + 
+             60000*beta**2*C7*k**3*kmax**1.5*Sqrt(-k + kmax) - 
+             37940*1j*beta*C7*k**4*kmax**1.5*Sqrt(-k + kmax) - 1890*C7*k**5*kmax**1.5*Sqrt(-k + kmax) - 
+             38400*beta**2*C6*kmax**2.5*Sqrt(-k + kmax) - 21120*1j*beta*C6*k*kmax**2.5*Sqrt(-k + kmax) - 
+             56448*C6*k**2*kmax**2.5*Sqrt(-k + kmax) + 24960*beta**2*C7*k**2*kmax**2.5*Sqrt(-k + kmax) + 
+             26480*1j*beta*C7*k**3*kmax**2.5*Sqrt(-k + kmax) + 19992*C7*k**4*kmax**2.5*Sqrt(-k + kmax) - 
+             42240*1j*beta*C6*kmax**3.5*Sqrt(-k + kmax) + 5376*C6*k*kmax**3.5*Sqrt(-k + kmax) - 
+             11520*beta**2*C7*k*kmax**3.5*Sqrt(-k + kmax) + 
+             60000*1j*beta*C7*k**2*kmax**3.5*Sqrt(-k + kmax) + 9456*C7*k**3*kmax**3.5*Sqrt(-k + kmax) + 
+             10752*C6*kmax**4.5*Sqrt(-k + kmax) - 23040*beta**2*C7*kmax**4.5*Sqrt(-k + kmax) - 
+             14080*1j*beta*C7*k*kmax**4.5*Sqrt(-k + kmax) - 33408*C7*k**2*kmax**4.5*Sqrt(-k + kmax) - 
+             28160*1j*beta*C7*kmax**5.5*Sqrt(-k + kmax) + 3840*C7*k*kmax**5.5*Sqrt(-k + kmax) + 
+             7680*C7*kmax**6.5*Sqrt(-k + kmax) - (230400*beta**2*C6*k**3*Sqrt(k + kmax))/Sqrt(kmax) - 
+             (107520*1j*beta*C6*k**4*Sqrt(k + kmax))/Sqrt(kmax) - 
+             86400*beta**2*C6*k**2*Sqrt(kmax)*Sqrt(k + kmax) + 
+             57360*1j*beta*C6*k**3*Sqrt(kmax)*Sqrt(k + kmax) - 62160*C6*k**4*Sqrt(kmax)*Sqrt(k + kmax) + 
+             25200*beta**2*C7*k**4*Sqrt(kmax)*Sqrt(k + kmax) - 
+             3150*1j*beta*C7*k**5*Sqrt(kmax)*Sqrt(k + kmax) + 2835*C7*k**6*Sqrt(kmax)*Sqrt(k + kmax) - 
+             19200*beta**2*C6*k*kmax**1.5*Sqrt(k + kmax) - 
+             125280*1j*beta*C6*k**2*kmax**1.5*Sqrt(k + kmax) + 23520*C6*k**3*kmax**1.5*Sqrt(k + kmax) + 
+             60000*beta**2*C7*k**3*kmax**1.5*Sqrt(k + kmax) + 
+             37940*1j*beta*C7*k**4*kmax**1.5*Sqrt(k + kmax) - 1890*C7*k**5*kmax**1.5*Sqrt(k + kmax) + 
+             38400*beta**2*C6*kmax**2.5*Sqrt(k + kmax) - 21120*1j*beta*C6*k*kmax**2.5*Sqrt(k + kmax) + 
+             56448*C6*k**2*kmax**2.5*Sqrt(k + kmax) - 24960*beta**2*C7*k**2*kmax**2.5*Sqrt(k + kmax) + 
+             26480*1j*beta*C7*k**3*kmax**2.5*Sqrt(k + kmax) - 19992*C7*k**4*kmax**2.5*Sqrt(k + kmax) + 
+             42240*1j*beta*C6*kmax**3.5*Sqrt(k + kmax) + 5376*C6*k*kmax**3.5*Sqrt(k + kmax) - 
+             11520*beta**2*C7*k*kmax**3.5*Sqrt(k + kmax) - 
+             60000*1j*beta*C7*k**2*kmax**3.5*Sqrt(k + kmax) + 9456*C7*k**3*kmax**3.5*Sqrt(k + kmax) - 
+             10752*C6*kmax**4.5*Sqrt(k + kmax) + 23040*beta**2*C7*kmax**4.5*Sqrt(k + kmax) - 
+             14080*1j*beta*C7*k*kmax**4.5*Sqrt(k + kmax) + 33408*C7*k**2*kmax**4.5*Sqrt(k + kmax) + 
+             28160*1j*beta*C7*kmax**5.5*Sqrt(k + kmax) + 3840*C7*k*kmax**5.5*Sqrt(k + kmax) - 
+             7680*C7*kmax**6.5*Sqrt(k + kmax) - (230400*beta**2*C6*k**3*Sqrt(k - kmin))/Sqrt(kmin) - 
+             (107520*1j*beta*C6*k**4*Sqrt(k - kmin))/Sqrt(kmin) + 
+             86400*beta**2*C6*k**2*Sqrt(k - kmin)*Sqrt(kmin) + 
+             176640*1j*beta*C6*k**3*Sqrt(k - kmin)*Sqrt(kmin) - 62160*C6*k**4*Sqrt(k - kmin)*Sqrt(kmin) - 
+             25200*beta**2*C7*k**4*Sqrt(k - kmin)*Sqrt(kmin) - 
+             18900*1j*beta*C7*k**5*Sqrt(k - kmin)*Sqrt(kmin) + 2835*C7*k**6*Sqrt(k - kmin)*Sqrt(kmin) - 
+             19200*beta**2*C6*k*Sqrt(k - kmin)*kmin**1.5 - 
+             46080*1j*beta*C6*k**2*Sqrt(k - kmin)*kmin**1.5 - 23520*C6*k**3*Sqrt(k - kmin)*kmin**1.5 + 
+             60000*beta**2*C7*k**3*Sqrt(k - kmin)*kmin**1.5 + 
+             23240*1j*beta*C7*k**4*Sqrt(k - kmin)*kmin**1.5 + 1890*C7*k**5*Sqrt(k - kmin)*kmin**1.5 - 
+             38400*beta**2*C6*Sqrt(k - kmin)*kmin**2.5 - 7680*1j*beta*C6*k*Sqrt(k - kmin)*kmin**2.5 + 
+             56448*C6*k**2*Sqrt(k - kmin)*kmin**2.5 + 24960*beta**2*C7*k**2*Sqrt(k - kmin)*kmin**2.5 + 
+             53920*1j*beta*C7*k**3*Sqrt(k - kmin)*kmin**2.5 - 19992*C7*k**4*Sqrt(k - kmin)*kmin**2.5 - 
+             15360*1j*beta*C6*Sqrt(k - kmin)*kmin**3.5 - 5376*C6*k*Sqrt(k - kmin)*kmin**3.5 - 
+             11520*beta**2*C7*k*Sqrt(k - kmin)*kmin**3.5 - 
+             24000*1j*beta*C7*k**2*Sqrt(k - kmin)*kmin**3.5 - 9456*C7*k**3*Sqrt(k - kmin)*kmin**3.5 - 
+             10752*C6*Sqrt(k - kmin)*kmin**4.5 - 23040*beta**2*C7*Sqrt(k - kmin)*kmin**4.5 - 
+             5120*1j*beta*C7*k*Sqrt(k - kmin)*kmin**4.5 + 33408*C7*k**2*Sqrt(k - kmin)*kmin**4.5 - 
+             10240*1j*beta*C7*Sqrt(k - kmin)*kmin**5.5 - 3840*C7*k*Sqrt(k - kmin)*kmin**5.5 - 
+             7680*C7*Sqrt(k - kmin)*kmin**6.5 + (230400*beta**2*C6*k**3*Sqrt(k + kmin))/Sqrt(kmin) + 
+             (107520*1j*beta*C6*k**4*Sqrt(k + kmin))/Sqrt(kmin) + 
+             86400*beta**2*C6*k**2*Sqrt(kmin)*Sqrt(k + kmin) - 
+             57360*1j*beta*C6*k**3*Sqrt(kmin)*Sqrt(k + kmin) + 62160*C6*k**4*Sqrt(kmin)*Sqrt(k + kmin) - 
+             25200*beta**2*C7*k**4*Sqrt(kmin)*Sqrt(k + kmin) + 
+             3150*1j*beta*C7*k**5*Sqrt(kmin)*Sqrt(k + kmin) - 2835*C7*k**6*Sqrt(kmin)*Sqrt(k + kmin) + 
+             19200*beta**2*C6*k*kmin**1.5*Sqrt(k + kmin) + 
+             125280*1j*beta*C6*k**2*kmin**1.5*Sqrt(k + kmin) - 23520*C6*k**3*kmin**1.5*Sqrt(k + kmin) - 
+             60000*beta**2*C7*k**3*kmin**1.5*Sqrt(k + kmin) - 
+             37940*1j*beta*C7*k**4*kmin**1.5*Sqrt(k + kmin) + 1890*C7*k**5*kmin**1.5*Sqrt(k + kmin) - 
+             38400*beta**2*C6*kmin**2.5*Sqrt(k + kmin) + 21120*1j*beta*C6*k*kmin**2.5*Sqrt(k + kmin) - 
+             56448*C6*k**2*kmin**2.5*Sqrt(k + kmin) + 24960*beta**2*C7*k**2*kmin**2.5*Sqrt(k + kmin) - 
+             26480*1j*beta*C7*k**3*kmin**2.5*Sqrt(k + kmin) + 19992*C7*k**4*kmin**2.5*Sqrt(k + kmin) - 
+             42240*1j*beta*C6*kmin**3.5*Sqrt(k + kmin) - 5376*C6*k*kmin**3.5*Sqrt(k + kmin) + 
+             11520*beta**2*C7*k*kmin**3.5*Sqrt(k + kmin) + 
+             60000*1j*beta*C7*k**2*kmin**3.5*Sqrt(k + kmin) - 9456*C7*k**3*kmin**3.5*Sqrt(k + kmin) + 
+             10752*C6*kmin**4.5*Sqrt(k + kmin) - 23040*beta**2*C7*kmin**4.5*Sqrt(k + kmin) + 
+             14080*1j*beta*C7*k*kmin**4.5*Sqrt(k + kmin) - 33408*C7*k**2*kmin**4.5*Sqrt(k + kmin) - 
+             28160*1j*beta*C7*kmin**5.5*Sqrt(k + kmin) - 3840*C7*k*kmin**5.5*Sqrt(k + kmin) + 
+             7680*C7*kmin**6.5*Sqrt(k + kmin) + 100800*beta**2*C6*k**3*Pi + 22680*C6*k**5*Pi - 
+             12600*beta**2*C7*k**5*Pi - 9450*1j*beta*C7*k**6*Pi + (2835*C7*k**7*Pi)/2. - 
+             201600*beta**2*C6*k**3*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             45360*C6*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             25200*beta**2*C7*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             18900*1j*beta*C7*k**6*ArcTan(Sqrt(kmin/(k - kmin))) - 
+             2835*C7*k**7*ArcTan(Sqrt(kmin/(k - kmin))) - 201600*beta**2*C6*k**3*Log(2*Sqrt(k)) + 
+             226800*1j*beta*C6*k**4*Log(2*Sqrt(k)) + 45360*C6*k**5*Log(2*Sqrt(k)) + 
+             25200*beta**2*C7*k**5*Log(2*Sqrt(k)) + 3150*1j*beta*C7*k**6*Log(2*Sqrt(k)) + 
+             2835*C7*k**7*Log(2*Sqrt(k)) + 201600*beta**2*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             226800*1j*beta*C6*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             45360*C6*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             25200*beta**2*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             3150*1j*beta*C7*k**6*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             2835*C7*k**7*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             201600*beta**2*C6*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             226800*1j*beta*C6*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             45360*C6*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             25200*beta**2*C7*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             3150*1j*beta*C7*k**6*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             2835*C7*k**7*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             201600*beta**2*C6*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             226800*1j*beta*C6*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             45360*C6*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             25200*beta**2*C7*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             3150*1j*beta*C7*k**6*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             2835*C7*k**7*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*k**2)
+             
+        return j1 + j2 + j3 + j4 + j5
+    
+    def full_source_from_model(self, m, nix):
+        """Use the data from a model at a timestep nix to calculate the full source term S."""
+        try:
+            #Get background values
+            phi, phidot, H = m.yresult[nix, 0:3, 0]
+            a = m.ainit*np.exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if np.any(np.isnan(phi)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        #Get potentials
+        V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*H
+        
+        
+        eta = 1/(beta*(1-m.bgepsilon[nix]))
+        
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
+        
+        #Set C_i values
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        
+        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        
+        C3 = -4.5 / (a*H**2) * self.k
+        
+        C4 = -phidot/(a*H**2) / self.k
+        
+        C5 = -1.5 * phidot * onekshape
+        
+        C6 = 2 * phidot * self.k
+        
+        C7 = - phidot / self.k
+        
+        #Get component integrals
+        J_A = self.J_A(self.k, alpha, C1, C2, eta)
+        J_B = self.J_B(self.k, alpha, C3, C4, eta)
+        J_C = self.J_C(self.k, alpha, beta, C5, eta)
+        J_D = self.J_D(self.k, alpha, beta, C6, C7, eta)
+        
+        src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
+        return src
