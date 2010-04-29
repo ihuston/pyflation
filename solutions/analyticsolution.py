@@ -261,11 +261,15 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
         super(NoPhaseWithEtaSolution, self).__init__(*args, **kwargs)
         
     
-    def J_A(self, k, alpha, C1, C2, eta):
+    def J_A(self, k, alpha, C1, C2, eta, kminoverride=None):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
-        kmin = k[0]
+        
         kmax = k[-1]
+        if kminoverride is not None:
+            kmin = kminoverride
+        else:
+            kmin = k[0]
         
         j1 = (alpha**2*(-720*C2*k**2*Sqrt(kmax)*(Sqrt(-k + kmax) - Sqrt(k + kmax)) + 
             1920*C2*kmax**2.5*(Sqrt(-k + kmax) - Sqrt(k + kmax)) - 
@@ -325,115 +329,14 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
             
         return j1 + j2 + j3
     
-    def J_B(self, k, alpha, C3, C4, eta):
+    def J_B(self, k, alpha, C3, C4, eta, kminoverride=None):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
-        kmin = k[0]
-        
-        j1 = (alpha**2*(-3245760*C3*k**2*Sqrt(kmax*(-k + kmax)) + 520380*C4*k**4*Sqrt(kmax*(-k + kmax)) + 
-            846720*C3*k*kmax*Sqrt(kmax*(-k + kmax)) + 346920*C4*k**3*kmax*Sqrt(kmax*(-k + kmax)) - 
-            1128960*C3*kmax**2*Sqrt(kmax*(-k + kmax)) - 1077216*C4*k**2*kmax**2*Sqrt(kmax*(-k + kmax)) + 
-            366912*C4*k*kmax**3*Sqrt(kmax*(-k + kmax)) - 677376*C4*kmax**4*Sqrt(kmax*(-k + kmax)) + 
-            3245760*C3*k**2*Sqrt(kmax*(k + kmax)) - 520380*C4*k**4*Sqrt(kmax*(k + kmax)) + 
-            846720*C3*k*kmax*Sqrt(kmax*(k + kmax)) + 346920*C4*k**3*kmax*Sqrt(kmax*(k + kmax)) + 
-            1128960*C3*kmax**2*Sqrt(kmax*(k + kmax)) + 1077216*C4*k**2*kmax**2*Sqrt(kmax*(k + kmax)) + 
-            366912*C4*k*kmax**3*Sqrt(kmax*(k + kmax)) + 677376*C4*kmax**4*Sqrt(kmax*(k + kmax)) + 
-            3245760*C3*k**2*Sqrt((k - kmin)*kmin) - 520380*C4*k**4*Sqrt((k - kmin)*kmin) - 
-            846720*C3*k*kmin*Sqrt((k - kmin)*kmin) - 346920*C4*k**3*kmin*Sqrt((k - kmin)*kmin) + 
-            1128960*C3*kmin**2*Sqrt((k - kmin)*kmin) + 1077216*C4*k**2*kmin**2*Sqrt((k - kmin)*kmin) - 
-            366912*C4*k*kmin**3*Sqrt((k - kmin)*kmin) + 677376*C4*kmin**4*Sqrt((k - kmin)*kmin) - 
-            3245760*C3*k**2*Sqrt(kmin)*Sqrt(k + kmin) + 520380*C4*k**4*Sqrt(kmin)*Sqrt(k + kmin) - 
-            846720*C3*k*kmin**1.5*Sqrt(k + kmin) - 346920*C4*k**3*kmin**1.5*Sqrt(k + kmin) - 
-            1128960*C3*kmin**2.5*Sqrt(k + kmin) - 1077216*C4*k**2*kmin**2.5*Sqrt(k + kmin) - 
-            366912*C4*k*kmin**3.5*Sqrt(k + kmin) - 677376*C4*kmin**4.5*Sqrt(k + kmin) - 
-            1764000*C3*k**3*Pi - 260190*C4*k**5*Pi + 3528000*C3*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
-            520380*C4*k**5*ArcTan(Sqrt(kmin/(k - kmin))) - 3528000*C3*k**3*Log(2*Sqrt(k)) - 
-            520380*C4*k**5*Log(2*Sqrt(k)) + 3528000*C3*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
-            520380*C4*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
-            3528000*C3*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
-            520380*C4*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
-            3528000*C3*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
-            520380*C4*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2.8224e6*eta**2*k**2) 
+        if kminoverride is not None:
+            kmin = kminoverride
+        else:
+            kmin = k[0]
             
-        j2 = 1j*((alpha**2*(424200*C3*k**3*Sqrt(kmax*(-k + kmax)) + 393225*C4*k**5*Sqrt(kmax*(-k + kmax)) - 
-            1795920*C3*k**2*kmax*Sqrt(kmax*(-k + kmax)) + 
-            262150*C4*k**4*kmax*Sqrt(kmax*(-k + kmax)) + 
-            584640*C3*k*kmax**2*Sqrt(kmax*(-k + kmax)) - 
-            5320*C4*k**3*kmax**2*Sqrt(kmax*(-k + kmax)) - 
-            712320*C3*kmax**3*Sqrt(kmax*(-k + kmax)) - 
-            895440*C4*k**2*kmax**3*Sqrt(kmax*(-k + kmax)) + 
-            327040*C4*k*kmax**4*Sqrt(kmax*(-k + kmax)) - 
-            474880*C4*kmax**5*Sqrt(kmax*(-k + kmax)) + 424200*C3*k**3*Sqrt(kmax*(k + kmax)) + 
-            393225*C4*k**5*Sqrt(kmax*(k + kmax)) + 1795920*C3*k**2*kmax*Sqrt(kmax*(k + kmax)) - 
-            262150*C4*k**4*kmax*Sqrt(kmax*(k + kmax)) + 
-            584640*C3*k*kmax**2*Sqrt(kmax*(k + kmax)) - 
-            5320*C4*k**3*kmax**2*Sqrt(kmax*(k + kmax)) + 712320*C3*kmax**3*Sqrt(kmax*(k + kmax)) + 
-            895440*C4*k**2*kmax**3*Sqrt(kmax*(k + kmax)) + 
-            327040*C4*k*kmax**4*Sqrt(kmax*(k + kmax)) + 474880*C4*kmax**5*Sqrt(kmax*(k + kmax)) - 
-            1516200*C3*k**3*Sqrt((k - kmin)*kmin) - 290325*C4*k**5*Sqrt((k - kmin)*kmin) + 
-            1426320*C3*k**2*kmin*Sqrt((k - kmin)*kmin) - 
-            193550*C4*k**4*kmin*Sqrt((k - kmin)*kmin) - 
-            450240*C3*k*kmin**2*Sqrt((k - kmin)*kmin) - 
-            369880*C4*k**3*kmin**2*Sqrt((k - kmin)*kmin) + 
-            981120*C3*kmin**3*Sqrt((k - kmin)*kmin) + 
-            727440*C4*k**2*kmin**3*Sqrt((k - kmin)*kmin) - 
-            237440*C4*k*kmin**4*Sqrt((k - kmin)*kmin) + 654080*C4*kmin**5*Sqrt((k - kmin)*kmin) - 
-            424200*C3*k**3*Sqrt(kmin)*Sqrt(k + kmin) - 393225*C4*k**5*Sqrt(kmin)*Sqrt(k + kmin) - 
-            1795920*C3*k**2*kmin**1.5*Sqrt(k + kmin) + 262150*C4*k**4*kmin**1.5*Sqrt(k + kmin) - 
-            584640*C3*k*kmin**2.5*Sqrt(k + kmin) + 5320*C4*k**3*kmin**2.5*Sqrt(k + kmin) - 
-            712320*C3*kmin**3.5*Sqrt(k + kmin) - 895440*C4*k**2*kmin**3.5*Sqrt(k + kmin) - 
-            327040*C4*k*kmin**4.5*Sqrt(k + kmin) - 474880*C4*kmin**5.5*Sqrt(k + kmin) - 
-            220500*C3*k**4*Pi - 145162.5)*C4*k**6*Pi + 
-            441000*C3*k**4*ArcTan(Sqrt(kmin/(k - kmin))) + 
-            290325*C4*k**6*ArcTan(Sqrt(kmin/(k - kmin))) - 1499400)*C3*k**4*Log(2*Sqrt(k)) - 
-            393225*C4*k**6*Log(2*Sqrt(k)) + 
-            1499400*C3*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
-            393225*C4*k**6*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
-            1499400*C3*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
-            393225*C4*k**6*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
-            1499400*C3*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
-            393225*C4*k**6*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))))/(2.8224e6*eta*k**2) 
-        
-        
-        j3 = (alpha**2*(-117600*C3*k**4*Sqrt(kmax*(-k + kmax)) - 28350*C4*k**6*Sqrt(kmax*(-k + kmax)) + 
-            280000*C3*k**3*kmax*Sqrt(kmax*(-k + kmax)) - 18900*C4*k**5*kmax*Sqrt(kmax*(-k + kmax)) + 
-            116480*C3*k**2*kmax**2*Sqrt(kmax*(-k + kmax)) - 15120*C4*k**4*kmax**2*Sqrt(kmax*(-k + kmax)) - 
-            53760*C3*k*kmax**3*Sqrt(kmax*(-k + kmax)) + 140640*C4*k**3*kmax**3*Sqrt(kmax*(-k + kmax)) - 
-            107520*C3*kmax**4*Sqrt(kmax*(-k + kmax)) + 65280*C4*k**2*kmax**4*Sqrt(kmax*(-k + kmax)) - 
-            38400*C4*k*kmax**5*Sqrt(kmax*(-k + kmax)) - 76800*C4*kmax**6*Sqrt(kmax*(-k + kmax)) + 
-            117600*C3*k**4*Sqrt(kmax*(k + kmax)) + 28350*C4*k**6*Sqrt(kmax*(k + kmax)) + 
-            280000*C3*k**3*kmax*Sqrt(kmax*(k + kmax)) - 18900*C4*k**5*kmax*Sqrt(kmax*(k + kmax)) - 
-            116480*C3*k**2*kmax**2*Sqrt(kmax*(k + kmax)) + 15120*C4*k**4*kmax**2*Sqrt(kmax*(k + kmax)) - 
-            53760*C3*k*kmax**3*Sqrt(kmax*(k + kmax)) + 140640*C4*k**3*kmax**3*Sqrt(kmax*(k + kmax)) + 
-            107520*C3*kmax**4*Sqrt(kmax*(k + kmax)) - 65280*C4*k**2*kmax**4*Sqrt(kmax*(k + kmax)) - 
-            38400*C4*k*kmax**5*Sqrt(kmax*(k + kmax)) + 76800*C4*kmax**6*Sqrt(kmax*(k + kmax)) - 
-            117600*C3*k**4*Sqrt((k - kmin)*kmin) - 28350*C4*k**6*Sqrt((k - kmin)*kmin) + 
-            280000*C3*k**3*kmin*Sqrt((k - kmin)*kmin) - 18900*C4*k**5*kmin*Sqrt((k - kmin)*kmin) + 
-            116480*C3*k**2*kmin**2*Sqrt((k - kmin)*kmin) - 15120*C4*k**4*kmin**2*Sqrt((k - kmin)*kmin) - 
-            53760*C3*k*kmin**3*Sqrt((k - kmin)*kmin) + 140640*C4*k**3*kmin**3*Sqrt((k - kmin)*kmin) - 
-            107520*C3*kmin**4*Sqrt((k - kmin)*kmin) + 65280*C4*k**2*kmin**4*Sqrt((k - kmin)*kmin) - 
-            38400*C4*k*kmin**5*Sqrt((k - kmin)*kmin) - 76800*C4*kmin**6*Sqrt((k - kmin)*kmin) - 
-            117600*C3*k**4*Sqrt(kmin)*Sqrt(k + kmin) - 28350*C4*k**6*Sqrt(kmin)*Sqrt(k + kmin) - 
-            280000*C3*k**3*kmin**1.5*Sqrt(k + kmin) + 18900*C4*k**5*kmin**1.5*Sqrt(k + kmin) + 
-            116480*C3*k**2*kmin**2.5*Sqrt(k + kmin) - 15120*C4*k**4*kmin**2.5*Sqrt(k + kmin) + 
-            53760*C3*k*kmin**3.5*Sqrt(k + kmin) - 140640*C4*k**3*kmin**3.5*Sqrt(k + kmin) - 
-            107520*C3*kmin**4.5*Sqrt(k + kmin) + 65280*C4*k**2*kmin**4.5*Sqrt(k + kmin) + 
-            38400*C4*k*kmin**5.5*Sqrt(k + kmin) - 76800*C4*kmin**6.5*Sqrt(k + kmin) - 58800*C3*k**5*Pi - 
-            14175*C4*k**7*Pi + 117600*C3*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
-            28350*C4*k**7*ArcTan(Sqrt(kmin/(k - kmin))) + 117600*C3*k**5*Log(2*Sqrt(k)) + 
-            28350*C4*k**7*Log(2*Sqrt(k)) - 117600*C3*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
-            28350*C4*k**7*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
-            117600*C3*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
-            28350*C4*k**7*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
-            117600*C3*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
-            28350*C4*k**7*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2.8224e6*k**2)
-            
-        return j1 + j2 + j3
-    
-    def J_B2(self, k, alpha, C3, C4, eta):
-        """Second attempt at J_B"""
-        kmax = k[-1]
-        kmin = k[0]
         J_B = (alpha ** 2 * (-(Sqrt(kmax * (-k + kmax)) * 
               (280 * C3 * (420 * eta ** 2 * k ** 4 - 5 * eta * k ** 3 * (303 * 1j + 200 * eta * kmax) + 
                    k ** 2 * (11592 + 6414 * 1j * eta * kmax - 416 * eta ** 2 * kmax ** 2) + 
@@ -491,10 +394,13 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
               
         return J_B
 
-    def J_C(self, k, alpha, beta, C5, eta):
+    def J_C(self, k, alpha, beta, C5, eta, kminoverride=None):
         """Solution for J_C"""
         kmax = k[-1]
-        kmin = k[0]
+        if kminoverride is not None:
+            kmin = kminoverride
+        else:
+            kmin = k[0]
         
         J_C = (alpha ** 2 * C5 * (-(Sqrt(kmax * (-k + kmax)) * 
                (-28800 + 19200 * 1j * eta * (k - kmax) + 3840 * 1j * eta ** 3 * (k - kmax) ** 2 * kmax + 
@@ -543,10 +449,13 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
 
         return J_C
     
-    def J_D(self, k, alpha, beta, C6, C7, eta):
+    def J_D(self, k, alpha, beta, C6, C7, eta, kminoverride=None):
         """Solution for J_D"""
         kmax = k[-1]
-        kmin = k[0]
+        if kminoverride is not None:
+            kmin = kminoverride
+        else:
+            kmin = k[0]
         
         j1 = (alpha**2*((483840*C6*k**2*Sqrt(-k + kmax))/kmax**1.5 - (967680*C6*k*Sqrt(-k + kmax))/Sqrt(kmax) - 
              725760*C6*Sqrt(kmax)*Sqrt(-k + kmax) - 695520*C7*k**2*Sqrt(kmax)*Sqrt(-k + kmax) + 
@@ -912,9 +821,8 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
              2835*C7*k**7*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(604800.*beta**2*k**2)
              
         return j1 + j2 + j3 + j4 + j5
-    
-    def full_source_from_model(self, m, nix):
-        """Use the data from a model at a timestep nix to calculate the full source term S."""
+    def get_vars_from_model(self, m, nix):
+        """Find and calculate variables from cosmomodels model."""
         try:
             #Get background values
             phi, phidot, H = m.yresult[nix, 0:3, 0]
@@ -953,11 +861,19 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
         
         C7 = - phidot / self.k
         
+        return (alpha, beta), (C1, C2, C3, C4, C5, C6, C7), eta
+    
+    def full_source_from_model(self, m, nix, kminoverride=None):
+        """Use the data from a model at a timestep nix to calculate the full source term S."""
+        
+        (alpha, beta), Cs, eta = self.get_vars_from_model(m, nix)
+        C1, C2, C3, C4, C5, C6, C7 = Cs
+        
         #Get component integrals
-        J_A = self.J_A(self.k, alpha, C1, C2, eta)
-        J_B = self.J_B(self.k, alpha, C3, C4, eta)
-        J_C = self.J_C(self.k, alpha, beta, C5, eta)
-        J_D = self.J_D(self.k, alpha, beta, C6, C7, eta)
+        J_A = self.J_A(self.k, alpha, C1, C2, eta, kminoverride)
+        J_B = self.J_B(self.k, alpha, C3, C4, eta, kminoverride)
+        J_C = self.J_C(self.k, alpha, beta, C5, eta, kminoverride)
+        J_D = self.J_D(self.k, alpha, beta, C6, C7, eta, kminoverride)
         
         src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
         return src
