@@ -329,7 +329,7 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
             
         return j1 + j2 + j3
     
-    def J_B(self, k, alpha, C3, C4, eta, kminoverride=None):
+    def J_B2(self, k, alpha, C3, C4, eta, kminoverride=None):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
         if kminoverride is not None:
@@ -393,6 +393,132 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
               C4 * k ** 2 * (-4956 + 3745 * 1j * eta * k + 270 * eta ** 2 * k ** 2)) * Log(2 * (Sqrt(kmin) + Sqrt(k + kmin))))) / (2.8224e6 * eta ** 2 * k ** 2)
               
         return J_B
+
+    def J_B(self, k, alpha, C3, C4, eta, kminoverride=None):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        kmax = k[-1]
+        if kminoverride is not None:
+            kmin = kminoverride
+        else:
+            kmin = k[0]
+            
+        J_B = ((-4*alpha**2*C4*kmin**6*Sqrt((k - kmin)*kmin))/(147.*k**2) - 
+        (4*alpha**2*C4*kmin**6.5*Sqrt(k + kmin))/(147.*k**2) + 
+        (alpha**2*kmin**5*(654080*1j*C4*eta*Sqrt((k - kmin)*kmin) - 
+             38400*C4*eta**2*k*Sqrt((k - kmin)*kmin)))/(2.8224e6*eta**2*k**2) + 
+        (alpha**2*kmin**4*(677376*C4*Sqrt((k - kmin)*kmin) - 107520*C3*eta**2*Sqrt((k - kmin)*kmin) - 
+             237440*1j*C4*eta*k*Sqrt((k - kmin)*kmin) + 65280*C4*eta**2*k**2*Sqrt((k - kmin)*kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*kmin**3*
+           (981120*1j*C3*eta*Sqrt((k - kmin)*kmin) - 366912*C4*k*Sqrt((k - kmin)*kmin) - 
+             53760*C3*eta**2*k*Sqrt((k - kmin)*kmin) + 727440*1j*C4*eta*k**2*Sqrt((k - kmin)*kmin) + 
+             140640*C4*eta**2*k**3*Sqrt((k - kmin)*kmin)))/(2.8224e6*eta**2*k**2) + 
+        (alpha**2*kmin**2*(1128960*C3*Sqrt((k - kmin)*kmin) - 450240*1j*C3*eta*k*Sqrt((k - kmin)*kmin) + 
+             1077216*C4*k**2*Sqrt((k - kmin)*kmin) + 116480*C3*eta**2*k**2*Sqrt((k - kmin)*kmin) - 
+             369880*1j*C4*eta*k**3*Sqrt((k - kmin)*kmin) - 15120*C4*eta**2*k**4*Sqrt((k - kmin)*kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*kmin*
+           (-846720*C3*k*Sqrt((k - kmin)*kmin) + 1426320*1j*C3*eta*k**2*Sqrt((k - kmin)*kmin) - 
+             346920*C4*k**3*Sqrt((k - kmin)*kmin) + 280000*C3*eta**2*k**3*Sqrt((k - kmin)*kmin) - 
+             193550*1j*C4*eta*k**4*Sqrt((k - kmin)*kmin) - 18900*C4*eta**2*k**5*Sqrt((k - kmin)*kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*kmin**5.5*
+           (-474880*1j*C4*eta*Sqrt(k + kmin) + 38400*C4*eta**2*k*Sqrt(k + kmin)))/(2.8224e6*eta**2*k**2) + 
+        (alpha**2*kmin**4.5*(-677376*C4*Sqrt(k + kmin) - 107520*C3*eta**2*Sqrt(k + kmin) - 
+             327040*1j*C4*eta*k*Sqrt(k + kmin) + 65280*C4*eta**2*k**2*Sqrt(k + kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*kmin**3.5*
+           (-712320*1j*C3*eta*Sqrt(k + kmin) - 366912*C4*k*Sqrt(k + kmin) + 
+             53760*C3*eta**2*k*Sqrt(k + kmin) - 895440*1j*C4*eta*k**2*Sqrt(k + kmin) - 
+             140640*C4*eta**2*k**3*Sqrt(k + kmin)))/(2.8224e6*eta**2*k**2) + 
+        (alpha**2*kmin**2.5*(-1128960*C3*Sqrt(k + kmin) - 584640*1j*C3*eta*k*Sqrt(k + kmin) - 
+             1077216*C4*k**2*Sqrt(k + kmin) + 116480*C3*eta**2*k**2*Sqrt(k + kmin) + 
+             5320*1j*C4*eta*k**3*Sqrt(k + kmin) - 15120*C4*eta**2*k**4*Sqrt(k + kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*kmin**1.5*
+           (-846720*C3*k*Sqrt(k + kmin) - 1795920*1j*C3*eta*k**2*Sqrt(k + kmin) - 
+             346920*C4*k**3*Sqrt(k + kmin) - 280000*C3*eta**2*k**3*Sqrt(k + kmin) + 
+             262150*1j*C4*eta*k**4*Sqrt(k + kmin) + 18900*C4*eta**2*k**5*Sqrt(k + kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*Sqrt(kmin)*
+           (-3245760*C3*k**2*Sqrt(k + kmin) - 424200*1j*C3*eta*k**3*Sqrt(k + kmin) + 
+             520380*C4*k**4*Sqrt(k + kmin) - 117600*C3*eta**2*k**4*Sqrt(k + kmin) - 
+             393225*1j*C4*eta*k**5*Sqrt(k + kmin) - 28350*C4*eta**2*k**6*Sqrt(k + kmin)))/
+         (2.8224e6*eta**2*k**2) + (alpha**2*
+           (-3245760*C3*k**2*Sqrt(kmax*(-k + kmax)) + 424200*1j*C3*eta*k**3*Sqrt(kmax*(-k + kmax)) + 
+             520380*C4*k**4*Sqrt(kmax*(-k + kmax)) - 117600*C3*eta**2*k**4*Sqrt(kmax*(-k + kmax)) + 
+             393225*1j*C4*eta*k**5*Sqrt(kmax*(-k + kmax)) - 28350*C4*eta**2*k**6*Sqrt(kmax*(-k + kmax)) + 
+             846720*C3*k*kmax*Sqrt(kmax*(-k + kmax)) - 
+             1795920*1j*C3*eta*k**2*kmax*Sqrt(kmax*(-k + kmax)) + 
+             346920*C4*k**3*kmax*Sqrt(kmax*(-k + kmax)) + 
+             280000*C3*eta**2*k**3*kmax*Sqrt(kmax*(-k + kmax)) + 
+             262150*1j*C4*eta*k**4*kmax*Sqrt(kmax*(-k + kmax)) - 
+             18900*C4*eta**2*k**5*kmax*Sqrt(kmax*(-k + kmax)) - 1128960*C3*kmax**2*Sqrt(kmax*(-k + kmax)) + 
+             584640*1j*C3*eta*k*kmax**2*Sqrt(kmax*(-k + kmax)) - 
+             1077216*C4*k**2*kmax**2*Sqrt(kmax*(-k + kmax)) + 
+             116480*C3*eta**2*k**2*kmax**2*Sqrt(kmax*(-k + kmax)) - 
+             5320*1j*C4*eta*k**3*kmax**2*Sqrt(kmax*(-k + kmax)) - 
+             15120*C4*eta**2*k**4*kmax**2*Sqrt(kmax*(-k + kmax)) - 
+             712320*1j*C3*eta*kmax**3*Sqrt(kmax*(-k + kmax)) + 
+             366912*C4*k*kmax**3*Sqrt(kmax*(-k + kmax)) - 
+             53760*C3*eta**2*k*kmax**3*Sqrt(kmax*(-k + kmax)) - 
+             895440*1j*C4*eta*k**2*kmax**3*Sqrt(kmax*(-k + kmax)) + 
+             140640*C4*eta**2*k**3*kmax**3*Sqrt(kmax*(-k + kmax)) - 
+             677376*C4*kmax**4*Sqrt(kmax*(-k + kmax)) - 107520*C3*eta**2*kmax**4*Sqrt(kmax*(-k + kmax)) + 
+             327040*1j*C4*eta*k*kmax**4*Sqrt(kmax*(-k + kmax)) + 
+             65280*C4*eta**2*k**2*kmax**4*Sqrt(kmax*(-k + kmax)) - 
+             474880*1j*C4*eta*kmax**5*Sqrt(kmax*(-k + kmax)) - 
+             38400*C4*eta**2*k*kmax**5*Sqrt(kmax*(-k + kmax)) - 
+             76800*C4*eta**2*kmax**6*Sqrt(kmax*(-k + kmax)) + 3245760*C3*k**2*Sqrt(kmax*(k + kmax)) + 
+             424200*1j*C3*eta*k**3*Sqrt(kmax*(k + kmax)) - 520380*C4*k**4*Sqrt(kmax*(k + kmax)) + 
+             117600*C3*eta**2*k**4*Sqrt(kmax*(k + kmax)) + 393225*1j*C4*eta*k**5*Sqrt(kmax*(k + kmax)) + 
+             28350*C4*eta**2*k**6*Sqrt(kmax*(k + kmax)) + 846720*C3*k*kmax*Sqrt(kmax*(k + kmax)) + 
+             1795920*1j*C3*eta*k**2*kmax*Sqrt(kmax*(k + kmax)) + 
+             346920*C4*k**3*kmax*Sqrt(kmax*(k + kmax)) + 280000*C3*eta**2*k**3*kmax*Sqrt(kmax*(k + kmax)) - 
+             262150*1j*C4*eta*k**4*kmax*Sqrt(kmax*(k + kmax)) - 
+             18900*C4*eta**2*k**5*kmax*Sqrt(kmax*(k + kmax)) + 1128960*C3*kmax**2*Sqrt(kmax*(k + kmax)) + 
+             584640*1j*C3*eta*k*kmax**2*Sqrt(kmax*(k + kmax)) + 
+             1077216*C4*k**2*kmax**2*Sqrt(kmax*(k + kmax)) - 
+             116480*C3*eta**2*k**2*kmax**2*Sqrt(kmax*(k + kmax)) - 
+             5320*1j*C4*eta*k**3*kmax**2*Sqrt(kmax*(k + kmax)) + 
+             15120*C4*eta**2*k**4*kmax**2*Sqrt(kmax*(k + kmax)) + 
+             712320*1j*C3*eta*kmax**3*Sqrt(kmax*(k + kmax)) + 366912*C4*k*kmax**3*Sqrt(kmax*(k + kmax)) - 
+             53760*C3*eta**2*k*kmax**3*Sqrt(kmax*(k + kmax)) + 
+             895440*1j*C4*eta*k**2*kmax**3*Sqrt(kmax*(k + kmax)) + 
+             140640*C4*eta**2*k**3*kmax**3*Sqrt(kmax*(k + kmax)) + 
+             677376*C4*kmax**4*Sqrt(kmax*(k + kmax)) + 107520*C3*eta**2*kmax**4*Sqrt(kmax*(k + kmax)) + 
+             327040*1j*C4*eta*k*kmax**4*Sqrt(kmax*(k + kmax)) - 
+             65280*C4*eta**2*k**2*kmax**4*Sqrt(kmax*(k + kmax)) + 
+             474880*1j*C4*eta*kmax**5*Sqrt(kmax*(k + kmax)) - 
+             38400*C4*eta**2*k*kmax**5*Sqrt(kmax*(k + kmax)) + 
+             76800*C4*eta**2*kmax**6*Sqrt(kmax*(k + kmax)) + 3245760*C3*k**2*Sqrt((k - kmin)*kmin) - 
+             1516200*1j*C3*eta*k**3*Sqrt((k - kmin)*kmin) - 520380*C4*k**4*Sqrt((k - kmin)*kmin) - 
+             117600*C3*eta**2*k**4*Sqrt((k - kmin)*kmin) - 290325*1j*C4*eta*k**5*Sqrt((k - kmin)*kmin) - 
+             28350*C4*eta**2*k**6*Sqrt((k - kmin)*kmin) - 1764000*C3*k**3*Pi - 220500*1j*C3*eta*k**4*Pi - 
+             260190*C4*k**5*Pi - 58800*C3*eta**2*k**5*Pi - 145162.5*1j*C4*eta*k**6*Pi - 
+             14175*C4*eta**2*k**7*Pi + 3528000*C3*k**3*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             441000*1j*C3*eta*k**4*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             520380*C4*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             117600*C3*eta**2*k**5*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             290325*1j*C4*eta*k**6*ArcTan(Sqrt(kmin/(k - kmin))) + 
+             28350*C4*eta**2*k**7*ArcTan(Sqrt(kmin/(k - kmin))) - 3528000*C3*k**3*Log(2*Sqrt(k)) - 
+             1499400*1j*C3*eta*k**4*Log(2*Sqrt(k)) - 520380*C4*k**5*Log(2*Sqrt(k)) + 
+             117600*C3*eta**2*k**5*Log(2*Sqrt(k)) - 393225*1j*C4*eta*k**6*Log(2*Sqrt(k)) + 
+             28350*C4*eta**2*k**7*Log(2*Sqrt(k)) + 3528000*C3*k**3*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             1499400*1j*C3*eta*k**4*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             520380*C4*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             117600*C3*eta**2*k**5*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             393225*1j*C4*eta*k**6*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+             28350*C4*eta**2*k**7*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) + 
+             3528000*C3*k**3*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             1499400*1j*C3*eta*k**4*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+             520380*C4*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             117600*C3*eta**2*k**5*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             393225*1j*C4*eta*k**6*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             28350*C4*eta**2*k**7*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) - 
+             3528000*C3*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             1499400*1j*C3*eta*k**4*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) - 
+             520380*C4*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             117600*C3*eta**2*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             393225*1j*C4*eta*k**6*Log(2*(Sqrt(kmin) + Sqrt(k + kmin))) + 
+             28350*C4*eta**2*k**7*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(2.8224e6*eta**2*k**2))
+             
+        return J_B
+     
 
     def J_C(self, k, alpha, beta, C5, eta, kminoverride=None):
         """Solution for J_C"""
