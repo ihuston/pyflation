@@ -1106,13 +1106,14 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         #Get source terms and multiply by ramp
         tanharg =  t-self.tstart[kix] - self.rampargs["b"]
-        if N.abs(tanharg) < self.rampargs["e"]:
-            ramp = (N.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
-            src = ramp*self.source[tix][kix]
-        else:
-            src = self.source[tix][kix]
-            
+        ramp = (N.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+        #Get source from file
+        src = self.source[tix][kix]
         
+        #When absolute value of tanharg is less than e then multiply source by ramp for those values.
+        src[abs(tanharg)<self.rampargs["e"]] = ramp*src
+        
+        #Split source into real and imaginary parts.
         srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
@@ -1877,9 +1878,10 @@ class ThirdStageModel(MultiStageModel):
             self.soclass = soclass
         self.somodel = None
         
-    def runso(self):
+    def runso(self, soclassargs=None):
         """Run second order model."""
-        kwargs = {
+        
+        sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
         "tend": self.tend,
@@ -1892,7 +1894,11 @@ class ThirdStageModel(MultiStageModel):
         "pot_params": self.pot_params,
         "cq": self.cq}
         
-        self.somodel = self.soclass(**kwargs)
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            sokwargs.update(soclassargs)
+        
+        self.somodel = self.soclass(**sokwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
         #Set second stage and source terms for somodel
         self.somodel.source = self.source
@@ -1909,10 +1915,10 @@ class ThirdStageModel(MultiStageModel):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, soclassargs=None):
         """Run simulation and save results."""
         #Run second order model
-        self.runso()
+        self.runso(soclassargs=soclassargs)
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
