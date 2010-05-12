@@ -31,6 +31,7 @@ fx = fixtures["msqphisq_withV0"]
 # SOME OTHER CHANGEABLE VALUES
 ##############################
 BASEDIR = "/home/ith/numerics/"
+CODEDIR = BASEDIR + "code/"
 RESULTSDIR = BASEDIR + "results/" + time.strftime("%Y%m%d") + "/"
 LOGDIR = BASEDIR + "applogs/"
 LOGLEVEL = logging.INFO #Change to desired logging level

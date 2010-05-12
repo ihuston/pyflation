@@ -10,8 +10,8 @@ import time
 import sys
 from helpers import ensurepath
 
-templatefile = "/home/ith/numerics/fullsubs/full-template.sh"
-filestub = "/home/ith/numerics/fullsubs/full-"
+templatefile = os.path.join(hconfig.CODEDIR, "full-template.sh")
+filestub = os.path.join(hconfig.BASEDIR, "qsubscripts/full-")
 
 sublist = [ {"kinit": 0.5e-61, "deltak": 1e-61, "numsoks": 1025},
             {"kinit": 1.5e-61, "deltak": 3e-61, "numsoks": 1025},
