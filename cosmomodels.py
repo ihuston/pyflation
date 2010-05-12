@@ -1032,6 +1032,116 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         
         return dydx
         
+class CanonicalRampedSecondOrder(PhiModels):
+    """Second order model using efold as time variable.
+       y[0] - \delta\varphi_2 : Second order perturbation [Real Part]
+       y[1] - \delta\varphi_2^\prime : Derivative of second order perturbation [Real Part]
+       y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
+       y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
+       """
+    #Text for graphs
+    plottitle = "Complex Second Order Malik Model with source term in Efold time"
+    tname = r"$n$"
+    ynames = [r"Real $\delta\varphi_2$",
+                    r"Real $\dot{\delta\varphi_2}$",
+                    r"Imag $\delta\varphi_2$",
+                    r"Imag $\dot{\delta\varphi_2}$"]
+                    
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalRampedSecondOrder, self).__init__(*args, **kwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Let k roam for a start if not given
+        if k is None:
+            self.k = 10**(N.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart = N.array([0.0,0.0,0.0,0.0])   
+            
+        #Ramp arguments in form
+        # Ramp = (tanh(a*(t - t_ic - b) + c))/d if abs(t-t_ic+b) < e
+        if "rampargs" not in kwargs:
+            self.rampargs = {"a": 15.0,
+                        "b": 0.3,
+                        "c": 1,
+                        "d": 2, 
+                        "e": 1}
+        else:
+            self.rampargs = kwargs["rampargs"]
+                    
+    def derivs(self, y, t, **kwargs):
+        """Equation of motion for second order perturbations including source term"""
+        self._log.debug("args: %s", str(kwargs))
+        #If k not given select all
+        if "k" not in kwargs or kwargs["k"] is None:
+            k = self.k
+            kix = N.arange(len(k))
+        else:
+            k = kwargs["k"]
+            kix = kwargs["kix"]
+        
+        if kix is None:
+            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
+        #Need t index to use first order data
+        if kwargs["tix"] is None:
+            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
+        else:
+            tix = kwargs["tix"]
+        #debug logging
+        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        #Get first order results for this time step
+        fovars = self.second_stage.yresult[tix].copy()[:,kix]
+        phi, phidot, H = fovars[0:3]
+        epsilon = self.second_stage.bgepsilon[tix]
+        
+        #Get source terms and multiply by ramp
+        tanharg =  t-self.tstart[kix] - self.rampargs["b"]
+        ramp = (N.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+        #Get source from file
+        src = self.source[tix][kix]
+        
+        #When absolute value of tanharg is less than e then multiply source by ramp for those values.
+        src[abs(tanharg)<self.rampargs["e"]] = ramp*src
+        
+        #Split source into real and imaginary parts.
+        srcreal, srcimag = src.real, src.imag
+        #get potential from function
+        U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is N.ndarray or type(k) is list: 
+            dydx = N.zeros((4,len(k)))
+        else:
+            dydx = N.zeros(4)
+            
+        #Get a
+        a = self.ainit*N.exp(t)
+        #Real parts
+        #d\deltaphi_2/dn = y[1]
+        dydx[0] = y[1]
+        
+        #d\deltaphi_2^prime/dn  #
+        dydx[1] = (-(3 - epsilon)*y[1] - ((k/(a*H))**2)*y[0]
+                    -(d2U/H**2 - 3*(phidot**2))*y[0] - srcreal)
+                
+        #Complex \deltaphi_2
+        dydx[2] = y[3]
+        
+        #Complex derivative
+        dydx[3] = (-(3 - epsilon)*y[3] - ((k/(a*H))**2)*y[2]
+                    -(d2U/H**2 - 3*(phidot**2))*y[2] - srcimag)
+        
+        return dydx
         
 class MultiStageModel(CosmologicalModel):
     """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
@@ -1768,9 +1878,10 @@ class ThirdStageModel(MultiStageModel):
             self.soclass = soclass
         self.somodel = None
         
-    def runso(self):
+    def runso(self, soclassargs=None):
         """Run second order model."""
-        kwargs = {
+        
+        sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
         "tend": self.tend,
@@ -1783,7 +1894,11 @@ class ThirdStageModel(MultiStageModel):
         "pot_params": self.pot_params,
         "cq": self.cq}
         
-        self.somodel = self.soclass(**kwargs)
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            sokwargs.update(soclassargs)
+        
+        self.somodel = self.soclass(**sokwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
         #Set second stage and source terms for somodel
         self.somodel.source = self.source
@@ -1800,10 +1915,10 @@ class ThirdStageModel(MultiStageModel):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, soclassargs=None):
         """Run simulation and save results."""
         #Run second order model
-        self.runso()
+        self.runso(soclassargs=soclassargs)
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list

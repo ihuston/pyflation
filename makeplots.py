@@ -11,6 +11,7 @@ import sohelpers
 import tables
 import os.path
 import cPickle
+from solutions import fixtures, analyticsolution, calcedsolution
 #
 
 
@@ -175,7 +176,7 @@ def src_onek(fname="src_onek", size="large", fo=None, kix=17):
     set_size(fig, size)
     #Plot graph
     kstart = int(fo.fotstart[kix]/fo.tstep_wanted)
-    P.semilogy(fo.tresult[-1] - fo.tresult[kstart:], abs(fo.source[kstart:,kix]))
+    P.semilogy(fo.tresult[-1] - fo.tresult[kstart:], np.abs(fo.source[kstart:,kix]))
     cg.reversexaxis()
     P.xlabel(calN)
     P.ylabel(r"$|S|$")
@@ -242,11 +243,11 @@ def src_kwmap_3ranges(fname="src-kwmap-3ranges", size="small", m=cmbmsq, fo=foms
     set_size(fig, size)
     
     #Setup vars
-    s1=abs(fo.source[::2,52])
+    s1=np.abs(fo.source[::2,52])
     fo2=c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-msqphisq-1.5e-61-6.153e-58-3e-61-195554.hf5")
     fo3=c.make_wrapper_model("./foandsrc-FOCanonicalTwoStage-msqphisq-2.5e-61-2.0505e-57-1e-60-195554.hf5")
-    s2=abs(fo2.source[::2,17])
-    s3=abs(fo3.source[::2,5])
+    s2=np.abs(fo2.source[::2,17])
+    s3=np.abs(fo3.source[::2,5])
 
     tr = m.tresult[-1] - m.tresult[865:]
     P.semilogy(tr, s3[865:])
@@ -712,8 +713,8 @@ def src_3ns(fname="src_3ns", size="large"):
     fig = P.figure()
     set_size(fig, size)
     ax = fig.gca()
-    P.loglog(fomsq.k, abs(fomsq.source[2354,:]), color="green")
-    P.loglog(fomsq.k, abs(fomsq.source[3000,:]), ls="--", color="r")
+    P.loglog(fomsq.k, np.abs(fomsq.source[2354,:]), color="green")
+    P.loglog(fomsq.k, np.abs(fomsq.source[3000,:]), ls="--", color="r")
     
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
     
@@ -733,7 +734,7 @@ def cmp_src_allks(fname="cmp_src_allks", size="large", nefolds=5, models=None, m
     for m, mleg in zip(models, models_legends):
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
-        P.loglog(m.k, abs(m.source[tix,:]), label=mleg)
+        P.loglog(m.k, np.abs(m.source[tix,:]), label=mleg)
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(r"$|S|$")
     ax = fig.gca()
@@ -773,7 +774,7 @@ def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, m
         tix = int(kcrossend + nefolds/m.tstep_wanted)
         m.runcount = 1
         dp2 = m.yresult[tix,7,:] + m.yresult[tix,9,:]*1j
-        scdp = m.k**1.5/(np.sqrt(2)*np.pi) * abs(dp2) / (m.yresult[tix,1,:]**2)
+        scdp = m.k**1.5/(np.sqrt(2)*np.pi) * np.abs(dp2) / (m.yresult[tix,1,:]**2)
         P.loglog(m.k, scdp, label=mleg)
     P.xlabel(r"$k$")
     P.ylabel(r"$\mathcal{P}^2_\mathcal{R}$")
@@ -823,7 +824,7 @@ def errors_analytic(fname="errors_aterm", size="large", termix=0, Kix=0):
     term_legends = [r"$I_{\mathcal{A}}(k) / M_{\mathrm{PL}}^2$", r"$|I_{\mathcal{B}}(k)|$", 
                     r"$|I_{\widetilde{\mathcal{C}}}(k)|$", r"$|I_{\widetilde{\mathcal{D}}}(k)|$"]
     err = results[Kix]
-    P.semilogx(err.k, abs(err.postconv["analytic"][termix]), label=K_legends[Kix])
+    P.semilogx(err.k, np.abs(err.postconv["analytic"][termix]), label=K_legends[Kix])
     ax = fig.gca()
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(term_legends[termix])
@@ -846,7 +847,7 @@ def errors_general(fname="errors_general", size="large", fixture_ixs=None, fx_la
     set_size(fig, size)
     errors = results[fixture_ixs]
     for eix, err in enumerate(errors):
-        P.loglog(err.k, abs(err.postconv["rel_err"]), label=fx_labels[eix])
+        P.loglog(err.k, np.abs(err.postconv["rel_err"]), label=fx_labels[eix])
     ax = fig.gca()
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
     P.ylabel(r"$\epsilon_\mathrm{rel}$")
@@ -892,7 +893,7 @@ def errors_nthetas(fname="errors_general", size="large"):
     set_size(fig, size)
     labels = [r"$N_\theta = " + str(t) + "$" for t in [129,257,513]]
     for eix, err in enumerate(results):
-        P.loglog(err.k, abs(err.postconv["rel_err"][0]), label=labels[eix])
+        P.loglog(err.k, np.abs(err.postconv["rel_err"][0]), label=labels[eix])
     ax = fig.gca()
     ax.set_xlim((1e-61, 2e-57))
     P.xlabel(r"$k / M_{\mathrm{PL}}$")
@@ -962,3 +963,105 @@ def eta_slowroll(fname="eta_slowroll", size="large", models=None, legends=None, 
     
     P.draw()    
     return fig, fname    
+
+def analytic_v_calced_prehorizon(fname="analytic_v_calced_prehorizon", size="large"):
+    fig = P.figure()
+    set_size(fig, size)
+    try:
+        cfile = open("/home/network/ith/results/analysis/newmass/csrc-beforehorizon.dat", "r")
+        afile = open("/home/network/ith/results/analysis/newmass/asrc-beforehorizon.dat", "r")
+        tfile = open("/home/network/ith/results/analysis/newmass/tres-beforehorizon.dat", "r")
+        csrc = np.load(cfile)
+        asrc = np.load(afile)
+        tres = np.load(tfile)
+    finally:
+        cfile.close()
+        afile.close()
+        tfile.close()
+    
+    P.semilogy(tres[:250], np.abs(csrc[:250]), label="Calculated Solution")
+    P.semilogy(tres[:250], np.abs(asrc[:250]), label="Analytic Solution")
+    cg.reversexaxis()
+    P.xlabel(r"$\mathcal{N}_\mathrm{end} - \mathcal{N}$")
+    P.ylabel(r"$|S(k_\mathrm{WMAP})|$")
+    ax = P.gca()
+    ax.legend(prop=prop, loc=0)
+    
+    P.draw()
+    return fig, fname
+
+def analytic_v_calced_prehorizon_errors(fname="analytic_v_calced_prehorizon", size="large"):
+    fig = P.figure()
+    set_size(fig, size)
+    try:
+        cfile = open("/home/network/ith/results/analysis/newmass/csrc-beforehorizon.dat", "r")
+        afile = open("/home/network/ith/results/analysis/newmass/asrc-beforehorizon.dat", "r")
+        tfile = open("/home/network/ith/results/analysis/newmass/tres-beforehorizon.dat", "r")
+        csrc = np.load(cfile)
+        asrc = np.load(afile)
+        tres = np.load(tfile)
+    finally:
+        cfile.close()
+        afile.close()
+        tfile.close()
+    
+    err = np.abs(csrc[:250]-asrc[:250])/np.abs(asrc[:250])
+    
+    P.semilogy(tres[:250], err)
+    
+    cg.reversexaxis()
+    P.xlabel(r"$\mathcal{N}_\mathrm{end} - \mathcal{N}$")
+    P.ylabel(r"$\epsilon_\mathrm{rel}$")
+    ax = P.gca()
+    ax.legend(prop=prop, loc=0)
+    
+    P.draw()
+    return fig, fname
+    
+def analytic_v_calced_onetstep(fname="analytic_v_calced_onetstep", size="large", nix=1000):
+    fig = P.figure()
+    set_size(fig, size)
+    m = c.make_wrapper_model("/home/network/ith/results/analysis/newmass/cmb-msqphisq-1.5e-61-3.0735e-58-3e-61.hf5")
+    fx = fixtures.fixture_from_model(m)
+    asol = analyticsolution.NoPhaseWithEtaSolution(fx)
+    csol = calcedsolution.NoPhaseWithEtaCalced(fx)
+    
+    asol.k = np.float128(asol.k)
+    
+    asrc = asol.full_source_from_model(m, nix)
+    csrc = csol.full_source_from_model(m, nix)
+    
+    P.semilogx(csol.k, np.abs(csrc), label="Calculated Solution")
+    P.semilogx(asol.k, np.abs(asrc), label="Analytic Solution")
+    
+    P.xlabel(r"$k$")
+    P.ylabel(r"$|S(k_\mathrm{WMAP})|$")
+    ax = P.gca()
+    ax.legend(prop=prop, loc=0)
+    
+    P.draw()
+    
+    return fig, fname
+
+def analytic_v_calced_onetstep_error(fname="analytic_v_calced_onetstep", size="large", nix=1000):
+    fig = P.figure()
+    set_size(fig, size)
+    m = c.make_wrapper_model("/home/network/ith/results/analysis/newmass/cmb-msqphisq-1.5e-61-3.0735e-58-3e-61.hf5")
+    fx = fixtures.fixture_from_model(m)
+    asol = analyticsolution.NoPhaseWithEtaSolution(fx)
+    csol = calcedsolution.NoPhaseWithEtaCalced(fx)
+    
+    asol.k = np.float128(asol.k)
+    
+    asrc = asol.full_source_from_model(m, nix)
+    csrc = csol.full_source_from_model(m, nix)
+    
+    err = np.abs(asrc-csrc)/np.abs(asrc)
+    
+    P.loglog(csol.k, err)
+    
+    P.xlabel(r"$k$")
+    P.ylabel(r"$\epsilon_\mathrm{rel}$")
+    ax = P.gca()
+    P.draw()
+    return fig, fname
