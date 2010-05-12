@@ -964,6 +964,30 @@ def eta_slowroll(fname="eta_slowroll", size="large", models=None, legends=None, 
     P.draw()    
     return fig, fname    
 
+def cos_keta_kwmap(fname="cos_keta_kwmap", size="large", zoom=False, models=None, legends=None, kix=None):
+    if models is None:
+        models, legends = get_fo_models()
+        kix = 17
+    fig = P.figure()
+    set_size(fig, size)
+    lines = []
+    for m,l in zip(models,legends):
+        ts = helpers.find_nearest_ix(m.tresult, m.fotstart[kix])
+        te = len(m.tresult)-1
+        eta = 1/(m.ainit*np.exp(m.tresult[ts:te])*m.yresult[ts:te,2,kix]*(1-m.bgepsilon[ts:te]))
+        lines.append(P.plot(m.tresult[ts:te]-m.tresult[ts], np.cos(-m.k[kix]*eta), label=l))
+    P.xlabel(r"$\mathcal{N}-\mathcal{N}_\mathrm{~init}$")
+    P.ylabel(r"$\cos(-k\eta)$")
+    ax = fig.gca()
+    ax.legend(prop=prop, loc=0)
+    if zoom:
+        ax.set_xlim((0.5, 1.0))
+        ax.set_ylim((-1.1, 1.1))
+    else:
+        ax.set_xlim((-3, 67))
+#        ax.set_ylim((-0.05, 1.05))
+    P.draw()    
+    return fig, fname       
 def analytic_v_calced_prehorizon(fname="analytic_v_calced_prehorizon", size="large"):
     fig = P.figure()
     set_size(fig, size)
@@ -986,7 +1010,6 @@ def analytic_v_calced_prehorizon(fname="analytic_v_calced_prehorizon", size="lar
     P.ylabel(r"$|S(k_\mathrm{WMAP})|$")
     ax = P.gca()
     ax.legend(prop=prop, loc=0)
-    
     P.draw()
     return fig, fname
 
@@ -1014,7 +1037,6 @@ def analytic_v_calced_prehorizon_errors(fname="analytic_v_calced_prehorizon", si
     P.ylabel(r"$\epsilon_\mathrm{rel}$")
     ax = P.gca()
     ax.legend(prop=prop, loc=0)
-    
     P.draw()
     return fig, fname
     
@@ -1038,10 +1060,9 @@ def analytic_v_calced_onetstep(fname="analytic_v_calced_onetstep", size="large",
     P.ylabel(r"$|S(k_\mathrm{WMAP})|$")
     ax = P.gca()
     ax.legend(prop=prop, loc=0)
-    
     P.draw()
-    
     return fig, fname
+    
 
 def analytic_v_calced_onetstep_error(fname="analytic_v_calced_onetstep", size="large", nix=1000):
     fig = P.figure()
