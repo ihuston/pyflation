@@ -32,7 +32,7 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
 
 ##############################
 # CHOOSE FIXTURE HERE
-fx = fixtures["msqphisq_withV0"]
+fx = fixtures["msqphisq"]
 ##############################
 
 ##############################
