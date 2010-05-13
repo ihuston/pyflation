@@ -31,7 +31,7 @@ fx = fixtures["msqphisq_withV0"]
 ##############################
 # SOME OTHER CHANGEABLE VALUES
 ##############################
-BASEDIR = os.path.join(os.path.expanduser("$HOME"), "numerics")
+BASEDIR = os.path.join(os.path.expandvars("$HOME"), "numerics")
 if not os.path.isdir(BASEDIR):
     raise IOError("Base directory %s does not exist" % BASEDIR)
 
