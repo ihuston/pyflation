@@ -35,7 +35,8 @@ BASEDIR = os.path.join(os.path.expanduser("$HOME"), "numerics")
 if not os.path.isdir(BASEDIR):
     raise IOError("Base directory %s does not exist" % BASEDIR)
 
-CODEDIR = os.path.join(BASEDIR, "code")
+BZRBRANCH = "trunk" #Change to branch name to execute code from 
+CODEDIR = os.path.join(BASEDIR, "code", BZRBRANCH)
 RESULTSDIR = os.path.join(BASEDIR, "results", time.strftime("%Y%m%d"))
 LOGDIR = os.path.join(BASEDIR, "applogs")
 LOGLEVEL = logging.INFO #Change to desired logging level
