@@ -8,6 +8,13 @@ import time
 import cosmomodels as c
 import os.path
 
+######################################
+#IMPORTANT
+#CHANGE TO BRANCH YOU WANT TO RUN FROM
+######################################
+BZRBRANCH = "trunk" 
+######################################
+
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
@@ -31,11 +38,11 @@ fx = fixtures["msqphisq_withV0"]
 ##############################
 # SOME OTHER CHANGEABLE VALUES
 ##############################
-BASEDIR = os.path.join(os.path.expandvars("$HOME"), "numerics")
+BASEDIR = os.path.join(os.path.expandvars("$HOME"), "pyflation")
 if not os.path.isdir(BASEDIR):
     raise IOError("Base directory %s does not exist" % BASEDIR)
 
-BZRBRANCH = "trunk" #Change to branch name to execute code from 
+ 
 CODEDIR = os.path.join(BASEDIR, "code", BZRBRANCH)
 RESULTSDIR = os.path.join(BASEDIR, "results", time.strftime("%Y%m%d"))
 LOGDIR = os.path.join(BASEDIR, "applogs")
