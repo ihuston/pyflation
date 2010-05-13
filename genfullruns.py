@@ -57,5 +57,5 @@ if __name__ == "__main__":
     if os.path.isfile(templatefile):
         genfullscripts(templatefile)
     else:
-        print "No template file found!"
+        print("No template file found at %s!" %templatefile)
         sys.exit(1)
