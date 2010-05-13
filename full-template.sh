@@ -4,8 +4,7 @@
 #$ -N full-%(kinit)s-%(deltak)s
 #$ -o %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.out
 #$ -e %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.err
-#$ -v PATH
-#$ -v PYTHONPATH
+#$ -v PATH, PYTHONPATH, LD_LIBRARY_PATH
 #$ -S /bin/bash
 
 #Change first order file here
