@@ -11,7 +11,7 @@ import sys
 from helpers import ensurepath
 
 templatefile = os.path.join(hconfig.CODEDIR, "full-template.sh")
-filestub = os.path.join(hconfig.BASEDIR, "qsubscripts/full-")
+
 
 sublist = [ {"kinit": 0.5e-61, "deltak": 1e-61, "numsoks": 1025},
             {"kinit": 1.5e-61, "deltak": 3e-61, "numsoks": 1025},
@@ -26,16 +26,25 @@ def genfullscripts(tfilename):
     try:
         text = f.read()
         for d in sublist:
+            #Put k values in dictionary
             kinit, deltak = d["kinit"], d["deltak"]
             kend = harness.checkkend(kinit, None, deltak, numsoks)
             d["kend"] = kend
-            nf = open(filestub + str(kinit) + "-" + str(deltak) + ".sh", "w")
-            info = hconfig.foclass.__name__ + "-" + hconfig.POT_FUNC + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S")
+            
+            #Set script filename and ensure directory exists
+            qsubfilename = os.path.join(hconfig.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
+            ensurepath(qsubfilename) 
+            nf = open(qsubfilename, "w")
+            
+            #Put together info for filenames
+            info = "-".join([hconfig.foclass.__name__, hconfig.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
             filename = os.path.join(hconfig.RESULTSDIR , "fo-" + info + ".hf5")
             srcdir = os.path.join(hconfig.RESULTSDIR, "src-" + info, "")
             ensurepath(filename)
             ensurepath(srcdir)
             d["fofile"] = filename
+            d["codedir"] = hconfig.CODEDIR
+            d["qsublogsdir"] = hconfig.QSUBLOGSDIR
             try:
                 nf.write(text%d)
             finally:

@@ -2,8 +2,8 @@
 #$ -pe orte 7
 #$ -l h_rt=03:00:00
 #$ -N full-%(kinit)s-%(deltak)s
-#$ -o /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.out
-#$ -e /home/ith/numerics/qsublogs/full-%(kinit)s-%(deltak)s.err
+#$ -o %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.out
+#$ -e %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.err
 #$ -v PATH
 #$ -v PYTHONPATH
 #$ -S /bin/bash
@@ -13,6 +13,7 @@ FOFILE=%(fofile)s
 KINIT=%(kinit)s
 DELTAK=%(deltak)s
 KEND=%(kend)s
+CODEDIR=%(codedir)s
 
 echo -----------------------------------------
 echo Start: host `hostname`, date `date`
@@ -21,7 +22,8 @@ declare -i TOTNUMPROCS
 TOTNUMPROCS=4*$NSLOTS
 echo TOTNUMPROCS: $TOTNUMPROCS
 
-cd /home/ith/numerics
+cd $CODEDIR
+echo In directory $CODEDIR
 
 echo Starting first order run:
 mpirun -np 1 python harness.py -f $FOFILE -m --kinit $KINIT --deltak $DELTAK --kend $KEND
