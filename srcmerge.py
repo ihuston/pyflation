@@ -6,7 +6,7 @@ import numpy as np
 import os
 import logging
 import logging.handlers
-from hconfig import *
+from configuration import *
 import time
 import re
 
