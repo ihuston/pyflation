@@ -38,17 +38,29 @@ fx = fixtures["msqphisq"]
 ##############################
 # SOME OTHER CHANGEABLE VALUES
 ##############################
-BASEDIR = os.path.join(os.path.expandvars("$HOME"), "pyflation")
+# Directory structure
+
+# Name of base directory which everything else is below
+BASEDIRNAME = "pyflation"
+
+# Calculate base directory as being below $HOME
+BASEDIR = os.path.join(os.path.expandvars("$HOME"), BASEDIRNAME)
 if not os.path.isdir(BASEDIR):
     raise IOError("Base directory %s does not exist" % BASEDIR)
 
- 
-CODEDIR = os.path.join(BASEDIR, "code", BZRBRANCH)
-RESULTSDIR = os.path.join(BASEDIR, "results", time.strftime("%Y%m%d"))
-LOGDIR = os.path.join(BASEDIR, "applogs")
-LOGLEVEL = logging.INFO #Change to desired logging level
-QSUBSCRIPTSDIR = os.path.join(BASEDIR, "qsubscripts")
-QSUBLOGSDIR = os.path.join(BASEDIR, "qsublogs")
+# The code should live in the the branch under the CODEDIRNAME directory.
+CODEDIRNAME = "code"
+CODEDIR = os.path.join(BASEDIR, CODEDIRNAME, BZRBRANCH)
+
+# Change the names of various directories
+RESULTSDIRNAME = "results"
+LOGDIRNAME = "applogs"
+QSUBSCRIPTSDIRNAME = "qsubscripts"
+QSUBLOGSDIRNAME = "qsublogs"
+
+# The logging level changes how much is saved to logging files. 
+# Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
+LOGLEVEL = logging.INFO 
 
 ##############################
 # IMPORTANT VALUES 
