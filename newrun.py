@@ -11,7 +11,7 @@ import logging
 import sys
 import time
 
-def create_run_directory(newrundir):
+def create_run_directory(newrundir, codedir):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir):
         raise IOError("New run directory already exists!")
@@ -45,7 +45,8 @@ def create_run_directory(newrundir):
         bzr_available = False
         
     if bzr_available:
-        accelerator_tree, source = BzrDir.open_tree_or_branch(configuration.CODEDIR)
+        accelerator_tree, source = BzrDir.open_tree_or_branch(codedir)
+        source.create_checkout(os.path.join(newrundir, configuration.CODEDIRNAME), None, True, accelerator_tree)
     else:
         pass
     
