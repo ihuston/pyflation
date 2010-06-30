@@ -4,6 +4,7 @@ Author: Ian Huston
 """
 import os.path
 import configuration
+import run_config
 import harness
 import time
 import sys
@@ -15,41 +16,54 @@ fotemplatefile = os.path.join(configuration.CODEDIR, "forun-template.sh")
 fulltemplatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
 
         
-def genfullscripts(tfilename):
+def genfullscript(tfilename):
     numsoks = configuration.NUMSOKS
+    #Put k values in dictionary
+    kinit, deltak = d["kinit"], d["deltak"]
+    kend = harness.checkkend(kinit, None, deltak, numsoks)
+    d["kend"] = kend
+    
+    #Set script filename and ensure directory exists
+    qsubfilename = os.path.join(configuration.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
+    ensurepath(qsubfilename) 
+            
+    #Put together info for filenames
+    info = "-".join([configuration.foclass.__name__, configuration.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
+    filename = os.path.join(configuration.RESULTSDIR , "fo-" + info + ".hf5")
+    srcdir = os.path.join(configuration.RESULTSDIR, "src-" + info, "")
+    ensurepath(filename)
+    ensurepath(srcdir)
+    d["fofile"] = filename
+    d["codedir"] = configuration.CODEDIR
+    d["qsublogsdir"] = configuration.QSUBLOGSDIR
+        
+        write_out_template(tfilename, qsubfilename, d)
+    return
+
+def write_out_template(templatefile, newfile, textdict):
+    """Write the textdict dictionary using the templatefile to newfile."""
     try:
         f = open(tfilename, "r")
+        text = f.read()
     except IOError:
         raise
-    try:
-        text = f.read()
-        for d in sublist:
-            #Put k values in dictionary
-            kinit, deltak = d["kinit"], d["deltak"]
-            kend = harness.checkkend(kinit, None, deltak, numsoks)
-            d["kend"] = kend
-            
-            #Set script filename and ensure directory exists
-            qsubfilename = os.path.join(configuration.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
-            ensurepath(qsubfilename) 
-            nf = open(qsubfilename, "w")
-            
-            #Put together info for filenames
-            info = "-".join([configuration.foclass.__name__, configuration.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
-            filename = os.path.join(configuration.RESULTSDIR , "fo-" + info + ".hf5")
-            srcdir = os.path.join(configuration.RESULTSDIR, "src-" + info, "")
-            ensurepath(filename)
-            ensurepath(srcdir)
-            d["fofile"] = filename
-            d["codedir"] = configuration.CODEDIR
-            d["qsublogsdir"] = configuration.QSUBLOGSDIR
-            try:
-                nf.write(text%d)
-            finally:
-                nf.close()
     finally:
         f.close()
-    return
+        
+    #Ensure directory exists for new file
+    try:
+        ensurepath(newfile)
+    except IOError:
+        raise
+    try: 
+        nf = open(newfile, "w")
+        nf.write(text%textdict)
+    except IOError:
+        raise
+    finally:
+        nf.close()
+    
+    
 
 def main():
     """Process command line options, create qsub scripts and start execution."""

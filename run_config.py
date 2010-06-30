@@ -6,7 +6,7 @@ Created on 30 Jun 2010
 '''
 
 import numpy as N
-import os.path
+import cosmomodels as c
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
@@ -31,19 +31,27 @@ fx = fixtures["msqphisq"]
 # IMPORTANT VALUES 
 # DO NOT CHANGE UNLESS SURE
 ##############################
-NUMSOKS =1025  #Should be power of two + 1
+numsoks = 1025  #Should be power of two + 1
 ntheta = 513
 foclass = c.FOCanonicalTwoStage
 cq = 50
 
 ##############################
+# qsub submission values
+#
+##############################
+
+
+##############################
 # DO NOT CHANGE ANYTHING BELOW
 # THIS LINE
 ##############################
-POT_FUNC = fx["potential_func"]
-YSTART = fx["ystart"]
-FOARGS = {"potential_func": POT_FUNC,
-            "ystart": YSTART,
+pot_func = fx["potential_func"]
+ystart = fx["ystart"]
+
+foargs = {"potential_func": pot_func,
+            "ystart": ystart,
             "cq": cq}
-SOARGS = {}
+soargs = {}
+ 
 
