@@ -8,6 +8,8 @@ import harness
 import time
 import sys
 from helpers import ensurepath
+from optparse import OptionParser
+import logging
 
 fotemplatefile = os.path.join(configuration.CODEDIR, "forun-template.sh")
 fulltemplatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
@@ -49,9 +51,34 @@ def genfullscripts(tfilename):
         f.close()
     return
 
-if __name__ == "__main__":
+def main():
+    """Process command line options, create qsub scripts and start execution."""
+    
+    #Parse command line options
+    parser = OptionParser()
+    parser.add_option("-q", "--quiet",
+                  action="store_const", const=logging.FATAL, dest="loglevel", 
+                  help="only print fatal error messages")
+    parser.add_option("-v", "--verbose",
+                  action="store_const", const=logging.INFO, dest="loglevel", 
+                  help="print informative messages")
+    parser.add_option("--debug",
+                  action="store_const", const=logging.DEBUG, dest="loglevel", 
+                  help="print lots of debugging information")
+        
+    (options, args) = parser.parse_args()
+    
+    # Start logging
+    logging.basicConfig(level=options.loglevel)
+    
     if os.path.isfile(templatefile):
         genfullscripts(templatefile)
     else:
         print("No template file found at %s!" %templatefile)
         sys.exit(1)
+        
+
+if __name__ == "__main__":
+    main()
+    
+    

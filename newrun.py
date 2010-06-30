@@ -65,6 +65,9 @@ def main():
     
     #Parse command line options
     parser = OptionParser()
+    
+    parser.set_defaults(loglevel=configuration.LOGLEVEL)
+    
     parser.add_option("-n", "--newdir", dest="newdir",
                   help="create run directory in NEWDIR", metavar="NEWDIR")
     parser.add_option("-c", "--codedir", dest="codedir",
@@ -95,7 +98,7 @@ def main():
         codedir = options.codedir
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
-        codedir = os.path.join(configuration.BZRCODEDIR)
+        codedir = os.path.join(configuration.CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:

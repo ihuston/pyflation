@@ -48,33 +48,12 @@ import getopt
 import sohelpers
 import os
 import configuration
+import run_config
 import srcmerge 
-from helpers import ensurepath
+from helpers import ensurepath, startlogging
 
 
-def startlogging(loglevel=configuration.LOGLEVEL):
-    """Start the logging system to store rotational log based on date."""
 
-    harness_logger.setLevel(loglevel)
-    #Get date for logfile
-    date = time.strftime("%Y%m%d")
-    #create file handler and set level to debug
-    fh = logging.handlers.RotatingFileHandler(filename=configuration.LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
-    fh.setLevel(loglevel)
-    #create console handler and set level to error
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
-    #create formatter
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    #add formatter to fh
-    fh.setFormatter(formatter)
-    #add formatter to ch
-    ch.setFormatter(formatter)
-    #add fh to logger
-    harness_logger.addHandler(fh)
-    #add ch to logger
-    harness_logger.addHandler(ch)
-    harness_logger.debug("Logging started at level %d", loglevel)
 
 
 
@@ -126,15 +105,16 @@ def runfomodel(filename=None, foargs=None, foclass=configuration.foclass):
     if foargs is None:
         foargs = {}
     if "k" not in foargs:
-        kinit, kend, deltak, numsoks = configuration.kinit, configuration.kend, configuration.deltak, configuration.NUMSOKS
+        kinit, kend, deltak, numsoks = (run_config.kinit, run_config.kend, 
+                                        run_config.deltak, run_config.NUMSOKS)
         kend = checkkend(kinit, kend, deltak, numsoks)
         foargs["k"] = seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
     if "potential_func" not in foargs:
-        foargs["potential_func"] = configuration.POT_FUNC
+        foargs["potential_func"] = run_config.POT_FUNC
     if "ystart" not in foargs:
-        foargs["ystart"] = configuration.YSTART
+        foargs["ystart"] = run_config.YSTART
     if filename is None:
         kinit, kend, deltak = foargs["k"][0], foargs["k"][-1], foargs["k"][1]-foargs["k"][0]
         filename = configuration.RESULTSDIR + "fo-" + foclass.__name__ + "-" + foargs["potential_func"] + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
@@ -344,7 +324,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("---------------------Starting full run through...--------------------")
-    fofile = runfomodel(foargs=configuration.FOARGS)
+    fofile = runfomodel(foargs=run_config.FOARGS)
     sourcefile = runfullsourceintegration(fofile)
     foandsrcfile = sohelpers.combine_source_and_fofile(sourcefile, fofile)
     sofile = runsomodel(foandsrcfile)
@@ -370,11 +350,12 @@ def main(args):
     kinit = kend = deltak = None
     ninit = 0
     nfinal = -1
-    numsoks = configuration.NUMSOKS
-    ntheta = configuration.ntheta
+    numsoks = run_config.NUMSOKS
+    ntheta = run_config.ntheta
     loglevel = configuration.LOGLEVEL
-    foargs = getattr(configuration, "FOARGS", {})
-    soargs = getattr(configuration, "SOARGS", {})
+    logfile = os.path.join(configuration.LOGDIRNAME)
+    foargs = getattr(run_config, "FOARGS", {})
+    soargs = getattr(run_config, "SOARGS", {})
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             print __doc__
@@ -408,7 +389,7 @@ def main(args):
         elif opt in ("--ntheta",):
             ntheta = int(arg)
     #Start the logging module
-    startlogging(loglevel)
+    startlogging(harness_logger, logfile, loglevel)
     
     if func == "fomodel":
         harness_logger.info("-----------First order run requested------------------")
@@ -419,7 +400,7 @@ def main(args):
             filename = None 
         #start model run
         if not (kinit and deltak):
-            kinit, deltak, kend = configuration.kinit, configuration.deltak, configuration.kend
+            kinit, deltak, kend = run_config.kinit, run_config.deltak, run_config.kend
         if not kend:
             kend = 2*((numsoks-1)*deltak + kinit)
             harness_logger.info("Set kend to %s.", str(kend))
@@ -463,7 +444,7 @@ def main(args):
         sys.exit()
         
 if __name__ == "__main__":
-    harness_logger = logging.getLogger()
+    harness_logger = logging.getLogger(__name__)
     harness_logger.handlers = []
     main(sys.argv[1:])
 else:

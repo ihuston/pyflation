@@ -10,6 +10,7 @@ import re
 from scipy import integrate
 import os 
 import os.path
+import logging
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
@@ -210,3 +211,26 @@ def find_nearest_ix(array,value):
     Find the index of the number in `array` which is nearest to `value`.
     """
     return (np.abs(array-value)).argmin()
+
+def startlogging(log, logfile, loglevel=logging.INFO):
+    """Start the logging system to store rotational file based log."""
+
+    log.setLevel(loglevel)
+    #create file handler and set level to debug
+    fh = logging.handlers.RotatingFileHandler(filename=logfile, maxBytes=2**20, backupCount=50)
+    fh.setLevel(loglevel)
+    #create console handler and set level to error
+    ch = logging.StreamHandler()
+    ch.setLevel(loglevel)
+    #create formatter
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    #add formatter to fh
+    fh.setFormatter(formatter)
+    #add formatter to ch
+    ch.setFormatter(formatter)
+    #add fh to logger
+    log.addHandler(fh)
+    #add ch to logger
+    log.addHandler(ch)
+    log.debug("Logging started at level %d", loglevel)
+    return log
