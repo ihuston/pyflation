@@ -21,7 +21,7 @@ BASEDIRNAME = "pyflation"
 
 # Calculate base directory as being below $HOME
 CODEDIR = os.path.dirname(os.path.abspath(__file__))
-print CODEDIR
+
 if os.path.basename(os.path.dirname(CODEDIR)) == BASEDIRNAME:
     BASEDIR = os.path.dirname(CODEDIR)
 elif os.path.basename(os.path.dirname(os.path.dirname(CODEDIR))) == BASEDIRNAME:
