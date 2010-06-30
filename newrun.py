@@ -87,15 +87,15 @@ def main():
         newdir = options.newdir
         logging.debug("Option newdir specified with value %s.", options.newdir)
     else:
-        newdir = os.path.join(os.getcwd(), time.strftime("%Y%m%d%H%M%S"))
+        newdir = os.path.join(configuration.BASEDIR, 
+                              configuration.RUNDIRNAME, time.strftime("%Y%m%d%H%M%S"))
         logging.debug("Variable newdir created with value %s", newdir)
     
     if options.codedir:
         codedir = options.codedir
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
-        codedir = os.path.join(configuration.BASEDIR, 
-                               configuration.CODEDIRNAME, configuration.BZRBRANCH)
+        codedir = os.path.join(configuration.BZRCODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:

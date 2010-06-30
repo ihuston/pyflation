@@ -50,13 +50,16 @@ if not os.path.isdir(BASEDIR):
 
 # The code should live in the the branch under the CODEDIRNAME directory.
 CODEDIRNAME = "code"
-CODEDIR = os.path.join(BASEDIR, CODEDIRNAME, BZRBRANCH)
+BZRCODEDIR = os.path.join(BASEDIR, CODEDIRNAME, BZRBRANCH)
+
 
 # Change the names of various directories
+RUNDIRNAME = "runs"
 RESULTSDIRNAME = "results"
 LOGDIRNAME = "applogs"
 QSUBSCRIPTSDIRNAME = "qsubscripts"
 QSUBLOGSDIRNAME = "qsublogs"
+
 
 # The logging level changes how much is saved to logging files. 
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
