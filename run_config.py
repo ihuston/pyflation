@@ -9,7 +9,6 @@ import numpy as N
 import cosmomodels as c
 import configuration
 import os.path
-import helpers
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
@@ -64,10 +63,6 @@ ntheta = 513
 foclass = c.FOCanonicalTwoStage
 cq = 50
 
-##############################
-# qsub submission values
-#
-##############################
 
 
 ##############################
@@ -85,8 +80,6 @@ QSUBLOGSDIR = os.path.join(RUNDIR, configuration.QSUBLOGSDIRNAME)
 if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
 
-#Dictionary of values for qsub scripts
-qsubdict = {}
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
@@ -97,4 +90,19 @@ foargs = {"potential_func": pot_func,
             "cq": cq}
 soargs = {}
  
+##############################
+# qsub submission values
+#
+##############################
+runname = configuration.PROGRAM_NAME + "-" + pot_func
+qsublogname = os.path.join(QSUBLOGSDIR, "log-node-$TASK_ID" )
+#Dictionary of values for qsub scripts
+qsubdict = {"timelimit": "3:00:00", # Time needed for each array job
+            "runname": runname, # Name of run in qstat list
+            "qsublogname": qsublogname, #Name of log file for qsub
+            "taskmin": "1", #starting task id number
+            "taskmax": "20", #finishing task id number
+            "hold_jid_list": "", # List of jobs this task depends on 
+            }
+
 

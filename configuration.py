@@ -8,20 +8,16 @@ import time
 import cosmomodels as c
 import os.path
 
-######################################
-#IMPORTANT
-#CHANGE TO BRANCH YOU WANT TO RUN FROM
-######################################
-BZRBRANCH = "trunk" 
-######################################
 
 ##############################
-# SOME OTHER CHANGEABLE VALUES
+# CHANGEABLE VALUES
 ##############################
+
 # Directory structure
 
 # Name of base directory which everything else is below
 BASEDIRNAME = "pyflation"
+
 
 # Calculate base directory as being below $HOME
 CODEDIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,3 +43,6 @@ QSUBLOGSDIRNAME = "qsublogs"
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
 LOGLEVEL = logging.INFO 
 
+#Program name
+PROGRAM_NAME = "Pyflation"
+VERSION = "0.2"
