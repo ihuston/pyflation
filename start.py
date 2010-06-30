@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""genfullruns.py - Generate bash scripts for qsub for multiple first order runs.
+"""start.py - Generate bash scripts for qsub and execute.
 Author: Ian Huston
 """
-import os
 import os.path
 import configuration
 import harness
@@ -10,13 +9,10 @@ import time
 import sys
 from helpers import ensurepath
 
-templatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
+fotemplatefile = os.path.join(configuration.CODEDIR, "forun-template.sh")
+fulltemplatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
 
-
-sublist = [ {"kinit": 0.5e-61, "deltak": 1e-61, "numsoks": 1025},
-            {"kinit": 1.5e-61, "deltak": 3e-61, "numsoks": 1025},
-            {"kinit": 0.25e-60, "deltak": 1e-60, "numsoks": 1025}]
-            
+        
 def genfullscripts(tfilename):
     numsoks = configuration.NUMSOKS
     try:
