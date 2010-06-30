@@ -57,21 +57,9 @@ from helpers import ensurepath, startlogging
 
 
 
-def checkkend(kinit, deltak, numsoks, kend=None):
-    """Check whether kend has correct value for second order run.
+
     
-    If it is None, then set it to a value that will satisfy requirements. 
-    If it is not the correct value then log a complaint and return it anyway.
-    """
-    if not kend:
-        #Change from numsoks-1 to numsoks to include extra point when deltak!=kinit
-        kend = 2*((numsoks)*deltak + kinit)
-        harness_logger.info("Set kend to %s.", str(kend))
-    elif kend < 2*((numsoks)*deltak + kinit):
-        harness_logger.info("Requested k range will not satisfy condition for second order run!")
-    return kend
-    
-def runfomodel(filename=None, foargs=None, foclass=configuration.foclass):
+def runfomodel(filename=None, foargs=None, foclass=run_config.foclass):
     """Execute a TwoStageModel from cosmomodels and save results.
     
     A new instance of foclass is created, with the specified arguments.
@@ -106,18 +94,17 @@ def runfomodel(filename=None, foargs=None, foclass=configuration.foclass):
         foargs = {}
     if "k" not in foargs:
         kinit, kend, deltak, numsoks = (run_config.kinit, run_config.kend, 
-                                        run_config.deltak, run_config.NUMSOKS)
-        kend = checkkend(kinit, deltak, numsoks, kend=kend)
+                                        run_config.deltak, run_config.numsoks)
         foargs["k"] = seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
     if "potential_func" not in foargs:
-        foargs["potential_func"] = run_config.POT_FUNC
+        foargs["potential_func"] = run_config.pot_func
     if "ystart" not in foargs:
-        foargs["ystart"] = run_config.YSTART
+        foargs["ystart"] = run_config.ystart
     if filename is None:
         kinit, kend, deltak = foargs["k"][0], foargs["k"][-1], foargs["k"][1]-foargs["k"][0]
-        filename = configuration.RESULTSDIR + "fo-" + foclass.__name__ + "-" + foargs["potential_func"] + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = run_config.RESULTSDIR + "fo-" + foclass.__name__ + "-" + foargs["potential_func"] + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
     if not issubclass(foclass, c.TwoStageModel):
         raise ValueError("Must use TwoStageModel class for first order run!")
     
@@ -189,7 +176,7 @@ def runsomodel(fofile, filename=None, soargs=None):
         sys.exit(1)
     if filename is None:
         kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
-        filename = configuration.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
+        filename = run_config.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
     try:
         harness_logger.debug("Trying to save model data to %s...", filename)
         ensurepath(filename)
@@ -211,7 +198,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, num
         harness_logger.exception("Error wrapping model file.")
         raise
     if sourcefile is None:
-        sourcefile = configuration.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
+        sourcefile = run_config.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
         sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:
@@ -253,7 +240,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
             srcstub = os.path.splitext(os.path.basename(modelfile))[0].replace("fo", "src")
         else:
             srcstub = "-".join(["src", m.potential_func, str(min(m.k)), str(max(m.k)), str(m.k[1]-m.k[0]), time.strftime("%Y%m%d")])
-        sourcefile = configuration.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
+        sourcefile = run_config.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
     if myrank == 0:
         #Check sourcefile directory exists:
         ensurepath(os.path.dirname(sourcefile))
@@ -324,7 +311,7 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
 def dofullrun():
     """Complete full model run of 1st, source and 2nd order calculations."""
     harness_logger.info("---------------------Starting full run through...--------------------")
-    fofile = runfomodel(foargs=run_config.FOARGS)
+    fofile = runfomodel(foargs=run_config.foargs)
     sourcefile = runfullsourceintegration(fofile)
     foandsrcfile = sohelpers.combine_source_and_fofile(sourcefile, fofile)
     sofile = runsomodel(foandsrcfile)
@@ -350,7 +337,7 @@ def main(args):
     kinit = kend = deltak = None
     ninit = 0
     nfinal = -1
-    numsoks = run_config.NUMSOKS
+    numsoks = run_config.numsoks
     ntheta = run_config.ntheta
     loglevel = configuration.LOGLEVEL
     logfile = os.path.join(configuration.LOGDIRNAME)
