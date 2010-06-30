@@ -1,21 +1,14 @@
-#!/bin/sh
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=00:10:00
-#PBS -N ih-forun-%(kinit)s-%(deltak)s
-#PBS -o /home/ith/numerics/qsublogs/forun-%(kinit)s-%(deltak)s.out
-#PBS -e /home/ith/numerics/qsublogs/forun-%(kinit)s-%(deltak)s.err
-#PBS -V
-KINIT=%(kinit)s
-DELTAK=%(deltak)s
+#!/bin/bash
+#$ -l h_rt=%(timelimit)s
+#$ -N %(runname)s
+#$ -o %(qsublogname)s
+#$ -j y
+#$ -v PATH,PYTHONPATH,LD_LIBRARY_PATH
+#$ -S /bin/bash
 
+echo -----------------------------------------
 echo Start: host `hostname`, date `date`
-NPROCS=`wc -l < $PBS_NODEFILE`
-echo Number of nodes is $NPROCS
-echo PBS id is $PBS_JOBID
-echo Assigned nodes: `cat $PBS_NODEFILE`
+echo My job-id:{$SGE_JOB_ID}
 
-cd /home/ith/numerics
-
-/usr/local/bin/mpiexec --comm=pmi python harness.py -m --kinit $KINIT --deltak $DELTAK
-
+echo Do some work here now!
 

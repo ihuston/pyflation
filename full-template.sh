@@ -1,11 +1,17 @@
 #!/bin/bash
-#$ -pe orte 7
-#$ -l h_rt=03:00:00
-#$ -N full-%(kinit)s-%(deltak)s
-#$ -o %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.out
-#$ -e %(qsublogsdir)s/full-%(kinit)s-%(deltak)s.err
+#$ -l h_rt=%(timelimit)s
+#$ -N %(runname)s
+#$ -o %(qsublogname)s
+#$ -j y
 #$ -v PATH,PYTHONPATH,LD_LIBRARY_PATH
 #$ -S /bin/bash
+#$ -t %(taskmin)s-%(taskmax)s
+#$ -hold_jid %(hold_jid_list)s
+
+echo -----------------------------------------
+echo Start: host `hostname`, date `date`
+echo Task array: {$SGE_TASK_FIRST}-{$SGE_TASK_LAST}, step={$SGE_TASK_STEPSIZE}
+echo My task-id:{$SGE_TASK_ID}
 
 #Change first order file here
 FOFILE=%(fofile)s
@@ -14,19 +20,7 @@ DELTAK=%(deltak)s
 KEND=%(kend)s
 CODEDIR=%(codedir)s
 
-echo -----------------------------------------
-echo Start: host `hostname`, date `date`
-echo NSLOTS: $NSLOTS
-declare -i TOTNUMPROCS
-TOTNUMPROCS=4*$NSLOTS
-echo TOTNUMPROCS: $TOTNUMPROCS
-
 cd $CODEDIR
 echo In directory $CODEDIR
 
-echo Starting first order run:
-mpirun -np 1 python harness.py -f $FOFILE -m --kinit $KINIT --deltak $DELTAK --kend $KEND
-echo First order run complete.
-echo Starting second order run:
-mpirun -np $TOTNUMPROCS python harness.py -f $FOFILE -p 
-echo Second order run complete.
+echo Do some work here now!
