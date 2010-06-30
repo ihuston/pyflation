@@ -20,7 +20,7 @@ def genfullscript(tfilename):
     numsoks = configuration.NUMSOKS
     #Put k values in dictionary
     kinit, deltak = d["kinit"], d["deltak"]
-    kend = harness.checkkend(kinit, None, deltak, numsoks)
+    kend = harness.checkkend(kinit, deltak, numsoks)
     d["kend"] = kend
     
     #Set script filename and ensure directory exists

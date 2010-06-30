@@ -57,7 +57,7 @@ from helpers import ensurepath, startlogging
 
 
 
-def checkkend(kinit, kend, deltak, numsoks):
+def checkkend(kinit, deltak, numsoks, kend=None):
     """Check whether kend has correct value for second order run.
     
     If it is None, then set it to a value that will satisfy requirements. 
@@ -107,7 +107,7 @@ def runfomodel(filename=None, foargs=None, foclass=configuration.foclass):
     if "k" not in foargs:
         kinit, kend, deltak, numsoks = (run_config.kinit, run_config.kend, 
                                         run_config.deltak, run_config.NUMSOKS)
-        kend = checkkend(kinit, kend, deltak, numsoks)
+        kend = checkkend(kinit, deltak, numsoks, kend=kend)
         foargs["k"] = seq(kinit, kend, deltak)
     if "solver" not in foargs:
         foargs["solver"] = "rkdriver_withks"
