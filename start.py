@@ -11,6 +11,7 @@ import sys
 from helpers import ensurepath
 from optparse import OptionParser
 import logging
+import subprocess
 
 fotemplatefile = os.path.join(configuration.CODEDIR, "forun-template.sh")
 fulltemplatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
@@ -40,10 +41,28 @@ def genfullscript(tfilename):
         write_out_template(tfilename, qsubfilename, d)
     return
 
+def launch_qsub(qsubscript):
+    """Submit the job to the queueing system using qsub.
+    
+    Return job id of new job.
+    """
+    qsubcommand = ["qsub", "-terse", qsubscript]
+    newprocess = subprocess.Popen(qsubcommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    result = newprocess.stdout.read()
+    error_msg = newprocess.stderr.read()
+    
+    if error_msg:
+        raise Exception(error_msg)
+    
+    job_id = result.rstrip()
+    
+    return job_id
+
 def write_out_template(templatefile, newfile, textdict):
     """Write the textdict dictionary using the templatefile to newfile."""
     try:
-        f = open(tfilename, "r")
+        f = open(templatefile, "r")
         text = f.read()
     except IOError:
         raise
