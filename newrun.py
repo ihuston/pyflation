@@ -43,7 +43,7 @@ def create_run_directory(newrundir, codedir):
     
     #Try to do Bazaar checkout of code
     try:
-        from bzrlib.bzrdir import BzrDir
+        import bzrlib.export, bzrlib.workingtree
         bzr_available = True
     except ImportError:
         bzr_available = False
@@ -51,18 +51,18 @@ def create_run_directory(newrundir, codedir):
     logging.debug("bzr_available=%s", bzr_available)
     
     if bzr_available:
-        accelerator_tree, source = BzrDir.open_tree_or_branch(codedir)
-        source.create_checkout(os.path.join(newrundir, configuration.CODEDIRNAME), 
-                               None, True, accelerator_tree)
+        mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
+        bzrlib.export.export(mytree, os.path.join(newrundir, configuration.CODEDIRNAME))
         
     else:
         raise NotImplementedError("Bazaar is needed to copy code directory. Please do this manually.")
     
     return
     
-def main():
+def main(argv = None):
     """Check command line options and start directory creation."""
-    
+    if not argv:
+        argv = sys.argv
     #Parse command line options
     parser = OptionParser()
     
@@ -82,7 +82,7 @@ def main():
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
                   help="print lots of debugging information")
         
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(args=argv[1:])
     
     logging.basicConfig(level=options.loglevel)
         
