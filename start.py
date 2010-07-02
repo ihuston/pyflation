@@ -38,7 +38,7 @@ def genfullscript(tfilename):
     d["codedir"] = configuration.CODEDIR
     d["qsublogsdir"] = configuration.QSUBLOGSDIR
         
-        write_out_template(tfilename, qsubfilename, d)
+    write_out_template(tfilename, qsubfilename, d)
     return
 
 def launch_qsub(qsubscript):
