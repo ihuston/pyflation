@@ -8,6 +8,7 @@ Created on 30 Jun 2010
 import numpy as N
 import cosmomodels as c
 import configuration
+from configuration import CODEDIR, PROGRAM_NAME, LOGLEVEL
 import os.path
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
@@ -71,15 +72,16 @@ cq = 50
 ##############################
 
 #Directory names computed from current code directory
-RUNDIR = os.path.dirname(configuration.CODEDIR)
+RUNDIR = os.path.dirname(CODEDIR)
 RESULTSDIR = os.path.join(RUNDIR, configuration.RESULTSDIRNAME)
 LOGDIR = os.path.join(RUNDIR, configuration.LOGDIRNAME)
 QSUBSCRIPTSDIR = os.path.join(RUNDIR, configuration.QSUBSCRIPTSDIRNAME)
 QSUBLOGSDIR = os.path.join(RUNDIR, configuration.QSUBLOGSDIRNAME)
 
-if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
+if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
 
+logfile = os.path.join(LOGDIR, "run.log")
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
@@ -94,15 +96,11 @@ soargs = {}
 # qsub submission values
 #
 ##############################
-runname = configuration.PROGRAM_NAME + "-" + pot_func
+runname = PROGRAM_NAME + "-" + pot_func
 qsublogname = os.path.join(QSUBLOGSDIR, "log-node-$TASK_ID" )
-#Dictionary of values for qsub scripts
-qsubdict = {"timelimit": "3:00:00", # Time needed for each array job
-            "runname": runname, # Name of run in qstat list
-            "qsublogname": qsublogname, #Name of log file for qsub
-            "taskmin": "1", #starting task id number
-            "taskmax": "20", #finishing task id number
-            "hold_jid_list": "", # List of jobs this task depends on 
-            }
+timelimit = "3:00:00" # Time needed for each array job
+taskmin= "1" #starting task id number
+taskmax= "20" #finishing task id number
+hold_jid_list= "" # List of jobs this task depends on 
 
 
