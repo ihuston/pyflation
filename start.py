@@ -9,38 +9,52 @@ import harness
 import time
 import sys
 from helpers import ensurepath
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 import logging
 import subprocess
-
-fotemplatefile = os.path.join(configuration.CODEDIR, "forun-template.sh")
-fulltemplatefile = os.path.join(configuration.CODEDIR, "full-template.sh")
+import helpers
 
         
 def genfullscript(tfilename):
-    numsoks = configuration.NUMSOKS
+    numsoks = run_config.numsoks
     #Put k values in dictionary
     kinit, deltak = d["kinit"], d["deltak"]
-    kend = harness.checkkend(kinit, deltak, numsoks)
+    kend = run_config.getkend(kinit, deltak, numsoks)
     d["kend"] = kend
     
     #Set script filename and ensure directory exists
-    qsubfilename = os.path.join(configuration.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
+    qsubfilename = os.path.join(run_config.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
     ensurepath(qsubfilename) 
             
     #Put together info for filenames
-    info = "-".join([configuration.foclass.__name__, configuration.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
-    filename = os.path.join(configuration.RESULTSDIR , "fo-" + info + ".hf5")
-    srcdir = os.path.join(configuration.RESULTSDIR, "src-" + info, "")
+    info = "-".join([run_config.foclass.__name__, run_config.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
+    filename = os.path.join(run_config.RESULTSDIR , "fo-" + info + ".hf5")
+    srcdir = os.path.join(run_config.RESULTSDIR, "src-" + info, "")
     ensurepath(filename)
     ensurepath(srcdir)
     d["fofile"] = filename
-    d["codedir"] = configuration.CODEDIR
-    d["qsublogsdir"] = configuration.QSUBLOGSDIR
+    d["codedir"] = run_config.CODEDIR
+    d["qsublogsdir"] = run_config.QSUBLOGSDIR
         
     write_out_template(tfilename, qsubfilename, d)
     return
 
+@property
+def base_qsub_dict():
+    qdict = dict(kinit = run_config.kinit,
+                 deltak = run_config.deltak,
+                 numsoks = run_config.numsoks,
+                 kend = run_config.kend,
+                 codedir = run_config.CODEDIR,
+                 runname = run_config.PROGRAM_NAME,
+                 timelimit = run_config.timelimit,
+                 qsublogname = run_config.qsublogname,
+                 taskmin = run_config.taskmin,
+                 taskmax = run_config.taskmax,
+                 hold_jid_list = run_config.hold_jid_list,                
+                 )
+    return qdict
+    
 def launch_qsub(qsubscript):
     """Submit the job to the queueing system using qsub.
     
@@ -84,34 +98,75 @@ def write_out_template(templatefile, newfile, textdict):
     
     
 
-def main():
+def main(argv=None):
     """Process command line options, create qsub scripts and start execution."""
+
+    if not argv:
+        argv = sys.argv
+    
+    #Template file defaults
+    fotemplatefile = os.path.join(run_config.CODEDIR, "forun-template.sh")
+    fulltemplatefile = os.path.join(run_config.CODEDIR, "full-template.sh")
     
     #Parse command line options
     parser = OptionParser()
-    parser.add_option("-q", "--quiet",
+    
+    loggroup = OptionGroup(parser, "Log Options", 
+                           "These options affect the verbosity of the log files generated.")
+    loggroup.add_option("-q", "--quiet",
                   action="store_const", const=logging.FATAL, dest="loglevel", 
                   help="only print fatal error messages")
-    parser.add_option("-v", "--verbose",
+    loggroup.add_option("-v", "--verbose",
                   action="store_const", const=logging.INFO, dest="loglevel", 
                   help="print informative messages")
-    parser.add_option("--debug",
+    loggroup.add_option("--debug",
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
-                  help="print lots of debugging information")
-        
-    (options, args) = parser.parse_args()
+                  help="print lots of debugging information",
+                  default=run_config.LOGLEVEL)
+    parser.add_option_group(loggroup)
     
-    # Start logging
-    logging.basicConfig(level=options.loglevel)
+    cfggroup = OptionGroup(parser, "Simulation configuration Options",
+                           "These options affect the options used by the simulation.")
+    cfggroup.add_option("--name", action="store", dest="runname", 
+                        type="string", help="name of run")
+    cfggroup.add_option("--timelimit", action="store", dest="timelimit",
+                        type="string", help="time for simulation in format hh:mm:ss")
+    cfggroup.add_option("--taskmin", action="store", dest="taskmin",
+                        type="string", metavar="NUM", help="minimum task number, default: 1")
+    cfggroup.add_option("-t", "--taskmax", action="store", dest="taskmax",
+                        type="string", metavar="NUM", help="maximum task number, default: 20")
+    parser.add_option_group(cfggroup)
     
-    if os.path.isfile(templatefile):
+    (options, args) = parser.parse_args(args=argv[1:])
+    
+    helpers.startlogging(log, run_config.logfile, options.loglevel)
+    
+    if os.path.isfile(fotemplatefile):
         genfullscripts(templatefile)
     else:
-        print("No template file found at %s!" %templatefile)
-        sys.exit(1)
+        raise IOError("No template file found at %s!" %templatefile)
+
+    
+    #Write first order file
+    
+    #Launch first order script and get job id
+    
+    #Write second order file with job_id from first
+    
+    #Launch second order script
+    
+    
         
 
 if __name__ == "__main__":
-    main()
+    # Start logging
+    log=logging.getLogger()
+    try:
+        main()
+    except Exception as e:
+        print("Something went wrong!", file=sys.stderr)
+        print(e.message, file=sys.stderr)
+        sys.exit(1)
+        
     
     
