@@ -16,30 +16,6 @@ import logging
 import subprocess
 import helpers
 
-        
-def genfullscript(tfilename):
-    numsoks = run_config.numsoks
-    #Put k values in dictionary
-    kinit, deltak = d["kinit"], d["deltak"]
-    kend = run_config.getkend(kinit, deltak, numsoks)
-    d["kend"] = kend
-    
-    #Set script filename and ensure directory exists
-    qsubfilename = os.path.join(run_config.QSUBSCRIPTSDIR, "-".join(["full", str(kinit), str(deltak)]) + ".sh")
-    ensurepath(qsubfilename) 
-            
-    #Put together info for filenames
-    info = "-".join([run_config.foclass.__name__, run_config.POT_FUNC, str(kinit), str(kend), str(deltak), time.strftime("%H%M%S")])
-    filename = os.path.join(run_config.RESULTSDIR , "fo-" + info + ".hf5")
-    srcdir = os.path.join(run_config.RESULTSDIR, "src-" + info, "")
-    ensurepath(filename)
-    ensurepath(srcdir)
-    d["fofile"] = filename
-    d["codedir"] = run_config.CODEDIR
-    d["qsublogsdir"] = run_config.QSUBLOGSDIR
-        
-    write_out_template(tfilename, qsubfilename, d)
-    return
 
 @property
 def base_qsub_dict():
@@ -49,7 +25,11 @@ def base_qsub_dict():
                  qsublogname = run_config.qsublogname,
                  taskmin = run_config.taskmin,
                  taskmax = run_config.taskmax,
-                 hold_jid_list = run_config.hold_jid_list,                
+                 hold_jid_list = run_config.hold_jid_list, 
+                 fotemplatefile = run_config.fotemplatefile,
+                 fulltemplatefile = run_config.fulltemplatefile,
+                 foscriptname = run_config.foscriptname,
+                 fullscriptname = run_config.fullscriptname               
                  )
     return qdict
     
@@ -101,10 +81,6 @@ def main(argv=None):
 
     if not argv:
         argv = sys.argv
-    
-    #Template file defaults
-    fotemplatefile = run_config.fotemplatefile
-    fulltemplatefile = run_config.fulltemplatefile
     
     #Default dictionary for templates
     template_dict = base_qsub_dict
@@ -167,28 +143,46 @@ def main(argv=None):
     fo_dict = template_dict.copy()
     fo_dict["runname"] += "-fo"
     
-    if os.path.isfile(fotemplatefile):
-        genfullscripts(fotemplatefile)
+    if os.path.isfile(fo_dict["fotemplatefile"]):
+        write_out_template(fo_dict["fotemplatefile"],fo_dict["foscriptname"], fo_dict)
     else:
-        raise IOError("No template file found at %s!" %templatefile)
+        raise IOError("No template file found at %s!" % fo_dict["fotemplatefile"])
 
     
-    #Write first order file
-    
     #Launch first order script and get job id
+    try:
+        fo_jid = launch_qsub(fo_dict["foscriptname"])
+        log.info("Submitted first order script with job id %s.", fo_jid)
+    except Exception:
+        log.error("Error executing script %s", fo_dict["foscriptname"])
+        raise
     
     #Write second order file with job_id from first
+    full_dict = template_dict.copy()
+    full_dict["hold_jid_list"] = fo_jid
     
-    #Launch second order script
+    if os.path.isfile(full_dict["fulltemplatefile"]):
+        write_out_template(full_dict["fulltemplatefile"],full_dict["fullscriptname"], full_dict)
+    else:
+        raise IOError("No template file found at %s!" % full_dict["fulltemplatefile"])
+
     
+    #Launch full script and get job id
+    try:
+        full_jid = launch_qsub(full_dict["fullscriptname"])
+        log.info("Submitted full script with job id %s.", full_jid)
+    except Exception:
+        log.error("Error executing script %s", full_dict["fullscriptname"])
+        raise
     
-        
+    return 0
+            
 
 if __name__ == "__main__":
     # Start logging
     log=logging.getLogger()
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         print("Something went wrong!", file=sys.stderr)
         print(e.message, file=sys.stderr)
