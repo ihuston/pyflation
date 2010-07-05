@@ -12,7 +12,7 @@ import sys
 import time
 from optparse import OptionParser
 
-def create_run_directory(newrundir, codedir):
+def create_run_directory(newrundir, codedir, bzr_checkout=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir):
         raise IOError("New run directory already exists!")
@@ -52,7 +52,11 @@ def create_run_directory(newrundir, codedir):
     
     if bzr_available:
         mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
-        bzrlib.export.export(mytree, os.path.join(newrundir, configuration.CODEDIRNAME))
+        if bzr_checkout:
+            newtree = mytree.branch.create_checkout(os.path.join(newrundir, 
+                            configuration.CODEDIRNAME), lightweight=True)
+        else:
+            bzrlib.export.export(mytree, os.path.join(newrundir, configuration.CODEDIRNAME))
         
     else:
         raise NotImplementedError("Bazaar is needed to copy code directory. Please do this manually.")
@@ -81,6 +85,8 @@ def main(argv = None):
     parser.add_option("--debug",
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
                   help="print lots of debugging information")
+    parser.add_option("--checkout", action="store_true", dest="bzr_checkout",
+                      default=True, help="create a bzr checkout instead of export")
         
     (options, args) = parser.parse_args(args=argv[1:])
     
@@ -102,7 +108,7 @@ def main(argv = None):
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:
-        create_run_directory(newdir, codedir)
+        create_run_directory(newdir, codedir, options.bzr_checkout)
     except Exception, e:
         logging.critical("Something went wrong! Quitting.")
         sys.exit(e)
