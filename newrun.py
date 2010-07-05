@@ -11,6 +11,7 @@ import logging
 import sys
 import time
 from optparse import OptionParser
+from setup import setup, setup_args
 
 def create_run_directory(newrundir, codedir, bzr_checkout=False):
     """Create the run directory using `newdir` as directory name."""
@@ -60,6 +61,16 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
         
     else:
         raise NotImplementedError("Bazaar is needed to copy code directory. Please do this manually.")
+    
+    #Try to run setup to create .so files
+    try:
+        olddir = os.getcwd()
+        os.chdir(os.path.join(newrundir, configuration.CODEDIRNAME))
+        logging.info("Preparing to compile non-python files.")
+        setup(script_args=["build_ext", "-i"], **setup_args)
+        os.chdir(olddir)
+    except:
+        logging.exception("Compiling additional modules did not work. Please do so by hand!")
     
     return
     

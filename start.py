@@ -129,7 +129,9 @@ def main(argv=None):
         raise ValueError("No extra command line arguments are allowed!")
     
     #Update dictionary with options
-    template_dict.update(options)
+    for key in template_dict.keys():
+        if getattr(options, key, None):
+            template_dict[key] = getattr(options, key, None)
     
     helpers.startlogging(log, run_config.logfile, options.loglevel)
     
