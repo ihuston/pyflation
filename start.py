@@ -16,10 +16,8 @@ import logging
 import subprocess
 import helpers
 
-
-@property
-def base_qsub_dict():
-    qdict = dict(codedir = run_config.CODEDIR,
+#Dictionary of qsub configuration values
+base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  runname = run_config.PROGRAM_NAME,
                  timelimit = run_config.timelimit,
                  qsublogname = run_config.qsublogname,
@@ -31,7 +29,6 @@ def base_qsub_dict():
                  foscriptname = run_config.foscriptname,
                  fullscriptname = run_config.fullscriptname               
                  )
-    return qdict
     
 def launch_qsub(qsubscript):
     """Submit the job to the queueing system using qsub.
@@ -83,7 +80,7 @@ def main(argv=None):
         argv = sys.argv
     
     #Default dictionary for templates
-    template_dict = base_qsub_dict
+    template_dict = base_qsub_dict.copy()
     
     #Parse command line options
     parser = OptionParser()
