@@ -143,6 +143,7 @@ def main(argv=None):
     #First order script creation
     fo_dict = template_dict.copy()
     fo_dict["runname"] += "-fo"
+    fo_dict["qsublogname"] += "-fo"
     
     if os.path.isfile(fo_dict["fotemplatefile"]):
         write_out_template(fo_dict["fotemplatefile"],fo_dict["foscriptname"], fo_dict)
@@ -161,6 +162,8 @@ def main(argv=None):
     #Write second order file with job_id from first
     full_dict = template_dict.copy()
     full_dict["hold_jid_list"] = fo_jid
+    full_dict["runname"] += "-full"
+    full_dict["qsublogname"] += "-node-$TASK_ID"
     
     if os.path.isfile(full_dict["fulltemplatefile"]):
         write_out_template(full_dict["fulltemplatefile"],full_dict["fullscriptname"], full_dict)

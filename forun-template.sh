@@ -8,7 +8,6 @@
 
 echo -----------------------------------------
 echo Start: host `hostname`, date `date`
-echo My job-id:{$SGE_JOB_ID}
 
 echo Do some work here now!
 

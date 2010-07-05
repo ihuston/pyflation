@@ -10,8 +10,8 @@
 
 echo -----------------------------------------
 echo Start: host `hostname`, date `date`
-echo Task array: {$SGE_TASK_FIRST}-{$SGE_TASK_LAST}, step={$SGE_TASK_STEPSIZE}
-echo My task-id:{$SGE_TASK_ID}
+echo Task array: $SGE_TASK_FIRST-$SGE_TASK_LAST, step=$SGE_TASK_STEPSIZE
+echo My task-id:$SGE_TASK_ID
 
 #Change first order file here
 FOFILE=%(foresults)s
@@ -21,4 +21,4 @@ cd $CODEDIR
 echo In directory $CODEDIR
 
 echo Do some work here now!
-echo Source filename %(srcstub)s{$SGE_TASK_ID}.hf5
+echo Source filename %(srcstub)s$SGE_TASK_ID.hf5

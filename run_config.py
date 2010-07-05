@@ -96,8 +96,8 @@ soargs = {}
 # qsub submission values
 #
 ##############################
-runname = PROGRAM_NAME + "-" + pot_func
-qsublogname = os.path.join(QSUBLOGSDIR, "log-node-$TASK_ID" )
+runname = PROGRAM_NAME
+qsublogname = os.path.join(QSUBLOGSDIR, "log" )
 timelimit = "3:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
 taskmax= "20" #finishing task id number
