@@ -14,7 +14,7 @@ echo Task array: {$SGE_TASK_FIRST}-{$SGE_TASK_LAST}, step={$SGE_TASK_STEPSIZE}
 echo My task-id:{$SGE_TASK_ID}
 
 #Change first order file here
-FOFILE=%(fofile)s
+FOFILE=%(foresults)s
 KINIT=%(kinit)s
 DELTAK=%(deltak)s
 KEND=%(kend)s
@@ -24,3 +24,4 @@ cd $CODEDIR
 echo In directory $CODEDIR
 
 echo Do some work here now!
+echo Source filename %(srcstub)s{$SGE_TASK_ID}.hf5

@@ -108,3 +108,6 @@ fulltemplatefile = os.path.join(CODEDIR, "full-template.sh")
 
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 fullscriptname = os.path.join(QSUBSCRIPTSDIR, "full.qsub")
+
+foresults = os.path.join(RESULTSDIR, "fo.hf5")
+srcstub = os.path.join(RESULTSDIR, "src-")

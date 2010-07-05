@@ -12,3 +12,5 @@ echo My job-id:{$SGE_JOB_ID}
 
 echo Do some work here now!
 
+echo Filename %(foresults)s
+
