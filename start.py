@@ -43,11 +43,7 @@ def genfullscript(tfilename):
 
 @property
 def base_qsub_dict():
-    qdict = dict(kinit = run_config.kinit,
-                 deltak = run_config.deltak,
-                 numsoks = run_config.numsoks,
-                 kend = run_config.kend,
-                 codedir = run_config.CODEDIR,
+    qdict = dict(codedir = run_config.CODEDIR,
                  runname = run_config.PROGRAM_NAME,
                  timelimit = run_config.timelimit,
                  qsublogname = run_config.qsublogname,
@@ -107,8 +103,11 @@ def main(argv=None):
         argv = sys.argv
     
     #Template file defaults
-    fotemplatefile = os.path.join(run_config.CODEDIR, "forun-template.sh")
-    fulltemplatefile = os.path.join(run_config.CODEDIR, "full-template.sh")
+    fotemplatefile = run_config.fotemplatefile
+    fulltemplatefile = run_config.fulltemplatefile
+    
+    #Default dictionary for templates
+    template_dict = base_qsub_dict
     
     #Parse command line options
     parser = OptionParser()
@@ -139,12 +138,37 @@ def main(argv=None):
                         type="string", metavar="NUM", help="maximum task number, default: 20")
     parser.add_option_group(cfggroup)
     
+    filegrp = OptionGroup(parser, "File options", 
+                          "These options override the default choice of template and script files.")
+    filegrp.add_option("--fotemplate", action="store", dest="fotemplatefile", 
+                       type="string", help="first order template file")
+    filegrp.add_option("--fulltemplate", action="store", dest="fulltemplatefile",
+                       type="string", help="full program template file")
+    filegrp.add_option("--foscript", action="store", dest="foscriptname",
+                       type="string", help="first order script name")
+    filegrp.add_option("--fullscript", action="store", dest="fullscriptname",
+                       type="string", help="full program script name")
+    parser.add_option_group(filegrp)
+    
     (options, args) = parser.parse_args(args=argv[1:])
+    
+    if args:
+        raise ValueError("No extra command line arguments are allowed!")
+    
+    #Update dictionary with options
+    template_dict.update(options)
     
     helpers.startlogging(log, run_config.logfile, options.loglevel)
     
+    #Log options chosen
+    log.debug("Generic template dictionary is %s", template_dict)
+    
+    #First order script creation
+    fo_dict = template_dict.copy()
+    fo_dict["runname"] += "-fo"
+    
     if os.path.isfile(fotemplatefile):
-        genfullscripts(templatefile)
+        genfullscripts(fotemplatefile)
     else:
         raise IOError("No template file found at %s!" %templatefile)
 
