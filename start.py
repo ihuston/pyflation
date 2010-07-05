@@ -27,7 +27,9 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  fotemplatefile = run_config.fotemplatefile,
                  fulltemplatefile = run_config.fulltemplatefile,
                  foscriptname = run_config.foscriptname,
-                 fullscriptname = run_config.fullscriptname               
+                 fullscriptname = run_config.fullscriptname,
+                 foresults = run_config.foresults,
+                 srcstub = run_config.srcstub             
                  )
     
 def launch_qsub(qsubscript):
