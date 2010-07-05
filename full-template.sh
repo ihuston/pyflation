@@ -15,9 +15,6 @@ echo My task-id:{$SGE_TASK_ID}
 
 #Change first order file here
 FOFILE=%(foresults)s
-KINIT=%(kinit)s
-DELTAK=%(deltak)s
-KEND=%(kend)s
 CODEDIR=%(codedir)s
 
 cd $CODEDIR
