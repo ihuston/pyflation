@@ -134,7 +134,7 @@ def main(argv=None):
         
         
     #Start the logging module
-    if console:
+    if options.console:
         consolelevel = options.loglevel
     else:
         consolelevel = logging.WARN
