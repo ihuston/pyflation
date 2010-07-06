@@ -213,8 +213,11 @@ def find_nearest_ix(array,value):
     """
     return (np.abs(array-value)).argmin()
 
-def startlogging(log, logfile, loglevel=logging.INFO):
+def startlogging(log, logfile, loglevel=logging.INFO, consolelevel=None):
     """Start the logging system to store rotational file based log."""
+    
+    if not consolelevel:
+        consolelevel = loglevel
 
     log.setLevel(loglevel)
     #create file handler and set level to debug
@@ -222,7 +225,7 @@ def startlogging(log, logfile, loglevel=logging.INFO):
     fh.setLevel(loglevel)
     #create console handler and set level to error
     ch = logging.StreamHandler()
-    ch.setLevel(loglevel)
+    ch.setLevel(consolelevel)
     #create formatter
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     #add formatter to fh

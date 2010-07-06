@@ -123,15 +123,22 @@ def main(argv=None):
                   help="print informative messages")
     loggroup.add_option("--debug",
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
-                  help="print lots of debugging information",
+                  help="log lots of debugging information",
                   default=run_config.LOGLEVEL)
+    loggroup.add_option("--console", action="store_true", dest="console",
+                        default=False, help="if selected matches console log level" 
+                        "to selected file log level, otherwise only warnings are shown.")
     parser.add_option_group(loggroup)
     
     (options, args) = parser.parse_args(args=argv[1:])
         
         
     #Start the logging module
-    helpers.startlogging(log, run_config.logfile, options.loglevel)
+    if console:
+        consolelevel = options.loglevel
+    else:
+        consolelevel = logging.WARN
+    helpers.startlogging(log, run_config.logfile, options.loglevel, consolelevel)
     
     
     log.info("-----------First order run requested------------------")
