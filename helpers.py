@@ -11,6 +11,7 @@ from scipy import integrate
 import os 
 import os.path
 import logging
+import logging.handlers
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""

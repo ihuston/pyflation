@@ -110,7 +110,8 @@ def main(argv=None):
     parser = optparse.OptionParser()
     
     parser.add_option("-f", "--filename", action="store", dest="foresults", 
-                      default=run_config.foresults, type="string", help="file to store results")
+                      default=run_config.foresults, type="string", 
+                      METAVAR="FILE", help="file to store results")
     
     loggroup = optparse.OptionGroup(parser, "Log Options", 
                            "These options affect the verbosity of the log files generated.")
