@@ -138,51 +138,91 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         log.info("Combined results saved in %s.", cfile)
         return cfile
     
-def main():
-    , "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks=", "ntheta="
-    elif opt in ("-t", "--source"):
-            func = "source"
-        elif opt in ("-a", "--all"):
-            func = "all"
-        elif opt in ("-d", "--debug"):
-            loglevel = logging.DEBUG
-        elif opt in ("--kinit",):
-            kinit = float(arg)
-        elif opt in ("--kend",):
-            kend = float(arg)
-        elif opt in ("--deltak",):
-            deltak = float(arg)
-        elif opt in ("-p", "--parallelsrc"):
-            func = "parallelsrc"
-        elif opt in ("-b", "--begin"):
-            ninit = int(arg)
-        elif opt in ("-e", "--end"):
-            nfinal = int(arg)
-        elif opt in ("--numsoks",):
-            numsoks = int(arg)
-        elif opt in ("--ntheta",):
-            ntheta = int(arg)
+
+def main(argv=None):
+    """Main function: deal with command line arguments and start calculation as reqd."""
     
-    elif func == "source":
-        log.info("-----------Source integral run requested------------------")
-        log.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
-        try:
-            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
-        except Exception:
-            log.exception("Error getting source integral!")
-    elif func == "parallelsrc":
-        try:
-            try:
-                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks, soargs=soargs)
-            except ImportError:
-                log.exception("Parallel module not available!")
-                sys.exit(1)
-        except Exception:
-            log.exception("Error getting source integral in parallel!")
+    if not argv:
+        argv = sys.argv
+    
+    #Parse command line options
+    parser = optparse.OptionParser()
+    
+    parser.add_option("-f", "--filename", action="store", dest="foresults", 
+                      default=run_config.foresults, type="string", 
+                      metavar="FILE", help="first order results file, default=%default")
+    
+    arraygroup = optparse.OptionGroup(parser, "Task Array Options",
+                            "These options specify a task array to work inside."
+                            "The array is the range taskmin:taskmax with step taskstep."
+                            "The current process should be given a taskid in the range specified."
+                            "The default is an array of 1:1, step 1 with id 1.")
+    arraygroup.add_option("--taskmin", action="store", dest="taskmin", default=1,
+                          type="num", help="start of task array range", metavar="NUM")
+    arraygroup.add_option("--taskmax", action="store", dest="taskmax", default=1,
+                          type="num", help="end of task array range", metavar="NUM")
+    arraygroup.add_option("--taskstep", action="store", dest="taskstep", default=1,
+                          type="num", help="step size of task array range", metavar="NUM")
+    arraygroup.add_option("--taskid", action="store", dest="taskid", default=1,
+                          type="num", help="task id of current process", metavar="NUM")
+    parser.add_option_group(arraygroup)
+    
+    timegroup = optparse.OptionGroup(parser, "Timestep Options",
+                     "These options affect which timesteps the source term is calculated for.")
+    timegroup.add_option("--tstart", action="store", dest="tstart", default=0,
+                         type="num", help="first time step to calculate, default=%default")
+    timegroup.add_option("--tend", action="store", dest="tend", default=-1,
+                         type="num", help="last time step to calculate, use -1 for the last value, default=%default")
+    
+    parser.add_option_group(timegroup)
+    
+    loggroup = optparse.OptionGroup(parser, "Log Options", 
+                           "These options affect the verbosity of the log files generated.")
+    loggroup.add_option("-q", "--quiet",
+                  action="store_const", const=logging.FATAL, dest="loglevel", 
+                  help="only print fatal error messages")
+    loggroup.add_option("-v", "--verbose",
+                  action="store_const", const=logging.INFO, dest="loglevel", 
+                  help="print informative messages")
+    loggroup.add_option("--debug",
+                  action="store_const", const=logging.DEBUG, dest="loglevel", 
+                  help="log lots of debugging information",
+                  default=run_config.LOGLEVEL)
+    loggroup.add_option("--console", action="store_true", dest="console",
+                        default=False, help="if selected matches console log level" 
+                        "to selected file log level, otherwise only warnings are shown.")
+    parser.add_option_group(loggroup)
+    
+    (options, args) = parser.parse_args(args=argv[1:])
+        
+        
+    #Start the logging module
+    if options.console:
+        consolelevel = options.loglevel
+    else:
+        consolelevel = logging.WARN
+    helpers.startlogging(log, run_config.logfile, options.loglevel, consolelevel)
+    
+    
+    taskarray = dict(min=options.taskmin,
+                     max=options.taskmax,
+                     step=options.taskstep,
+                     id=options.taskid)
+    
+    try:
+        runparallelintegration(modelfile=options.foresults, 
+                                   ninit=options.tstart, 
+                                   nfinal=options.tend,
+                                   taskarray=taskarray)
+    except Exception:
+        log.exception("Error getting source integral!")
+        return 1
+    
+    return 0
     
 if __name__ == "__main__":
     log = logging.getLogger(__name__)
     log.handlers = []
-    main(sys.argv[1:])
+    sys.exit(main())
 else:
     log = logging.getLogger(__name__)
