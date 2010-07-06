@@ -1,8 +1,14 @@
-'''
+'''secondorder.py - Run a second order simulation
 Created on 6 Jul 2010
 
-@author: ith
+@author: Ian Huston
 '''
+
+import cosmomodels as c
+import run_config
+import helpers
+import logging
+import sys
 
 def runsomodel(fofile, filename=None, soargs=None):
     """Execute a SOCanonicalThreeStage model and save results.
@@ -36,34 +42,40 @@ def runsomodel(fofile, filename=None, soargs=None):
     try:
         fomodel = c.make_wrapper_model(fofile)
     except:
-        harness_logger.exception("Error wrapping model file.")
+        log.exception("Error wrapping model file.")
         raise
     if soargs is None:
         soargs = {}
     somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
     try:
-        harness_logger.debug("Starting model run...")
+        log.debug("Starting model run...")
         somodel.run(saveresults=False)
-        harness_logger.debug("Model run finished.")
+        log.debug("Model run finished.")
     except c.ModelError:
-        harness_logger.exception("Something went wrong with model, quitting!")
+        log.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
         kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
         filename = run_config.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
     try:
-        harness_logger.debug("Trying to save model data to %s...", filename)
-        ensurepath(filename)
+        log.debug("Trying to save model data to %s...", filename)
+        helpers.ensurepath(filename)
         somodel.saveallresults(filename=filename)
     except Exception:
-        harness_logger.exception("IO error, nothing saved!")
+        log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
-#     harness_logger.debug("Destroying model instance...")
+#     log.debug("Destroying model instance...")
 #     del somodel
     #Success!
-    harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
+    log.info("Successfully ran and saved simulation in file %s.", filename)
     return filename
 
-
-if __name__ == '__main__':
+def main():
     pass
+    
+if __name__ == "__main__":
+    log = logging.getLogger(__name__)
+    log.handlers = []
+    main(sys.argv[1:])
+else:
+    log = logging.getLogger(__name__)
