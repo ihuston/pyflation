@@ -72,6 +72,16 @@ def runsomodel(fofile, filename=None, soargs=None):
 
 def main():
     pass
+elif func == "somodel":
+        log.info("-----------Second order run requested------------------")
+        try:
+            if not filename:
+                raise AttributeError("Need to specify first order file!")
+        except AttributeError:
+            log.exception("Error starting second order model!")
+        #start model run
+        runsomodel(fofile=filename, soargs=soargs)
+    
     
 if __name__ == "__main__":
     log = logging.getLogger(__name__)

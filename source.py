@@ -1,4 +1,6 @@
 '''source.py - Compute the source term integral given first order results
+This should be run as a standalone script.
+
 Created on 6 Jul 2010
 
 @author: Ian Huston
@@ -137,7 +139,46 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
         return cfile
     
 def main():
-    pass
+    , "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks=", "ntheta="
+    elif opt in ("-t", "--source"):
+            func = "source"
+        elif opt in ("-a", "--all"):
+            func = "all"
+        elif opt in ("-d", "--debug"):
+            loglevel = logging.DEBUG
+        elif opt in ("--kinit",):
+            kinit = float(arg)
+        elif opt in ("--kend",):
+            kend = float(arg)
+        elif opt in ("--deltak",):
+            deltak = float(arg)
+        elif opt in ("-p", "--parallelsrc"):
+            func = "parallelsrc"
+        elif opt in ("-b", "--begin"):
+            ninit = int(arg)
+        elif opt in ("-e", "--end"):
+            nfinal = int(arg)
+        elif opt in ("--numsoks",):
+            numsoks = int(arg)
+        elif opt in ("--ntheta",):
+            ntheta = int(arg)
+    
+    elif func == "source":
+        log.info("-----------Source integral run requested------------------")
+        log.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
+        try:
+            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
+        except Exception:
+            log.exception("Error getting source integral!")
+    elif func == "parallelsrc":
+        try:
+            try:
+                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks, soargs=soargs)
+            except ImportError:
+                log.exception("Parallel module not available!")
+                sys.exit(1)
+        except Exception:
+            log.exception("Error getting source integral in parallel!")
     
 if __name__ == "__main__":
     log = logging.getLogger(__name__)

@@ -89,7 +89,8 @@ ystart = fx["ystart"]
 
 foargs = {"potential_func": pot_func,
             "ystart": ystart,
-            "cq": cq}
+            "cq": cq,
+            "solver": "rkdriver_withks"}
 soargs = {}
  
 ##############################

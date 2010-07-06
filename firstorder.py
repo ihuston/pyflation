@@ -1,58 +1,29 @@
 # -*- coding: utf-8 -*-
 """
-Harness to run multiple simulations at different k
+firstorder.py - Run a first order simulation
 Author: Ian Huston
 
-This program will run Cosmomodels simulations in different stage or as a straight
-through run. For a full through or first order run no filename is required, but can be
-specified if desired. For a source or second order run you need to give the filename of
-a first order model's results. This tool will calculate the source term integral for the
-second order equation of motion but does not automatically combine the source term into
-the first order results file in preparation of a second order run. 
+This program will run a first order Pyflation simulation as a straight
+through run.  
 See cosmomodels.py for the specification for each type of model. 
-Configuration is done in configuration.py.
-
-Usage
------
-python harness.py [-f filename] [options]
-
-Arguments
----------
--h, --help:                 Print this help text.
--f file, --filename file:   First order file to use
--a, --all:                  Run all stages of computation
--m, --fomodel:              Run first order model
--p, --parallelsrc:          Calculate source term in parallel (need first order filename)
--t, --source:               Calculate source term (single process) (need first order filename)
--s, --somodel:              Run second order model (need combined foandsrc filename)
--b num, --begin num:        Begin sourceterm calculation at timestep num
--e num, --end num:          End sourceterm calculation at timestep num (not inclusive)
--d, --debug:                Change logging level to debug, dramatic increase in volume.
---kinit num:                Initial k mode to use in k range
---deltak num:               Difference between two k modes in k range
---kend num:                 Final k mode to use in k range (Can be calculated from kinit, deltak)
+Default configuration can be changed in run_config.py.
 
 
 """
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import numpy as N
+
 import cosmomodels as c
-from helpers import seq 
-import time
 import sys
-import sosource
-import getopt
-import sohelpers
 import os
-import configuration
 import run_config
-import srcmerge 
-from helpers import ensurepath, startlogging
+import optparse
+import helpers
+import logging
 
 
  
-def runfomodel(filename=None, foargs=None, foclass=run_config.foclass):
+def runfomodel(filename=None, foargs=None, foclass=None):
     """Execute a TwoStageModel from cosmomodels and save results.
     
     A new instance of foclass is created, with the specified arguments.
@@ -83,175 +54,103 @@ def runfomodel(filename=None, foargs=None, foclass=run_config.foclass):
     Exception
        Any exception raised during saving of code.
     """
+    #Check whether foargs is specified and use default if not. 
     if foargs is None:
-        foargs = {}
+        foargs = run_config.foargs.copy()
+        
+    #Check whether needed array k is in foargs otherwise use values from run_config
     if "k" not in foargs:
-        kinit, kend, deltak, numsoks = (run_config.kinit, run_config.kend, 
-                                        run_config.deltak, run_config.numsoks)
-        foargs["k"] = seq(kinit, kend, deltak)
-    if "solver" not in foargs:
-        foargs["solver"] = "rkdriver_withks"
-    if "potential_func" not in foargs:
-        foargs["potential_func"] = run_config.pot_func
-    if "ystart" not in foargs:
-        foargs["ystart"] = run_config.ystart
+        kinit, kend, deltak= (run_config.kinit, run_config.kend, run_config.deltak)
+        foargs["k"] = helpers.seq(kinit, kend, deltak)
+    
     if filename is None:
-        kinit, kend, deltak = foargs["k"][0], foargs["k"][-1], foargs["k"][1]-foargs["k"][0]
-        filename = run_config.RESULTSDIR + "fo-" + foclass.__name__ + "-" + foargs["potential_func"] + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + "-" + time.strftime("%H%M%S") + ".hf5"
+        filename = run_config.foresults
+    
+    #Check foclass is specified and is suitable
+    if not foclass:
+        foclass = run_config.foclass
     if not issubclass(foclass, c.TwoStageModel):
         raise ValueError("Must use TwoStageModel class for first order run!")
     
+    #Create model instance
     model = foclass(**foargs)
+    
     try:
-        harness_logger.debug("Starting model run...")
+        log.debug("Starting model run...")
         model.run(saveresults=False)
-        harness_logger.debug("Model run finished.")
+        log.debug("Model run finished.")
     except c.ModelError:
-        harness_logger.exception("Something went wrong with model, quitting!")
+        log.exception("Something went wrong with model, quitting!")
         sys.exit(1)
+        
+    #Save data
     try:
-        harness_logger.debug("Trying to save model data to %s...", filename)
-        ensurepath(filename)
+        log.debug("Trying to save model data to %s...", filename)
+        helpers.ensurepath(filename)
         model.saveallresults(filename=filename)
         #Success!
-        harness_logger.info("Successfully ran and saved simulation in file %s.", filename)
+        log.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:
-        harness_logger.exception("IO error, nothing saved!")
+        log.exception("IO error, nothing saved!")
+        
     #Destroy model instance to save memory
-    harness_logger.debug("Destroying model instance...")
+    log.debug("Destroying model instance...")
     del model
     
     return filename
 
 
-    
-
-          
-def dofullrun():
-    """Complete full model run of 1st, source and 2nd order calculations."""
-    harness_logger.info("---------------------Starting full run through...--------------------")
-    fofile = runfomodel(foargs=run_config.foargs)
-    sourcefile = runfullsourceintegration(fofile)
-    foandsrcfile = sohelpers.combine_source_and_fofile(sourcefile, fofile)
-    sofile = runsomodel(foandsrcfile)
-    cfilename = sofile.replace("so", "cmb")
-    cfile = sohelpers.combine_results(fofile, sofile, cfilename)
-    harness_logger.info("Combined results saved in %s.", cfile)
-    harness_logger.info("---------------- Full run finished! ---------------------")
-    return cfile
-
-def main(args):
+def main(argv=None):
     """Main function: deal with command line arguments and start calculation as reqd."""
-
-    #Set up arguments
-    shortargs = "hf:mstadpb:e:"
-    longargs = ["help", "filename=", "fomodel", "somodel", "source", "all", "debug", "kinit=", "kend=", "deltak=", "parallelsrc", "begin=", "end=", "numsoks=", "ntheta="]
-    try:                                
-        opts, args = getopt.getopt(args, shortargs, longargs)
-    except getopt.GetoptError:
-        print __doc__ 
-        sys.exit(2)
-    filename = None
-    func = None
-    kinit = kend = deltak = None
-    ninit = 0
-    nfinal = -1
-    numsoks = run_config.numsoks
-    ntheta = run_config.ntheta
-    loglevel = configuration.LOGLEVEL
-    logfile = os.path.join(configuration.LOGDIRNAME)
-    foargs = getattr(run_config, "FOARGS", {})
-    soargs = getattr(run_config, "SOARGS", {})
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print __doc__
-            sys.exit()
-        elif opt in ("-f", "--filename"):
-            filename = arg
-        elif opt in ("-m", "--fomodel"):
-            func = "fomodel"
-        elif opt in ("-s", "--somodel"):
-            func = "somodel"
-        elif opt in ("-t", "--source"):
-            func = "source"
-        elif opt in ("-a", "--all"):
-            func = "all"
-        elif opt in ("-d", "--debug"):
-            loglevel = logging.DEBUG
-        elif opt in ("--kinit",):
-            kinit = float(arg)
-        elif opt in ("--kend",):
-            kend = float(arg)
-        elif opt in ("--deltak",):
-            deltak = float(arg)
-        elif opt in ("-p", "--parallelsrc"):
-            func = "parallelsrc"
-        elif opt in ("-b", "--begin"):
-            ninit = int(arg)
-        elif opt in ("-e", "--end"):
-            nfinal = int(arg)
-        elif opt in ("--numsoks",):
-            numsoks = int(arg)
-        elif opt in ("--ntheta",):
-            ntheta = int(arg)
-    #Start the logging module
-    startlogging(harness_logger, logfile, loglevel)
     
-    if func == "fomodel":
-        harness_logger.info("-----------First order run requested------------------")
-        try:
-            if not filename:
-                filename = None
-        except AttributeError:
-            filename = None 
-        #start model run
-        if not (kinit and deltak):
-            kinit, deltak, kend = run_config.kinit, run_config.deltak, run_config.kend
-        if not kend:
-            kend = 2*((numsoks-1)*deltak + kinit)
-            harness_logger.info("Set kend to %s.", str(kend))
-        elif kend < 2*((numsoks-1)*deltak + kinit):
-            harness_logger.info("Requested k range will not satisfy condition for second order run!")
+    if not argv:
+        argv = sys.argv
+    
+    #Parse command line options
+    parser = optparse.OptionParser()
+    
+    parser.add_option("-f", "--filename", action="store", dest="foresults", 
+                      default=run_config.foresults, type="string", help="file to store results")
+    
+    loggroup = optparse.OptionGroup(parser, "Log Options", 
+                           "These options affect the verbosity of the log files generated.")
+    loggroup.add_option("-q", "--quiet",
+                  action="store_const", const=logging.FATAL, dest="loglevel", 
+                  help="only print fatal error messages")
+    loggroup.add_option("-v", "--verbose",
+                  action="store_const", const=logging.INFO, dest="loglevel", 
+                  help="print informative messages")
+    loggroup.add_option("--debug",
+                  action="store_const", const=logging.DEBUG, dest="loglevel", 
+                  help="print lots of debugging information",
+                  default=run_config.LOGLEVEL)
+    parser.add_option_group(loggroup)
+    
+    (options, args) = parser.parse_args(args=argv[1:])
         
-        foargs["k"] = seq(kinit, kend, deltak)
-        runfomodel(filename=filename, foargs=foargs)
-    elif func == "somodel":
-        harness_logger.info("-----------Second order run requested------------------")
-        try:
-            if not filename:
-                raise AttributeError("Need to specify first order file!")
-        except AttributeError:
-            harness_logger.exception("Error starting second order model!")
-        #start model run
-        runsomodel(fofile=filename, soargs=soargs)
-    elif func == "source":
-        harness_logger.info("-----------Source integral run requested------------------")
-        harness_logger.info("Parameters: modelfile=%s, ntheta=%s", str(filename), str(ntheta))
-        try:
-            runfullsourceintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks)
-        except Exception:
-            harness_logger.exception("Error getting source integral!")
-    elif func == "parallelsrc":
-        try:
-            try:
-                runparallelintegration(modelfile=filename, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numsoks=numsoks, soargs=soargs)
-            except ImportError:
-                harness_logger.exception("Parallel module not available!")
-                sys.exit(1)
-        except Exception:
-            harness_logger.exception("Error getting source integral in parallel!")
-    elif func == "all":
-        try:
-            dofullrun()
-        except Exception:
-            harness_logger.exception("Error doing full run!")
-    else:
-        print __doc__
-        sys.exit()
+        
+    #Start the logging module
+    helpers.startlogging(log, run_config.logfile, options.loglevel)
+    
+    
+    log.info("-----------First order run requested------------------")
+    
+    if os.path.isfile(options.foresults):
+        raise IOError("First order results file already exists!") 
+      
+    foargs = run_config.foargs.copy()
+    #Get k variable for first order run
+    foargs["k"] = helpers.seq(run_config.kinit, run_config.kend, run_config.deltak)
+    
+    #Start first order run
+    runfomodel(filename=options.foresults, foargs=foargs)
+    
+    return 0
+    
         
 if __name__ == "__main__":
-    harness_logger = logging.getLogger(__name__)
-    harness_logger.handlers = []
-    main(sys.argv[1:])
+    log = logging.getLogger(__name__)
+    log.handlers = []
+    sys.exit(main())
 else:
-    harness_logger = logging.getLogger(__name__)
+    log = logging.getLogger(__name__)
