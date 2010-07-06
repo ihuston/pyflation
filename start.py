@@ -5,10 +5,7 @@ Author: Ian Huston
 from __future__ import print_function
 
 import os.path
-import configuration
 import run_config
-import harness
-import time
 import sys
 from helpers import ensurepath
 from optparse import OptionParser, OptionGroup
