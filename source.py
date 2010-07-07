@@ -149,6 +149,9 @@ def main(argv=None):
                      step=options.taskstep,
                      id=options.taskid)
     
+    if not os.path.isfile(options.foresults):
+        raise IOError("First order file %s does not exist! Please run firstorder.py." % options.foresults)
+    
     try:
         runsource(modelfile=options.foresults, 
                                    ninit=options.tstart, 
