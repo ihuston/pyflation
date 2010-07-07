@@ -17,6 +17,7 @@ import srcmerge
 import sohelpers
 import logging
 import sys
+import optparse
 
 
 def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, numsoks=1025, ntheta=513):
@@ -221,8 +222,8 @@ def main(argv=None):
     return 0
     
 if __name__ == "__main__":
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("source")
     log.handlers = []
     sys.exit(main())
 else:
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("source")

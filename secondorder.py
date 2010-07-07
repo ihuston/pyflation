@@ -84,8 +84,8 @@ elif func == "somodel":
     
     
 if __name__ == "__main__":
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("secondorder")
     log.handlers = []
     main(sys.argv[1:])
 else:
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("secondorder")

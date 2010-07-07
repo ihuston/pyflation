@@ -11,7 +11,6 @@ from scipy import integrate
 import os 
 import os.path
 import logging
-import logging.handlers
 
 def nanfillstart(a, l):
     """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
@@ -216,12 +215,21 @@ def find_nearest_ix(array,value):
 def startlogging(log, logfile, loglevel=logging.INFO, consolelevel=None):
     """Start the logging system to store rotational file based log."""
     
+    try:
+        from cloghandler import ConcurrentRotatingFileHandler as RFHandler
+    except ImportError:
+    # Next 2 lines are optional:  issue a warning to the user
+        from warnings import warn
+        warn("ConcurrentLogHandler package not installed.  Using builtin log handler")
+        from logging.handlers import RotatingFileHandler as RFHandler
+
+    
     if not consolelevel:
         consolelevel = loglevel
 
     log.setLevel(loglevel)
     #create file handler and set level to debug
-    fh = logging.handlers.RotatingFileHandler(filename=logfile, maxBytes=2**20, backupCount=50)
+    fh = RFHandler(filename=logfile, maxBytes=2**20, backupCount=50)
     fh.setLevel(loglevel)
     #create console handler and set level to error
     ch = logging.StreamHandler()
