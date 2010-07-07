@@ -111,6 +111,8 @@ srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 srcstub = os.path.join(RESULTSDIR, "src-")
+mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
+soresults = os.path.join(RESULTSDIR, "so.hf5")
 
 
 ##################################################

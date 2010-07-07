@@ -4,13 +4,18 @@ Created on 6 Jul 2010
 @author: Ian Huston
 '''
 
+import logging
+import sys
+import os.path
+import optparse
+
 import cosmomodels as c
 import run_config
 import helpers
-import logging
-import sys
 
-def runsomodel(fofile, filename=None, soargs=None):
+from run_config import _debug
+
+def runsomodel(mrgfile, filename=None, soargs=None):
     """Execute a SOCanonicalThreeStage model and save results.
     
     A new instance of SOCanonicalThreeStage is created, from the specified first order file.
@@ -18,9 +23,8 @@ def runsomodel(fofile, filename=None, soargs=None):
     
     Parameters
     ----------
-    fofile : String
-             Filename of first order file to use in simulation. First order file must contain
-             source term and have correct data structure.
+    mrgfile : String
+             Filename of merged first order and source file to use in simulation. 
     
     filename : String, optional
                Name of file to save results to. File will be created in the directory
@@ -40,47 +44,99 @@ def runsomodel(fofile, filename=None, soargs=None):
        Any exception raised during saving of code.
     """
     try:
-        fomodel = c.make_wrapper_model(fofile)
+        fomodel = c.make_wrapper_model(mrgfile)
     except:
         log.exception("Error wrapping model file.")
         raise
     if soargs is None:
         soargs = {}
+    #Create second order model instance
     somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
     try:
-        log.debug("Starting model run...")
+        if _debug:
+            log.debug("Starting model run...")
         somodel.run(saveresults=False)
-        log.debug("Model run finished.")
+        if _debug:
+            log.debug("Model run finished.")
     except c.ModelError:
         log.exception("Something went wrong with model, quitting!")
         sys.exit(1)
     if filename is None:
-        kinit, kend, deltak = somodel.k[0], somodel.k[-1], somodel.k[1]-somodel.k[0]
-        filename = run_config.RESULTSDIR + "so-" + somodel.potential_func + "-" + str(kinit) + "-" + str(kend) + "-" + str(deltak) + ".hf5"
+        filename = run_config.soresults
     try:
-        log.debug("Trying to save model data to %s...", filename)
+        if _debug:
+            log.debug("Trying to save model data to %s...", filename)
         helpers.ensurepath(filename)
         somodel.saveallresults(filename=filename)
     except Exception:
         log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
-#     log.debug("Destroying model instance...")
-#     del somodel
+    if _debug:
+        log.debug("Destroying model instance...")
+    del somodel
     #Success!
     log.info("Successfully ran and saved simulation in file %s.", filename)
     return filename
 
-def main():
-    pass
-elif func == "somodel":
+
+def main(argv=None):
+    """Main function: deal with command line arguments and start calculation as reqd."""
+    
+    if not argv:
+        argv = sys.argv
+    
+    #Parse command line options
+    parser = optparse.OptionParser()
+    
+    parser.add_option("-f", "--filename", action="store", dest="mrgresults", 
+                      default=run_config.mrgresults, type="string", 
+                      metavar="FILE", help="merged first order and source results file, default=%default")
+    
+    loggroup = optparse.OptionGroup(parser, "Log Options", 
+                           "These options affect the verbosity of the log files generated.")
+    loggroup.add_option("-q", "--quiet",
+                  action="store_const", const=logging.FATAL, dest="loglevel", 
+                  help="only print fatal error messages")
+    loggroup.add_option("-v", "--verbose",
+                  action="store_const", const=logging.INFO, dest="loglevel", 
+                  help="print informative messages")
+    loggroup.add_option("--debug",
+                  action="store_const", const=logging.DEBUG, dest="loglevel", 
+                  help="log lots of debugging information",
+                  default=run_config.LOGLEVEL)
+    loggroup.add_option("--console", action="store_true", dest="console",
+                        default=False, help="if selected matches console log level " 
+                        "to selected file log level, otherwise only warnings are shown.")
+    parser.add_option_group(loggroup)
+    
+    (options, args) = parser.parse_args(args=argv[1:])
+    
+    #Start the logging module
+    if options.console:
+        consolelevel = options.loglevel
+    else:
+        consolelevel = logging.WARN
+        
+    logfile = os.path.join(run_config.LOGDIR, "src.log")
+    helpers.startlogging(log, logfile, options.loglevel, consolelevel)
+    
+    if (not _debug) and (options.loglevel == logging.DEBUG):
+        log.warn("Debugging information will not be stored due to setting in run_config.")
+    
+    if not os.path.isfile(options.mrgresults):
+        raise IOError("Merged results file %s does not exist!" % options.foresults)
+    
+    try:
         log.info("-----------Second order run requested------------------")
-        try:
-            if not filename:
-                raise AttributeError("Need to specify first order file!")
-        except AttributeError:
-            log.exception("Error starting second order model!")
-        #start model run
-        runsomodel(fofile=filename, soargs=soargs)
+        runsomodel(mrgfile=options.mrgresults, soargs=run_config.soargs)
+    except Exception:
+        log.exception("Error getting second order results!")
+        return 1
+    
+    return 0
+        
+      
+
     
     
 if __name__ == "__main__":
