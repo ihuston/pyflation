@@ -93,21 +93,21 @@ def main(argv=None):
                             "The current process should be given a taskid in the range specified."
                             "The default is an array of 1:1, step 1 with id 1.")
     arraygroup.add_option("--taskmin", action="store", dest="taskmin", default=1,
-                          type="num", help="start of task array range", metavar="NUM")
+                          type="int", help="start of task array range", metavar="NUM")
     arraygroup.add_option("--taskmax", action="store", dest="taskmax", default=1,
-                          type="num", help="end of task array range", metavar="NUM")
+                          type="int", help="end of task array range", metavar="NUM")
     arraygroup.add_option("--taskstep", action="store", dest="taskstep", default=1,
-                          type="num", help="step size of task array range", metavar="NUM")
+                          type="int", help="step size of task array range", metavar="NUM")
     arraygroup.add_option("--taskid", action="store", dest="taskid", default=1,
-                          type="num", help="task id of current process", metavar="NUM")
+                          type="int", help="task id of current process", metavar="NUM")
     parser.add_option_group(arraygroup)
     
     timegroup = optparse.OptionGroup(parser, "Timestep Options",
                      "These options affect which timesteps the source term is calculated for.")
     timegroup.add_option("--tstart", action="store", dest="tstart", default=0,
-                         type="num", help="first time step to calculate, default=%default")
+                         type="int", help="first time step to calculate, default=%default")
     timegroup.add_option("--tend", action="store", dest="tend", default=-1,
-                         type="num", help="last time step to calculate, use -1 for the last value, default=%default")
+                         type="int", help="last time step to calculate, use -1 for the last value, default=%default")
     
     parser.add_option_group(timegroup)
     
