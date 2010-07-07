@@ -153,10 +153,8 @@ def main(argv=None):
         raise IOError("First order file %s does not exist! Please run firstorder.py." % options.foresults)
     
     try:
-        runsource(modelfile=options.foresults, 
-                                   ninit=options.tstart, 
-                                   nfinal=options.tend,
-                                   taskarray=taskarray)
+        runsource(fofile=options.foresults, ninit=options.tstart, 
+                  nfinal=options.tend, taskarray=taskarray)
     except Exception:
         log.exception("Error getting source integral!")
         return 1

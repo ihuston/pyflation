@@ -119,4 +119,4 @@ srcstub = os.path.join(RESULTSDIR, "src-")
 # 0 for off, 1 for on
 # This can be changed using command line arguments
 ##################################################
-_debug = 0 #
+_debug = 1 #
