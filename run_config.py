@@ -110,7 +110,11 @@ foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
+#Source results will be stored in src-#.hf5
 srcstub = os.path.join(RESULTSDIR, "src-")
+#This is the pattern that is checked when results are merged
+pattern = "src-(\d*).hf5" 
+
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
 
