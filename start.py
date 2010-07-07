@@ -180,10 +180,10 @@ def main(argv=None):
     
     src_dict = source_dict(template_dict, fo_jid=fo_jid)
     
-    if os.path.isfile(src_dict["fulltemplatefile"]):
-        write_out_template(src_dict["fulltemplatefile"],src_dict["fullscriptname"], src_dict)
+    if os.path.isfile(src_dict["templatefile"]):
+        write_out_template(src_dict["templatefile"],src_dict["fullscriptname"], src_dict)
     else:
-        raise IOError("No template file found at %s!" % src_dict["fulltemplatefile"])
+        raise IOError("No template file found at %s!" % src_dict["templatefile"])
 
     
     #Launch full script and get job id
