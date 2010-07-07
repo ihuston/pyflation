@@ -12,6 +12,7 @@ from optparse import OptionParser, OptionGroup
 import logging
 import subprocess
 import helpers
+from run_config import _debug
 
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
@@ -23,7 +24,7 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  hold_jid_list = run_config.hold_jid_list, 
                  templatefile = run_config.templatefile,
                  foscriptname = run_config.foscriptname,
-                 fullscriptname = run_config.fullscriptname,
+                 srcscriptname = run_config.srcscriptname,
                  foresults = run_config.foresults,
                  srcstub = run_config.srcstub,
                  extra_qsub_params = "",
@@ -36,20 +37,29 @@ def launch_qsub(qsubscript):
     Return job id of new job.
     """
     qsubcommand = ["qsub", "-terse", qsubscript]
-    newprocess = subprocess.Popen(qsubcommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        newprocess = subprocess.Popen(qsubcommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception:
+        raise
     
     result = newprocess.stdout.read()
     error_msg = newprocess.stderr.read()
     
     if error_msg:
+        log.error("Error executing script %s", qsubscript)
         raise Exception(error_msg)
-    
+    # Get job id
     job_id = result.rstrip()
+    #Log job id info
+    if _debug:
+        log.debug("Submitted qsub script %s with job id %s.", qsubscript, job_id)
     
     return job_id
 
 def write_out_template(templatefile, newfile, textdict):
     """Write the textdict dictionary using the templatefile to newfile."""
+    if not os.path.isfile(templatefile):
+        raise IOError("Template file %s does not exist!" % templatefile)
     try:
         f = open(templatefile, "r")
         text = f.read()
@@ -57,7 +67,9 @@ def write_out_template(templatefile, newfile, textdict):
         raise
     finally:
         f.close()
-        
+    
+    if os.path.isfile(newfile):
+        raise IOError("File %s already exists! Please delete or use another filename." % newfile)
     #Ensure directory exists for new file
     try:
         ensurepath(newfile)
@@ -70,6 +82,7 @@ def write_out_template(templatefile, newfile, textdict):
         raise
     finally:
         nf.close()
+    return
     
 def first_order_dict(template_dict):
     """Return dictionary for first order qsub script.
@@ -136,14 +149,12 @@ def main(argv=None):
     
     filegrp = OptionGroup(parser, "File options", 
                           "These options override the default choice of template and script files.")
-    filegrp.add_option("--fotemplate", action="store", dest="templatefile", 
-                       type="string", help="first order template file")
-    filegrp.add_option("--fulltemplate", action="store", dest="fulltemplatefile",
-                       type="string", help="full program template file")
+    filegrp.add_option("--template", action="store", dest="templatefile", 
+                       type="string", help="qsub template file")
     filegrp.add_option("--foscript", action="store", dest="foscriptname",
                        type="string", help="first order script name")
-    filegrp.add_option("--fullscript", action="store", dest="fullscriptname",
-                       type="string", help="full program script name")
+    filegrp.add_option("--srcscript", action="store", dest="srcscriptname",
+                       type="string", help="source integration script name")
     parser.add_option_group(filegrp)
     
     (options, args) = parser.parse_args(args=argv[1:])
@@ -161,39 +172,32 @@ def main(argv=None):
     #Log options chosen
     log.debug("Generic template dictionary is %s", template_dict)
     
+    #First order calculation
     #First order script creation
     fo_dict = first_order_dict(template_dict)    
-    
-    if os.path.isfile(fo_dict["templatefile"]):
-        write_out_template(fo_dict["templatefile"],fo_dict["foscriptname"], fo_dict)
-    else:
-        raise IOError("No template file found at %s!" % fo_dict["templatefile"])
-
-    
+    write_out_template(fo_dict["templatefile"],fo_dict["foscriptname"], fo_dict)
     #Launch first order script and get job id
-    try:
-        fo_jid = launch_qsub(fo_dict["foscriptname"])
-        log.info("Submitted first order script with job id %s.", fo_jid)
-    except Exception:
-        log.error("Error executing script %s", fo_dict["foscriptname"])
-        raise
-    
+    fo_jid = launch_qsub(fo_dict["foscriptname"])
+  
+    #Source term calculation
     src_dict = source_dict(template_dict, fo_jid=fo_jid)
-    
-    if os.path.isfile(src_dict["templatefile"]):
-        write_out_template(src_dict["templatefile"],src_dict["fullscriptname"], src_dict)
-    else:
-        raise IOError("No template file found at %s!" % src_dict["templatefile"])
-
-    
+    write_out_template(src_dict["templatefile"],src_dict["srcscriptname"], src_dict)
     #Launch full script and get job id
-    try:
-        full_jid = launch_qsub(src_dict["fullscriptname"])
-        log.info("Submitted full script with job id %s.", full_jid)
-    except Exception:
-        log.error("Error executing script %s", src_dict["fullscriptname"])
-        raise
+    src_jid = launch_qsub(src_dict["srcscriptname"])
     
+    #Merger of source terms and combining with firstorder results
+    #mrg_dict = merge_dict(template_dict, src_jid=src_jid)
+    #write_out_template(mrg_dict["templatefile"], mrg_dict["mrgscriptname"], mrg_dict)
+    #Launch full script and get job id
+    #mrg_jid = launch_qsub(mrg_dict["mrgscriptname"])
+    
+    #Second order calculation
+    #so_dict = second_order_dict(template_dict, mrg_jid=mrg_jid)
+    #write_out_template(so_dict["templatefile"], so_dict["soscriptname"], so_dict)
+    #Launch full script and get job id
+    #so_jid = launch_qsub(so_dict["soscriptname"])
+    
+        
     return 0
             
 

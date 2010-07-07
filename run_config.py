@@ -107,7 +107,7 @@ hold_jid_list= "" # List of jobs this task depends on
 templatefile = os.path.join(CODEDIR, "qsub-template.sh")
 
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
-fullscriptname = os.path.join(QSUBSCRIPTSDIR, "full.qsub")
+srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 srcstub = os.path.join(RESULTSDIR, "src-")
