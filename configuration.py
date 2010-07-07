@@ -15,21 +15,8 @@ import os.path
 
 # Directory structure
 
-# Name of base directory which everything else is below
-BASEDIRNAME = "pyflation"
-
-
 # Calculate base directory as being below $HOME
 CODEDIR = os.path.dirname(os.path.abspath(__file__))
-
-if os.path.basename(os.path.dirname(CODEDIR)) == BASEDIRNAME:
-    BASEDIR = os.path.dirname(CODEDIR)
-elif os.path.basename(os.path.dirname(os.path.dirname(CODEDIR))) == BASEDIRNAME:
-    BASEDIR = os.path.dirname(os.path.dirname(CODEDIR))
-elif os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(CODEDIR)))) == BASEDIRNAME:
-    BASEDIR = os.path.dirname(os.path.dirname(os.path.dirname(CODEDIR)))
-else:
-    raise IOError("Base directory cannot be found!")
 
 
 # Change the names of various directories

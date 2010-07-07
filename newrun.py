@@ -83,8 +83,10 @@ def main(argv = None):
     
     parser.set_defaults(loglevel=configuration.LOGLEVEL)
     
-    parser.add_option("-n", "--newdir", dest="newdir",
-                  help="create run directory in NEWDIR", metavar="NEWDIR")
+    parser.add_option("-d", "--dir", dest="dir", default=os.getcwd(),
+                  help="create run directory in DIR, default is current directory", metavar="DIR")
+    parser.add_option("-n", "--name", dest="dirname",
+                      help="new run directory name")
     parser.add_option("-c", "--codedir", dest="codedir",
                   help="copy code from CODEDIR", metavar="CODEDIR")
     parser.add_option("-q", "--quiet",
@@ -103,12 +105,14 @@ def main(argv = None):
     
     logging.basicConfig(level=options.loglevel)
         
-    if options.newdir:
-        newdir = options.newdir
-        logging.debug("Option newdir specified with value %s.", options.newdir)
+    if not os.path.isdir(options.dir):
+        raise IOError("Please check that parent directory %s exists." % options.dir)
+
+    if options.dirname:
+        newdir = os.path.join(options.dir, options.dirname)
+        logging.debug("Variable newdir specified with value %s.", newdir)
     else:
-        newdir = os.path.join(configuration.BASEDIR, 
-                              configuration.RUNDIRNAME, time.strftime("%Y%m%d%H%M%S"))
+        newdir = os.path.join(options.dir, time.strftime("%Y%m%d%H%M%S"))
         logging.debug("Variable newdir created with value %s", newdir)
     
     if options.codedir:
