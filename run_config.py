@@ -115,6 +115,7 @@ srcstub = os.path.join(RESULTSDIR, "src-")
 #This is the pattern that is checked when results are merged
 pattern = "src-(\d*).hf5" 
 
+srcresults = os.path.join(RESULTSDIR, "src.hf5")
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
 

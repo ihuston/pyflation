@@ -13,9 +13,10 @@ from run_config import _debug
 import sys
 import helpers
 import optparse
+import sohelpers
 
 
-def mergefiles(newfile, dirname, pattern=None):
+def joinsrcfiles(newfile, dirname, pattern=None):
     """Merge sourceterms in `dirname` into one file `newfile`
     
     Parameters
@@ -107,16 +108,27 @@ def main(argv=None):
     #Parse command line options
     parser = optparse.OptionParser()
     
-    parser.add_option("-f", "--filename", action="store", dest="mrgresults", 
-                      default=run_config.mrgresults, type="string", 
-                      metavar="FILE", help="file to store merged results, default=%default")
+    parser.add_option("-f", "--filename", action="store", dest="srcresults", 
+                      default=run_config.srcresults, type="string", 
+                      metavar="FILE", help="file to store all src results, default=%default")
     parser.add_option("-d", "--dirname", action="store", dest="dirname",
                       default=run_config.RESULTSDIR, type="string",
                       metavar="DIR", help="directory to search for src node files, " 
                       "default=%default")  
     parser.add_option("--pattern", action="store", dest="pattern",
                       default=run_config.pattern, type="string",
-                      help="regex pattern to match with src node files, default %default")
+                      help="regex pattern to match with src node files, default=%default")
+    
+    foagroup = optparse.OptionGroup(parser, "Combination Options",
+                        "These options control the merging of first order and source files.")
+    foagroup.add_option("--merge", action="store_true", dest="merge",
+                        default=False, help="combine first order and source results in one file")
+    foagroup.add_option("--fofile", action="store", dest="foresults",
+                        default=run_config.foresults, type="string",
+                        metavar="FILE", help="first order results file, default=%default")
+    foagroup.add_option("--mergedfile", action="store", dest="mrgresults",
+                        default=run_config.mrgresults, type="string",
+                        metavar="FILE", help="new file to store first order and source results, default=%default")
     
     loggroup = optparse.OptionGroup(parser, "Log Options", 
                            "These options affect the verbosity of the log files generated.")
@@ -150,18 +162,29 @@ def main(argv=None):
     if (not _debug) and (options.loglevel == logging.DEBUG):
         log.warn("Debugging information will not be stored due to setting in run_config.")
         
-    if os.path.isfile(options.mrgresults):
-        raise IOError("File %s already exists! Please delete or specify another filename." % options.mrgresults)
+    if os.path.isfile(options.srcresults):
+        raise IOError("File %s already exists! Please delete or specify another filename." % options.srcresults)
     
     if not os.path.isdir(options.dirname):
         raise IOError("Directory %s does not exist!" % options.dirname)
     
     try:
-        mergefiles(options.mrgresults, options.dirname, options.pattern)
+        srcfile = joinsrcfiles(options.srcresults, options.dirname, options.pattern)
     except Exception:
-        log.exception("Something went wrong while merging results!")
+        log.exception("Something went wrong while combining source files!")
         return 1
     
+    if options.merge:
+        if os.path.isfile(options.mrgresults):
+            raise IOError("File %s already exists! Please delete or specify another filename." % options.srcresults)
+        if not os.path.isfile(options.foresults):
+            raise IOError("First order file %s does not exist!" % options.foresults)
+        try:
+            sohelpers.combine_source_and_fofile(srcfile, options.foresults, options.mrgresults)
+        except Exception:
+            log.exception("Something went wrong while merging first order and source files.")
+            return 1
+        
     return 0
     
 #Get root log
