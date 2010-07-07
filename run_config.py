@@ -104,8 +104,7 @@ taskmin= "1" #starting task id number
 taskmax= "20" #finishing task id number
 hold_jid_list= "" # List of jobs this task depends on 
 
-fotemplatefile = os.path.join(CODEDIR, "forun-template.sh")
-fulltemplatefile = os.path.join(CODEDIR, "full-template.sh")
+templatefile = os.path.join(CODEDIR, "qsub-template.sh")
 
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 fullscriptname = os.path.join(QSUBSCRIPTSDIR, "full.qsub")

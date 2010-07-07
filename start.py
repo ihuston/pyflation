@@ -21,12 +21,13 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  taskmin = run_config.taskmin,
                  taskmax = run_config.taskmax,
                  hold_jid_list = run_config.hold_jid_list, 
-                 fotemplatefile = run_config.fotemplatefile,
-                 fulltemplatefile = run_config.fulltemplatefile,
+                 templatefile = run_config.templatefile,
                  foscriptname = run_config.foscriptname,
                  fullscriptname = run_config.fullscriptname,
                  foresults = run_config.foresults,
-                 srcstub = run_config.srcstub             
+                 srcstub = run_config.srcstub,
+                 extra_qsub_params = "",
+                 command = "",      
                  )
     
 def launch_qsub(qsubscript):
@@ -70,7 +71,30 @@ def write_out_template(templatefile, newfile, textdict):
     finally:
         nf.close()
     
-    
+def first_order_dict(template_dict):
+    """Return dictionary for first order qsub script.
+    Copies template_dict so as not to change values."""
+    fo_dict = template_dict.copy()
+    fo_dict["runname"] += "-fo"
+    fo_dict["qsublogname"] += "-fo"
+    fo_dict["command"] = "python firstorder.py"
+    return fo_dict
+
+def source_dict(template_dict, fo_jid=None):
+    """Return dictionary for source qsub script."""
+    #Write second order file with job_id from first
+    src_dict = template_dict.copy()
+    src_dict["hold_jid_list"] = fo_jid
+    src_dict["runname"] += "-full"
+    src_dict["qsublogname"] += "-node-$TASK_ID"
+    src_dict["extra_qsub_args"] = ("#$ -t " + src_dict["taskmin"] + "-" +
+                                    src_dict["taskmax"] +"\n#$ -hold_jid " + 
+                                    src_dict["hold_jid_list"])
+    #Formulate source term command
+    src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
+                           "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
+                           "--taskid=$SGE_TASK_ID -f $FOFILE")
+    return src_dict
 
 def main(argv=None):
     """Process command line options, create qsub scripts and start execution."""
@@ -112,7 +136,7 @@ def main(argv=None):
     
     filegrp = OptionGroup(parser, "File options", 
                           "These options override the default choice of template and script files.")
-    filegrp.add_option("--fotemplate", action="store", dest="fotemplatefile", 
+    filegrp.add_option("--fotemplate", action="store", dest="templatefile", 
                        type="string", help="first order template file")
     filegrp.add_option("--fulltemplate", action="store", dest="fulltemplatefile",
                        type="string", help="full program template file")
@@ -138,14 +162,12 @@ def main(argv=None):
     log.debug("Generic template dictionary is %s", template_dict)
     
     #First order script creation
-    fo_dict = template_dict.copy()
-    fo_dict["runname"] += "-fo"
-    fo_dict["qsublogname"] += "-fo"
+    fo_dict = first_order_dict(template_dict)    
     
-    if os.path.isfile(fo_dict["fotemplatefile"]):
-        write_out_template(fo_dict["fotemplatefile"],fo_dict["foscriptname"], fo_dict)
+    if os.path.isfile(fo_dict["templatefile"]):
+        write_out_template(fo_dict["templatefile"],fo_dict["foscriptname"], fo_dict)
     else:
-        raise IOError("No template file found at %s!" % fo_dict["fotemplatefile"])
+        raise IOError("No template file found at %s!" % fo_dict["templatefile"])
 
     
     #Launch first order script and get job id
@@ -156,24 +178,20 @@ def main(argv=None):
         log.error("Error executing script %s", fo_dict["foscriptname"])
         raise
     
-    #Write second order file with job_id from first
-    full_dict = template_dict.copy()
-    full_dict["hold_jid_list"] = fo_jid
-    full_dict["runname"] += "-full"
-    full_dict["qsublogname"] += "-node-$TASK_ID"
+    src_dict = source_dict(template_dict, fo_jid=fo_jid)
     
-    if os.path.isfile(full_dict["fulltemplatefile"]):
-        write_out_template(full_dict["fulltemplatefile"],full_dict["fullscriptname"], full_dict)
+    if os.path.isfile(src_dict["fulltemplatefile"]):
+        write_out_template(src_dict["fulltemplatefile"],src_dict["fullscriptname"], src_dict)
     else:
-        raise IOError("No template file found at %s!" % full_dict["fulltemplatefile"])
+        raise IOError("No template file found at %s!" % src_dict["fulltemplatefile"])
 
     
     #Launch full script and get job id
     try:
-        full_jid = launch_qsub(full_dict["fullscriptname"])
+        full_jid = launch_qsub(src_dict["fullscriptname"])
         log.info("Submitted full script with job id %s.", full_jid)
     except Exception:
-        log.error("Error executing script %s", full_dict["fullscriptname"])
+        log.error("Error executing script %s", src_dict["fullscriptname"])
         raise
     
     return 0
