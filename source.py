@@ -88,9 +88,9 @@ def main(argv=None):
                       metavar="FILE", help="first order results file, default=%default")
     
     arraygroup = optparse.OptionGroup(parser, "Task Array Options",
-                            "These options specify a task array to work inside."
-                            "The array is the range taskmin:taskmax with step taskstep."
-                            "The current process should be given a taskid in the range specified."
+                            "These options specify a task array to work inside. "
+                            "The array is the range taskmin:taskmax with step taskstep. "
+                            "The current process should be given a taskid in the range specified. "
                             "The default is an array of 1:1, step 1 with id 1.")
     arraygroup.add_option("--taskmin", action="store", dest="taskmin", default=1,
                           type="int", help="start of task array range", metavar="NUM")
@@ -124,7 +124,7 @@ def main(argv=None):
                   help="log lots of debugging information",
                   default=run_config.LOGLEVEL)
     loggroup.add_option("--console", action="store_true", dest="console",
-                        default=False, help="if selected matches console log level" 
+                        default=False, help="if selected matches console log level " 
                         "to selected file log level, otherwise only warnings are shown.")
     parser.add_option_group(loggroup)
     
