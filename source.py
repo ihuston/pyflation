@@ -22,21 +22,40 @@ import optparse
 #Set logging of debug messages on or off
 from run_config import _debug
 
-
-def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, numsoks=1025, ntheta=513):
-    """Run source integrand calculation."""
+def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None, 
+              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None):
+    """Run parallel source integrand and second order calculation."""
+    
+    id = taskarray["id"]
+    ntasks = (taskarray["max"] -taskarray["min"]) // taskarray["step"] + 1
+   
     try:
-        m = c.make_wrapper_model(modelfile)
+        m = c.make_wrapper_model(fofile)
     except:
-        log.exception("Error wrapping model file.")
-        raise
+        log.exception("Error wrapping first order file.")
+        
     if sourcefile is None:
-        sourcefile = run_config.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
-        sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
+        sourcefile = run_config.srcstub + str(id) + ".hf5"
+    
+    if nfinal == -1:
+        nfinal = m.tresult.shape[0]
+    nfostart = min(m.fotstartindex).astype(int)
+    nstar = max(nfostart, ninit)
+    totalnrange = len(m.tresult[nstar:nfinal])
+    nrange = N.ceil(totalnrange/ntasks)
+    
+    #Change myninit to match task id
+    if id == 1:
+        myninit = ninit
+    else:
+        myninit = nstar + (id-1)*nrange
+    mynend = nstar + id*nrange
+    log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
+    
     #get source integrand and save to file
     try:
-        helpers.ensurepath(sourcefile)
-        filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=ninit, nfinal=nfinal, ntheta=ntheta, numks=numsoks)
+        filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
+                                                   ntheta=ntheta, numks=numsoks)
         log.info("Source term saved as " + filesaved)
     except Exception:
         log.exception("Error getting source term.")
@@ -48,101 +67,11 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, num
         del m
     except IOError:
         log.exception("Error closing model file!")
-        raise
-    return filesaved
-
-
-def runsource(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025, soargs=None):
-    """Run parallel source integrand and second order calculation."""
-    try:
-        from mpi4py import MPI
-    except ImportError:
-        raise
-
-    comm = MPI.COMM_WORLD
-    myrank = comm.Get_rank()
-    nprocs = comm.Get_size() - 1 #Don't include host
-    status = 0
-    try:
-        m = c.make_wrapper_model(modelfile)
-    except:
-        log.exception("Error wrapping model file.")
-        if myrank != 0:
-            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Send error msg
-        raise
-    if sourcefile is None:
-        if "fo-" in modelfile:
-            srcstub = os.path.splitext(os.path.basename(modelfile))[0].replace("fo", "src")
-        else:
-            srcstub = "-".join(["src", m.potential_func, str(min(m.k)), str(max(m.k)), str(m.k[1]-m.k[0]), time.strftime("%Y%m%d")])
-        sourcefile = run_config.RESULTSDIR + srcstub + "/src-part-" + str(myrank) + ".hf5"
-    if myrank == 0:
-        #Check sourcefile directory exists:
-        helpers.ensurepath(os.path.dirname(sourcefile))
-        log.info("Source file path is %s." %sourcefile)
-    if myrank != 0:
-        #Do not include host node in execution
-        if nfinal == -1:
-            nfinal = m.tresult.shape[0]
-        nfostart = min(m.fotstartindex).astype(int)
-        nstar = max(nfostart, ninit)
-        totalnrange = len(m.tresult[nstar:nfinal])
-        nrange = N.ceil(totalnrange/nprocs)
-        if myrank == 1:
-            myninit = ninit
-        else:
-            myninit = nstar + (myrank-1)*nrange
-        mynend = nstar + myrank*nrange
-        log.info("Process rank: %d, ninit: %d, nend: %d", myrank, myninit, mynend)
         
-        #get source integrand and save to file
-        try:
-            filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
-                                                       ntheta=ntheta, numks=numsoks)
-            log.info("Source term saved as " + filesaved)
-        except Exception:
-            log.exception("Error getting source term.")
-            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
-            raise
-        #Destroy model instance to save memory
-        if _debug:
-            log.debug("Destroying model instance to reclaim memory...")
-        try:
-            del m
-        except IOError:
-            log.exception("Error closing model file!")
-            comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
-            raise
-        comm.send([{'rank':myrank, 'status':0}], dest=0, tag=0) #Tag=0 signals success
-        return filesaved
-    else:
-        #Get rid of model object
-        del m
-        process_list = range(1, nprocs+1)
-        status_list = []
-        while len(status_list) < len(process_list):
-            status = MPI.Status()
-            data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            status_list.append(data[0])
-            if status.tag > 0:
-                log.error("Error in subprocess %d!", status.source)
-                raise IOError("Error in subprocess %d!" % status.source)
-        log.info("All processes finished! Starting merger...")
-        srcdir = os.path.dirname(sourcefile)
-        newsrcfile = os.path.dirname(srcdir) + os.sep + srcstub + ".hf5" 
-        srcmergefile = srcmerge.mergefiles(newfile=newsrcfile, dirname=srcdir)
-        log.info("Merger complete. File saved as %s.", srcmergefile)
-        #Start combination of first order and source files
-        log.info("Starting to combine first order and source files.")
-        foandsrcfile = sohelpers.combine_source_and_fofile(srcmergefile, modelfile)
-        log.info("Combination complete, saved in %s.", foandsrcfile)
-        log.info("Starting second order run...")
-        sofile = runsomodel(foandsrcfile, soargs=soargs)
-        log.info("Second order run complete. Starting to combine first and second order results.")
-        cfilename = sofile.replace("so", "cmb")
-        cfile = sohelpers.combine_results(foandsrcfile, sofile, cfilename)
-        log.info("Combined results saved in %s.", cfile)
-        return cfile
+        raise
+    
+    return filesaved
+    
     
 
 def main(argv=None):
@@ -207,7 +136,9 @@ def main(argv=None):
         consolelevel = options.loglevel
     else:
         consolelevel = logging.WARN
-    helpers.startlogging(log, run_config.logfile, options.loglevel, consolelevel)
+        
+    logfile = os.path.join(run_config.LOGDIR, "src.log")
+    helpers.startlogging(log, logfile, options.loglevel, consolelevel)
     
     if (not _debug) and (options.loglevel == logging.DEBUG):
         log.warn("Debugging information will not be stored due to setting in run_config.")
