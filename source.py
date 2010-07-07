@@ -19,6 +19,9 @@ import logging
 import sys
 import optparse
 
+#Set logging of debug messages on or off
+from run_config import _debug
+
 
 def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, numsoks=1025, ntheta=513):
     """Run source integrand calculation."""
@@ -39,7 +42,8 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, num
         log.exception("Error getting source term.")
         raise
     #Destroy model instance to save memory
-    log.debug("Destroying model instance to reclaim memory...")
+    if _debug:
+        log.debug("Destroying model instance to reclaim memory...")
     try:
         del m
     except IOError:
@@ -48,7 +52,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None, num
     return filesaved
 
 
-def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025, soargs=None):
+def runsource(modelfile, ninit=0, nfinal=None, sourcefile=None, ntheta=513, numsoks=1025, soargs=None):
     """Run parallel source integrand and second order calculation."""
     try:
         from mpi4py import MPI
@@ -101,7 +105,8 @@ def runparallelintegration(modelfile, ninit=0, nfinal=None, sourcefile=None, nth
             comm.send([{'rank':myrank, 'status':10}], dest=0, tag=10) #Tag=10 signals an error
             raise
         #Destroy model instance to save memory
-        log.debug("Destroying model instance to reclaim memory...")
+        if _debug:
+            log.debug("Destroying model instance to reclaim memory...")
         try:
             del m
         except IOError:
@@ -196,7 +201,7 @@ def main(argv=None):
     
     (options, args) = parser.parse_args(args=argv[1:])
         
-        
+            
     #Start the logging module
     if options.console:
         consolelevel = options.loglevel
@@ -204,6 +209,9 @@ def main(argv=None):
         consolelevel = logging.WARN
     helpers.startlogging(log, run_config.logfile, options.loglevel, consolelevel)
     
+    if (not _debug) and (options.loglevel == logging.DEBUG):
+        log.warn("Debugging information will not be stored due to setting in run_config.")
+        
     
     taskarray = dict(min=options.taskmin,
                      max=options.taskmax,
@@ -211,7 +219,7 @@ def main(argv=None):
                      id=options.taskid)
     
     try:
-        runparallelintegration(modelfile=options.foresults, 
+        runsource(modelfile=options.foresults, 
                                    ninit=options.tstart, 
                                    nfinal=options.tend,
                                    taskarray=taskarray)
