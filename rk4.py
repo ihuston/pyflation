@@ -284,7 +284,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 kmax = kix.max()
                 v[:,:kmax+1][N.isnan(v[:,:kmax+1])] = vstart[:,:kmax+1][N.isnan(v[:,:kmax+1])]
                 #Change last y result to hold initial condition
-                y[-1][:,kix] = v[:,kix]
+                #y[-1][:,kix] = v[:,kix]
+                yarr[xix-1,:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
                 #xx.append(x.copy() + h)
                 xix += 1
