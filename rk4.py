@@ -211,7 +211,8 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
         y.append(v)
     
     return xx, y
-    
+   
+@profile 
 def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
