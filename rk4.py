@@ -217,13 +217,14 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    set_trace()
+    
     
     #Make sure h is specified
     if h is None:
         raise SimRunError("Need to specify h.")
    
     if allks is not None:
+        set_trace()
         if not isinstance(ts, N.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
         #Set up x results
