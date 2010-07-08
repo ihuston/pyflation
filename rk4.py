@@ -272,7 +272,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
     
-        y[xix] = v.copy()
+        yarr[xix] = v.copy()
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
