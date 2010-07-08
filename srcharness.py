@@ -29,7 +29,7 @@ import sosource
 import getopt
 import sohelpers
 import os
-import hconfig
+import configuration
 
 
 #Get root logger
@@ -42,12 +42,12 @@ else:
 def startlogging():
     """Start the logging system to store rotational log based on date."""
 
-    harness_logger.setLevel(hconfig.LOGLEVEL)
+    harness_logger.setLevel(configuration.LOGLEVEL)
     #Get date for logfile
     date = time.strftime("%Y%m%d")
     #create file handler and set level to debug
-    fh = logging.handlers.RotatingFileHandler(filename=hconfig.LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
-    fh.setLevel(hconfig.LOGLEVEL)
+    fh = logging.handlers.RotatingFileHandler(filename=configuration.LOGDIR + date + ".log", maxBytes=2**20, backupCount=50)
+    fh.setLevel(configuration.LOGLEVEL)
     #create console handler and set level to error
     ch = logging.StreamHandler()
     ch.setLevel(logging.ERROR)
@@ -80,7 +80,7 @@ def runfullsourceintegration(modelfile, ninit=0, nfinal=-1, sourcefile=None):
         harness_logger.exception("Error wrapping model file.")
         raise
     if sourcefile is None:
-        sourcefile = hconfig.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
+        sourcefile = configuration.RESULTSDIR + "src-" + m.potential_func + "-" + str(min(m.k)) + "-" + str(max(m.k))
         sourcefile += "-" + str(m.k[1]-m.k[0]) + "-" + time.strftime("%H%M%S") + ".hf5"
     #get source integrand and save to file
     try:

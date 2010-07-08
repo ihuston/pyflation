@@ -10,7 +10,7 @@ from scipy import log as clog
 from scipy import sqrt
 from sosource import getthetaterms
 import helpers
-from harness import checkkend
+from run_config import getkend
 import logging
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def generate_fixtures(kmins=kmins_default, deltaks=deltaks_default, numsoks=nums
     """Generator for fixtures created from cartesian products of input lists."""
     c = helpers.cartesian_product([kmins, deltaks, numsoks, nthetas, As, Bs, etas])
     for now in c:
-        fullkmax = checkkend(now[0], None, now[1], now[2])
+        fullkmax = getkend(now[0], now[1], now[2], kend=None)
         fx = {"kmin":now[0], "deltak":now[1], "numsoks":now[2], "fullkmax":fullkmax, "nthetas":now[3], "A":now[4], "B":now[5], "eta":now[6]}
         yield fx
 

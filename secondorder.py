@@ -1,208 +1,147 @@
-"""Second Order Cosmological Model simulations by Ian Huston
-    $Id: secondorder.py,v 1.7 2008/11/14 17:28:51 ith Exp $
+'''secondorder.py - Run a second order simulation
+Created on 6 Jul 2010
+
+@author: Ian Huston
+'''
+
+import logging
+import sys
+import os.path
+import optparse
+
+import cosmomodels as c
+import run_config
+import helpers
+
+from run_config import _debug
+
+def runsomodel(mrgfile, filename=None, soargs=None):
+    """Execute a SOCanonicalThreeStage model and save results.
     
-    Provides generic class CosmologicalModel that can be used as a base for explicit models."""
-
-from cosmomodels import *
-import numpy as N
-from pdb import set_trace
-import cmpotentials
-
-class CanonicalSecondOrder(PhiModels):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
-       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
-       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
-       y[7] - \delta\varphi_2 : Second order perturbation [Real Part]
-       y[8] - \delta\varphi_2^\prime : Derivative of second order perturbation [Real Part]
-       y[9] - \delta\varphi_2 : Second order perturbation [Imag Part]
-       y[10] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
-       """
-    def __init__(self,  k=None, ainit=None, *args, **kwargs):
-        """Initialize variables and call superclass"""
-        
-        super(CanonicalSecondOrder, self).__init__(*args, **kwargs)
-        
-        if ainit is None:
-            #Don't know value of ainit yet so scale it to 1
-            self.ainit = 1
-        else:
-            self.ainit = ainit
-        
-        #Let k roam for a start if not given
-        if k is None:
-            self.k = 10**(N.arange(10.0)-8)
-        else:
-            self.k = k
-        
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0])
-        
-        #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
-            U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-            
-        #Text for graphs
-        self.plottitle = "Complex First Order Malik Model in Efold time"
-        self.tname = r"$n$"
-        self.ynames = [r"$\varphi_0$",
-                        r"$\dot{\varphi_0}$",
-                        r"$H$",
-                        r"Real $\delta\varphi_1$",
-                        r"Real $\dot{\delta\varphi_1}$",
-                        r"Imag $\delta\varphi_1$",
-                        r"Imag $\dot{\delta\varphi_1}$",
-                        r"Real $\delta\varphi_2$",
-                        r"Real $\dot{\delta\varphi_2}$",
-                        r"Imag $\delta\varphi_2$",
-                        r"Imag $\dot{\delta\varphi_2}$"]
-                    
-    def derivs(self, y, t, k=None):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/dn etc"""
-        #If k not given select all
-        if k is None:
-            k = self.k
-            
-        #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)        
-        
-        #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((11,len(k)))
-        else:
-            dydx = N.zeros(11)
-            
-        
-        #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
-        
-        #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
-        
-        #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
-        
-        #Get a
-        a = self.ainit*N.exp(t)
-        
-        #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-        #print dydx[4]
-        
-        #Complex parts
-        dydx[5] = y[6]
-        
-        #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
-        #
-        #Second Order perturbations
-        #
-        #d\deltaphi_2/dn Real
-        dydx[7] = y[8]
-        
-        #d\deltaphi_2^\prime/dn Real
-        dydx[8] = (-(3 + dydx[2]/y[2])*y[8] - ((k/(a*y[2]))**2)*y[7]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[7]/(y[2]**2)))
-        
-        #d\deltaphi_2/dn Imag
-        dydx[9] = y[10]
-        
-        #d\deltaphi_2^\prime/dn Imag
-        dydx[10] = (-(3 + dydx[2]/y[2])*y[10] - ((k/(a*y[2]))**2)*y[9]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[9]/(y[2]**2)))
-        
-        return dydx
-        
-        
-class SOCanonicalTwoStage(CanonicalTwoStage):
-    """Implementation of Second Order Canonical two stage model with standard initial conditions for phi.
+    A new instance of SOCanonicalThreeStage is created, from the specified first order file.
+    The model is run and the results are then saved into a file with the specified filename.
+    
+    Parameters
+    ----------
+    mrgfile : String
+             Filename of merged first order and source file to use in simulation. 
+    
+    filename : String, optional
+               Name of file to save results to. File will be created in the directory
+               specified by `RESULTSDIR` module variable.
+               
+    soargs : dict, optional
+             Dictonary of arguments to be sent to second order class method. 
+    
+    Returns
+    -------
+    filename: String
+              Name of the file where results have been saved.
+              
+    Raises
+    ------
+    Exception
+       Any exception raised during saving of code.
     """
-                    
-    def __init__(self, ystart=None, foclass=CanonicalSecondOrder, *args,**kwargs):
-        """Initialize model and ensure initial conditions are sane."""
-        
-        #Initial conditions for each of the variables.
-        if ystart is None:
-            #Initial conditions for all variables
-            self.ystart = ystart = N.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0, # Im\dot{\delta\phi_1}
-                                    0.0, # Re\delta\phi_2
-                                    0.0, # Re\dot{\delta\phi_2}
-                                    0.0, # Im\delta\phi_2
-                                    0.0  # Im\dot{\delta\phi_2}
-                                    ])
-        else:
-            self.ystart = ystart
-        
-        #Call superclass
-        super(SOCanonicalTwoStage, self).__init__(ystart=ystart, foclass=foclass, *args, **kwargs)
-        
-    def getfoystart(self, ts=None, tsix=None):
-        """Model dependent setting of ystart"""
-        #Set variables in standard case:
-        if ts is None or tsix is None:
-            ts, tsix = self.fotstart, self.fotstartindex
-            
-        #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
-        
-        #set_trace()
-        #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
-        epsstar = self.bgepsilon[tsix]
-        etastar = -1/(astar*Hstar*(1-epsstar))
-        
-        etadiff = etastar - self.etainit
-        keta = self.k*etadiff
-        
-        #Set bg init conditions based on previous bg evolution
-        foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
-        
-        #Find 1/asqrt(2k)
-        arootk = 1/(astar*(N.sqrt(2*self.k)))
-        #Find cos and sin(-keta)
-        csketa = N.cos(-keta)
-        snketa = N.sin(-keta)
-        
-        #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = csketa*arootk
-        #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
-        #Set Im\delta\phi_1
-        foystart[5,:] = snketa*arootk
-        #Set Im\dot\delta\phi_1
-        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
-        
-        return foystart
-    
-    def getdeltaphi(self):
-        """Return the total perturbation \delta\phi taking into 
-            account up to second order perturbations.
-           """
-        #Raise error if first order not run yet
-        self.checkfirstordercomplete()
-        
-        #Set nice variable names
-        deltaphi1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi1
-        deltaphi2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j #complex deltaphi2
-        deltaphi = deltaphi1 + 0.5*deltaphi2
-        return deltaphi
+    try:
+        fomodel = c.make_wrapper_model(mrgfile)
+    except:
+        log.exception("Error wrapping model file.")
+        raise
+    if soargs is None:
+        soargs = {}
+    #Create second order model instance
+    somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
+    try:
+        if _debug:
+            log.debug("Starting model run...")
+        somodel.run(saveresults=False)
+        if _debug:
+            log.debug("Model run finished.")
+    except c.ModelError:
+        log.exception("Something went wrong with model, quitting!")
+        sys.exit(1)
+    if filename is None:
+        filename = run_config.soresults
+    try:
+        if _debug:
+            log.debug("Trying to save model data to %s...", filename)
+        helpers.ensurepath(filename)
+        somodel.saveallresults(filename=filename)
+    except Exception:
+        log.exception("IO error, nothing saved!")
+    #Destroy model instance to save memory
+    if _debug:
+        log.debug("Destroying model instance...")
+    del somodel
+    #Success!
+    log.info("Successfully ran and saved simulation in file %s.", filename)
+    return filename
 
+
+def main(argv=None):
+    """Main function: deal with command line arguments and start calculation as reqd."""
+    
+    if not argv:
+        argv = sys.argv
+    
+    #Parse command line options
+    parser = optparse.OptionParser()
+    
+    parser.add_option("-f", "--filename", action="store", dest="mrgresults", 
+                      default=run_config.mrgresults, type="string", 
+                      metavar="FILE", help="merged first order and source results file, default=%default")
+    
+    loggroup = optparse.OptionGroup(parser, "Log Options", 
+                           "These options affect the verbosity of the log files generated.")
+    loggroup.add_option("-q", "--quiet",
+                  action="store_const", const=logging.FATAL, dest="loglevel", 
+                  help="only print fatal error messages")
+    loggroup.add_option("-v", "--verbose",
+                  action="store_const", const=logging.INFO, dest="loglevel", 
+                  help="print informative messages")
+    loggroup.add_option("--debug",
+                  action="store_const", const=logging.DEBUG, dest="loglevel", 
+                  help="log lots of debugging information",
+                  default=run_config.LOGLEVEL)
+    loggroup.add_option("--console", action="store_true", dest="console",
+                        default=False, help="if selected matches console log level " 
+                        "to selected file log level, otherwise only warnings are shown.")
+    parser.add_option_group(loggroup)
+    
+    (options, args) = parser.parse_args(args=argv[1:])
+    
+    #Start the logging module
+    if options.console:
+        consolelevel = options.loglevel
+    else:
+        consolelevel = logging.WARN
+        
+    logfile = os.path.join(run_config.LOGDIR, "src.log")
+    helpers.startlogging(log, logfile, options.loglevel, consolelevel)
+    
+    if (not _debug) and (options.loglevel == logging.DEBUG):
+        log.warn("Debugging information will not be stored due to setting in run_config.")
+    
+    if not os.path.isfile(options.mrgresults):
+        raise IOError("Merged results file %s does not exist!" % options.foresults)
+    
+    try:
+        log.info("-----------Second order run requested------------------")
+        runsomodel(mrgfile=options.mrgresults, soargs=run_config.soargs)
+    except Exception:
+        log.exception("Error getting second order results!")
+        return 1
+    
+    return 0
+        
+      
+
+    
+    
+if __name__ == "__main__":
+    log = logging.getLogger("secondorder")
+    log.handlers = []
+    main(sys.argv[1:])
+else:
+    log = logging.getLogger("secondorder")
