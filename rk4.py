@@ -253,16 +253,17 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
-            set_trace()
+            #set_trace()
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
-            kmax = kix.max()
-            for oneix in xrange(kmax):
-                if N.any(N.isnan(v[:,oneix])):
-                    v[:,oneix] = vstart[:,oneix]
-            #Change last y result to hold initial condition
-            y[-1][:,kix] = v[:,kix]
+            if kix:
+                kmax = kix.max()
+                for oneix in xrange(kmax):
+                    if N.any(N.isnan(v[:,oneix])):
+                        v[:,oneix] = vstart[:,oneix]
+                #Change last y result to hold initial condition
+                y[-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
                 xx.append(x.copy() + h)
                 if len(kix) > 0:
