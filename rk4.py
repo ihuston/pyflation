@@ -12,6 +12,7 @@ from helpers import seq #Proper sequencing of floats
 import logging
 import helpers
 
+set_trace()
 if not getattr(__builtins__, "profile", None):
     def profile(f):
         return f
