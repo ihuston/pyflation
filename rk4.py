@@ -14,7 +14,7 @@ import helpers
 
 if not getattr(__builtins__, "profile", None):
     def profile(f):
-        return f()
+        return f
 
 rk_log = logging.getLogger(__name__)
 
