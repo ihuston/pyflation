@@ -100,7 +100,7 @@ def source_dict(template_dict, fo_jid=None):
     src_dict["hold_jid_list"] = fo_jid
     src_dict["runname"] += "-src"
     src_dict["qsublogname"] += "-node-$TASK_ID"
-    src_dict["extra_qsub_args"] = ("#$ -t " + src_dict["taskmin"] + "-" +
+    src_dict["extra_qsub_params"] = ("#$ -t " + src_dict["taskmin"] + "-" +
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
                                     src_dict["hold_jid_list"])
     #Formulate source term command
@@ -116,7 +116,7 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["runname"] += "-mrg"
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
-    mrg_dict["extra_qsub_args"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
+    mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
     mrg_dict["command"] = "python srcmerge.py --merge"
     return mrg_dict
 
@@ -127,7 +127,7 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["runname"] += "-so"
     so_dict["hold_jid_list"] = mrg_jid
     so_dict["qsublogname"] += "-so"
-    so_dict["extra_qsub_args"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
+    so_dict["extra_qsub_params"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
     so_dict["command"] = "python secondorder.py"
     return so_dict
 
