@@ -232,6 +232,13 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         #set_trace()
         if not isinstance(ts, N.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
+        #Set up x counter and index for x
+        xix = 0 # first index
+        #The number of steps could be either the floor or ceiling of the following calc
+        #In the previous code, the floor was used, but then the rk step add another step on
+        number_steps = N.ceil((te - simtstart)/h) #floor might be needed for compatibility
+        #set up x results array
+        xarr = N.zeros((number_steps,))
         #Set up x results
         
         x1 = simtstart #Find simulation start time
@@ -239,6 +246,9 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             raise SimRunError("ks not in order of start time.") #Sanity check
         xx = []
         xx.append(x1) #Start x value
+        
+        #New array 
+        xarr[xix] = x1
         
         #Set up start and end list for each section
         xslist = N.empty((len(ts)+1))
@@ -249,6 +259,12 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
         v = N.ones_like(vstart)*N.nan
         y = [] #start results list
+        
+        #New y results array
+        yshape = [number_steps]
+        yshape.extend(v.shape)
+        yarr = N.ones(yshape)*N.nan
+        
         #First result is initial condition
         firstkix = N.where(x1>=ts)[0]
         for anix in firstkix:
@@ -256,6 +272,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
     
+        y[xix] = v.copy()
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
@@ -269,12 +286,15 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 y[-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
                 xx.append(x.copy() + h)
+                xix += 1
+                xarr[xix] = x.copy() + h
                 if len(kix) > 0:
                     #Only complete if there is some k being calculated
                     dargs = {"k": ks}
                     dv = derivs(v[:,kix], x, **dargs)
                     v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
                 y.append(v.copy())
+                yarr[xix] = v.copy()
         #Get results in right shape
         xx = N.array(xx)
         #y = N.concatenate([y], 0)  #very bad performance wise
