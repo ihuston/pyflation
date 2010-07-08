@@ -236,7 +236,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xix = 0 # first index
         #The number of steps could be either the floor or ceiling of the following calc
         #In the previous code, the floor was used, but then the rk step add another step on
-        number_steps = N.ceil((te - simtstart)/h) #floor might be needed for compatibility
+        #Additional +1 is to match with extra step as x is incremented at beginning of loop
+        number_steps = N.ceil((te - simtstart)/h) + 1#floor might be needed for compatibility
         #set up x results array
         xarr = N.zeros((number_steps,))
         #Set up x results
