@@ -257,7 +257,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
-            for oneix in kix:
+            kmax = kix.max()
+            for oneix in xrange(kmax):
                 if N.any(N.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
             #Change last y result to hold initial condition
