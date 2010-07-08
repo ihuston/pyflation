@@ -245,8 +245,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         x1 = simtstart #Find simulation start time
         if not all(ts[ts.argsort()] == ts):
             raise SimRunError("ks not in order of start time.") #Sanity check
-        xx = []
-        xx.append(x1) #Start x value
+        #xx = []
+        #xx.append(x1) #Start x value
         
         #New array 
         xarr[xix] = x1
@@ -259,7 +259,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
         xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
         v = N.ones_like(vstart)*N.nan
-        y = [] #start results list
+        #y = [] #start results list
         
         #New y results array
         yshape = [number_steps]
@@ -271,7 +271,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         for anix in firstkix:
             if N.any(N.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
-        y.append(v.copy()) #Add first result
+        #y.append(v.copy()) #Add first result
     
         yarr[xix] = v.copy()
         #Need to start at different times for different k modes
@@ -286,7 +286,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 #Change last y result to hold initial condition
                 y[-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
-                xx.append(x.copy() + h)
+                #xx.append(x.copy() + h)
                 xix += 1
                 xarr[xix] = x.copy() + h
                 if len(kix) > 0:
@@ -294,12 +294,14 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                     dargs = {"k": ks}
                     dv = derivs(v[:,kix], x, **dargs)
                     v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
-                y.append(v.copy())
+                #y.append(v.copy())
                 yarr[xix] = v.copy()
         #Get results in right shape
-        xx = N.array(xx)
+        #xx = N.array(xx)
         #y = N.concatenate([y], 0)  #very bad performance wise
-        y = N.array(y)
+        #y = N.array(y)
+        xx = xarr
+        y = yarr
     else: #No ks to iterate over
         nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
