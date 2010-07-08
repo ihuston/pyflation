@@ -277,7 +277,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 y.append(v.copy())
         #Get results in right shape
         xx = N.array(xx)
-        y = N.concatenate([y], 0)  #very bad performance wise
+        #y = N.concatenate([y], 0)  #very bad performance wise
+        y = N.array(y)
     else: #No ks to iterate over
         nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
