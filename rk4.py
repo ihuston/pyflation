@@ -265,7 +265,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             if len(kix):
                 kmax = kix.max()
                 for oneix in xrange(kmax):
-                    if N.any(N.isnan(v[:,oneix])):
+                    vnan = N.isnan(v[:,oneix])
+                    if N.any(vnan):
                         v[:,oneix] = vstart[:,oneix]
                 #Change last y result to hold initial condition
                 y[-1][:,kix] = v[:,kix]
