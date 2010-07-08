@@ -253,7 +253,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
-            #set_trace()
+            set_trace()
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
