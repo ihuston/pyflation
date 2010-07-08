@@ -7,7 +7,7 @@
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
-from pdb import set_trace
+from pudb import set_trace 
 from helpers import seq #Proper sequencing of floats
 import logging
 import helpers
@@ -217,7 +217,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    #set_trace()
+    set_trace()
     
     #Make sure h is specified
     if h is None:
@@ -271,7 +271,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
                 y.append(v.copy())
         #Get results in right shape
         xx = N.array(xx)
-        y = N.concatenate([y], 0)
+        y = N.concatenate([y], 0)  #very bad performance wise
     else: #No ks to iterate over
         nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
@@ -286,7 +286,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
-        y = N.concatenate([y], 0)
+        y = N.concatenate([y], 0) #very bad performance wise
     #Return results    
     return xx, y
 
