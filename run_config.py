@@ -108,6 +108,8 @@ templatefile = os.path.join(CODEDIR, "qsub-template.sh")
 
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
+mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
+soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5

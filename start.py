@@ -98,7 +98,7 @@ def source_dict(template_dict, fo_jid=None):
     #Write second order file with job_id from first
     src_dict = template_dict.copy()
     src_dict["hold_jid_list"] = fo_jid
-    src_dict["runname"] += "-full"
+    src_dict["runname"] += "-src"
     src_dict["qsublogname"] += "-node-$TASK_ID"
     src_dict["extra_qsub_args"] = ("#$ -t " + src_dict["taskmin"] + "-" +
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
@@ -106,8 +106,30 @@ def source_dict(template_dict, fo_jid=None):
     #Formulate source term command
     src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
-                           "--taskid=$SGE_TASK_ID -f $FOFILE")
+                           "--taskid=$SGE_TASK_ID")
     return src_dict
+
+def merge_dict(template_dict, src_jid=None):
+    """Return dictionary for first order qsub script.
+    Copies template_dict so as not to change values."""
+    mrg_dict = template_dict.copy()
+    mrg_dict["runname"] += "-mrg"
+    mrg_dict["hold_jid_list"] = src_jid
+    mrg_dict["qsublogname"] += "-mrg"
+    mrg_dict["extra_qsub_args"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
+    mrg_dict["command"] = "python srcmerge.py --merge"
+    return mrg_dict
+
+def second_order_dict(template_dict, mrg_jid=None):
+    """Return dictionary for first order qsub script.
+    Copies template_dict so as not to change values."""
+    so_dict = template_dict.copy()
+    so_dict["runname"] += "-so"
+    so_dict["hold_jid_list"] = mrg_jid
+    so_dict["qsublogname"] += "-so"
+    so_dict["extra_qsub_args"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
+    so_dict["command"] = "python secondorder.py"
+    return so_dict
 
 def main(argv=None):
     """Process command line options, create qsub scripts and start execution."""
@@ -186,16 +208,16 @@ def main(argv=None):
     src_jid = launch_qsub(src_dict["srcscriptname"])
     
     #Merger of source terms and combining with firstorder results
-    #mrg_dict = merge_dict(template_dict, src_jid=src_jid)
-    #write_out_template(mrg_dict["templatefile"], mrg_dict["mrgscriptname"], mrg_dict)
+    mrg_dict = merge_dict(template_dict, src_jid=src_jid)
+    write_out_template(mrg_dict["templatefile"], mrg_dict["mrgscriptname"], mrg_dict)
     #Launch full script and get job id
-    #mrg_jid = launch_qsub(mrg_dict["mrgscriptname"])
+    mrg_jid = launch_qsub(mrg_dict["mrgscriptname"])
     
     #Second order calculation
-    #so_dict = second_order_dict(template_dict, mrg_jid=mrg_jid)
-    #write_out_template(so_dict["templatefile"], so_dict["soscriptname"], so_dict)
+    so_dict = second_order_dict(template_dict, mrg_jid=mrg_jid)
+    write_out_template(so_dict["templatefile"], so_dict["soscriptname"], so_dict)
     #Launch full script and get job id
-    #so_jid = launch_qsub(so_dict["soscriptname"])
+    so_jid = launch_qsub(so_dict["soscriptname"])
     
         
     return 0
