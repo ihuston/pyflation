@@ -13,7 +13,7 @@ import logging
 import helpers
 
 set_trace()
-if not getattr(__builtins__, "profile", None):
+if not "profile" in __builtins__:
     def profile(f):
         return f
 
