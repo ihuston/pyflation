@@ -212,7 +212,7 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     
     return xx, y
    
-#@profile 
+@profile 
 def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
@@ -224,7 +224,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         raise SimRunError("Need to specify h.")
    
     if allks is not None:
-        set_trace()
+        #set_trace()
         if not isinstance(ts, N.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
         #Set up x results
