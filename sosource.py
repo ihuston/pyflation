@@ -18,6 +18,7 @@ import time
 import os
 import srccython
 import run_config
+from run_config import _debug
 
 
 #This is the results directory which will be used if no filenames are specified
@@ -195,17 +196,20 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     if N.any(m.tresult[nix] < m.fotstart):
         #Get first order ICs:
         nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
-        source_logger.debug("Left getfoystart. Filling nans...")
+        if _debug:
+            source_logger.debug("Left getfoystart. Filling nans...")
         #switch nans for ICs in m.yresult
         are_nan = N.isnan(myr)
         myr[are_nan] = nanfiller[are_nan]
-        source_logger.debug("NaNs filled. Setting dynamical variables...")
+        if _debug:
+            source_logger.debug("NaNs filled. Setting dynamical variables...")
     #Get first order results
     bgvars = myr[0:3,0]
     dphi1 = myr[3,:] + myr[5,:]*1j
     dphi1dot = myr[4,:] + myr[6,:]*1j
     #Setup interpolation
-    source_logger.debug("Variables set. Getting potentials for this timestep...")
+    if _debug:
+        source_logger.debug("Variables set. Getting potentials for this timestep...")
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
@@ -213,17 +217,20 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
             potentials[pix] = p[0]
     #Value of a for this time step
     a = m.ainit*N.exp(m.tresult[nix])
-    source_logger.debug("Calculating source term integrand for this timestep...")
+    if _debug:
+        source_logger.debug("Calculating source term integrand for this timestep...")
     theta_terms = getthetaterms(integrand_elements, dphi1, dphi1dot)
     #Get unintegrated source term
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot, theta_terms)
     #Get integration function
-    source_logger.debug("Integrating source term...")
-    source_logger.debug("Number of integrand elements: %f", src_integrand.shape[-1])
+    if _debug:
+        source_logger.debug("Integrating source term...")
+        source_logger.debug("Number of integrand elements: %f", src_integrand.shape[-1])
     src = integrate.romb(src_integrand, dx=m.k[1]-m.k[0])
     
     
-    source_logger.debug("Integration successful!")
+    if _debug:
+        source_logger.debug("Integration successful!")
     return src
                 
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=513, numks=1025):
@@ -288,7 +295,8 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
         sf, sarr, narr = opensourcefile(k, savefile, sourcetype="term")
         try:
             # Begin calculation
-            source_logger.debug("Entering main time loop...")    
+            if _debug:
+                source_logger.debug("Entering main time loop...")    
             #Main loop over each time step
             for nix in xrange(ninit, nfinal):    
                 if nix%10 == 0:
@@ -300,7 +308,8 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
                     src = N.nan*N.ones_like(k)
                 sarr.append(src[N.newaxis,:])
                 narr.append(N.array([nix]))
-                source_logger.debug("Results for this timestep saved.")
+                if _debug:
+                    source_logger.debug("Results for this timestep saved.")
         finally:
             #source = N.array(source)
             sf.close()
@@ -321,7 +330,8 @@ def opensourcefile(k, filename=None, sourcetype=None):
         raise TypeError("Need to specify filename and type of source data to store [int(egrand)|(full)term]!")
     if sourcetype in ["int", "term"]:
         sarrname = "source" + sourcetype
-        source_logger.debug("Source array type: " + sarrname)
+        if _debug:
+            source_logger.debug("Source array type: " + sarrname)
     else:
         raise TypeError("Incorrect source type specified!")
     #Add compression to files and specify good chunkshape
@@ -330,21 +340,25 @@ def opensourcefile(k, filename=None, sourcetype=None):
     #Get atom shape for earray
     atomshape = (0, len(k))
     try:
-        source_logger.debug("Trying to open source file " + filename)
+        if _debug:
+            source_logger.debug("Trying to open source file " + filename)
         rf = tables.openFile(filename, "a", "Source term result")
         if not "results" in rf.root:
-            source_logger.debug("Creating group 'results' in source file.")
+            if _debug:
+                source_logger.debug("Creating group 'results' in source file.")
             resgrp = rf.createGroup(rf.root, "results", "Results")
         else:
             resgrp = rf.root.results
         if not sarrname in resgrp:
-            source_logger.debug("Creating array '" + sarrname + "' in source file.")
+            if _debug:
+                source_logger.debug("Creating array '" + sarrname + "' in source file.")
             sarr = rf.createEArray(resgrp, sarrname, tables.ComplexAtom(itemsize=16), atomshape, filters=filters)
             karr = rf.createEArray(resgrp, "k", tables.Float64Atom(), (0,), filters=filters)
             narr = rf.createEArray(resgrp, "nix", tables.IntAtom(), (0,), filters=filters)
             karr.append(k)
         else:
-            source_logger.debug("Source file and node exist. Testing source node shape...")
+            if _debug:
+                source_logger.debug("Source file and node exist. Testing source node shape...")
             sarr = rf.getNode(resgrp, sarrname)
             narr = rf.getNode(resgrp, "nix")
             if sarr.shape[1:] != atomshape[1:]:
