@@ -139,7 +139,7 @@ def main(argv=None):
     
     #Change logger to add task id
     if options.taskmax != options.taskmin:
-        log.name = "src-" + options.taskid
+        log.name = "src-" + str(options.taskid)
         
     logfile = os.path.join(run_config.LOGDIR, "src.log")
     helpers.startlogging(log, logfile, options.loglevel, consolelevel)

@@ -143,6 +143,6 @@ if __name__ == "__main__":
     log = logging.getLogger()
     log.name = "so"
     log.handlers = []
-    main(sys.argv[1:])
+    sys.exit(main())
 else:
     log = logging.getLogger("so")

@@ -151,8 +151,13 @@ def main(argv=None):
     foargs["k"] = helpers.seq(run_config.kinit, run_config.kend, run_config.deltak)
     
     #Start first order run
-    runfomodel(filename=options.foresults, foargs=foargs)
+    try:
+        runfomodel(filename=options.foresults, foargs=foargs)
+    except Exception:
+        log.exception("Something went wrong during first order run!")
+        return 1
     
+    log.info("----------First order run finished-------------------")
     return 0
     
         
