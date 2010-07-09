@@ -2,10 +2,7 @@
 Author: Ian Huston
 
 """
-import numpy as N
 import logging
-import time
-import cosmomodels as c
 import os.path
 
 
