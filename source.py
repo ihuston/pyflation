@@ -138,7 +138,7 @@ def main(argv=None):
         consolelevel = logging.WARN
     
     #Change logger to add task id
-    if options.taskmax != options.taskmix:
+    if options.taskmax != options.taskmin:
         log.name = "src-" + options.taskid
         
     logfile = os.path.join(run_config.LOGDIR, "src.log")
