@@ -99,9 +99,9 @@ soargs = {}
 ##############################
 runname = PROGRAM_NAME[0:4]
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
-timelimit = "3:00:00" # Time needed for each array job
+timelimit = "23:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
-taskmax= "20" #finishing task id number
+taskmax= "100" #finishing task id number
 hold_jid_list= "" # List of jobs this task depends on 
 
 templatefile = os.path.join(CODEDIR, "qsub-template.sh")
