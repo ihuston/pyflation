@@ -157,8 +157,9 @@ def main(argv=None):
     
         
 if __name__ == "__main__":
-    log = logging.getLogger("firstorder")
+    log = logging.getLogger()
+    log.name = "fo"
     log.handlers = []
     sys.exit(main())
 else:
-    log = logging.getLogger("firstorder")
+    log = logging.getLogger("fo")

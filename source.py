@@ -136,6 +136,10 @@ def main(argv=None):
         consolelevel = options.loglevel
     else:
         consolelevel = logging.WARN
+    
+    #Change logger to add task id
+    if options.taskmax != options.taskmix:
+        log.name = "src-" + options.taskid
         
     logfile = os.path.join(run_config.LOGDIR, "src.log")
     helpers.startlogging(log, logfile, options.loglevel, consolelevel)
@@ -162,8 +166,8 @@ def main(argv=None):
     return 0
     
 if __name__ == "__main__":
-    log = logging.getLogger("source")
+    log = logging.getLogger()
     log.handlers = []
     sys.exit(main())
 else:
-    log = logging.getLogger("source")
+    log = logging.getLogger("src")

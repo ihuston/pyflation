@@ -140,8 +140,9 @@ def main(argv=None):
     
     
 if __name__ == "__main__":
-    log = logging.getLogger("secondorder")
+    log = logging.getLogger()
+    log.name = "so"
     log.handlers = []
     main(sys.argv[1:])
 else:
-    log = logging.getLogger("secondorder")
+    log = logging.getLogger("so")

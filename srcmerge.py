@@ -189,9 +189,10 @@ def main(argv=None):
     
 #Get root log
 if __name__ == "__main__":
-    log = logging.getLogger("srcmerge")
+    log = logging.getLogger()
+    log.name = "mrg"
     log.handlers = []
     sys.exit(main())
 else:
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("mrg")
     
