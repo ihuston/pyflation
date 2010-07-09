@@ -90,7 +90,8 @@ def first_order_dict(template_dict):
     fo_dict = template_dict.copy()
     fo_dict["runname"] += "-fo"
     fo_dict["qsublogname"] += "-fo"
-    fo_dict["command"] = "python firstorder.py"
+    fo_dict["command"] = "echo Finished first order"
+    #fo_dict["command"] = "python firstorder.py"
     return fo_dict
 
 def source_dict(template_dict, fo_jid=None):
@@ -104,9 +105,10 @@ def source_dict(template_dict, fo_jid=None):
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
                                     src_dict["hold_jid_list"])
     #Formulate source term command
-    src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
-                           "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
-                           "--taskid=$SGE_TASK_ID")
+    src_dict["command"] = "echo Finished source"
+    #src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
+    #                       "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
+    #                       "--taskid=$SGE_TASK_ID")
     return src_dict
 
 def merge_dict(template_dict, src_jid=None):
@@ -117,7 +119,8 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
     mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
-    mrg_dict["command"] = "python srcmerge.py --merge"
+    mrg_dict["command"] = "echo Finished merge"
+    #mrg_dict["command"] = "python srcmerge.py --merge"
     return mrg_dict
 
 def second_order_dict(template_dict, mrg_jid=None):
@@ -128,7 +131,8 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["hold_jid_list"] = mrg_jid
     so_dict["qsublogname"] += "-so"
     so_dict["extra_qsub_params"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
-    so_dict["command"] = "python secondorder.py"
+    so_dict["command"] = "echo Finished second order"
+    #so_dict["command"] = "python secondorder.py"
     return so_dict
 
 def main(argv=None):
@@ -229,8 +233,7 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as e:
-        print("Something went wrong!", file=sys.stderr)
-        print(e.message, file=sys.stderr)
+        log.exception("Something went wrong!")
         sys.exit(1)
         
     
