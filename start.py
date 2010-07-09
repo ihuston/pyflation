@@ -13,6 +13,7 @@ import logging
 import subprocess
 import helpers
 from run_config import _debug
+import re
 
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
@@ -51,7 +52,7 @@ def launch_qsub(qsubscript):
         log.error("Error executing script %s", qsubscript)
         raise Exception(error_msg)
     # Get job id
-    job_id = result.rstrip()
+    job_id = re.search(r"(\d+).?\S*", result).groups()[0]
     #Log job id info
     if _debug:
         log.debug("Submitted qsub script %s with job id %s.", qsubscript, job_id)
