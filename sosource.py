@@ -25,8 +25,11 @@ from run_config import _debug
 RESULTSDIR = run_config.RESULTSDIR
 
 #Start logging
-root_log_name = logging.getLogger().name
-source_logger = logging.getLogger(root_log_name + "." + __name__)
+source_logger = logging.getLogger(__name__)
+
+def set_log_name():
+    root_log_name = logging.getLogger().name
+    source_logger.name = root_log_name + "." + __name__
 
 def klessq(k, q, theta):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
