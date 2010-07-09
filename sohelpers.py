@@ -12,7 +12,10 @@ import os.path
 from sosource import getthetaterms
 from scipy.integrate import romb
 
-_log = logging.getLogger(__name__)
+#Start logging
+root_log_name = logging.getLogger().name
+_log = logging.getLogger(root_log_name + "." + __name__)
+
 
 def combine_source_and_fofile(sourcefile, fofile, newfile=None):
     """Copy source term to first order file in preparation for second order run.

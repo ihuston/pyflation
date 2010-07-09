@@ -5,6 +5,7 @@
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
+import run_config
 try:
     import pylab as P
     USEPYLAB = True
@@ -28,15 +29,16 @@ import logging
 #debugging
 from pdb import set_trace
 
-#Logging
-module_logger = logging.getLogger(__name__)
+#Start logging
+root_log_name = logging.getLogger().name
+module_logger = logging.getLogger(root_log_name + "." + __name__)
 
 #WMAP pivot scale and Power spectrum
 WMAP_PIVOT = 5.25e-60 #WMAP pivot scale in Mpl
 WMAP_PR = 2.457e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
 
 #Results directory
-RESULTS_PATH = "/misc/scratch/ith/numerics/results/"
+RESULTS_PATH = run_config.RESULTSDIR
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""

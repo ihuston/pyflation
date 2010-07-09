@@ -17,13 +17,15 @@ import logging
 import time
 import os
 import srccython
+import run_config
 
 
 #This is the results directory which will be used if no filenames are specified
-RESULTSDIR = "/misc/scratch/ith/numerics/results/"
+RESULTSDIR = run_config.RESULTSDIR
 
 #Start logging
-source_logger = logging.getLogger(__name__)
+root_log_name = logging.getLogger().name
+source_logger = logging.getLogger(root_log_name + "." + __name__)
 
 def klessq(k, q, theta):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
