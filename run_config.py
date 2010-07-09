@@ -97,7 +97,7 @@ soargs = {}
 # qsub submission values
 #
 ##############################
-runname = PROGRAM_NAME
+runname = PROGRAM_NAME[0:4]
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
 timelimit = "3:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
