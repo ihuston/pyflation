@@ -7,10 +7,15 @@
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 import sys
-from pdb import set_trace
+from pudb import set_trace 
 from helpers import seq #Proper sequencing of floats
 import logging
 import helpers
+
+
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
 
 rk_log = logging.getLogger(__name__)
 
@@ -211,27 +216,38 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
         y.append(v)
     
     return xx, y
-    
+   
+@profile 
 def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
     Copes with multiple start times for different ks if they are sorted in terms of starting time."""
-    #set_trace()
+    
     
     #Make sure h is specified
     if h is None:
         raise SimRunError("Need to specify h.")
    
     if allks is not None:
+        #set_trace()
         if not isinstance(ts, N.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
+        #Set up x counter and index for x
+        xix = 0 # first index
+        #The number of steps could be either the floor or ceiling of the following calc
+        #In the previous code, the floor was used, but then the rk step add another step on
+        #Additional +1 is to match with extra step as x is incremented at beginning of loop
+        number_steps = N.ceil((te - simtstart)/h) + 1#floor might be needed for compatibility
+        #set up x results array
+        xarr = N.zeros((number_steps,))
         #Set up x results
         
         x1 = simtstart #Find simulation start time
         if not all(ts[ts.argsort()] == ts):
             raise SimRunError("ks not in order of start time.") #Sanity check
-        xx = []
-        xx.append(x1) #Start x value
+        
+        #New array 
+        xarr[xix] = x1
         
         #Set up start and end list for each section
         xslist = N.empty((len(ts)+1))
@@ -241,36 +257,41 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
         xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
         v = N.ones_like(vstart)*N.nan
-        y = [] #start results list
+        
+        #New y results array
+        yshape = [number_steps]
+        yshape.extend(v.shape)
+        yarr = N.ones(yshape)*N.nan
+        
         #First result is initial condition
         firstkix = N.where(x1>=ts)[0]
         for anix in firstkix:
             if N.any(N.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
-        y.append(v.copy()) #Add first result
-    
+        yarr[xix] = v.copy()
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
             #Set up initial values
             kix = N.where(xstart>=ts)[0]
             ks = allks[kix]
-            for oneix in kix:
-                if N.any(N.isnan(v[:,oneix])):
-                    v[:,oneix] = vstart[:,oneix]
-            #Change last y result to hold initial condition
-            y[-1][:,kix] = v[:,kix]
+            if len(kix):
+                kmax = kix.max()
+                v[:,:kmax+1][N.isnan(v[:,:kmax+1])] = vstart[:,:kmax+1][N.isnan(v[:,:kmax+1])]
+                #Change last y result to hold initial condition
+                yarr[xix-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
-                xx.append(x.copy() + h)
+                xix += 1
+                xarr[xix] = x.copy() + h
                 if len(kix) > 0:
                     #Only complete if there is some k being calculated
                     dargs = {"k": ks}
                     dv = derivs(v[:,kix], x, **dargs)
                     v[:,kix] = rk4stepks(x, v[:,kix], h, dv, dargs, derivs)
-                y.append(v.copy())
-        #Get results in right shape
-        xx = N.array(xx)
-        y = N.concatenate([y], 0)
+                yarr[xix] = v.copy()
+        #Get results 
+        xx = xarr
+        y = yarr
     else: #No ks to iterate over
         nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
         xx = N.zeros(nstep+1) #initialize 1-dim array for x
@@ -285,7 +306,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
-        y = N.concatenate([y], 0)
+        y = N.concatenate([y], 0) #very bad performance wise
     #Return results    
     return xx, y
 

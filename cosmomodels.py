@@ -5,11 +5,6 @@
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
-try:
-    import pylab as P
-    USEPYLAB = True
-except ImportError:
-    USEPYLAB = False
 
 import rk4
 import sys
@@ -22,7 +17,7 @@ from scipy import interpolate
 import helpers 
 import cmpotentials
 import gzip
-import tables #@UnresolvedImport
+import tables 
 import logging
 
 #debugging
@@ -323,89 +318,7 @@ class CosmologicalModel(object):
         except IOError:
             raise
         return
-    
-    #Don't define graphics methods unless we can use pylab
-    if USEPYLAB:    
-        def plotresults(self, fig=None, show=True, varindex=None, klist=None, saveplot=False):
-            """Plot results of simulation run on a graph.
-                Return figure instance used."""
-            if self.runcount == 0:
-                raise ModelError("Model has not been run yet, cannot plot results!")
-            
-            if varindex is None:
-                varindex = 0 #Set default list of variables to plot
-            
-            if fig is None:
-                fig = P.figure() #Create figure
-            else:
-                P.figure(fig.number)
-            #One plot command for with ks, one for without
-            
-            if klist is None:
-                P.plot(self.tresult, self.yresult[:,varindex])
-            else:
-                P.plot(self.tresult, self.yresult[:,varindex,klist])
-            #Create legends and axis names
-            P.xlabel(self.tname)
-            P.ylabel(self.ynames[varindex])
-            if klist is not None:
-                P.legend([r"$k=" + helpers.eto10(ks) + "$" for ks in self.k[klist]])
-            #P.title(self.plottitle, figure=fig)
-            
-            #Should we show it now or just return it without showing?
-            if show:
-                P.show()
-            #Should we save the plot somewhere?
-            if saveplot:
-                self.saveplot(fig)   
-            #Return the figure instance
-            return fig
-
-    #Don't define graphics methods unless we can use pylab
-    if USEPYLAB:    
-        def plotkcrosssection(self, tindex=None, fig=None, show=True, varindex=None, klist=None, kfunction=None, saveplot=False):
-            """Plot results for different ks in 3d plot. Can only plot a single variable at a time."""
-            #Test whether model has run yet
-            if self.runcount == 0:
-                raise ModelError("Model has not been run yet, cannot plot results!")
-            
-            #Test whether model has k variable dependence
-            try:
-                self.yresult[0,0,0] #Does this exist?
-            except IndexError, er:
-                raise ModelError("This model does not have any k variable to plot! Got " + er.message)
-            
-            if varindex is None:
-                varindex = 0 #Set variable to plot
-            if klist is None:
-                klist = N.arange(len(self.k)) #Plot all ks
-            if tindex is None:
-                tindex = N.arange(0,len(self.tresult), 1000) #Selection of time slices
-            #Set names for t slices
-            #tnames = str(self.tresult[tindex])
-            
-            if fig is None:
-                fig = P.figure() #Create figure
-            else:
-                P.figure(fig.number)
-            
-            #Plot figure, default is semilogx for k
-            P.semilogx(self.k[klist], self.yresult[tindex,varindex,:][:,klist].transpose(), 'o-')
-                    
-            #Create legends and axis names
-            P.xlabel(r"$k$")
-            #P.legend(tnames)
-            P.legend([r"$t=" + str(ts) + "$" for ts in self.tresult[tindex]])
-            P.ylabel(self.ynames[varindex])
-                    
-            #Should we show it now or just return it without showing?
-            if show:
-                P.show()
-            #Should we save the plot somewhere?
-            if saveplot:
-                self.saveplot(fig)
-            return fig
-        
+           
     def saveallresults(self, filename=None, filetype="hf5"):
         """Tries to save file as a pickled object in directory 'results'."""
         
@@ -457,7 +370,9 @@ class CosmologicalModel(object):
             try:
                 if filemode is "w":
                     #Add compression
-                    filters = tables.Filters(complevel=1, complib="zlib")
+                    #Changed to test blosc
+                    filters = tables.Filters(complevel=2, complib="blosc")
+                    #filters = tables.Filters(complevel=1, complib="zlib")
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
@@ -470,7 +385,7 @@ class CosmologicalModel(object):
                             bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
                             bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
                         #Save results
-                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, chunkshape=(10,7,10))
+                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, expectedrows=8194)# chunkshape=(10,7,10))
                         karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
                         if hasattr(self, "foystart"):
                             foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
@@ -689,27 +604,7 @@ class PhiModels(CosmologicalModel):
             Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2]
             epsilon = - Hdot/self.yresult[:,2]
         return epsilon
-    
-    #Don't define graphics methods unless we can use pylab
-    if USEPYLAB:    
-        def plotbgresults(self, saveplot = False):
-            """Plot results of simulation run on a graph."""
-            
-            if self.runcount == 0:
-                raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-            
-            f = P.figure()
-            
-            #First plot of phi
-            P.subplot(121)
-            super(PhiModels, self).plotresults(fig=f, show=False, varindex=0, saveplot=False)
-            
-            #Second plot of H
-            P.subplot(122)
-            super(PhiModels, self).plotresults(fig=f, show=False, varindex=2, saveplot=False)
-                    
-            P.show()
-            return
+
     
 class CanonicalBackground(PhiModels):
     """Basic model with background equations in terms of n
@@ -1239,24 +1134,6 @@ class MultiStageModel(CosmologicalModel):
         nsunsort[sortix] = ns
         
         return nsunsort
-    
-    #Don't define graphics methods unless we can use pylab
-    if USEPYLAB:    
-        def plotpivotPr(self, nefolds=5):
-            """Plot the spectrum of curvature perturbations normalized with the spectrum at the pivot scale."""
-            #Raise error if first order not run yet
-            self.checkruncomplete()
-            
-            ts = self.findHorizoncrossings()[:,0] + nefolds/self.tstep_wanted #Take spectrum a few efolds after horizon crossing
-            Prs = self.findPr()[ts.astype(int)].diagonal()/WMAP_PR
-            
-            f = P.figure()
-            P.semilogx(self.k, Prs)
-            P.xlabel(r"$k$")
-            P.ylabel(r"$\mathcal{P}_{\mathcal{R}}/\mathcal{P}_*$")
-            P.title(r"Power spectrum of curvature perturbations normalized at $k=0.05 \,\mathrm{Mpc}^{-1} = "+ helpers.eto10(WMAP_PIVOT) + "\,\mathrm{M}_{\mathrm{PL}}$")
-            P.show()
-            return f
     
     def callingparams(self):
         """Returns list of parameters to save with results."""
