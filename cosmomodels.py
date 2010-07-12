@@ -371,7 +371,7 @@ class CosmologicalModel(object):
                 if filemode is "w":
                     #Add compression
                     #Changed to test blosc
-                    filters = tables.Filters(complevel=0, complib="blosc")
+                    filters = tables.Filters(complevel=1, complib="blosc")
                     #filters = tables.Filters(complevel=1, complib="zlib")
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
@@ -385,7 +385,7 @@ class CosmologicalModel(object):
                             bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
                             bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
                         #Save results
-                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, chunkshape=(10,7,10))
+                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, expectedrows=8194)# chunkshape=(10,7,10))
                         karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
                         if hasattr(self, "foystart"):
                             foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
