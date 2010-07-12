@@ -172,6 +172,9 @@ def cartesian(arrays, out=None):
 
 def ensurepath(path):
     """Check that the path for given directory exists and create it if not."""
+    
+    #Get absolute path
+    path = os.path.abspath(path)
     #Does path exist?
     if not os.path.isdir(os.path.dirname(path)):
         try:
