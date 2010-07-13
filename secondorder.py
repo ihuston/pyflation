@@ -1,8 +1,10 @@
-'''secondorder.py - Run a second order simulation
+"""secondorder.py - Run a second order simulation
 Created on 6 Jul 2010
 
 @author: Ian Huston
-'''
+"""
+
+from __future__ import division
 
 import logging
 import sys
@@ -117,7 +119,7 @@ def main(argv=None):
     else:
         consolelevel = logging.WARN
         
-    logfile = os.path.join(run_config.LOGDIR, "src.log")
+    logfile = os.path.join(run_config.LOGDIR, "so.log")
     helpers.startlogging(log, logfile, options.loglevel, consolelevel)
     
     if (not _debug) and (options.loglevel == logging.DEBUG):

@@ -17,7 +17,7 @@ import re
 
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
-                 runname = run_config.PROGRAM_NAME,
+                 runname = run_config.runname,
                  timelimit = run_config.timelimit,
                  qsublogname = run_config.qsublogname,
                  taskmin = run_config.taskmin,

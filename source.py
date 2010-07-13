@@ -5,6 +5,7 @@ Created on 6 Jul 2010
 
 @author: Ian Huston
 '''
+from __future__ import division
 
 import cosmomodels as c
 import run_config

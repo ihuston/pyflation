@@ -1,6 +1,8 @@
 """srcmerge.py - Combine sourcefiles in a directory into one master file by n index
 Author: Ian Huston
 """
+from __future__ import division
+
 import tables
 import numpy as np
 import os
@@ -119,16 +121,17 @@ def main(argv=None):
                       default=run_config.pattern, type="string",
                       help="regex pattern to match with src node files, default=%default")
     
-    foagroup = optparse.OptionGroup(parser, "Combination Options",
+    mrggroup = optparse.OptionGroup(parser, "Combination Options",
                         "These options control the merging of first order and source files.")
-    foagroup.add_option("--merge", action="store_true", dest="merge",
+    mrggroup.add_option("--merge", action="store_true", dest="merge",
                         default=False, help="combine first order and source results in one file")
-    foagroup.add_option("--fofile", action="store", dest="foresults",
+    mrggroup.add_option("--fofile", action="store", dest="foresults",
                         default=run_config.foresults, type="string",
                         metavar="FILE", help="first order results file, default=%default")
-    foagroup.add_option("--mergedfile", action="store", dest="mrgresults",
+    mrggroup.add_option("--mergedfile", action="store", dest="mrgresults",
                         default=run_config.mrgresults, type="string",
                         metavar="FILE", help="new file to store first order and source results, default=%default")
+    parser.add_option_group(mrggroup)
     
     loggroup = optparse.OptionGroup(parser, "Log Options", 
                            "These options affect the verbosity of the log files generated.")
@@ -156,7 +159,7 @@ def main(argv=None):
     else:
         consolelevel = logging.WARN
         
-    logfile = os.path.join(run_config.LOGDIR, "src.log")
+    logfile = os.path.join(run_config.LOGDIR, "mrg.log")
     helpers.startlogging(log, logfile, options.loglevel, consolelevel)
     
     if (not _debug) and (options.loglevel == logging.DEBUG):
