@@ -56,7 +56,7 @@ def joinsrcfiles(newfile, dirname, pattern=None):
         
     try:
         #Open all hf5 files in directory
-        files = [tables.openFile("".join([dirname, os.path.sep, f])) for f in filenames]
+        files = [tables.openFile(f, "r") for f in filenames]
     except IOError:
         log.error("Cannot open hf5 files in %s!", dirname)
         raise
