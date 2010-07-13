@@ -21,6 +21,11 @@ import run_config
 from run_config import _debug
 
 
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
+
+
 #This is the results directory which will be used if no filenames are specified
 RESULTSDIR = run_config.RESULTSDIR
 
@@ -235,7 +240,8 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     if _debug:
         source_logger.debug("Integration successful!")
     return src
-                
+
+@profile                
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=513, numks=1025):
     """Calculate and save integrated source term.
     
