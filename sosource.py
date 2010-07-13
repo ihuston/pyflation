@@ -285,6 +285,10 @@ def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nf
         ninit = 0
     if nfinal > m.tresult.shape[0] or nfinal == -1:
         nfinal = m.tresult.shape[0]
+    #Change to ints for xrange
+    ninit = int(ninit)
+    nfinal = int(nfinal)    
+    
     if not numks:
         numks = round((m.k[-1]/2 - m.k[0])/(m.k[1]-m.k[0])) + 1
     #Initialize variables for all timesteps
