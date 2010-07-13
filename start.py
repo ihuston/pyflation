@@ -13,10 +13,11 @@ import logging
 import subprocess
 import helpers
 from run_config import _debug
+import re
 
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
-                 runname = run_config.PROGRAM_NAME,
+                 runname = run_config.runname,
                  timelimit = run_config.timelimit,
                  qsublogname = run_config.qsublogname,
                  taskmin = run_config.taskmin,
@@ -25,6 +26,8 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  templatefile = run_config.templatefile,
                  foscriptname = run_config.foscriptname,
                  srcscriptname = run_config.srcscriptname,
+                 mrgscriptname = run_config.mrgscriptname,
+                 soscriptname = run_config.soscriptname,
                  foresults = run_config.foresults,
                  srcstub = run_config.srcstub,
                  extra_qsub_params = "",
@@ -49,7 +52,7 @@ def launch_qsub(qsubscript):
         log.error("Error executing script %s", qsubscript)
         raise Exception(error_msg)
     # Get job id
-    job_id = result.rstrip()
+    job_id = re.search(r"(\d+).?\S*", result).groups()[0]
     #Log job id info
     if _debug:
         log.debug("Submitted qsub script %s with job id %s.", qsubscript, job_id)
@@ -229,8 +232,7 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except Exception as e:
-        print("Something went wrong!", file=sys.stderr)
-        print(e.message, file=sys.stderr)
+        log.exception("Something went wrong!")
         sys.exit(1)
         
     

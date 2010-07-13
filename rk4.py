@@ -12,12 +12,13 @@ from helpers import seq #Proper sequencing of floats
 import logging
 import helpers
 
-
 if not "profile" in __builtins__:
     def profile(f):
         return f
 
-rk_log = logging.getLogger(__name__)
+#Start logging
+root_log_name = logging.getLogger().name
+rk_log = logging.getLogger(root_log_name + "." + __name__)
 
 #Constants
 #Cash Karp coefficients for Runge Kutta.

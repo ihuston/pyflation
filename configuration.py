@@ -2,10 +2,7 @@
 Author: Ian Huston
 
 """
-import numpy as N
 import logging
-import time
-import cosmomodels as c
 import os.path
 
 
@@ -27,6 +24,12 @@ LOGDIRNAME = "applogs"
 QSUBSCRIPTSDIRNAME = "qsubscripts"
 QSUBLOGSDIRNAME = "qsublogs"
 
+#Directory names computed from current code directory
+RUNDIR = os.path.dirname(CODEDIR)
+RESULTSDIR = os.path.join(RUNDIR, RESULTSDIRNAME)
+LOGDIR = os.path.join(RUNDIR, LOGDIRNAME)
+QSUBSCRIPTSDIR = os.path.join(RUNDIR, QSUBSCRIPTSDIRNAME)
+QSUBLOGSDIR = os.path.join(RUNDIR, QSUBLOGSDIRNAME)
 
 # The logging level changes how much is saved to logging files. 
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity

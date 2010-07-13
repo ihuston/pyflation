@@ -5,6 +5,7 @@ Created on 6 Jul 2010
 
 @author: Ian Huston
 '''
+from __future__ import division
 
 import cosmomodels as c
 import run_config
@@ -50,6 +51,8 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     else:
         myninit = nstar + (id-1)*nrange
     mynend = nstar + id*nrange
+    if mynend > nfinal:
+        mynend = nfinal
     log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
     
     #get source integrand and save to file
@@ -136,6 +139,11 @@ def main(argv=None):
         consolelevel = options.loglevel
     else:
         consolelevel = logging.WARN
+    
+    #Change logger to add task id
+    if options.taskmax != options.taskmin:
+        log.name = "src-" + str(options.taskid)
+        sosource.set_log_name()
         
     logfile = os.path.join(run_config.LOGDIR, "src.log")
     helpers.startlogging(log, logfile, options.loglevel, consolelevel)
@@ -162,8 +170,8 @@ def main(argv=None):
     return 0
     
 if __name__ == "__main__":
-    log = logging.getLogger("source")
+    log = logging.getLogger()
     log.handlers = []
     sys.exit(main())
 else:
-    log = logging.getLogger("source")
+    log = logging.getLogger("src")

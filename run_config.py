@@ -7,8 +7,7 @@ Created on 30 Jun 2010
 
 import numpy as N
 import cosmomodels as c
-import configuration
-from configuration import CODEDIR, PROGRAM_NAME, LOGLEVEL
+from configuration import PROGRAM_NAME, LOGLEVEL
 import os.path
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
@@ -71,12 +70,7 @@ cq = 50
 # THIS LINE
 ##############################
 
-#Directory names computed from current code directory
-RUNDIR = os.path.dirname(CODEDIR)
-RESULTSDIR = os.path.join(RUNDIR, configuration.RESULTSDIRNAME)
-LOGDIR = os.path.join(RUNDIR, configuration.LOGDIRNAME)
-QSUBSCRIPTSDIR = os.path.join(RUNDIR, configuration.QSUBSCRIPTSDIRNAME)
-QSUBLOGSDIR = os.path.join(RUNDIR, configuration.QSUBLOGSDIRNAME)
+from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR
 
 if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
@@ -97,11 +91,11 @@ soargs = {}
 # qsub submission values
 #
 ##############################
-runname = PROGRAM_NAME
+runname = PROGRAM_NAME[0:4]
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
-timelimit = "3:00:00" # Time needed for each array job
+timelimit = "23:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
-taskmax= "20" #finishing task id number
+taskmax= "100" #finishing task id number
 hold_jid_list= "" # List of jobs this task depends on 
 
 templatefile = os.path.join(CODEDIR, "qsub-template.sh")
