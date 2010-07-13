@@ -21,7 +21,7 @@ cdef extern from "math.h":
     double ceil(double x)
     double floor(double x)
 
-cdef klessq2(int kix, int qix, int theta, float kmin, float dk):
+cdef klessq2(int kix, int qix, float theta, float kmin, float dk):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -101,48 +101,3 @@ def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1d
                     dpres[0,z,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
                     dpres[1,z,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
     return dpres
-
-def getthetaterms(integrand_elements, dp1func, dp1dotfunc):
-    """Return array of integrated values for specified theta function and dphi function.
-    
-    Parameters
-    ----------
-    integrand_elements: tuple
-            Contains integrand arrays in order (k, q, theta)
-             
-    dp1func: function object
-             Function of klessq for dphi1 e.g. interpolated function of dphi1 results.
-    
-    dp1dotfunc: function object
-             Function of klessq for dphi1dot e.g. interpolated function of dphi1dot results.
-                                  
-    Returns
-    -------
-    theta_terms: tuple
-                 Tuple of len(k)xlen(q) shaped arrays of integration results in form
-                 (\int(sin(theta) dp1(k-q) dtheta,
-                  \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-                  \int(sin(theta) dp1dot(k-q) dtheta,
-                  \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
-                 
-    """
-    k, q, theta = integrand_elements
-    dpshape = [q.shape[0], theta.shape[0]]
-    dtheta = theta[1]-theta[0]
-    sinth = N.sin(theta)
-    cossinth = N.cos(theta)*N.sin(theta)
-    aterm, bterm, cterm, dterm = [],[],[],[] #Results lists
-    for onek in k:
-        klq = klessq(onek, q, theta)
-        dphi_klq = N.empty(dpshape)
-        dphidot_klq = N.empty(dpshape)
-        for r in xrange(len(q)):
-            oklq = klq[r]
-            dphi_klq[r] = dp1func(oklq)
-            dphidot_klq[r] = dp1dotfunc(oklq)
-        aterm.append(integrate.romb(sinth*dphi_klq, dtheta))
-        bterm.append(integrate.romb(cossinth*dphi_klq, dtheta))
-        cterm.append(integrate.romb(sinth*dphidot_klq, dtheta))
-        dterm.append(integrate.romb(cossinth*dphidot_klq, dtheta))
-    theta_terms = N.array(aterm), N.array(bterm), N.array(cterm), N.array(dterm)
-    return theta_terms   
