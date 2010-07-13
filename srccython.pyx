@@ -14,14 +14,13 @@ DTYPEI = N.int
 ctypedef N.float_t DTYPEF_t
 ctypedef N.int_t DTYPEI_t
 
-from scipy import integrate
 
 cdef extern from "math.h":
     double sqrt(double x)
     double ceil(double x)
     double floor(double x)
 
-cdef klessq2(int kix, int qix, double theta, double kmin, double dk):
+cdef double klessq2(int kix, int qix, double theta, double kmin, double dk):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
