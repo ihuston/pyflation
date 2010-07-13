@@ -75,8 +75,8 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
     return dpres
     
 def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
-              DTYPEF_t kmin, DTYPEF_t dk, DTYPEF_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
-              DTYPEF_t rmax):
+              DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
+              DTYPEI_t rmax):
     """Interpolate values of dphi1 and dphi1dot at k=klq."""
     #cdef N.ndarray[DTYPEF_t, ndim=2] klqix = (klq - kmin)/dk #Supposed indices
     #cdef int rmax = klq.shape[0]
