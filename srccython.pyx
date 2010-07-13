@@ -21,7 +21,7 @@ cdef extern from "math.h":
     double ceil(double x)
     double floor(double x)
 
-def klessq(double k, N.ndarray[DTYPEF_t] q, N.ndarray[DTYPEF_t] theta):
+cdef klessq2(int kix, int qix, int theta, float kmin, float dk):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -41,16 +41,10 @@ def klessq(double k, N.ndarray[DTYPEF_t] q, N.ndarray[DTYPEF_t] theta):
             len(q)*len(theta) array of values for
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
+    cdef double res
 #     N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
-    
-    cdef int r, t
-    cdef int rmax = q.shape[0]
-    cdef int tmax = theta.shape[0]
-    cdef N.ndarray[DTYPEF_t, ndim=2] res = N.empty([rmax, tmax], dtype=DTYPEF)
-    
-    for r in range(rmax):
-        for t in range(tmax):
-            res[r,t] = sqrt(k**2 + q[r]**2 - 2*k*q[r]*theta[t])
+    kquot = kmin/dk
+    res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*theta) - kmin
     return res
 
 def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
@@ -66,6 +60,33 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
     for r in range(rmax):
         for t in range(tmax):
             p = klqix[r,t]
+            if p >= 0.0:
+                #get floor and ceiling (cast as ints)
+                fp = <int> floor(p)
+                cp = <int> ceil(p)
+                if fp == cp:
+                    pquotient = 0.0
+                else:
+                    pquotient = (p - fp)/(cp - fp)
+                #Save results
+                for z in range(2):
+                    dpres[0,z,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
+                    dpres[1,z,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
+    return dpres
+    
+def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
+              DTYPEF_t kmin, DTYPEF_t dk, DTYPEF_t kix, N.ndarray[DTYPEF_t, ndim=1] theta):
+    """Interpolate values of dphi1 and dphi1dot at k=klq."""
+    #cdef N.ndarray[DTYPEF_t, ndim=2] klqix = (klq - kmin)/dk #Supposed indices
+    cdef int rmax = klq.shape[0]
+    cdef int tmax = klq.shape[1]
+    cdef int r, t, z
+    cdef float p, pquotient
+    cdef int fp, cp
+    cdef N.ndarray[DTYPEF_t, ndim=4] dpres = N.zeros((2,2,rmax,tmax))
+    for r in range(rmax):
+        for t in range(tmax):
+            p = klessq2(kix, r, theta[t], kmin, dk)
             if p >= 0.0:
                 #get floor and ceiling (cast as ints)
                 fp = <int> floor(p)
