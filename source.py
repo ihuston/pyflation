@@ -51,6 +51,8 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     else:
         myninit = nstar + (id-1)*nrange
     mynend = nstar + id*nrange
+    if mynend > nfinal:
+        mynend = nfinal
     log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
     
     #get source integrand and save to file
