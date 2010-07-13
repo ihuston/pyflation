@@ -58,6 +58,7 @@ def klessq(k, q, theta):
     """
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
+@profile
 def getthetaterms(integrand_elements, dp1, dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
