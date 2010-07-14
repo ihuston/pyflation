@@ -54,11 +54,11 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
       ode, odeint - ODE integrators
     """
 #    y = asarray(y)
-    DTYPEI_t nd = 2
-    DTYPEI_t Nsamps = y.shape[1]
-    DTYPEI_t Ninterv = Nsamps-1
-    DTYPEI_t n = 1
-    DTYPEI_t k = 0
+    cdef DTYPEI_t nd = 2
+    cdef DTYPEI_t Nsamps = y.shape[1]
+    cdef DTYPEI_t Ninterv = Nsamps-1
+    cdef DTYPEI_t n = 1
+    cdef DTYPEI_t k = 0
     
     while n < Ninterv:
         n <<= 1
