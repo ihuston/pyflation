@@ -8,6 +8,17 @@ Adapted from scipy.integrate by Ian Huston
 from numpy import add, isscalar, asarray
 cimport numpy as np
 
+cimport numpy as N
+cimport cython
+
+DTYPED = N.double
+DTYPEI = N.int
+ctypedef N.double_t DTYPED_t
+ctypedef N.int_t DTYPEI_t
+DTYPEC = N.complex128
+ctypedef N.complex128_t DTYPEC_t
+
+
 
 def tupleset(t, i, value):
     l = list(t)
@@ -15,7 +26,7 @@ def tupleset(t, i, value):
     return tuple(l)
 
 
-def romb(y, dx=1.0, axis=-1, show=False):
+def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
     """Romberg integration using samples of a function
 
     Inputs:
@@ -42,12 +53,13 @@ def romb(y, dx=1.0, axis=-1, show=False):
       cumtrapz - cumulative integration for sampled data
       ode, odeint - ODE integrators
     """
-    y = asarray(y)
-    nd = len(y.shape)
-    Nsamps = y.shape[axis]
-    Ninterv = Nsamps-1
-    n = 1
-    k = 0
+#    y = asarray(y)
+    DTYPEI_t nd = 2
+    DTYPEI_t Nsamps = y.shape[1]
+    DTYPEI_t Ninterv = Nsamps-1
+    DTYPEI_t n = 1
+    DTYPEI_t k = 0
+    
     while n < Ninterv:
         n <<= 1
         k += 1
@@ -72,28 +84,5 @@ def romb(y, dx=1.0, axis=-1, show=False):
             R[(i,j)] = R[(i,j-1)] + \
                        (R[(i,j-1)]-R[(i-1,j-1)]) / ((1 << (2*(j-1)))-1)
         h = h / 2.0
-
-    if show:
-        if not isscalar(R[(1,1)]):
-            print "*** Printing table only supported for integrals" + \
-                  " of a single data set."
-        else:
-            try:
-                precis = show[0]
-            except (TypeError, IndexError):
-                precis = 5
-            try:
-                width = show[1]
-            except (TypeError, IndexError):
-                width = 8
-            formstr = "%" + str(width) + '.' + str(precis)+'f'
-
-            print "\n       Richardson Extrapolation Table for Romberg Integration       "
-            print "===================================================================="
-            for i in range(1,k+1):
-                for j in range(1,i+1):
-                    print formstr % R[(i,j)],
-                print
-            print "====================================================================\n"
 
     return R[(k,k)]
