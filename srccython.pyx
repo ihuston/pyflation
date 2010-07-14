@@ -1,4 +1,3 @@
-# cython: profile=True
 """srccython.pyx Second order source helper module for cython.
 Author: Ian Huston
 

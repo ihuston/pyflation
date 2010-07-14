@@ -92,9 +92,12 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
     sinth = N.sin(theta)
     cossinth = N.cos(theta)*N.sin(theta)
     theta_terms = N.empty([4, k.shape[0], q.shape[0]])
-    for n, onek in enumerate(k):
+    lenq = len(q)
+    dk = k[1]-k[0]
+    kmin = k[0]
+    for n in xrange(len(k)):
         #klq = klessq(onek, q, theta)
-        dphi_tgther, dphidot_tgther = srccython.interpdps2(dp1, dp1dot, k[0], k[1]-k[0], n, theta, len(q))
+        dphi_tgther, dphidot_tgther = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
         
         theta_terms[0,n] = romb(sinth*dphi_tgther, dx=dtheta)
         theta_terms[1,n] = romb(cossinth*dphi_tgther, dx=dtheta)
