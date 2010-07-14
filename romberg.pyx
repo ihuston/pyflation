@@ -6,7 +6,7 @@ Adapted from scipy.integrate by Ian Huston
 '''
 
 from numpy import add, isscalar, asarray
-
+cimport numpy as np
 
 
 def tupleset(t, i, value):

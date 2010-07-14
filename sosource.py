@@ -21,7 +21,6 @@ import srccython
 import run_config
 from run_config import _debug
 
-from pudb import set_trace
 
 if not "profile" in __builtins__:
     def profile(f):
@@ -61,7 +60,7 @@ def klessq(k, q, theta):
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
 @profile
-def getthetaterms(integrand_elements, dp1, dp1dot, fullk):
+def getthetaterms(integrand_elements, dp1, dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
     Parameters
@@ -85,50 +84,22 @@ def getthetaterms(integrand_elements, dp1, dp1dot, fullk):
                   \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
                  
     """
-#    set_trace()
     k, q, theta = integrand_elements
-#    dpshape = [q.shape[0], theta.shape[0]]
-#    dpnew = N.array([dp1.real, dp1.imag])
-#    dpdnew = N.array([dp1dot.real, dp1dot.imag])
-#    dtheta = theta[1]-theta[0]
-#    sinth = N.sin(theta)
-#    cossinth = N.cos(theta)*N.sin(theta)
+    dpshape = [q.shape[0], theta.shape[0]]
+    dpnew = N.array([dp1.real, dp1.imag])
+    dpdnew = N.array([dp1dot.real, dp1dot.imag])
+    dtheta = theta[1]-theta[0]
+    sinth = N.sin(theta)
+    cossinth = N.cos(theta)*N.sin(theta)
     theta_terms = N.empty([4, 2, k.shape[0], q.shape[0]])
-    
-    dpnew = interpolate.interp1d(fullk, dp1, bounds_error=False, fill_value=N.nan)
-    dpdnew = interpolate.interp1d(fullk, dp1dot, bounds_error=False, fill_value=N.nan)
-    
-    xdpx = lambda x: x*dpnew(x)
-    x3dpx = lambda x: x**3 * dpnew(x)
-    
-    xdpdx = lambda x: x*dpdnew(x)
-    x3dpdx = lambda x: x**3 * dpdnew(x)
-    
     for n, onek in enumerate(k):
         #klq = klessq(onek, q, theta)
-#        dphi_tgther, dphidot_tgther = srccython.interpdps2(dpnew, dpdnew, k[0], k[1]-k[0], n, theta, len(q))
-#        for z in range(2):
-#            theta_terms[0,z,n] = romb(sinth*dphi_tgther[z], dx=dtheta)
-#            theta_terms[1,z,n] = romb(cossinth*dphi_tgther[z], dx=dtheta)
-#            theta_terms[2,z,n] = romb(sinth*dphidot_tgther[z], dx=dtheta)
-#            theta_terms[3,z,n] = romb(cossinth*dphidot_tgther[z], dx=dtheta)
-        for r, oneq in enumerate(q):
-            lower_limit = N.abs(onek-oneq)
-            upper_limit = onek+oneq
-            dpint1 = integrate.romberg(xdpx, lower_limit, upper_limit, vec_func=True)
-            dpres1 = dpint1/(onek*oneq)
-            theta_terms[0,:,n,r] = dpres1.real, dpres1.imag
-            dpint2 = integrate.romberg(x3dpx, lower_limit, upper_limit, vec_func=True)
-            dpres2 = (-dpint2 + (onek**2+oneq**2)*dpint1)/(2*(onek*oneq)**2)
-            theta_terms[1,:,n,r] = dpres2.real, dpres2.imag
-            dpdint1 = integrate.romberg(xdpdx, lower_limit, upper_limit, vec_func=True)
-            dpdres1 = dpdint1/(onek*oneq)
-            theta_terms[2,:,n,r] = dpdres1.real, dpdres1.imag
-            dpdint2 = integrate.romberg(x3dpdx, lower_limit, upper_limit, vec_func=True)
-            dpdres2 = (-dpdint2 + (onek**2+oneq**2)*dpdint1)/(2*(onek*oneq)**2)
-            theta_terms[3,:,n,r] = dpdres2.real, dpdres2.imag
-            
-    
+        dphi_tgther, dphidot_tgther = srccython.interpdps2(dpnew, dpdnew, k[0], k[1]-k[0], n, theta, len(q))
+        for z in range(2):
+            theta_terms[0,z,n] = romb(sinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[1,z,n] = romb(cossinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[2,z,n] = romb(sinth*dphidot_tgther[z], dx=dtheta)
+            theta_terms[3,z,n] = romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
 
         
@@ -258,7 +229,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     a = m.ainit*N.exp(m.tresult[nix])
     if _debug:
         source_logger.debug("Calculating source term integrand for this timestep...")
-    theta_terms = getthetaterms(integrand_elements, dphi1, dphi1dot, m.k)
+    theta_terms = getthetaterms(integrand_elements, dphi1, dphi1dot)
     #Get unintegrated source term
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot, theta_terms)
     #Get integration function
