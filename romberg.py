@@ -7,12 +7,16 @@ Adapted from scipy.integrate by Ian Huston
 
 from numpy import add, isscalar, asarray
 
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
 
 def tupleset(t, i, value):
     l = list(t)
     l[i] = value
     return tuple(l)
 
+@profile
 def romb(y, dx=1.0, axis=-1, show=False):
     """Romberg integration using samples of a function
 
