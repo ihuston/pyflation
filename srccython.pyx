@@ -11,6 +11,8 @@ Provides the method interpdps which interpolates results in dp1 and dpdot1.
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 cimport numpy as N
+cimport cython
+
 DTYPEF = N.float
 DTYPEI = N.int
 ctypedef N.float_t DTYPEF_t
@@ -24,7 +26,7 @@ cdef extern from "math.h":
     double ceil(double x)
     double floor(double x)
 
-cdef double klessq2(int kix, int qix, double theta, double kmin, double dk):
+cdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -45,9 +47,6 @@ cdef double klessq2(int kix, int qix, double theta, double kmin, double dk):
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
     cdef double res
-    cdef double kquot
-#     N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
-    kquot = kmin/dk
     res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*theta) - kmin
     return res
 
@@ -77,7 +76,8 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
                     dpres[0,z,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
                     dpres[1,z,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
     return dpres
-    
+
+@cython.boundscheck(False)    
 def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1dot,
               DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
               DTYPEI_t rmax):
@@ -85,13 +85,15 @@ def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1d
     #cdef N.ndarray[DTYPEF_t, ndim=2] klqix = (klq - kmin)/dk #Supposed indices
     #cdef int rmax = klq.shape[0]
     cdef int tmax = theta.shape[0]
+    cdef double kquot = kmin/dk
     cdef int r, t, z
     cdef double p, pquotient
     cdef int fp, cp
     cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.zeros((2,rmax,tmax), dtype=DTYPEC)
+    
     for r in range(rmax):
         for t in range(tmax):
-            p = klessq2(kix, r, theta[t], kmin, dk)
+            p = klessq2(kix, r, theta[t], kmin, kquot)
             if p >= 0.0:
                 #get floor and ceiling (cast as ints)
                 fp = <int> floor(p)
