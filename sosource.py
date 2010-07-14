@@ -12,6 +12,7 @@ from __future__ import division # Get rid of integer division problems, i.e. 1/2
 
 import numpy as N
 from scipy import integrate, interpolate
+from romberg import romb
 import helpers
 import logging
 import time
@@ -95,10 +96,10 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
         #klq = klessq(onek, q, theta)
         dphi_tgther, dphidot_tgther = srccython.interpdps2(dpnew, dpdnew, k[0], k[1]-k[0], n, theta, len(q))
         for z in range(2):
-            theta_terms[0,z,n] = integrate.romb(sinth*dphi_tgther[z], dx=dtheta)
-            theta_terms[1,z,n] = integrate.romb(cossinth*dphi_tgther[z], dx=dtheta)
-            theta_terms[2,z,n] = integrate.romb(sinth*dphidot_tgther[z], dx=dtheta)
-            theta_terms[3,z,n] = integrate.romb(cossinth*dphidot_tgther[z], dx=dtheta)
+            theta_terms[0,z,n] = romb(sinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[1,z,n] = romb(cossinth*dphi_tgther[z], dx=dtheta)
+            theta_terms[2,z,n] = romb(sinth*dphidot_tgther[z], dx=dtheta)
+            theta_terms[3,z,n] = romb(cossinth*dphidot_tgther[z], dx=dtheta)
     return theta_terms
 
         
