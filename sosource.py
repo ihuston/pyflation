@@ -21,6 +21,7 @@ import srccython
 import run_config
 from run_config import _debug
 
+from pudb import set_trace
 
 if not "profile" in __builtins__:
     def profile(f):
@@ -84,6 +85,7 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
                   \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
                  
     """
+    set_trace()
     k, q, theta = integrand_elements
     dpshape = [q.shape[0], theta.shape[0]]
     dpnew = N.array([dp1.real, dp1.imag])
