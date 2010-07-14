@@ -86,7 +86,7 @@ def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1d
     cdef int r, t, z
     cdef double p, pquotient
     cdef int fp, cp
-    cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.zeros((2,rmax,tmax))
+    cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.zeros((2,rmax,tmax), dtype=DTYPEC)
     for r in range(rmax):
         for t in range(tmax):
             p = klessq2(kix, r, theta[t], kmin, dk)
