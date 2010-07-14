@@ -99,6 +99,6 @@ def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1d
                 else:
                     pquotient = (p - fp)/(cp - fp)
                 #Save results
-                dpres[0,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
-                dpres[1,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
+                dpres[0,r,t] = dp1[fp] + pquotient*(dp1[cp]-dp1[fp])
+                dpres[1,r,t] = dp1dot[fp] + pquotient*(dp1dot[cp]-dp1dot[fp])
     return dpres
