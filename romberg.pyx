@@ -7,7 +7,7 @@ Adapted from scipy.integrate by Ian Huston
 
 from numpy import add, isscalar, asarray
 
-
+import numpy as N
 cimport numpy as N
 cimport cython
 
