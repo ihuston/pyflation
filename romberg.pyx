@@ -69,17 +69,17 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
 
     R = {}
     all = (slice(None),) * nd
-    slice0 = tupleset(all, axis, 0)
-    slicem1 = tupleset(all, axis, -1)
+    slice0 = tupleset(all, 1, 0)
+    slicem1 = tupleset(all, 1, -1)
     h = Ninterv*asarray(dx)*1.0
     R[(1,1)] = (y[slice0] + y[slicem1])/2.0*h
     slice_R = all
     start = stop = step = Ninterv
     for i in range(2,k+1):
         start >>= 1
-        slice_R = tupleset(slice_R, axis, slice(start,stop,step))
+        slice_R = tupleset(slice_R, 1, slice(start,stop,step))
         step >>= 1
-        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[slice_R],axis))
+        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[slice_R],1))
         for j in range(2,i+1):
             R[(i,j)] = R[(i,j-1)] + \
                        (R[(i,j-1)]-R[(i-1,j-1)]) / ((1 << (2*(j-1)))-1)
