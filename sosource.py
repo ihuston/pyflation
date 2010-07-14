@@ -86,20 +86,20 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
     """
     k, q, theta = integrand_elements
     dpshape = [q.shape[0], theta.shape[0]]
-    dpnew = N.array([dp1.real, dp1.imag])
-    dpdnew = N.array([dp1dot.real, dp1dot.imag])
+#    dpnew = N.array([dp1.real, dp1.imag])
+#    dpdnew = N.array([dp1dot.real, dp1dot.imag])
     dtheta = theta[1]-theta[0]
     sinth = N.sin(theta)
     cossinth = N.cos(theta)*N.sin(theta)
-    theta_terms = N.empty([4, 2, k.shape[0], q.shape[0]])
+    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
     for n, onek in enumerate(k):
         #klq = klessq(onek, q, theta)
-        dphi_tgther, dphidot_tgther = srccython.interpdps2(dpnew, dpdnew, k[0], k[1]-k[0], n, theta, len(q))
-        for z in range(2):
-            theta_terms[0,z,n] = romb(sinth*dphi_tgther[z], dx=dtheta)
-            theta_terms[1,z,n] = romb(cossinth*dphi_tgther[z], dx=dtheta)
-            theta_terms[2,z,n] = romb(sinth*dphidot_tgther[z], dx=dtheta)
-            theta_terms[3,z,n] = romb(cossinth*dphidot_tgther[z], dx=dtheta)
+        dphi_tgther, dphidot_tgther = srccython.interpdps2(dp1, dp1dot, k[0], k[1]-k[0], n, theta, len(q))
+        
+        theta_terms[0,n] = romb(sinth*dphi_tgther, dx=dtheta)
+        theta_terms[1,n] = romb(cossinth*dphi_tgther, dx=dtheta)
+        theta_terms[2,n] = romb(sinth*dphidot_tgther, dx=dtheta)
+        theta_terms[3,n] = romb(cossinth*dphidot_tgther, dx=dtheta)
     return theta_terms
 
         
@@ -150,11 +150,11 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
     #Calculate dphi(q) and dphi(k-q)
     dp1_q = dp1[N.newaxis,:q.shape[-1]]
     dp1dot_q = dp1dot[N.newaxis,q.shape[-1]]
-    atmp, btmp, ctmp, dtmp = theta_terms
-    aterm = atmp[0] + atmp[1]*1j
-    bterm = btmp[0] + btmp[1]*1j
-    cterm = ctmp[0] + ctmp[1]*1j
-    dterm = dtmp[0] + dtmp[1]*1j
+    aterm, bterm, cterm, dterm = theta_terms
+#    aterm = atmp[0] + atmp[1]*1j
+#    bterm = btmp[0] + btmp[1]*1j
+#    cterm = ctmp[0] + ctmp[1]*1j
+#    dterm = dtmp[0] + dtmp[1]*1j
     
     #Calculate unintegrated source term
     #First major term:
@@ -243,7 +243,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
         source_logger.debug("Integration successful!")
     return src
 
-@profile                
+           
 def getsourceandintegrate(m, savefile=None, srcfunc=slowrollsrcterm, ninit=0, nfinal=-1, ntheta=513, numks=1025):
     """Calculate and save integrated source term.
     

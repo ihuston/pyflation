@@ -13,6 +13,8 @@ DTYPEF = N.float
 DTYPEI = N.int
 ctypedef N.float_t DTYPEF_t
 ctypedef N.int_t DTYPEI_t
+DTYPEC = N.complex128
+ctypedef N.complex128_t DTYPEC_t
 
 
 cdef extern from "math.h":
@@ -74,7 +76,7 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
                     dpres[1,z,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
     return dpres
     
-def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
+def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1dot,
               DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
               DTYPEI_t rmax):
     """Interpolate values of dphi1 and dphi1dot at k=klq."""
@@ -84,7 +86,7 @@ def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1d
     cdef int r, t, z
     cdef double p, pquotient
     cdef int fp, cp
-    cdef N.ndarray[DTYPEF_t, ndim=4] dpres = N.zeros((2,2,rmax,tmax))
+    cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.zeros((2,rmax,tmax))
     for r in range(rmax):
         for t in range(tmax):
             p = klessq2(kix, r, theta[t], kmin, dk)
@@ -97,7 +99,6 @@ def interpdps2(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1d
                 else:
                     pquotient = (p - fp)/(cp - fp)
                 #Save results
-                for z in range(2):
-                    dpres[0,z,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
-                    dpres[1,z,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
+                dpres[0,r,t] = dp1[z,fp] + pquotient*(dp1[z,cp]-dp1[z,fp])
+                dpres[1,r,t] = dp1dot[z,fp] + pquotient*(dp1dot[z,cp]-dp1dot[z,fp])
     return dpres
