@@ -6,12 +6,12 @@ Adapted from scipy.integrate by Ian Huston
 '''
 
 from numpy import add, isscalar, asarray
-cimport numpy as np
+
 
 cimport numpy as N
 cimport cython
 
-DTYPED = N.double
+DTYPED = N.float64
 DTYPEI = N.int
 ctypedef N.double_t DTYPED_t
 ctypedef N.int_t DTYPEI_t
