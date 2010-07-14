@@ -5,6 +5,8 @@ $Id: srccython.pyx,v 1.2 2009/02/27 17:45:21 ith Exp $
 Provides the method interpdps which interpolates results in dp1 and dpdot1.
 
 """
+# cython: profile=True
+
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
