@@ -79,8 +79,8 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
     return dpres
 
 @cython.boundscheck(False)    
-cdef interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1dot,
-              DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
+cdef interpdps2(N.ndarray[DTYPEC_t] dp1, N.ndarray[DTYPEC_t] dp1dot,
+              DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t] theta,
               DTYPEI_t rmax):
     """Interpolate values of dphi1 and dphi1dot at k=klq."""
     #cdef N.ndarray[DTYPEF_t, ndim=2] klqix = (klq - kmin)/dk #Supposed indices
