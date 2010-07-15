@@ -59,6 +59,8 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
     cdef DTYPEI_t Ninterv = Nsamps-1
     cdef DTYPEI_t n = 1
     cdef DTYPEI_t k = 0
+    cdef int i, j
+    cdef DTYPEI_t start, stop, step
     
     while n < Ninterv:
         n <<= 1
