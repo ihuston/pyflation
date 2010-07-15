@@ -146,7 +146,7 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
     kmin = k[0]
     for n in xrange(len(k)):
         #klq = klessq(onek, q, theta)
-        dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
+        dphi_res = interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
         
         theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
         theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
