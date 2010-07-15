@@ -113,7 +113,7 @@ cdef interpdps2(object dp1_obj,  object dp1dot_obj,
     return dpres
 
 
-def getthetaterms(N.ndarray[DTYPEF_t, ndim=1] k, N.ndarray[DTYPEF_t], ndim=1] q,
+def getthetaterms(N.ndarray[DTYPEF_t, ndim=1] k, N.ndarray[DTYPEF_t, ndim=1] q,
                   N.ndarray[DTYPEF_t, ndim=1] theta, 
                   N.ndarray[DTYPEC_t, ndim=1] dp1, 
                   N.ndarray[DTYPEC_t, ndim=1] dp1dot):
