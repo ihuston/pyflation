@@ -150,7 +150,7 @@ def getthetaterms(N.ndarray[DTYPEF_t, ndim=1] k, N.ndarray[DTYPEF_t, ndim=1] q,
     
     cdef int lenk = k.shape[0]
     cdef int lenq = q.shape[0]
-    cdef N.ndarray[DTYPEC_t, ndim=3] theta_terms = N.empty([4, lenk, lenq])
+    cdef N.ndarray[DTYPEC_t, ndim=3] theta_terms = N.zeros([4, lenk, lenq], dtype=DTYPEC)
     cdef N.ndarray[DTYPEC_t, ndim=3] dphi_res = N.zeros((2,lenq,theta.shape[0]), dtype=DTYPEC)
     
     
