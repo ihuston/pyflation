@@ -203,6 +203,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     s: array_like
        Integrated source term calculated using srcfunc.
     """
+    k, q, theta = integrand_elements
     #Copy of yresult
     myr = m.yresult[nix].copy()
     #Fill nans with initial conditions
@@ -232,7 +233,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     a = m.ainit*N.exp(m.tresult[nix])
     if _debug:
         source_logger.debug("Calculating source term integrand for this timestep...")
-    theta_terms = srccython.getthetaterms(integrand_elements, dphi1, dphi1dot)
+    theta_terms = srccython.getthetaterms(k, q, theta, dphi1, dphi1dot)
     #Get unintegrated source term
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot, theta_terms)
     #Get integration function

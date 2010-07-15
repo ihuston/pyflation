@@ -79,7 +79,7 @@ def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1do
     return dpres
 
 @cython.boundscheck(False)    
-def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1dot,
+cdef interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1dot,
               DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, N.ndarray[DTYPEF_t, ndim=1] theta,
               DTYPEI_t rmax):
     """Interpolate values of dphi1 and dphi1dot at k=klq."""
@@ -109,7 +109,10 @@ def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1d
     return dpres
 
 
-def getthetaterms(integrand_elements, dp1, dp1dot):
+def getthetaterms(N.ndarray[DTYPEF_t, ndim=1] k, N.ndarray[DTYPEF_t], ndim=1] q,
+                  N.ndarray[DTYPEF_t, ndim=1] theta, 
+                  N.ndarray[DTYPEC_t, ndim=1] dp1, 
+                  N.ndarray[DTYPEC_t, ndim=1] dp1dot):
     """Return array of integrated values for specified theta function and dphi function.
     
     Parameters
@@ -133,18 +136,23 @@ def getthetaterms(integrand_elements, dp1, dp1dot):
                   \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
                  
     """
-    k, q, theta = integrand_elements
-    dpshape = [q.shape[0], theta.shape[0]]
+    #k, q, theta = integrand_elements
+    #dpshape = [q.shape[0], theta.shape[0]]
 #    dpnew = N.array([dp1.real, dp1.imag])
 #    dpdnew = N.array([dp1dot.real, dp1dot.imag])
-    dtheta = theta[1]-theta[0]
-    sinth = N.sin(theta)
-    cossinth = N.cos(theta)*N.sin(theta)
-    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
-    lenq = len(q)
-    dk = k[1]-k[0]
-    kmin = k[0]
-    for n in xrange(len(k)):
+    cdef DTYPEF_t dtheta = theta[1]-theta[0]
+    cdef N.ndarray[DTYPEF_t, ndim=1] sinth = N.sin(theta)
+    cdef N.ndarray[DTYPEF_t, ndim=1] cossinth = N.cos(theta)*N.sin(theta)
+    
+    cdef int lenk = k.shape[0]
+    cdef int lenq = q.shape[0]
+    cdef N.ndarray[DTYPEC_t, ndim=3] theta_terms = N.empty([4, lenk, lenq])
+    cdef N.ndarray[DTYPEC_t, ndim=3] dphi_res = N.zeros((2,lenq,theta.shape[0]), dtype=DTYPEC)
+    
+    
+    cdef DTYPEF_t dk = k[1]-k[0]
+    cdef DTYPEF_t kmin = k[0]
+    for n in range(lenk):
         #klq = klessq(onek, q, theta)
         dphi_res = interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
         
