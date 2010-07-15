@@ -106,3 +106,49 @@ def interpdps2(N.ndarray[DTYPEC_t, ndim=1] dp1, N.ndarray[DTYPEC_t, ndim=1] dp1d
                 dpres[0,r,t] = dp1[fp] + pquotient*(dp1[cp]-dp1[fp])
                 dpres[1,r,t] = dp1dot[fp] + pquotient*(dp1dot[cp]-dp1dot[fp])
     return dpres
+
+
+def getthetaterms(integrand_elements, dp1, dp1dot):
+    """Return array of integrated values for specified theta function and dphi function.
+    
+    Parameters
+    ----------
+    integrand_elements: tuple
+            Contains integrand arrays in order (k, q, theta)
+             
+    dp1: array_like
+         Array of values for dphi1
+    
+    dp1dot: array_like
+            Array of values for dphi1dot
+                                  
+    Returns
+    -------
+    theta_terms: tuple
+                 Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                 (\int(sin(theta) dp1(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                  \int(sin(theta) dp1dot(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                 
+    """
+    k, q, theta = integrand_elements
+    dpshape = [q.shape[0], theta.shape[0]]
+#    dpnew = N.array([dp1.real, dp1.imag])
+#    dpdnew = N.array([dp1dot.real, dp1dot.imag])
+    dtheta = theta[1]-theta[0]
+    sinth = N.sin(theta)
+    cossinth = N.cos(theta)*N.sin(theta)
+    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
+    lenq = len(q)
+    dk = k[1]-k[0]
+    kmin = k[0]
+    for n in xrange(len(k)):
+        #klq = klessq(onek, q, theta)
+        dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
+        
+        theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
+        theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
+        theta_terms[2,n] = romb(sinth*dphi_res[1], dx=dtheta)
+        theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=dtheta)
+    return theta_terms
