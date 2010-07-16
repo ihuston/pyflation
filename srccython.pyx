@@ -94,7 +94,7 @@ cdef interpdps2(object dp1_obj,  object dp1dot_obj,
     cdef int r, t, z
     cdef double p, pquotient
     cdef int fp, cp
-    cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.zeros((2,rmax,tmax), dtype=DTYPEC)
+    cdef N.ndarray[DTYPEC_t, ndim=3] dpres = N.empty((2,rmax,tmax), dtype=DTYPEC)
     
     for r in range(rmax):
         for t in range(tmax):
@@ -150,8 +150,8 @@ def getthetaterms(N.ndarray[DTYPEF_t, ndim=1] k, N.ndarray[DTYPEF_t, ndim=1] q,
     
     cdef int lenk = k.shape[0]
     cdef int lenq = q.shape[0]
-    cdef N.ndarray[DTYPEC_t, ndim=3] theta_terms = N.zeros([4, lenk, lenq], dtype=DTYPEC)
-    cdef N.ndarray[DTYPEC_t, ndim=3] dphi_res = N.zeros((2,lenq,theta.shape[0]), dtype=DTYPEC)
+    cdef N.ndarray[DTYPEC_t, ndim=3] theta_terms = N.empty([4, lenk, lenq], dtype=DTYPEC)
+    cdef N.ndarray[DTYPEC_t, ndim=3] dphi_res = N.empty((2,lenq,theta.shape[0]), dtype=DTYPEC)
     
     
     cdef DTYPEF_t dk = k[1]-k[0]
