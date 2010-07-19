@@ -60,50 +60,50 @@ def klessq(k, q, theta):
     return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
 #@profile
-#def getthetaterms(integrand_elements, dp1, dp1dot):
-#    """Return array of integrated values for specified theta function and dphi function.
-#    
-#    Parameters
-#    ----------
-#    integrand_elements: tuple
-#            Contains integrand arrays in order (k, q, theta)
-#             
-#    dp1: array_like
-#         Array of values for dphi1
-#    
-#    dp1dot: array_like
-#            Array of values for dphi1dot
-#                                  
-#    Returns
-#    -------
-#    theta_terms: tuple
-#                 Tuple of len(k)xlen(q) shaped arrays of integration results in form
-#                 (\int(sin(theta) dp1(k-q) dtheta,
-#                  \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-#                  \int(sin(theta) dp1dot(k-q) dtheta,
-#                  \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
-#                 
-#    """
+def getthetaterms(k, q, theta, dp1, dp1dot):
+    """Return array of integrated values for specified theta function and dphi function.
+    
+    Parameters
+    ----------
+    integrand_elements: tuple
+            Contains integrand arrays in order (k, q, theta)
+             
+    dp1: array_like
+         Array of values for dphi1
+    
+    dp1dot: array_like
+            Array of values for dphi1dot
+                                  
+    Returns
+    -------
+    theta_terms: tuple
+                 Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                 (\int(sin(theta) dp1(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                  \int(sin(theta) dp1dot(k-q) dtheta,
+                  \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                 
+    """
 #    k, q, theta = integrand_elements
 #    dpshape = [q.shape[0], theta.shape[0]]
-##    dpnew = N.array([dp1.real, dp1.imag])
-##    dpdnew = N.array([dp1dot.real, dp1dot.imag])
-#    dtheta = theta[1]-theta[0]
-#    sinth = N.sin(theta)
-#    cossinth = N.cos(theta)*N.sin(theta)
-#    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
-#    lenq = len(q)
-#    dk = k[1]-k[0]
-#    kmin = k[0]
-#    for n in xrange(len(k)):
-#        #klq = klessq(onek, q, theta)
-#        dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
-#        
-#        theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
-#        theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
-#        theta_terms[2,n] = romb(sinth*dphi_res[1], dx=dtheta)
-#        theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=dtheta)
-#    return theta_terms
+#    dpnew = N.array([dp1.real, dp1.imag])
+#    dpdnew = N.array([dp1dot.real, dp1dot.imag])
+    dtheta = theta[1]-theta[0]
+    sinth = N.sin(theta)
+    cossinth = N.cos(theta)*N.sin(theta)
+    theta_terms = N.empty([4, k.shape[0], q.shape[0]])
+    lenq = len(q)
+    dk = k[1]-k[0]
+    kmin = k[0]
+    for n in xrange(len(k)):
+        #klq = klessq(onek, q, theta)
+        dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
+        
+        theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
+        theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
+        theta_terms[2,n] = romb(sinth*dphi_res[1], dx=dtheta)
+        theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=dtheta)
+    return theta_terms
 
         
 def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
@@ -233,7 +233,7 @@ def calculatesource(m, nix, integrand_elements, srcfunc=slowrollsrcterm):
     a = m.ainit*N.exp(m.tresult[nix])
     if _debug:
         source_logger.debug("Calculating source term integrand for this timestep...")
-    theta_terms = srccython.getthetaterms(k, q, theta, dphi1, dphi1dot)
+    theta_terms = getthetaterms(k, q, theta, dphi1, dphi1dot)
     #Get unintegrated source term
     src_integrand = srcfunc(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot, theta_terms)
     #Get integration function
