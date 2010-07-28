@@ -26,6 +26,7 @@ cdef extern from "math.h":
     double sqrt(double x)
     double ceil(double x)
     double floor(double x)
+    double cos(double x)
 
 cpdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
@@ -48,7 +49,7 @@ cpdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
     cdef double res
-    res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*theta) - kmin
+    res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*cos(theta)) - kmin
     return res
 
 def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
