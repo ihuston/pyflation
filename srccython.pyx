@@ -27,7 +27,7 @@ cdef extern from "math.h":
     double ceil(double x)
     double floor(double x)
 
-cdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
+cpdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
