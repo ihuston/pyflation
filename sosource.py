@@ -156,8 +156,8 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
     k = integrand_elements[0]
     q = integrand_elements[1]
     #Calculate dphi(q) and dphi(k-q)
-#    dp1_q = dp1[N.newaxis,:q.shape[-1]]
-#    dp1dot_q = dp1dot[N.newaxis,q.shape[-1]]
+    dp1_q = dp1[:q.shape[-1]]
+    dp1dot_q = dp1dot[q.shape[-1]]
 #    aterm, bterm, cterm, dterm = theta_terms
 #    aterm = atmp[0] + atmp[1]*1j
 #    bterm = btmp[0] + btmp[1]*1j
@@ -203,10 +203,10 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
     
     srceqns = SourceEquations(k)
     #Get component integrals
-    J_A = srceqns.J_A(theta_terms[0], dp1, C1, C2)
-    J_B = srceqns.J_B(theta_terms[1], dp1, C3, C4)
-    J_C = srceqns.J_C(theta_terms[2], dp1dot, C5)
-    J_D = srceqns.J_D(theta_terms[3], dp1dot, C6, C7)
+    J_A = srceqns.J_A(theta_terms[0], dp1_q, C1, C2)
+    J_B = srceqns.J_B(theta_terms[1], dp1_q, C3, C4)
+    J_C = srceqns.J_C(theta_terms[2], dp1dot_q, C5)
+    J_D = srceqns.J_D(theta_terms[3], dp1dot_q, C6, C7)
     
     
     src = 1/((2*N.pi)**2 ) * (J_A + J_B + J_C + J_D)
