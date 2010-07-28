@@ -201,7 +201,9 @@ def slowrollsrcterm(bgvars, a, potentials, integrand_elements, dp1, dp1dot, thet
     
     C7 = - phidot / k
     
-    srceqns = SourceEquations(k)
+    fx = {"kmin":k[0], "deltak":k[1]-k[0], "numsoks":k.shape[-1], 
+               "fullkmax":run_config.kend, "nthetas":integrand_elements[2].shape[-1]}
+    srceqns = SourceEquations(fx)
     #Get component integrals
     J_A = srceqns.J_A(theta_terms[0], dp1_q, C1, C2)
     J_B = srceqns.J_B(theta_terms[1], dp1_q, C3, C4)
@@ -424,8 +426,10 @@ def opensourcefile(k, filename=None, sourcetype=None):
 
 class SourceEquations(object):
     """Class for source equations."""
-    def __init__(self, k):
-        self.k = k
+    def __init__(self, fixture):
+        self.fixture = fixture
+        self.fullk = N.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
+        self.k = self.fullk[:fixture["numsoks"]]
         
     def J_A(self, preaterm, dp1, C1, C2):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
