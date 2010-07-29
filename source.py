@@ -65,7 +65,7 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     #get source integrand and save to file
     try:
         filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
-                                                   ntheta=ntheta, numks=numsoks)
+                                                   ntheta=ntheta, numks=numsoks, srcclass=srcclass)
         log.info("Source term saved as " + filesaved)
     except Exception:
         log.exception("Error getting source term.")
