@@ -26,7 +26,7 @@ import optparse
 from run_config import _debug
 
 def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None, 
-              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None):
+              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None, srcclass=None):
     """Run parallel source integrand and second order calculation."""
     
     id = taskarray["id"]
@@ -56,6 +56,11 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     if mynend > nfinal:
         mynend = nfinal
     log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
+    
+    #Set source class using run_config
+    if srcclass is None:
+        srcclass = run_config.srcclass
+    
     
     #get source integrand and save to file
     try:

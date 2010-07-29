@@ -8,6 +8,7 @@ Created on 30 Jun 2010
 import numpy as N
 import cosmomodels as c
 from configuration import PROGRAM_NAME, LOGLEVEL
+from sourceterm import srcequations
 import os.path
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
@@ -61,6 +62,7 @@ kend = getkend(kinit, deltak, numsoks)
 
 ntheta = 513
 foclass = c.FOCanonicalTwoStage
+srcclass = srcequations.FullSingleFieldSource
 cq = 50
 
 
