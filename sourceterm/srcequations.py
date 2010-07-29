@@ -9,7 +9,11 @@ import numpy as N
 from romberg import romb
 from sourceterm import srccython
 
-def klessq(k, q, theta):
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
+
+def klessq_squared(k, q, theta):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -29,7 +33,8 @@ def klessq(k, q, theta):
             len(q)*len(theta) array of values for
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
-    return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
+    klessq = k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta))
+    return klessq*klessq
 
 class SourceEquations(object):
     '''
@@ -268,6 +273,7 @@ class FullSingleFieldSource(SourceEquations):
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
     
+    @profile
     def getthetaterms(self, k, q, theta, dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
         
@@ -297,7 +303,7 @@ class FullSingleFieldSource(SourceEquations):
         sinth = N.sin(theta)
         cossinth = N.cos(theta)*sinth
         cos2sinth = N.cos(theta)*cossinth
-        sin3th = N.sin(theta)**3
+        sin3th = sinth*sinth*sinth
         
         theta_terms = N.empty([7, k.shape[0], q.shape[0]])
         lenq = len(q)
@@ -316,7 +322,7 @@ class FullSingleFieldSource(SourceEquations):
             # E term integration
             theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=dtheta)
             #Get klessq for F and G terms
-            klq2 = klessq(k[n], q, theta)**4
+            klq2 = klessq_squared(k[n], q, theta)
             sinklq = sin3th/klq2
             # F term integration
             theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=dtheta)
