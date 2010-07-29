@@ -37,27 +37,7 @@ def set_log_name():
     root_log_name = logging.getLogger().name
     source_logger.name = root_log_name + "." + __name__
 
-def klessq(k, q, theta):
-    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
-    
-    Parameters
-    ----------
-    k: float
-       Single k value to compute array for.
-    
-    q: array_like
-       1-d array of q values to use
-     
-    theta: array_like
-           1-d array of theta values to use
-           
-    Returns
-    -------
-    klessq: array_like
-            len(q)*len(theta) array of values for
-            |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
-    """
-    return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
+
 
 def calculatesource(m, nix, integrand_elements, srceqns):
     """Return the integrated source term at this timestep.

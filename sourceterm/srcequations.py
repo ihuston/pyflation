@@ -7,7 +7,29 @@ Created on 29 Jul 2010
 import numpy as N
 
 from romberg import romb
-from sourceterm import srccython, sosource
+from sourceterm import srccython
+
+def klessq(k, q, theta):
+    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
+    
+    Parameters
+    ----------
+    k: float
+       Single k value to compute array for.
+    
+    q: array_like
+       1-d array of q values to use
+     
+    theta: array_like
+           1-d array of theta values to use
+           
+    Returns
+    -------
+    klessq: array_like
+            len(q)*len(theta) array of values for
+            |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
+    """
+    return N.sqrt(k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta)))
 
 class SourceEquations(object):
     '''
@@ -294,7 +316,7 @@ class FullSingleFieldSource(SourceEquations):
             # E term integration
             theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=dtheta)
             #Get klessq for F and G terms
-            klq2 = sosource.klessq(k[n], q, theta)**4
+            klq2 = klessq(k[n], q, theta)**4
             sinklq = sin3th/klq2
             # F term integration
             theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=dtheta)
