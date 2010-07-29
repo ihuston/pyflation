@@ -4,7 +4,7 @@ from Cython.Distutils import build_ext
 import numpy
 import configuration
 
-ext_modules = [Extension("srccython", ["srccython.pyx"], 
+ext_modules = [Extension("sourceterm.srccython", ["sourceterm/srccython.pyx"], 
                extra_compile_args=["-g"], 
                extra_link_args=["-g"],
                include_dirs=[numpy.get_include()]),

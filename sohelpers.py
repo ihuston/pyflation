@@ -9,7 +9,7 @@ import cosmomodels as c
 import logging
 import time
 import os.path
-from srccython import getthetaterms
+from sourceterm.srccython import getthetaterms
 from scipy.integrate import romb
 
 #Start logging

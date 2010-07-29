@@ -17,7 +17,7 @@ import helpers
 import logging
 import time
 import os
-import srccython
+from sourceterm import srccython
 import run_config
 from run_config import _debug
 
