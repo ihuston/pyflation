@@ -9,7 +9,7 @@ from __future__ import division
 
 import cosmomodels as c
 import run_config
-import sosource
+from sourceterm import sosource
 import time
 import helpers
 import os.path

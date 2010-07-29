@@ -8,7 +8,7 @@ from scipy.integrate import romb
 from scipy.special import erf
 from scipy import log as clog
 from scipy import sqrt
-from sosource import getthetaterms
+from sourceterm.sosource import getthetaterms
 import helpers
 from run_config import getkend
 import logging
