@@ -7,14 +7,16 @@ Created on 6 Jul 2010
 '''
 from __future__ import division
 
-import cosmomodels as c
-import run_config
-from sourceterm import sosource
 import time
 import helpers
 import os.path
 import numpy as N
-import srcmerge
+
+import cosmomodels as c
+import run_config
+from sourceterm import sosource
+
+from sourceterm import srcmerge
 import sohelpers
 import logging
 import sys

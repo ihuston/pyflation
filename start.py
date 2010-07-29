@@ -120,7 +120,7 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
     mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
-    mrg_dict["command"] = "python srcmerge.py --merge"
+    mrg_dict["command"] = "python sourceterm/srcmerge.py --merge"
     return mrg_dict
 
 def second_order_dict(template_dict, mrg_jid=None):
