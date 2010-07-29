@@ -297,7 +297,7 @@ def opensourcefile(k, filename=None, sourcetype=None):
     else:
         raise TypeError("Incorrect source type specified!")
     #Add compression to files and specify good chunkshape
-    filters = tables.Filters(complevel=1, complib="zlib") 
+    filters = tables.Filters(complevel=1, complib="blosc") 
     #cshape = (10,10,10) #good mix of t, k, q values
     #Get atom shape for earray
     atomshape = (0, len(k))
