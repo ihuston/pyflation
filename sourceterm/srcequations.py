@@ -25,6 +25,10 @@ class SourceEquations(object):
         """Calculate the source term for this timestep"""
         pass
     
+    def getthetaterms(self, k, q, theta, dp1, dp1dot):
+        """Calculate the theta terms needed for source integrations."""
+        pass
+    
     
 class SlowRollSource(SourceEquations):
     """
