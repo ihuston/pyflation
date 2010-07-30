@@ -3,6 +3,7 @@ Created on 29 Jul 2010
 
 @author: ith
 '''
+from __future__ import division
 
 import numpy as N
 
@@ -477,21 +478,50 @@ class FullSingleFieldSource(SourceEquations):
         #Get potentials
         V, Vp, Vpp, Vppp = potentials
         
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        k2 = k**2
+        pdot2 = phidot**2
+        
+        #Calculate Q term
+        Q = 1/H2 * V * phidot + a2 * Vp
       
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
+        C1 = (1/H2 * (Vppp + 3 * phidot * Vpp + 2 * pdot2 * Vp ) 
+                + phidot/(aH2) * (2*k2 + phidot * Q + Q**2/(4*aH2)))
         
-        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        C2 = phidot /(aH2) * (3.5 - pdot2 / 4) * onekshape
         
-        C3 = -4.5 * phidot / (a*H**2) * k
+        C3 = 1 / (aH2) * (2 * Q * (1 - Q * phidot / (aH2)) / k - 4.5 * phidot * k)
         
-        C4 = -phidot/(a*H**2) / k
+        C4 = -phidot/(aH2 * k)
         
-        C5 = -1.5 * phidot * onekshape
+        C5 = phidot * (-1.5 + 0.25 * pdot2) * onekshape
         
         C6 = 2 * phidot * k
         
         C7 = - phidot / k
+        
+        C8 = phidot * Q**2 / (2*aH2**2) * onekshape
+        
+        C9 = phidot * pdot2 /(4*aH2) * onekshape
+        
+        C10 = Q * pdot2 / (2*aH2) * onekshape
+        
+        C11 = -phidot * Q**2 / (4*aH2) * k2
+        
+        C12 = -phidot * Q**2 / (2*aH2) * onekshape
+        
+        C13 = -pdot2 * Q / (4*aH2) * k2
+        
+        C14 = C13
+        
+        C15 = -C10
+        
+        C16 = -phidot * pdot2 / 4 * k2
+        
+        
                 
         #Get component integrals
         J_A = self.J_A(theta_terms[0], dp1_q, C1, C2)
