@@ -233,8 +233,8 @@ class FullSingleFieldSource(SourceEquations):
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
         super(FullSingleFieldSource, self).__init__(*args, **kwargs)
-        
-    def J_A(self, preaterm, dp1, C1, C2):
+    
+    def J_A1(self, preaterm, dp1, C1, C2):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
@@ -244,7 +244,7 @@ class FullSingleFieldSource(SourceEquations):
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
     
-    def J_B(self, prebterm, dp1, C3, C4):
+    def J_B1(self, prebterm, dp1, C3, C4):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
@@ -254,7 +254,7 @@ class FullSingleFieldSource(SourceEquations):
         J_B = romb(bterm, self.fixture["deltak"])
         return J_B
     
-    def J_C(self, precterm, dp1dot, C5):
+    def J_C1(self, precterm, dp1dot, C5):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
@@ -263,7 +263,7 @@ class FullSingleFieldSource(SourceEquations):
         J_C = romb(cterm, self.fixture["deltak"])
         return J_C
     
-    def J_D(self, predterm, dp1dot, C6, C7):
+    def J_D1(self, predterm, dp1dot, C6, C7):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
