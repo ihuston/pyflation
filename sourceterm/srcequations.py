@@ -389,7 +389,7 @@ class FullSingleFieldSource(SourceEquations):
         
         C2 = 3.5 * phidot /((a*H)**2) * onekshape
         
-        C3 = -4.5 / (a*H**2) * k
+        C3 = -4.5 * phidot / (a*H**2) * k
         
         C4 = -phidot/(a*H**2) / k
         

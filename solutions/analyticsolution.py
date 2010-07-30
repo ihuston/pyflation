@@ -230,7 +230,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         
         C2 = 3.5 * phidot /((a*H)**2) * onekshape
         
-        C3 = -4.5 / (a*H**2) * self.k
+        C3 = -4.5 * phidot / (a*H**2) * self.k
         
         C4 = -phidot/(a*H**2) / self.k
         
