@@ -49,13 +49,25 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     
     #Change myninit to match task id
     if id == 1:
-        myninit = ninit
+        #First task should start at very beginning
+        myninit = ninit 
     else:
+        #Other tasks start where last one ended
         myninit = nstar + (id-1)*nrange
+    #Each task ends after doing it's range of steps
     mynend = nstar + id*nrange
     if mynend > nfinal:
+        #Make sure not to go any further than the end
         mynend = nfinal
+    if id == taskarray["max"]:
+        #Make up any leftover steps
+        mynend = nfinal
+    
     log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
+    if myninit > mynend:
+        #No timesteps left so stop
+        log.info("Process with rank %d has not timesteps to complete. Quitting!", id)
+        return None
     
     #Set source class using run_config
     if srcclass is None:
