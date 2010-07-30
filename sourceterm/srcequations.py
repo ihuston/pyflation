@@ -532,11 +532,23 @@ class FullSingleFieldSource(SourceEquations):
         C21 = 2 * Q / (aH2) * k 
                 
         #Get component integrals
-        J_A = self.J_A(theta_terms[0], dp1_q, C1, C2)
-        J_B = self.J_B(theta_terms[1], dp1_q, C3, C4)
-        J_C = self.J_C(theta_terms[2], dp1dot_q, C5)
-        J_D = self.J_D(theta_terms[3], dp1dot_q, C6, C7)
+        J_A1 = self.J_A1(theta_terms[0], dp1_q, C1, C2)
+        J_A2 = self.J_A2(theta_terms[0], dp1dot_q, C17, C18)
+        J_B1 = self.J_B1(theta_terms[1], dp1_q, C3, C4)
+        J_B2 = self.J_B2(theta_terms[1], dp1dot_q, C19)
+        J_C1 = self.J_C1(theta_terms[2], dp1dot_q, C5)
+        J_C2 = self.J_C2(theta_terms[2], dp1_q, C20)
+        J_D1 = self.J_D1(theta_terms[3], dp1dot_q, C6, C7)
+        J_D2 = self.J_D2(theta_terms[3], dp1_q, C21)
+        J_E1 = self.J_E1(theta_terms[4], dp1_q, C8, C9)
+        J_E2 = self.J_E2(theta_terms[4], dp1dot_q, C10)
+        J_F1 = self.J_F1(theta_terms[5], dp1_q, C11, C12)
+        J_F2 = self.J_F2(theta_terms[5], dp1dot_q, C13)
+        J_G1 = self.J_G1(theta_terms[6], dp1_q, C14, C15)
+        J_G2 = self.J_G2(theta_terms[6], dp1dot_q, C16)
         
         
-        src = 1/((2*N.pi)**2 ) * (J_A + J_B + J_C + J_D)
+        
+        src = 1/((2*N.pi)**2 ) * (J_A1 + J_A2 + J_B1 + J_B2 + J_C1 + J_C2 + J_D1 + J_D2 
+                                  + J_E1 + J_E2 + J_F1 + J_F2 + J_G1 + J_G2)
         return src
