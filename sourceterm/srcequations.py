@@ -521,7 +521,15 @@ class FullSingleFieldSource(SourceEquations):
         
         C16 = -phidot * pdot2 / 4 * k2
         
+        C17 = C10 * 0.5
         
+        C18 =  Q * pdot2 / (aH2 * k2)
+        
+        C19 = -2 * Q * pdot2 / (aH2*k2)
+        
+        C20 = Q / (aH2) * (-2 + pdot2*(1/(2*a*H) - 0.25)) * onekshape
+        
+        C21 = 2 * Q / (aH2) * k 
                 
         #Get component integrals
         J_A = self.J_A(theta_terms[0], dp1_q, C1, C2)
