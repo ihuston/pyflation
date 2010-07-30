@@ -240,9 +240,19 @@ class FullSingleFieldSource(SourceEquations):
         q = self.k
         C1k = C1[..., N.newaxis]
         C2k = C2[..., N.newaxis]
-        aterm = (C1k*q**2 + C2k*q**4) * dp1 * preaterm
+        aterm = (C1k*q**2 + C2k*q**2*q**2) * dp1 * preaterm
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
+    
+    def J_A2(self, preaterm, dpdot1, C17, C18):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+                
+        q = self.k
+        C17k = C17[..., N.newaxis]
+        C18k = C18[..., N.newaxis]
+        aterm = (C17k*q**2 + C18k*q**2*q**2) * dpdot1 * preaterm
+        J_A2 = romb(aterm, self.fixture["deltak"])
+        return J_A2
     
     def J_B1(self, prebterm, dp1, C3, C4):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
@@ -250,9 +260,18 @@ class FullSingleFieldSource(SourceEquations):
         q = self.k
         C3k = C3[..., N.newaxis]
         C4k = C4[..., N.newaxis]
-        bterm = (C3k*q**3 + C4k*q**5) * dp1 * prebterm
-        J_B = romb(bterm, self.fixture["deltak"])
-        return J_B
+        bterm = (C3k*q**2*q + C4k*q**2*q**2*q) * dp1 * prebterm
+        J_B1 = romb(bterm, self.fixture["deltak"])
+        return J_B1
+    
+    def J_B2(self, prebterm, dpdot1, C19):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+                
+        q = self.k
+        C19k = C19[..., N.newaxis]
+        bterm = (C19k*q**2*q) * dpdot1 * prebterm
+        J_B2 = romb(bterm, self.fixture["deltak"])
+        return J_B2
     
     def J_C1(self, precterm, dp1dot, C5):
         """Solution for J_C which is the integral for C in terms of constants C5."""
@@ -263,15 +282,52 @@ class FullSingleFieldSource(SourceEquations):
         J_C = romb(cterm, self.fixture["deltak"])
         return J_C
     
+    def J_C2(self, precterm, dp1, C20):
+        """Solution for J_C which is the integral for C in terms of constants C5."""
+                
+        q = self.k
+        C20k = C20[..., N.newaxis]
+        cterm = (C20k*q**2) * dp1 * precterm
+        J_C2 = romb(cterm, self.fixture["deltak"])
+        return J_C2
+    
     def J_D1(self, predterm, dp1dot, C6, C7):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
         C6k = C6[..., N.newaxis]
         C7k = C7[..., N.newaxis]
-        dterm = (C6k*q + C7k*q**3) * dp1dot * predterm
+        dterm = (C6k*q + C7k*q**2*q) * dp1dot * predterm
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
+    
+    def J_D2(self, predterm, dp1, C21):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+                
+        q = self.k
+        C21k = C21[..., N.newaxis]
+        dterm = (C21k*q) * dp1 * predterm
+        J_D2 = romb(dterm, self.fixture["deltak"])
+        return J_D2
+    
+    def J_E1(self, preeterm, dp1, C8, C9):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+                
+        q = self.k
+        C8k = C8[..., N.newaxis]
+        C9k = C9[..., N.newaxis]
+        eterm = (C8k*q**2 + C9k*q**2*q**2) * dp1 * preeterm
+        J_E1 = romb(eterm, self.fixture["deltak"])
+        return J_E1
+    
+    def J_E2(self, preeterm, dp1dot, C10):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+                
+        q = self.k
+        C10k = C10[..., N.newaxis]
+        eterm = (C10k*q**2) * dp1dot * preeterm
+        J_E2 = romb(eterm, self.fixture["deltak"])
+        return J_E2
     
     @profile
     def getthetaterms(self, k, q, theta, dp1, dp1dot):
