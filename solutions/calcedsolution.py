@@ -64,7 +64,7 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         
     def get_dp1(self, k, alpha):
         """Get dp1 for a certain value of alpha and beta."""
-        dp1 = alpha/np.sqrt(k)
+        dp1 = alpha/np.sqrt(k) + 0*1j
         return dp1
     
     def get_dp1dot(self, k, alpha, beta):
