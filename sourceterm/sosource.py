@@ -98,7 +98,7 @@ def calculatesource(m, nix, integrand_elements, srceqns):
         source_logger.debug("Calculating source term integrand for this timestep...")
 
     #Get integrated source term
-    src = srceqns.sourceterm(bgvars, a, potentials, integrand_elements, dphi1, dphi1dot)
+    src = srceqns.sourceterm(bgvars, a, potentials, dphi1, dphi1dot)
         
     if _debug:
         source_logger.debug("Integration successful!")
