@@ -142,7 +142,7 @@ class SlowRollSource(SourceEquations):
         
         for n in xrange(len(self.k)):
             #Calculate interpolated values of dphi and dphidot
-            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, theta, lenq)
+            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
             #Integrate theta dependence of interpolated values
             # dphi terms
