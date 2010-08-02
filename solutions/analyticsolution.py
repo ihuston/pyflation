@@ -242,10 +242,10 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         C7 = - phidot / k
         
         #Get component integrals
-        J_A = self.J_A(self.k, alpha, C1, C2)
-        J_B = self.J_B(self.k, alpha, C3, C4)
-        J_C = self.J_C(self.k, alpha, beta, C5)
-        J_D = self.J_D(self.k, alpha, beta, C6, C7)
+        J_A = self.J_A(k, alpha, C1, C2)
+        J_B = self.J_B(k, alpha, C3, C4)
+        J_C = self.J_C(k, alpha, beta, C5)
+        J_D = self.J_D(k, alpha, beta, C6, C7)
         
         src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
         return src
