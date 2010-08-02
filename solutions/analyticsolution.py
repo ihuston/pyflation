@@ -222,23 +222,24 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         alpha = 1/(a*np.sqrt(2))
         beta = a*H
         
+        k = self.srceqns.k
         #Set ones array with same shape as self.k
-        onekshape = np.ones(self.k.shape)
+        onekshape = np.ones(k.shape)
         
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
         
         C2 = 3.5 * phidot /((a*H)**2) * onekshape
         
-        C3 = -4.5 * phidot / (a*H**2) * self.k
+        C3 = -4.5 * phidot / (a*H**2) * k
         
-        C4 = -phidot/(a*H**2) / self.k
+        C4 = -phidot/(a*H**2) / k
         
         C5 = -1.5 * phidot * onekshape
         
-        C6 = 2 * phidot * self.k
+        C6 = 2 * phidot * k
         
-        C7 = - phidot / self.k
+        C7 = - phidot / k
         
         #Get component integrals
         J_A = self.J_A(self.k, alpha, C1, C2)
@@ -969,23 +970,24 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
         
         eta = -1/(beta*(1-m.bgepsilon[nix]))
         
+        k = self.srceqns.k
         #Set ones array with same shape as self.k
-        onekshape = np.ones(self.k.shape)
+        onekshape = np.ones(k.shape)
         
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * self.k**2 ))
+        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
         
         C2 = 3.5 * phidot /((a*H)**2) * onekshape
         
-        C3 = -4.5 / (a*H**2) * self.k
+        C3 = -4.5 / (a*H**2) * k
         
-        C4 = -phidot/(a*H**2) / self.k
+        C4 = -phidot/(a*H**2) / k
         
         C5 = -1.5 * phidot * onekshape
         
-        C6 = 2 * phidot * self.k
+        C6 = 2 * phidot * k
         
-        C7 = - phidot / self.k
+        C7 = - phidot / k
         
         return (alpha, beta), (C1, C2, C3, C4, C5, C6, C7), eta
     
