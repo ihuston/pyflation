@@ -103,7 +103,7 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         #Get potentials
         potentials = m.potentials(np.array([phi]))
         
-        src = self.srceqns.sourceterm(self, bgvars, a, potentials, dp1, dp1dot)
+        src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
        
         return src
     
@@ -160,7 +160,7 @@ class NoPhaseWithEtaCalced(CalcedSolution):
         #Get potentials
         potentials = m.potentials(np.array([phi]))
         
-        src = self.srceqns.sourceterm(self, bgvars, a, potentials, dp1, dp1dot)
+        src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
        
         return src
         
@@ -218,6 +218,6 @@ class WithPhaseBunchDaviesCalced(CalcedSolution):
         #Get potentials
         potentials = m.potentials(np.array([phi]))
         
-        src = self.srceqns.sourceterm(self, bgvars, a, potentials, dp1, dp1dot)
+        src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
        
         return src
