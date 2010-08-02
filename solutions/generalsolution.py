@@ -11,12 +11,10 @@ import numpy as np
 class GeneralSolution(object):
     """General solution base class."""
     
-    def __init__(self, fixture):
+    def __init__(self, fixture, srcclass):
         """Create a GeneralSolution object."""
-        self.fixture = fixture
-        self.fullk = np.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
-        self.k = self.fullk[:fixture["numsoks"]]
-    
+        self.srceqns = srcclass(fixture)
+            
     def full_source_from_model(self, m, nix):
         pass
     

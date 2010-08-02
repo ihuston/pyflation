@@ -46,14 +46,21 @@ class SourceEquations(object):
     def __init__(self, fixture):
         """Class for source term equations"""
         self.fixture = fixture
+        
         self.fullk = N.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
         self.k = self.fullk[:fixture["numsoks"]]
+        self.kmin = self.k[0]
+        self.deltak = self.k[1] - self.k[0]
+        
+        self.theta = N.linspace(0, N.pi, fixture["nthetas"])
+        self.dtheta = self.theta[1] - self.theta[0]
+                
     
-    def sourceterm(self, bgvars, a, potentials, integrand_elements, dp1, dp1dot, theta_terms):
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot, theta_terms):
         """Calculate the source term for this timestep"""
         pass
     
-    def getthetaterms(self, k, q, theta, dp1, dp1dot):
+    def getthetaterms(self, dp1, dp1dot):
         """Calculate the theta terms needed for source integrations."""
         pass
     
@@ -106,14 +113,11 @@ class SlowRollSource(SourceEquations):
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
     
-    def getthetaterms(self, k, q, theta, dp1, dp1dot):
+    def getthetaterms(self, dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
         
         Parameters
         ----------
-        integrand_elements: tuple
-                Contains integrand arrays in order (k, q, theta)
-                 
         dp1: array_like
              Array of values for dphi1
         
@@ -130,25 +134,27 @@ class SlowRollSource(SourceEquations):
                       \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
                      
         """
-        dtheta = theta[1]-theta[0]
-        sinth = N.sin(theta)
-        cossinth = N.cos(theta)*N.sin(theta)
-        theta_terms = N.empty([4, k.shape[0], q.shape[0]])
-        lenq = len(q)
-        dk = k[1]-k[0]
-        kmin = k[0]
-        for n in xrange(len(k)):
-            #klq = klessq(onek, q, theta)
-            dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
+        
+        sinth = N.sin(self.theta)
+        cossinth = N.cos(self.theta)*N.sin(self.theta)
+        theta_terms = N.empty([4, self.k.shape[0], self.k.shape[0]])
+        lenq = len(self.k)
+        
+        for n in xrange(len(self.k)):
+            #Calculate interpolated values of dphi and dphidot
+            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, theta, lenq)
             
-            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
-            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
-            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=dtheta)
-            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=dtheta)
+            #Integrate theta dependence of interpolated values
+            # dphi terms
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
+            # dphidot terms
+            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
+            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
         return theta_terms
 
-    def sourceterm(self, bgvars, a, potentials, integrand_elements, dp1, dp1dot):
-        """Return unintegrated slow roll source term.
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
+        """Return integrated slow roll source term.
     
         The source term before integration is calculated here using the slow roll
         approximation. This function follows the revised version of Eq (5.8) in 
@@ -164,10 +170,7 @@ class SlowRollSource(SourceEquations):
         
         potentials: tuple
                     Tuple of potential values in the form `(U, dU, dU2, dU3)`
-        
-        integrand_elements: tuple 
-             Contains integrand arrays in order (k, q, theta)
-                
+                    
         dp1: array_like
              Array of known dp1 values
                  
@@ -186,20 +189,18 @@ class SlowRollSource(SourceEquations):
         """
             #Unpack variables
         phi, phidot, H = bgvars
-        k = integrand_elements[0]
-        q = integrand_elements[1]
-        theta = integrand_elements[2]
+        k = self.k
+
         #Calculate dphi(q) and dphi(k-q)
-        dp1_q = dp1[:q.shape[-1]]
-        dp1dot_q = dp1dot[q.shape[-1]]  
+        dp1_q = dp1[:self.k.shape[-1]]
+        dp1dot_q = dp1dot[self.k.shape[-1]]  
         #Set ones array with same shape as self.k
         onekshape = N.ones(k.shape)
         
-        theta_terms = self.getthetaterms(k, q, theta, dp1, dp1dot)
+        theta_terms = self.getthetaterms(dp1, dp1dot)
         #Get potentials
         V, Vp, Vpp, Vppp = potentials
-        
-      
+              
         #Set C_i values
         C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
         
@@ -369,14 +370,11 @@ class FullSingleFieldSource(SourceEquations):
         return J_G1
     
     @profile
-    def getthetaterms(self, k, q, theta, dp1, dp1dot):
+    def getthetaterms(self, dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
         
         Parameters
         ----------
-        integrand_elements: tuple
-                Contains integrand arrays in order (k, q, theta)
-                 
         dp1: array_like
              Array of values for dphi1
         
@@ -393,40 +391,38 @@ class FullSingleFieldSource(SourceEquations):
                       \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
                      
         """
-        dtheta = theta[1]-theta[0]
+        
         # Sinusoidal theta terms
-        sinth = N.sin(theta)
-        cossinth = N.cos(theta)*sinth
-        cos2sinth = N.cos(theta)*cossinth
+        sinth = N.sin(self.theta)
+        cossinth = N.cos(self.theta)*sinth
+        cos2sinth = N.cos(self.theta)*cossinth
         sin3th = sinth*sinth*sinth
         
-        theta_terms = N.empty([7, k.shape[0], q.shape[0]])
-        lenq = len(q)
-        dk = k[1]-k[0]
-        kmin = k[0]
-        for n in xrange(len(k)):
+        theta_terms = N.empty([7, self.k.shape[0], self.k.shape[0]])
+        lenq = len(self.k)
+        for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
-            dphi_res = srccython.interpdps2(dp1, dp1dot, kmin, dk, n, theta, lenq)
+            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
-            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=dtheta)
-            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=dtheta)
-            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=dtheta)
-            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=dtheta)
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.theta)
+            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
+            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
             
             #New terms for full solution
             # E term integration
-            theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=dtheta)
+            theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=self.dtheta)
             #Get klessq for F and G terms
-            klq2 = klessq_squared(k[n], q, theta)
+            klq2 = klessq_squared(self.k[n], self.k, self.theta)
             sinklq = sin3th/klq2
             # F term integration
-            theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=dtheta)
+            theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=self.dtheta)
             # G term integration
-            theta_terms[6,n] = romb(sinklq *dphi_res[1], dx=dtheta)
+            theta_terms[6,n] = romb(sinklq *dphi_res[1], dx=self.dtheta)
             
         return theta_terms
 
-    def sourceterm(self, bgvars, a, potentials, integrand_elements, dp1, dp1dot):
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
         """Return unintegrated slow roll source term.
     
         The source term before integration is calculated here using the slow roll
@@ -443,9 +439,6 @@ class FullSingleFieldSource(SourceEquations):
         
         potentials: tuple
                     Tuple of potential values in the form `(U, dU, dU2, dU3)`
-        
-        integrand_elements: tuple 
-             Contains integrand arrays in order (k, q, theta)
                 
         dp1: array_like
              Array of known dp1 values
@@ -465,16 +458,14 @@ class FullSingleFieldSource(SourceEquations):
         """
             #Unpack variables
         phi, phidot, H = bgvars
-        k = integrand_elements[0]
-        q = integrand_elements[1]
-        theta = integrand_elements[2]
+        k = self.k
         #Calculate dphi(q) and dphi(k-q)
-        dp1_q = dp1[:q.shape[-1]]
-        dp1dot_q = dp1dot[q.shape[-1]]  
+        dp1_q = dp1[:self.k.shape[-1]]
+        dp1dot_q = dp1dot[self.k.shape[-1]]  
         #Set ones array with same shape as self.k
-        onekshape = N.ones(k.shape)
+        onekshape = N.ones(self.k.shape)
         
-        theta_terms = self.getthetaterms(k, q, theta, dp1, dp1dot)
+        theta_terms = self.getthetaterms(dp1, dp1dot)
         #Get potentials
         V, Vp, Vpp, Vppp = potentials
         
@@ -552,3 +543,5 @@ class FullSingleFieldSource(SourceEquations):
         src = 1/((2*N.pi)**2 ) * (J_A1 + J_A2 + J_B1 + J_B2 + J_C1 + J_C2 + J_D1 + J_D2 
                                   + J_E1 + J_E2 + J_F1 + J_F2 + J_G1 + J_G2)
         return src
+    
+    
