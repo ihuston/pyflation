@@ -7,7 +7,6 @@ Created on 22 Apr 2010
 from __future__ import division
 import numpy as np
 from generalsolution import GeneralSolution
-from sourceterm.sosource import getthetaterms, slowrollsrcterm
 
 from scipy.integrate import romb
 
