@@ -404,7 +404,7 @@ class FullSingleFieldSource(SourceEquations):
             #klq = klessq(onek, q, theta)
             dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
-            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.theta)
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
             theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
             theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
             theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
