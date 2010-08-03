@@ -193,7 +193,7 @@ class SlowRollSource(SourceEquations):
 
         #Calculate dphi(q) and dphi(k-q)
         dp1_q = dp1[:self.k.shape[-1]]
-        dp1dot_q = dp1dot[self.k.shape[-1]]  
+        dp1dot_q = dp1dot[:self.k.shape[-1]]  
         #Set ones array with same shape as self.k
         onekshape = N.ones(k.shape)
         
