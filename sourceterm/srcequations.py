@@ -14,7 +14,7 @@ if not "profile" in __builtins__:
     def profile(f):
         return f
 
-def klessq_squared(k, q, theta):
+def klessq(k, q, theta):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -34,8 +34,7 @@ def klessq_squared(k, q, theta):
             len(q)*len(theta) array of values for
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
-    klessq = k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta))
-    return klessq*klessq
+    return k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta))
 
 class SourceEquations(object):
     '''
@@ -413,7 +412,7 @@ class FullSingleFieldSource(SourceEquations):
             # E term integration
             theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=self.dtheta)
             #Get klessq for F and G terms
-            klq2 = klessq_squared(self.k[n], self.k, self.theta)
+            klq2 = klessq(self.k[n], self.k, self.theta)
             sinklq = sin3th/klq2
             # F term integration
             theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=self.dtheta)
