@@ -414,6 +414,8 @@ class FullSingleFieldSource(SourceEquations):
             #Get klessq for F and G terms
             klq2 = klessq(self.k[n], self.k, self.theta)
             sinklq = sin3th/klq2
+            #Get rid of NaNs in places where dphi_res=0 or equivalently klq2<self.kmin**2
+            sinklq[klq2<self.kmin**2] = 0
             # F term integration
             theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=self.dtheta)
             # G term integration
