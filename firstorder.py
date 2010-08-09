@@ -10,16 +10,17 @@ Default configuration can be changed in run_config.py.
 
 
 """
-
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 
-import cosmomodels as c
 import sys
 import os
-import run_config
 import optparse
-import helpers
 import logging
+
+import cosmomodels as c
+import run_config
+import helpers
+
 
 
  
@@ -53,6 +54,7 @@ def runfomodel(filename=None, foargs=None, foclass=None):
     ------
     Exception
        Any exception raised during saving of code.
+       
     """
     #Check whether foargs is specified and use default if not. 
     if foargs is None:
@@ -101,7 +103,21 @@ def runfomodel(filename=None, foargs=None, foclass=None):
 
 
 def main(argv=None):
-    """Main function: deal with command line arguments and start calculation as reqd."""
+    """Deal with command line arguments and start calculation as required.
+    
+    Parameters
+    ----------
+    
+    argv: list
+          List of command line arguments in the same form as sys.argv, 
+          i.e. argv[0] is the name of command being run.
+          
+    Returns
+    -------
+    int: Return value equivalent to shell return code, 0 corresponds to successful execution,
+         a value not equal to 0 corresponds to an error.
+    
+    """
     
     if not argv:
         argv = sys.argv
