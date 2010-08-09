@@ -10,7 +10,7 @@ order models.
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 
-import numpy as N
+import numpy as np
 import logging
 import time
 import os
@@ -70,13 +70,13 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     #Copy of yresult
     myr = m.yresult[nix].copy()
     #Fill nans with initial conditions
-    if N.any(m.tresult[nix] < m.fotstart):
+    if np.any(m.tresult[nix] < m.fotstart):
         #Get first order ICs:
-        nanfiller = m.getfoystart(m.tresult[nix].copy(), N.array([nix]))
+        nanfiller = m.getfoystart(m.tresult[nix].copy(), np.array([nix]))
         if _debug:
             source_logger.debug("Left getfoystart. Filling nans...")
         #switch nans for ICs in m.yresult
-        are_nan = N.isnan(myr)
+        are_nan = np.isnan(myr)
         myr[are_nan] = nanfiller[are_nan]
         if _debug:
             source_logger.debug("NaNs filled. Setting dynamical variables...")
@@ -90,10 +90,10 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
-        if N.shape(p) != N.shape(potentials[3]):
+        if np.shape(p) != np.shape(potentials[3]):
             potentials[pix] = p[0]
     #Value of a for this time step
-    a = m.ainit*N.exp(m.tresult[nix])
+    a = m.ainit*np.exp(m.tresult[nix])
     if _debug:
         source_logger.debug("Calculating source term integrand for this timestep...")
 
@@ -155,11 +155,11 @@ def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, n
     if not numks:
         numks = round((m.k[-1]/2 - m.k[0])/(m.k[1]-m.k[0])) + 1
     #Initialize variables for all timesteps
-    k = q = m.k[:numks] #Need N=len(m.k)/2 for case when q=-k
+    k = q = m.k[:numks] #Need np=len(m.k)/2 for case when q=-k
     #Check consistency of first order k range
     if (m.k[-1] - 2*k[-1])/m.k[-1] < -1e-12:
         raise ValueError("First order k range not sufficient!")
-    theta = N.linspace(0, N.pi, ntheta)
+    theta = np.linspace(0, np.pi, ntheta)
     firstmodestart = min(m.fotstart)
     lastmodestart = max(m.fotstart)
    
@@ -193,13 +193,13 @@ def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, n
                 if m.tresult[nix] > lastmodestart or m.tresult[nix+2] >= firstmodestart:
                     src = calculatesource(m, nix, integrand_elements, srceqns)
                 else:
-                    src = N.nan*N.ones_like(k)
-                sarr.append(src[N.newaxis,:])
-                narr.append(N.array([nix]))
+                    src = np.nan*np.ones_like(k)
+                sarr.append(src[np.newaxis,:])
+                narr.append(np.array([nix]))
                 if _debug:
                     source_logger.debug("Results for this timestep saved.")
         finally:
-            #source = N.array(source)
+            #source = np.array(source)
             sf.close()
     except IOError:
         raise

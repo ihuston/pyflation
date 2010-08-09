@@ -5,7 +5,7 @@
 #
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import numpy as N
+import numpy as np
 import sys
 from pudb import set_trace 
 from helpers import seq #Proper sequencing of floats
@@ -205,7 +205,7 @@ def rkdriver_dumb(vstart, x1, x2, nstep, derivs):
     
     v = vstart
     y = [v] #start results list
-    xx = N.zeros(nstep+1) #initialize 1-dim array for x
+    xx = np.zeros(nstep+1) #initialize 1-dim array for x
     xx[0] = x = x1 # set both first xx and x to x1
     
     h = (x2-x1)/nstep
@@ -231,16 +231,16 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
    
     if allks is not None:
         #set_trace()
-        if not isinstance(ts, N.ndarray):
+        if not isinstance(ts, np.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
         #Set up x counter and index for x
         xix = 0 # first index
         #The number of steps could be either the floor or ceiling of the following calc
         #In the previous code, the floor was used, but then the rk step add another step on
         #Additional +1 is to match with extra step as x is incremented at beginning of loop
-        number_steps = N.ceil((te - simtstart)/h) + 1#floor might be needed for compatibility
+        number_steps = np.ceil((te - simtstart)/h) + 1#floor might be needed for compatibility
         #set up x results array
-        xarr = N.zeros((number_steps,))
+        xarr = np.zeros((number_steps,))
         #Set up x results
         
         x1 = simtstart #Find simulation start time
@@ -251,34 +251,34 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xarr[xix] = x1
         
         #Set up start and end list for each section
-        xslist = N.empty((len(ts)+1))
+        xslist = np.empty((len(ts)+1))
         xslist[0] = simtstart
         xslist[1:] = ts[:]
-        xelist = N.empty((len(ts)+1)) #create empty array (which will be written over)
+        xelist = np.empty((len(ts)+1)) #create empty array (which will be written over)
         xelist[:-1] = ts[:] - h #End list is one time step before next start time
-        xelist[-1] = N.floor(te.copy()/h)*h # end time can only be in steps of size h
-        v = N.ones_like(vstart)*N.nan
+        xelist[-1] = np.floor(te.copy()/h)*h # end time can only be in steps of size h
+        v = np.ones_like(vstart)*np.nan
         
         #New y results array
         yshape = [number_steps]
         yshape.extend(v.shape)
-        yarr = N.ones(yshape)*N.nan
+        yarr = np.ones(yshape)*np.nan
         
         #First result is initial condition
-        firstkix = N.where(x1>=ts)[0]
+        firstkix = np.where(x1>=ts)[0]
         for anix in firstkix:
-            if N.any(N.isnan(v[:,anix])):
+            if np.any(np.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
         yarr[xix] = v.copy()
         #Need to start at different times for different k modes
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
             #Set up initial values
-            kix = N.where(xstart>=ts)[0]
+            kix = np.where(xstart>=ts)[0]
             ks = allks[kix]
             if len(kix):
                 kmax = kix.max()
-                v[:,:kmax+1][N.isnan(v[:,:kmax+1])] = vstart[:,:kmax+1][N.isnan(v[:,:kmax+1])]
+                v[:,:kmax+1][np.isnan(v[:,:kmax+1])] = vstart[:,:kmax+1][np.isnan(v[:,:kmax+1])]
                 #Change last y result to hold initial condition
                 yarr[xix-1][:,kix] = v[:,kix]
             for x in seq(xstart, xend, h):
@@ -294,8 +294,8 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
         xx = xarr
         y = yarr
     else: #No ks to iterate over
-        nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
-        xx = N.zeros(nstep+1) #initialize 1-dim array for x
+        nstep = np.ceil((te-ts)/h).astype(int) #Total number of steps to take
+        xx = np.zeros(nstep+1) #initialize 1-dim array for x
         xx[0] = x = ts # set both first xx and x to ts
         
         v = vstart
@@ -307,7 +307,7 @@ def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
             v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
-        y = N.concatenate([y], 0) #very bad performance wise
+        y = np.concatenate([y], 0) #very bad performance wise
     #Return results    
     return xx, y
 
@@ -322,7 +322,7 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         raise SimRunError("Need to specify h.")
    
     if allks is not None:
-        if not isinstance(ts, N.ndarray):
+        if not isinstance(ts, np.ndarray):
                 raise SimRunError("Need more than one start time for different k modes.")
         #Set up x results
         
@@ -333,26 +333,26 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         xx.append(x1) #Start x value
         
         #Set up start and end list for each section
-        #ts = N.where(N.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
-        ts = N.around(ts/h + h/2)*h
+        #ts = np.where(np.abs(ts%h - h) < h/10.0, ts, ts+h/2) #Put all start times on even steps
+        ts = np.around(ts/h + h/2)*h
         #Need to remove duplicates
         tsnd = helpers.removedups(ts)
-        xslist = N.empty((len(tsnd)+1))
+        xslist = np.empty((len(tsnd)+1))
         xslist[0] = simtstart
         xslist[1:] = tsnd[:]
         
-        xelist = N.empty((len(tsnd)+1)) #create empty array (which will be written over)
+        xelist = np.empty((len(tsnd)+1)) #create empty array (which will be written over)
         xelist[:-1] = tsnd[:] - h #End list is one time step before next start time
         # end time can only be in steps of size h one before end.
-        xelist[-1] = N.floor(te.copy()/h + 0.1)*h - h# Fix bug#3
+        xelist[-1] = np.floor(te.copy()/h + 0.1)*h - h# Fix bug#3
         xix = 0 #Index of x in first order tresult
-        v = N.ones_like(vstart)*N.nan
+        v = np.ones_like(vstart)*np.nan
         y = [] #start results list
         #First result is initial condition
         #Need to use ts for kix tests to get all indices
-        firstkix = N.where(x1>=ts)[0]
+        firstkix = np.where(x1>=ts)[0]
         for anix in firstkix:
-            if N.any(N.isnan(v[:,anix])):
+            if np.any(np.isnan(v[:,anix])):
                 v[:,anix] = vstart[:,anix]
         y.append(v.copy()) #Add first result
 #         xix+=2
@@ -361,10 +361,10 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
         for xstart, xend in zip(xslist,xelist):
             #set_trace()
             #Set up initial values
-            kix = N.where(xstart>=ts-h/2)[0]
+            kix = np.where(xstart>=ts-h/2)[0]
             ks = allks[kix]
             for oneix in kix:
-                if N.any(N.isnan(v[:,oneix])):
+                if np.any(np.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
             #Change last y result to initial conditions
             y[-1][:,kix] = v[:,kix]    
@@ -378,11 +378,11 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
                 xix+=2 #Increment x index counter
                 y.append(v.copy())
         #Get results in right shape
-        xx = N.array(xx)
-        y = N.concatenate([y], 0)
+        xx = np.array(xx)
+        y = np.concatenate([y], 0)
     else: #No ks to iterate over
-        nstep = N.ceil((te-ts)/h).astype(int) #Total number of steps to take
-        xx = N.zeros(nstep+1) #initialize 1-dim array for x
+        nstep = np.ceil((te-ts)/h).astype(int) #Total number of steps to take
+        xx = np.zeros(nstep+1) #initialize 1-dim array for x
         xx[0] = x = ts # set both first xx and x to ts
         
         v = vstart
@@ -394,7 +394,7 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
             v = rk4stepks(x, v, h, dv, dargs, derivs)
             x = xx[step+1] = x + h
             y.append(v.copy())
-        y = N.concatenate([y], 0)
+        y = np.concatenate([y], 0)
     #Return results    
     return xx, y
         
@@ -427,7 +427,7 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
         
         htemp = SAFETY*h*(errmax**PSHRINK)
         #Truncation error too large, reduce step size
-        #h = max(abs(htemp), 0.1*abs(h))*N.sign(h)#Old version from Fortran book
+        #h = max(abs(htemp), 0.1*abs(h))*np.sign(h)#Old version from Fortran book
         if h >= 0.0:
             h = max(htemp, 0.1*h)
         else:
@@ -450,7 +450,7 @@ def rkqs(y, dydx, x, htry, eps, yscal, derivs):
 def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
     
     x = x1
-    h = N.sign(x2-x1)*abs(h1)
+    h = np.sign(x2-x1)*abs(h1)
     nok = nbad = 0
     
     xp = [] # Lists that will hold intermediate results
@@ -490,8 +490,8 @@ def odeint(ystart, x1, x2, h1, hmin, derivs, eps=1.0e-6, dxsav=0.0):
             yp.append(y)
             
             #Want to return arrays, not lists so convert them
-            xp = N.array(xp)
-            yp = N.array(yp)
+            xp = np.array(xp)
+            yp = np.array(yp)
             return xp, yp, nok, nbad
         
         if abs(hnext) <= hmin:

@@ -1,5 +1,5 @@
 #Cosmomodels2 - testing classes
-import numpy as N
+import numpy as np
 from ipdb import set_trace
 from cosmomodels import *
 
@@ -26,16 +26,16 @@ class RingevalFirstOrder(MalikModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
             
@@ -58,10 +58,10 @@ class RingevalFirstOrder(MalikModels):
         U, dUdphi, d2Udphi2 = self.potentials(y)        
         
         #Set derivatives taking care of k type
-        if type(self.k) is N.ndarray or type(self.k) is list: 
-            dydx = N.zeros((7,len(self.k)))
+        if type(self.k) is np.ndarray or type(self.k) is list: 
+            dydx = np.zeros((7,len(self.k)))
         else:
-            dydx = N.zeros(7)
+            dydx = np.zeros(7)
             
         
         #d\phi_0/dn = y_1
@@ -77,7 +77,7 @@ class RingevalFirstOrder(MalikModels):
         dydx[3] = y[4]
         
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         
         #d\deltaphi_1^prime/dn
         dydx[4] = (-(3 + dydx[2]/y[2] + 2*y[1])*y[4] - ((self.k/(a*y[2]))**2)*y[3] 
@@ -102,11 +102,11 @@ class RingevalTwoStage(TwoStageModel):
     def getfoystart(self):
         """Model dependent setting of ystart"""
         #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((len(self.ystart), len(self.k)))
         
         #set_trace()
         #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(self.fotstart)
+        astar = self.ainit*np.exp(self.fotstart)
         Hstar = self.bgmodel.yresult[self.fotstartindex,2]
         epsstar = self.bgepsilon[self.fotstartindex]
         etastar = -1/(astar*Hstar*(1-epsstar))
@@ -118,10 +118,10 @@ class RingevalTwoStage(TwoStageModel):
         foystart[0:3] = self.bgmodel.yresult[self.fotstartindex,:].transpose()
         
         #Find 1/asqrt(2k)
-        arootk = 1/(astar*(N.sqrt(2*self.k)))
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
         #Find cos and sin(-keta)
-        csketa = N.cos(-keta)
-        snketa = N.sin(-keta)
+        csketa = np.cos(-keta)
+        snketa = np.sin(-keta)
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = csketa*arootk
@@ -146,7 +146,7 @@ class RingevalTwoStage(TwoStageModel):
         dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex dphi
         phidot = self.yresult[:,1,:] #bg phidot
         
-        Pphi = (self.k**3/(2*N.pi**2))*(dphi*dphi.conj())
+        Pphi = (self.k**3/(2*np.pi**2))*(dphi*dphi.conj())
         Pr = Pphi/(phidot**2) #change if bg evol is different  
         return Pr
     
@@ -173,16 +173,16 @@ class MalikFirstOrder2(MalikModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart)[0]
             self.ystart[2] = self.findH(U, self.ystart)
             
@@ -205,10 +205,10 @@ class MalikFirstOrder2(MalikModels):
         U, dUdphi, d2Udphi2 = self.potentials(y)        
         
         #Set derivatives taking care of k type
-        if type(self.k) is N.ndarray or type(self.k) is list: 
-            dydx = N.zeros((7,len(self.k)))
+        if type(self.k) is np.ndarray or type(self.k) is list: 
+            dydx = np.zeros((7,len(self.k)))
         else:
-            dydx = N.zeros(7)
+            dydx = np.zeros(7)
             
         
         #d\phi_0/dn = y_1
@@ -224,7 +224,7 @@ class MalikFirstOrder2(MalikModels):
         dydx[3] = y[4]
         
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         
         #d\deltaphi_1^prime/dn  #
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((self.k/(a*y[2]))**2)*y[3]

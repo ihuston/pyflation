@@ -10,7 +10,7 @@ from __future__ import division
 import time
 import helpers
 import os.path
-import numpy as N
+import numpy as np
 
 import cosmomodels as c
 import run_config
@@ -45,7 +45,7 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     nfostart = min(m.fotstartindex).astype(int)
     nstar = max(nfostart, ninit)
     totalnrange = len(m.tresult[nstar:nfinal])
-    nrange = N.ceil(totalnrange/ntasks)
+    nrange = np.ceil(totalnrange/ntasks)
     
     #Change myninit to match task id
     if id == 1:

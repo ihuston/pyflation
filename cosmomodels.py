@@ -4,7 +4,7 @@
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import numpy as N
+import numpy as np
 
 import rk4
 import sys
@@ -65,9 +65,9 @@ class CosmologicalModel(object):
         self.ystart = ystart
         self.k = getattr(self, "k", None) #so we can test whether k is set
         
-        if N.all(tstart < tend): 
+        if np.all(tstart < tend): 
             self.tstart, self.tend = tstart, tend
-        elif N.all(tstart==tend):
+        elif np.all(tstart==tend):
             raise ValueError, "End time is the same as start time!"
         else:
             raise ValueError, "Ending time is before starting time!"
@@ -132,10 +132,10 @@ class CosmologicalModel(object):
                 self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
                     self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
                 #Commented out next line to work with array of k values
-                #self.yresult = N.hsplit(self.yresult, self.yresult.shape[1])
+                #self.yresult = np.hsplit(self.yresult, self.yresult.shape[1])
             except rk4.SimRunError, er:
-                self.yresult = N.array(er.yresult)
-                self.tresult = N.array(er.tresult)
+                self.yresult = np.array(er.yresult)
+                self.tresult = np.array(er.tresult)
                 self._log.error("Error during run, but some results obtained: "+ er.message)
             except StandardError, er:
                 #raise ModelError("Error running odeint", self.tresult, self.yresult)
@@ -144,13 +144,13 @@ class CosmologicalModel(object):
         if self.solver == "rkdriver_dumb":
             #set_trace()
             #Loosely estimate number of steps based on requested step size
-            nstep = N.ceil((self.tend - self.tstart)/self.tstep_wanted)
+            nstep = np.ceil((self.tend - self.tstart)/self.tstep_wanted)
             try:
                 self.tresult, yreslist = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
             except StandardError, er:
                 merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
                 raise merror
-            self.yresult = N.vstack(yreslist)
+            self.yresult = np.vstack(yreslist)
 
         if self.solver in ["rkdriver_withks", "rkdriver_new"]:
             #set_trace()
@@ -169,17 +169,17 @@ class CosmologicalModel(object):
             #swap_derivs = lambda y, t : self.derivs(t,y)
                         
             #Now split depending on whether k exists
-            if type(self.k) is N.ndarray or type(self.k) is list:
+            if type(self.k) is np.ndarray or type(self.k) is list:
                 #Get set of times for each k
-                if type(self.tstart) is N.ndarray or type(self.tstart) is list:
-                    times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
+                if type(self.tstart) is np.ndarray or type(self.tstart) is list:
+                    times = np.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [np.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
                 else:
-                    times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                    times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                     startindices = [0]
                 #Make a copy of k and ystart while we work
-                klist = N.copy(self.k)
-                yslist = N.rollaxis(N.copy(self.ystart),1,0)
+                klist = np.copy(self.k)
+                yslist = np.rollaxis(np.copy(self.ystart),1,0)
                 
                 #Do calculation
                 #Compute list of ks in a row
@@ -189,12 +189,12 @@ class CosmologicalModel(object):
                 ylistlengths = [len(ys) for ys in ylist]
                 ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
                 #Now stack results to look like as normal (time,variable,k)
-                self.yresult = N.dstack(ylist)
+                self.yresult = np.dstack(ylist)
                 self.tresult = times
                 #Return klist to normal
                 self.k = klist
             else:
-                times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                 yres = scipy_odeint(self.derivs, self.ystart, times)
                 self.yresult = yres
                 
@@ -204,17 +204,17 @@ class CosmologicalModel(object):
             #Use scipy solver. Need to massage derivs into right form.
             swap_derivs = (lambda t, y : self.derivs(y,t))
             #Now split depending on whether k exists
-            if type(self.k) is N.ndarray or type(self.k) is list:
+            if type(self.k) is np.ndarray or type(self.k) is list:
                 #Get set of times for each k
-                if type(self.tstart) is N.ndarray or type(self.tstart) is list:
-                    times = N.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [N.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
+                if type(self.tstart) is np.ndarray or type(self.tstart) is list:
+                    times = np.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
+                    startindices = [np.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
                 else:
-                    times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                    times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                     startindices = [0]
                 #Make a copy of k and ystart while we work
-                klist = N.copy(self.k)
-                yslist = N.rollaxis(N.copy(self.ystart),1,0)
+                klist = np.copy(self.k)
+                yslist = np.rollaxis(np.copy(self.ystart),1,0)
                 
                 #Do calculation
                 #Compute list of ks in a row
@@ -226,19 +226,19 @@ class CosmologicalModel(object):
                     yr = []
                     while r.successful() and r.t <= self.tend :
                         yr += [r.integrate(r.t+self.tstep_wanted)]
-                    ylist += [N.array(yr)]
+                    ylist += [np.array(yr)]
                     del r
                 #ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
                 
                 ylistlengths = [len(ys) for ys in ylist]
                 ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
                 #Now stack results to look like as normal (time,variable,k)
-                self.yresult = N.dstack(ylist)
+                self.yresult = np.dstack(ylist)
                 self.tresult = times
                 #Return klist to normal
                 self.k = klist
             else:
-                times = N.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
+                times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
                 self.yresult = scipy_odeint(self.derivs, self.ystart, times)
                 self.tresult = times
         #Aggregrate results and calling parameters into results list
@@ -279,7 +279,7 @@ class CosmologicalModel(object):
         "classname" : tables.StringCol(255),
         "CVSRevision" : tables.StringCol(255),
         "ystart" : tables.Float64Col(self.ystart.shape),
-        "tstart" : tables.Float64Col(N.shape(self.tstart)),
+        "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
@@ -412,7 +412,7 @@ class CosmologicalModel(object):
                             karr = resgroup.k
                     except tables.NoSuchNodeError:
                         raise IOError("File is not in correct format! Correct results tables do not exist!")
-                    if N.shape(tres) != N.shape(self.tresult):
+                    if np.shape(tres) != np.shape(self.tresult):
                         raise IOError("Results file has different size of tresult!")
                 else:
                     raise IOError("Can only write or append to files!")
@@ -465,14 +465,14 @@ class TestModel(CosmologicalModel):
     plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
     tname = "Time"
             
-    def __init__(self, ystart=N.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
+    def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
         
 
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
-        dydx = N.zeros(2)
+        dydx = np.zeros(2)
         
         dydx[0] = y[1]
         dydx[1] = y[0]
@@ -491,7 +491,7 @@ class BasicBgModel(CosmologicalModel):
     tname = "Conformal time"
     ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
-    def __init__(self, ystart=N.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
+    def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
                     tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
         
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
@@ -522,10 +522,10 @@ class BasicBgModel(CosmologicalModel):
         U, dUdphi, d2Udphi2 = self.potentials(y)[0:3]
         
         #factor in eom [1/3 a^2 U_0]^{1/2}
-        Ufactor = N.sqrt((1.0/3.0)*(y[2]**2)*U)
+        Ufactor = np.sqrt((1.0/3.0)*(y[2]**2)*U)
         
         #Set derivatives
-        dydx = N.zeros(3)
+        dydx = np.zeros(3)
         
         #d\phi_0/d\eta = y_1
         dydx[0] = y[1] 
@@ -564,7 +564,7 @@ class PhiModels(CosmologicalModel):
         phidot = y[1]
         
         #Expression for H
-        H = N.sqrt(U/(3.0-0.5*(phidot**2)))
+        H = np.sqrt(U/(3.0-0.5*(phidot**2)))
         return H
     
     def potentials(self, y, pot_params=None):
@@ -582,13 +582,13 @@ class PhiModels(CosmologicalModel):
         self.epsilon = self.getepsilon()
         if not any(self.epsilon>1):
             raise ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
-        endindex = N.where(self.epsilon>=1)[0][0]
+        endindex = np.where(self.epsilon>=1)[0][0]
         
         #Interpolate results to find more accurate endpoint
         tck = interpolate.splrep(self.tresult[:endindex], self.epsilon[:endindex])
-        t2 = N.linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
+        t2 = np.linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
         y2 = interpolate.splev(t2, tck)
-        endindex2 = N.where(y2>1)[0][0]
+        endindex2 = np.where(y2>1)[0][0]
         #Return efold of more accurate endpoint
         endefold = t2[endindex2]
         
@@ -601,10 +601,10 @@ class PhiModels(CosmologicalModel):
 
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
+            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
             epsilon = - Hdot/self.yresult[:,2,0]
         else:
-            Hdot = N.array(map(self.derivs, self.yresult, self.tresult))[:,2]
+            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2]
             epsilon = - Hdot/self.yresult[:,2]
         return epsilon
 
@@ -628,7 +628,7 @@ class CanonicalBackground(PhiModels):
         super(CanonicalBackground, self).__init__(*args, **kwargs)
         
         #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
     
@@ -639,7 +639,7 @@ class CanonicalBackground(PhiModels):
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
         #Set derivatives
-        dydx = N.zeros(3)
+        dydx = np.zeros(3)
         
         #d\phi_0/dn = y_1
         dydx[0] = y[1] 
@@ -687,16 +687,16 @@ class CanonicalFirstOrder(PhiModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
         
         #Set initial H value if None
-        if N.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[2] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[2] = self.findH(U, self.ystart)
                         
@@ -713,10 +713,10 @@ class CanonicalFirstOrder(PhiModels):
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((7,len(k)))
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((7,len(k)))
         else:
-            dydx = N.zeros(7)
+            dydx = np.zeros(7)
             
         
         #d\phi_0/dn = y_1
@@ -732,7 +732,7 @@ class CanonicalFirstOrder(PhiModels):
         dydx[3] = y[4]
         
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         
         #d\deltaphi_1^prime/dn  #
         dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
@@ -776,13 +776,13 @@ class CanonicalSecondOrder(PhiModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([0.0,0.0,0.0,0.0])   
+            self.ystart = np.array([0.0,0.0,0.0,0.0])   
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
@@ -790,7 +790,7 @@ class CanonicalSecondOrder(PhiModels):
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
-            kix = N.arange(len(k))
+            kix = np.arange(len(k))
         else:
             k = kwargs["k"]
             kix = kwargs["kix"]
@@ -815,13 +815,13 @@ class CanonicalSecondOrder(PhiModels):
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
         #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((4,len(k)))
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((4,len(k)))
         else:
-            dydx = N.zeros(4)
+            dydx = np.zeros(4)
             
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         #Real parts
         #d\deltaphi_2/dn = y[1]
         dydx[0] = y[1]
@@ -867,13 +867,13 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([0.0,0.0,0.0,0.0])   
+            self.ystart = np.array([0.0,0.0,0.0,0.0])   
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
@@ -881,7 +881,7 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
-            kix = N.arange(len(k))
+            kix = np.arange(len(k))
         else:
             k = kwargs["k"]
             kix = kwargs["kix"]
@@ -906,13 +906,13 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
         #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((4,len(k)))
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((4,len(k)))
         else:
-            dydx = N.zeros(4)
+            dydx = np.zeros(4)
             
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         #Real parts
         #d\deltaphi_2/dn = y[1]
         dydx[0] = y[1]
@@ -958,13 +958,13 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         #Let k roam for a start if not given
         if k is None:
-            self.k = 10**(N.arange(10.0)-8)
+            self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = N.array([0.0,0.0,0.0,0.0])   
+            self.ystart = np.array([0.0,0.0,0.0,0.0])   
             
         #Ramp arguments in form
         # Ramp = (tanh(a*(t - t_ic - b) + c))/d if abs(t-t_ic+b) < e
@@ -983,7 +983,7 @@ class CanonicalRampedSecondOrder(PhiModels):
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
-            kix = N.arange(len(k))
+            kix = np.arange(len(k))
         else:
             k = kwargs["k"]
             kix = kwargs["kix"]
@@ -1004,7 +1004,7 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         #Get source terms and multiply by ramp
         tanharg =  t-self.tstart[kix] - self.rampargs["b"]
-        ramp = (N.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+        ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
         #Get source from file
         src = self.source[tix][kix]
         
@@ -1017,13 +1017,13 @@ class CanonicalRampedSecondOrder(PhiModels):
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
         #Set derivatives taking care of k type
-        if type(k) is N.ndarray or type(k) is list: 
-            dydx = N.zeros((4,len(k)))
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((4,len(k)))
         else:
-            dydx = N.zeros(4)
+            dydx = np.zeros(4)
             
         #Get a
-        a = self.ainit*N.exp(t)
+        a = self.ainit*np.exp(t)
         #Real parts
         #d\deltaphi_2/dn = y[1]
         dydx[0] = y[1]
@@ -1061,8 +1061,8 @@ class MultiStageModel(CosmologicalModel):
         if Hreh is None:
             Hreh = Hend #Instantaneous reheating
         a_0 = 1 # Normalize today
-        a_end = a_0*N.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
-        #a_end = a_0*N.exp(-71.49)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        a_end = a_0*np.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        #a_end = a_0*np.exp(-71.49)*((Hreh/(Hend**4.0))**(1.0/6.0))
         return a_end
         
     def findkcrossing(self, k, t, H, factor=None):
@@ -1072,9 +1072,9 @@ class MultiStageModel(CosmologicalModel):
         if factor is None:
             factor = self.cq #time before horizon crossing
         #get aHs
-        aH = self.ainit*N.exp(t)*H
+        aH = self.ainit*np.exp(t)*H
         try:
-            kcrindex = N.where(N.sign(k - (factor*aH))<0)[0][0]
+            kcrindex = np.where(np.sign(k - (factor*aH))<0)[0][0]
         except IndexError, ex:
             raise ModelError("k mode " + str(k) + " crosses horizon after end of inflation!")
         kcrefold = t[kcrindex]
@@ -1082,11 +1082,11 @@ class MultiStageModel(CosmologicalModel):
     
     def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list"""
-        return N.array([self.findkcrossing(onek, t, H) for onek in self.k])
+        return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
         """FInd horizon crossing for all ks"""
-        return N.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, N.rollaxis(self.yresult[:,2,:], -1,0))])
+        return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
@@ -1121,8 +1121,8 @@ class MultiStageModel(CosmologicalModel):
                 self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
         
         ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = N.log(self.Pr[ts.astype(int)].diagonal())
-        lnk = N.log(k)
+        xp = np.log(self.Pr[ts.astype(int)].diagonal())
+        lnk = np.log(k)
         
         #Need to sort into ascending k
         sortix = lnk.argsort()
@@ -1133,7 +1133,7 @@ class MultiStageModel(CosmologicalModel):
         
         ns = 1 + ders
         #Unorder the ks again
-        nsunsort = N.zeros(len(ns))
+        nsunsort = np.zeros(len(ns))
         nsunsort[sortix] = ns
         
         return nsunsort
@@ -1169,7 +1169,7 @@ class MultiStageModel(CosmologicalModel):
         "classname" : tables.StringCol(255),
         "CVSRevision" : tables.StringCol(255),
         "ystart" : tables.Float64Col(self.ystart.shape),
-        "tstart" : tables.Float64Col(N.shape(self.tstart)),
+        "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
         "ainit" : tables.Float64Col(),
         "potential_func" : tables.StringCol(255),
@@ -1266,14 +1266,14 @@ class CanonicalMultiStage(MultiStageModel):
         """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
         #Get needed variables
         phidot = self.yresult[:,1,:]
-        a = self.ainit*N.exp(self.tresult)
+        a = self.ainit*np.exp(self.tresult)
         H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][N.newaxis,:], self.pot_params)[1]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][np.newaxis,:], self.pot_params)[1]
         deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
         deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
         
         deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,N.newaxis]**2 - 2) -H*phidot*dUdphi
+        drhodt = (H**3)*(phidot**2)*(-1/a[:,np.newaxis]**2 - 2) -H*phidot*dUdphi
         
         zeta = -H*deltarho/drhodt
         return zeta, deltarho, drhodt
@@ -1294,7 +1294,7 @@ class TwoStageModel(MultiStageModel):
         #Initial conditions for each of the variables.
         if ystart is None:
             #Initial conditions for all variables
-            self.ystart = N.array([18.0, # \phi_0
+            self.ystart = np.array([18.0, # \phi_0
                                    -0.1, # \dot{\phi_0}
                                     0.0, # H - leave as 0.0 to let program determine
                                     1.0, # Re\delta\phi_1
@@ -1316,7 +1316,7 @@ class TwoStageModel(MultiStageModel):
                 
         #Let k roam if we don't know correct ks
         if k is None:
-            self.k = 10**(N.arange(7.0)-62)
+            self.k = 10**(np.arange(7.0)-62)
         else:
             self.k = k
         self.simtstart = simtstart
@@ -1348,7 +1348,7 @@ class TwoStageModel(MultiStageModel):
         #Need to change to find using splines
         Hend = self.bgmodel.yresult[self.fotendindex,2]
         self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*N.exp(-self.bgmodel.tresult[self.fotendindex])
+        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
         
         
         #Find epsilon from bg model
@@ -1369,7 +1369,7 @@ class TwoStageModel(MultiStageModel):
             raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
         
         #Find new start time from earliest kcrossing
-        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(N.int)
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(np.int)
         self.foystart = self.getfoystart()
         return  
         
@@ -1491,10 +1491,10 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((len(self.ystart), len(self.k)))
         #set_trace()
         #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(ts)
+        astar = self.ainit*np.exp(ts)
         Hstar = self.bgmodel.yresult[tsix,2]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
@@ -1508,13 +1508,13 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         try:
             foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
-        arootk = 1/(astar*(N.sqrt(2*self.k)))
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
         #Find cos and sin(-keta)
-        csketa = N.cos(-keta)
-        snketa = N.sin(-keta)
+        csketa = np.cos(-keta)
+        snketa = np.sin(-keta)
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = csketa*arootk
@@ -1569,10 +1569,10 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((len(self.ystart), len(self.k)))
         #set_trace()
         #Get values of needed variables at crossing time.
-        astar = self.ainit*N.exp(ts)
+        astar = self.ainit*np.exp(ts)
         Hstar = self.bgmodel.yresult[tsix,2]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
@@ -1586,13 +1586,13 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         try:
             foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
-        arootk = N.sqrt(self.k**3/(2*N.pi**2))/(astar*(N.sqrt(2*self.k)))
+        arootk = np.sqrt(self.k**3/(2*np.pi**2))/(astar*(np.sqrt(2*self.k)))
         #Find cos and sin(-keta)
-        csketa = N.cos(-keta)
-        snketa = N.sin(-keta)
+        csketa = np.cos(-keta)
+        snketa = np.sin(-keta)
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = csketa*arootk
@@ -1625,7 +1625,7 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
-            self.deltaphi = (2*N.pi**2)/(self.k**3) * (self.yresult[:,3,:] + self.yresult[:,5,:]*1j) #complex deltaphi
+            self.deltaphi = (2*np.pi**2)/(self.k**3) * (self.yresult[:,3,:] + self.yresult[:,5,:]*1j) #complex deltaphi
         return self.deltaphi
                 
     
@@ -1738,15 +1738,15 @@ class ThirdStageModel(MultiStageModel):
         else:
             self.second_stage = second_stage
             #Set properties to be those of second stage model
-            self.k = N.copy(self.second_stage.k)
+            self.k = np.copy(self.second_stage.k)
             self.simtstart = self.second_stage.tresult[0]
-            self.fotstart = N.copy(self.second_stage.fotstart)
+            self.fotstart = np.copy(self.second_stage.fotstart)
             self.ainit = self.second_stage.ainit
             self.potentials = self.second_stage.potentials
             self.potential_func = self.second_stage.potential_func
         
         if ystart is None:
-            ystart = N.zeros((4, len(self.k)))
+            ystart = np.zeros((4, len(self.k)))
         #Call superclass
         super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
         self.second_stage.tstep_wanted*2, self.second_stage.tstep_min*2, solver="rkdriver_new", 
@@ -1964,13 +1964,13 @@ class OneZeroIcsTwoStage(TwoStageModel):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((len(self.ystart), len(self.k)))
         
         #Set bg init conditions based on previous bg evolution
         try:
             foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0
@@ -2023,13 +2023,13 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = N.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((len(self.ystart), len(self.k)))
         
         #Set bg init conditions based on previous bg evolution
         try:
             foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, N.newaxis]
+            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0

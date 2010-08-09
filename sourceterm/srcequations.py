@@ -5,7 +5,7 @@ Created on 29 Jul 2010
 '''
 from __future__ import division
 
-import numpy as N
+import numpy as np
 
 from romberg import romb
 from sourceterm import srccython
@@ -34,7 +34,7 @@ def klessq(k, q, theta):
             len(q)*len(theta) array of values for
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
-    return k**2+q[..., N.newaxis]**2-2*k*N.outer(q,N.cos(theta))
+    return k**2+q[..., np.newaxis]**2-2*k*np.outer(q,np.cos(theta))
 
 class SourceEquations(object):
     '''
@@ -46,12 +46,12 @@ class SourceEquations(object):
         """Class for source term equations"""
         self.fixture = fixture
         
-        self.fullk = N.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
+        self.fullk = np.arange(fixture["kmin"], fixture["fullkmax"], fixture["deltak"])
         self.k = self.fullk[:fixture["numsoks"]]
         self.kmin = self.k[0]
         self.deltak = self.k[1] - self.k[0]
         
-        self.theta = N.linspace(0, N.pi, fixture["nthetas"])
+        self.theta = np.linspace(0, np.pi, fixture["nthetas"])
         self.dtheta = self.theta[1] - self.theta[0]
                 
     
@@ -77,8 +77,8 @@ class SlowRollSource(SourceEquations):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
-        C1k = C1[..., N.newaxis]
-        C2k = C2[..., N.newaxis]
+        C1k = C1[..., np.newaxis]
+        C2k = C2[..., np.newaxis]
         aterm = (C1k*q**2 + C2k*q**4) * dp1 * preaterm
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
@@ -87,8 +87,8 @@ class SlowRollSource(SourceEquations):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
-        C3k = C3[..., N.newaxis]
-        C4k = C4[..., N.newaxis]
+        C3k = C3[..., np.newaxis]
+        C4k = C4[..., np.newaxis]
         bterm = (C3k*q**3 + C4k*q**5) * dp1 * prebterm
         J_B = romb(bterm, self.fixture["deltak"])
         return J_B
@@ -97,7 +97,7 @@ class SlowRollSource(SourceEquations):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
-        C5k = C5[..., N.newaxis]
+        C5k = C5[..., np.newaxis]
         cterm = (C5k*q**2) * dp1dot * precterm
         J_C = romb(cterm, self.fixture["deltak"])
         return J_C
@@ -106,8 +106,8 @@ class SlowRollSource(SourceEquations):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
-        C6k = C6[..., N.newaxis]
-        C7k = C7[..., N.newaxis]
+        C6k = C6[..., np.newaxis]
+        C7k = C7[..., np.newaxis]
         dterm = (C6k*q + C7k*q**3) * dp1dot * predterm
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
@@ -134,9 +134,9 @@ class SlowRollSource(SourceEquations):
                      
         """
         
-        sinth = N.sin(self.theta)
-        cossinth = N.cos(self.theta)*N.sin(self.theta)
-        theta_terms = N.empty([4, self.k.shape[0], self.k.shape[0]])
+        sinth = np.sin(self.theta)
+        cossinth = np.cos(self.theta)*np.sin(self.theta)
+        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]])
         lenq = len(self.k)
         
         for n in xrange(len(self.k)):
@@ -194,7 +194,7 @@ class SlowRollSource(SourceEquations):
         dp1_q = dp1[:self.k.shape[-1]]
         dp1dot_q = dp1dot[:self.k.shape[-1]]  
         #Set ones array with same shape as self.k
-        onekshape = N.ones(k.shape)
+        onekshape = np.ones(k.shape)
         
         theta_terms = self.getthetaterms(dp1, dp1dot)
         #Get potentials
@@ -222,7 +222,7 @@ class SlowRollSource(SourceEquations):
         J_D = self.J_D(theta_terms[3], dp1dot_q, C6, C7)
         
         
-        src = 1/((2*N.pi)**2 ) * (J_A + J_B + J_C + J_D)
+        src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
         return src
 
 
@@ -239,8 +239,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
-        C1k = C1[..., N.newaxis]
-        C2k = C2[..., N.newaxis]
+        C1k = C1[..., np.newaxis]
+        C2k = C2[..., np.newaxis]
         aterm = (C1k*q**2 + C2k*q**2*q**2) * dp1 * preaterm
         J_A = romb(aterm, self.fixture["deltak"])
         return J_A
@@ -249,8 +249,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_A2 which is the integral for A in terms of constants C17 and C18."""
                 
         q = self.k
-        C17k = C17[..., N.newaxis]
-        C18k = C18[..., N.newaxis]
+        C17k = C17[..., np.newaxis]
+        C18k = C18[..., np.newaxis]
         aterm = (C17k*q**2 + C18k*q**2*q**2) * dpdot1 * preaterm
         J_A2 = romb(aterm, self.fixture["deltak"])
         return J_A2
@@ -259,8 +259,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
-        C3k = C3[..., N.newaxis]
-        C4k = C4[..., N.newaxis]
+        C3k = C3[..., np.newaxis]
+        C4k = C4[..., np.newaxis]
         bterm = (C3k*q**2*q + C4k*q**2*q**2*q) * dp1 * prebterm
         J_B1 = romb(bterm, self.fixture["deltak"])
         return J_B1
@@ -269,7 +269,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_B2 which is the integral for B in terms of constant C19."""
                 
         q = self.k
-        C19k = C19[..., N.newaxis]
+        C19k = C19[..., np.newaxis]
         bterm = (C19k*q**2*q) * dpdot1 * prebterm
         J_B2 = romb(bterm, self.fixture["deltak"])
         return J_B2
@@ -278,7 +278,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
-        C5k = C5[..., N.newaxis]
+        C5k = C5[..., np.newaxis]
         cterm = (C5k*q**2) * dp1dot * precterm
         J_C = romb(cterm, self.fixture["deltak"])
         return J_C
@@ -287,7 +287,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_C which is the integral for C in terms of constants C20."""
                 
         q = self.k
-        C20k = C20[..., N.newaxis]
+        C20k = C20[..., np.newaxis]
         cterm = (C20k*q**2) * dp1 * precterm
         J_C2 = romb(cterm, self.fixture["deltak"])
         return J_C2
@@ -296,8 +296,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
-        C6k = C6[..., N.newaxis]
-        C7k = C7[..., N.newaxis]
+        C6k = C6[..., np.newaxis]
+        C7k = C7[..., np.newaxis]
         dterm = (C6k*q + C7k*q**2*q) * dp1dot * predterm
         J_D = romb(dterm, self.fixture["deltak"])
         return J_D
@@ -306,7 +306,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_D which is the integral for D in terms of constant C21."""
                 
         q = self.k
-        C21k = C21[..., N.newaxis]
+        C21k = C21[..., np.newaxis]
         dterm = (C21k*q) * dp1 * predterm
         J_D2 = romb(dterm, self.fixture["deltak"])
         return J_D2
@@ -315,8 +315,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_E1 which is the integral for E in terms of constants C8 and C9."""
                 
         q = self.k
-        C8k = C8[..., N.newaxis]
-        C9k = C9[..., N.newaxis]
+        C8k = C8[..., np.newaxis]
+        C9k = C9[..., np.newaxis]
         eterm = (C8k*q**2 + C9k*q**2*q**2) * dp1 * preeterm
         J_E1 = romb(eterm, self.fixture["deltak"])
         return J_E1
@@ -325,7 +325,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_E2 which is the integral for E in terms of constant C10."""
                 
         q = self.k
-        C10k = C10[..., N.newaxis]
+        C10k = C10[..., np.newaxis]
         eterm = (C10k*q**2) * dp1dot * preeterm
         J_E2 = romb(eterm, self.fixture["deltak"])
         return J_E2
@@ -334,8 +334,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_F1 which is the integral for F in terms of constants C11 and C12."""
                 
         q = self.k
-        C11k = C11[..., N.newaxis]
-        C12k = C12[..., N.newaxis]
+        C11k = C11[..., np.newaxis]
+        C12k = C12[..., np.newaxis]
         fterm = (C11k*q**2 + C12k*q**2*q**2) * dp1 * prefterm
         J_F1 = romb(fterm, self.fixture["deltak"])
         return J_F1
@@ -344,7 +344,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_F2 which is the integral for F in terms of constant C13."""
                 
         q = self.k
-        C13k = C13[..., N.newaxis]
+        C13k = C13[..., np.newaxis]
         fterm = (C13k*q**2) * dpdot1 * prefterm
         J_F2 = romb(fterm, self.fixture["deltak"])
         return J_F2
@@ -353,8 +353,8 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_G1 which is the integral for G in terms of constants C14 and C15."""
                 
         q = self.k
-        C14k = C14[..., N.newaxis]
-        C15k = C15[..., N.newaxis]
+        C14k = C14[..., np.newaxis]
+        C15k = C15[..., np.newaxis]
         gterm = (C14k*q**2 + C15k*q**2*q**2) * dp1 * pregterm
         J_G1 = romb(gterm, self.fixture["deltak"])
         return J_G1
@@ -363,7 +363,7 @@ class FullSingleFieldSource(SourceEquations):
         """Solution for J_G2 which is the integral for G in terms of constant C16."""
                 
         q = self.k
-        C16k = C16[..., N.newaxis]
+        C16k = C16[..., np.newaxis]
         gterm = (C16k*q**2) * dpdot1 * pregterm
         J_G1 = romb(gterm, self.fixture["deltak"])
         return J_G1
@@ -392,12 +392,12 @@ class FullSingleFieldSource(SourceEquations):
         """
         
         # Sinusoidal theta terms
-        sinth = N.sin(self.theta)
-        cossinth = N.cos(self.theta)*sinth
-        cos2sinth = N.cos(self.theta)*cossinth
+        sinth = np.sin(self.theta)
+        cossinth = np.cos(self.theta)*sinth
+        cos2sinth = np.cos(self.theta)*cossinth
         sin3th = sinth*sinth*sinth
         
-        theta_terms = N.empty([7, self.k.shape[0], self.k.shape[0]])
+        theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]])
         lenq = len(self.k)
         for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
@@ -464,7 +464,7 @@ class FullSingleFieldSource(SourceEquations):
         dp1_q = dp1[:self.k.shape[-1]]
         dp1dot_q = dp1dot[:self.k.shape[-1]]  
         #Set ones array with same shape as self.k
-        onekshape = N.ones(self.k.shape)
+        onekshape = np.ones(self.k.shape)
         
         theta_terms = self.getthetaterms(dp1, dp1dot)
         #Get potentials
@@ -541,7 +541,7 @@ class FullSingleFieldSource(SourceEquations):
         
         
         
-        src = 1/((2*N.pi)**2 ) * (J_A1 + J_A2 + J_B1 + J_B2 + J_C1 + J_C2 + J_D1 + J_D2 
+        src = 1/((2*np.pi)**2 ) * (J_A1 + J_A2 + J_B1 + J_B2 + J_C1 + J_C2 + J_D1 + J_D2 
                                   + J_E1 + J_E2 + J_F1 + J_F2 + J_G1 + J_G2)
         return src
     

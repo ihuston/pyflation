@@ -7,7 +7,7 @@
     specified as a dictionary."""
     
 from __future__ import division
-import numpy as N
+import numpy as np
 from pdb import set_trace
 
 def msqphisq(y, params=None):
