@@ -120,12 +120,14 @@ class ConstantPerturbationCalced(CalcedSolution):
         
     def get_dp1(self, k, alpha):
         """Get dp1 for a certain value of alpha and beta."""
-        dp1 = alpha + 0*1j
+        onekshape = np.ones_like(k)
+        dp1 = alpha*onekshape + 0*1j
         return dp1
     
     def get_dp1dot(self, k, alpha, beta):
         """Get dp1dot for a certain value of alpha and beta."""
-        dp1dot = -alpha -(alpha/beta)* 1j
+        onekshape = np.ones_like(k)
+        dp1dot = (-alpha -(alpha/beta)* 1j)*onekshape
         return dp1dot
     
     def preconvolution_calced(self, alpha, beta):
