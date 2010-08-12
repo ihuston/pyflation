@@ -134,7 +134,7 @@ class ConstantPerturbationCalced(CalcedSolution):
         """Return calculates solution for pre-convolution terms."""
         dp1_fullk = self.get_dp1(self.srceqns.fullk, alpha)
         dp1dot_fullk = self.get_dp1dot(self.srceqns.fullk, alpha, beta)
-        return super(NoPhaseBunchDaviesCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
+        return super(ConstantPerturbationCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
         
     def full_source_from_model(self, m, nix):
         """Calculate full source term from model m at timestep nix."""
