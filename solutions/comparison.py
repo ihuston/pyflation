@@ -31,4 +31,4 @@ def compare_one_step(m, srcclass, nix):
     difference = analytic_result - calced_result
     error = np.abs(difference)/np.abs(analytic_result)
     
-    return difference, error, analytic_result, calced_result
+    return difference, error, analytic_result, calced_result, asol.srceqns.k
