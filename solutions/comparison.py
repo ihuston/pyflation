@@ -12,15 +12,20 @@ import analyticsolution
 import calcedsolution
 import fixtures
 
-def compare_one_step(m, srcclass, nix):
+def compare_one_step(m, srcclass, nix, analytic_class=None, calced_class=None):
     """
     Compare the analytic and calculated solutions for equations from `srclass` using the 
     results from `m` at the timestep `nix`. 
     """
     fx = fixtures.fixture_from_model(m)
     
-    asol = analyticsolution.NoPhaseBunchDaviesSolution(fx, srcclass)
-    csol = calcedsolution.NoPhaseBunchDaviesCalced(fx, srcclass)
+    if analytic_class is None:
+        analytic_class = analyticsolution.NoPhaseBunchDaviesSolution
+    if calced_class is None:
+        calced_class = calcedsolution.NoPhaseBunchDaviesCalced
+    
+    asol = analytic_class(fx, srcclass)
+    csol = calced_class(fx, srcclass)
     
     #Need to make analytic solution use 128 bit floats to avoid overruns
     asol.srceqns.k = np.float128(asol.srceqns.k)
