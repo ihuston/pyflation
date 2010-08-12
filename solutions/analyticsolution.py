@@ -269,16 +269,8 @@ class ConstantPerturbationSolution(AnalyticSolution):
         kmin = k[0]
         kmax = k[-1]
         
-        J_A = (4*alpha**2*((k + kmax)**2.5*
-             (33*C1*(-2*k + 5*kmax) + 
-               C2*(-16*k**3 + 40*k**2*kmax - 70*k*kmax**2 + 105*kmax**3)) - 
-            (-k + kmax)**2.5*(33*C1*(2*k + 5*kmax) + 
-               C2*(16*k**3 + 40*k**2*kmax + 70*k*kmax**2 + 105*kmax**3))))/(3465.*k)\
-        - (4*alpha**2*((k + kmin)**2.5*
-             (33*C1*(-2*k + 5*kmin) + 
-               C2*(-16*k**3 + 40*k**2*kmin - 70*k*kmin**2 + 105*kmin**3)) + 
-            (k - kmin)**2.5*(33*C1*(2*k + 5*kmin) + 
-               C2*(16*k**3 + 40*k**2*kmin + 70*k*kmin**2 + 105*kmin**3))))/(3465.*k)
+        J_A = ((2*alpha**2*C1*kmax**3)/3. + (2*alpha**2*C2*kmax**5)/5. - 
+              (2*alpha**2*C1*kmin**3)/3. - (2*alpha**2*C2*kmin**5)/5.)
         return J_A
     
     def J_B(self, k, alpha, C3, C4):
@@ -286,22 +278,7 @@ class ConstantPerturbationSolution(AnalyticSolution):
         kmax = k[-1]
         kmin = k[0]
         
-        J_B = ((-4*alpha**2*((k + kmax)**2.5*
-             (9*C3*(12*k**3 - 30*k**2*kmax + 25*k*kmax**2 - 10*kmax**3) + 
-               C4*(32*k**5 - 80*k**4*kmax + 140*k**3*kmax**2 - 210*k**2*kmax**3 + 
-                  165*k*kmax**4 - 66*kmax**5)) + 
-            (-k + kmax)**2.5*(9*C3*
-                (12*k**3 + 30*k**2*kmax + 25*k*kmax**2 + 10*kmax**3) + 
-               C4*(32*k**5 + 80*k**4*kmax + 140*k**3*kmax**2 + 210*k**2*kmax**3 + 
-                  165*k*kmax**4 + 66*kmax**5))))/(10395.*k**2) + 
-                  (4*alpha**2*((k + kmin)**2.5*
-             (9*C3*(12*k**3 - 30*k**2*kmin + 25*k*kmin**2 - 10*kmin**3) + 
-               C4*(32*k**5 - 80*k**4*kmin + 140*k**3*kmin**2 - 210*k**2*kmin**3 + 
-                  165*k*kmin**4 - 66*kmin**5)) - 
-            (k - kmin)**2.5*(9*C3*
-                (12*k**3 + 30*k**2*kmin + 25*k*kmin**2 + 10*kmin**3) + 
-               C4*(32*k**5 + 80*k**4*kmin + 140*k**3*kmin**2 + 210*k**2*kmin**3 + 
-                  165*k*kmin**4 + 66*kmin**5))))/(10395.*k**2))
+        J_B = 0
 
         return J_B
     
@@ -310,20 +287,8 @@ class ConstantPerturbationSolution(AnalyticSolution):
         kmax = k[-1]
         kmin = k[0]
         
-        J_C = ((-16*Sqrt(2)*alpha**2*((0+1*1j) + beta)*C5*k**1.5*(-9*beta*k - (0+10*1j)*k**2))/
-               (315.*beta**2) + (4*alpha**2*((0+1*1j) + beta)*C5*
-                (84*Sqrt(2)*k**3.5 - ((0+112*1j)*Sqrt(2)*k**4.5)/beta + 
-              ((0+24*1j)*Sqrt(2)*k**3.5*((0+5*1j)*beta + 3*k))/beta))/(315.*beta*k) - 
-              (4*alpha**2*((0+1*1j) + beta)*C5*
-          (21*k*(k + kmax)**2.5 + ((0+3*1j)*((0+5*1j)*beta + 3*k)*(k + kmax)**3.5)/beta - 
-            ((0+7*1j)*(k + kmax)**4.5)/beta + 
-            ((-k + kmax)**2.5*(3*beta*(2*k + 5*kmax) - 
-                 (0+1*1j)*(2*k**2 + 5*k*kmax - 7*kmax**2)))/beta))/(315.*beta*k) + 
-       (4*alpha**2*((0+1*1j) + beta)*C5*
-          ((0+1*1j)*(k - kmin)**2.5*(-2*k**2 - 5*k*kmin + 7*kmin**2 + 
-               (0+3*1j)*beta*(2*k + 5*kmin)) + 
-            (k + kmin)**2.5*(3*beta*(2*k - 5*kmin) + 
-               (0+1*1j)*(2*k**2 - 5*k*kmin - 7*kmin**2))))/(315.*beta**2*k))
+        J_C = ((2*alpha**2*(1*1j + beta)**2*C5*kmax**3)/(3.*beta**2) - 
+            (2*alpha**2*(1*1j + beta)**2*C5*kmin**3)/(3.*beta**2))
         
         return J_C
 
@@ -332,71 +297,7 @@ class ConstantPerturbationSolution(AnalyticSolution):
         kmax = k[-1]
         kmin = k[0]
         
-        J_D = ((-4*alpha**2*((0+1*1j) + beta)*
-          (Sqrt(2)*Sqrt(k)*(-585*beta*(1870*C6*k**3 + 252*C7*k**5) - 
-               (0+77*1j)*(2002*C6*k**4 - 1800*C7*k**6)) + 
-            90090*C6*(15*beta + (0+7*1j)*k)*k**3.5*ArcTanh(Sqrt(2))))/
-        (1.4189175e7*beta**2*k**2) + 
-       (4*alpha**2*((0+1*1j) + beta)*
-          (Sqrt(k + kmin)*(-585*beta*
-                (-21*C7*(k + kmin)**2*
-                   (12*k**3 - 30*k**2*kmin + 25*k*kmin**2 - 10*kmin**3) + 
-                  55*C6*(41*k**3 - 10*k**2*kmin - 3*k*kmin**2 + 6*kmin**3)) - 
-               (0+77*1j)*(-45*C7*(k + kmin)**3*
-                   (12*k**3 - 42*k**2*kmin + 49*k*kmin**2 - 14*kmin**3) + 
-                  91*C6*(103*k**4 - 29*k**3*kmin - 57*k**2*kmin**2 - 5*k*kmin**3 + 
-                     10*kmin**4))) + 
-            (0+1*1j)*Sqrt(k - kmin)*((0+-585*1j)*beta*
-                (55*C6*(41*k**3 + 10*k**2*kmin - 3*k*kmin**2 - 6*kmin**3) - 
-                  21*C7*(k - kmin)**2*
-                   (12*k**3 + 30*k**2*kmin + 25*k*kmin**2 + 10*kmin**3)) + 
-               77*(-45*C7*(k - kmin)**3*
-                   (12*k**3 + 42*k**2*kmin + 49*k*kmin**2 + 14*kmin**3) + 
-                  91*C6*(103*k**4 + 29*k**3*kmin - 57*k**2*kmin**2 + 5*k*kmin**3 + 
-                     10*kmin**4))) - 
-            90090*C6*(15*beta + (0+7*1j)*k)*k**3.5*ArcTanh(Sqrt(k - kmin)/Sqrt(k)) + 
-            90090*C6*(15*beta + (0+7*1j)*k)*k**3.5*ArcTanh(Sqrt(k + kmin)/Sqrt(k))))/
-        (1.4189175e7*beta**2*k**2) + 
-       (4*alpha**2*((0+1*1j) + beta)*
-          ((0+-3104640*1j)*Sqrt(2)*C7*k**6.5 - 
-            (0+150150*1j)*Sqrt(2)*C6*k**3.5*((0+-15*1j)*beta + 7*k) + 
-            (0+131040*1j)*Sqrt(2)*C7*k**5.5*((0+30*1j)*beta + 77*k) + 
-            80080*Sqrt(2)*k**4.5*((0+-14*1j)*C6 + 9*C7*(15*beta - (0+14*1j)*k)*k) + 
-            36036*Sqrt(2)*k**3.5*((0+-14*1j)*C6*k + 15*beta*(5*C6 + 7*C7*k**2)) + 
-            (0+51480*1j)*Sqrt(2)*k**3.5*
-             ((0+30*1j)*beta*(C6 + 7*C7*k**2) + 7*k*(7*C6 + 9*C7*k**2)) + 
-            90090*C6*(15*beta + (0+7*1j)*k)*k**3.5*ArcTanh(Sqrt(2)) - 
-            45045*C6*k**3.5*((0+15*1j)*beta + 7*k)*
-             Log((315*beta*(-2*Sqrt(k) + Sqrt(2)*Sqrt(k)))/
-               (4.*C6*(Sqrt(k) - Sqrt(2)*Sqrt(k))*k**4*((0+15*1j)*beta + 7*k))) - 
-            45045*C6*k**3.5*((0+15*1j)*beta + 7*k)*
-             Log((315*beta*(2*Sqrt(k) + Sqrt(2)*Sqrt(k)))/
-               (4.*C6*(Sqrt(k) + Sqrt(2)*Sqrt(k))*k**4*((0+15*1j)*beta + 7*k)))))/
-        (1.4189175e7*beta**2*k**2) - 
-       (4*alpha**2*((0+1*1j) + beta)*
-          ((0+-90090*1j)*C6*k**3*((0+-15*1j)*beta + 7*k)*Sqrt(k + kmax) - 
-            (0+30030*1j)*C6*k**2*((0+-15*1j)*beta + 7*k)*(k + kmax)**1.5 + 
-            9009*k*((0+-14*1j)*C6*k + 15*beta*(5*C6 + 7*C7*k**2))*(k + kmax)**2.5 + 
-            (0+6435*1j)*((0+30*1j)*beta*(C6 + 7*C7*k**2) + 7*k*(7*C6 + 9*C7*k**2))*
-             (k + kmax)**3.5 + 5005*((0+-14*1j)*C6 + 9*C7*(15*beta - (0+14*1j)*k)*k)*
-             (k + kmax)**4.5 + (0+4095*1j)*C7*((0+30*1j)*beta + 77*k)*(k + kmax)**5.5 - 
-            (0+48510*1j)*C7*(k + kmax)**6.5 + 
-            Sqrt(-k + kmax)*(-585*beta*
-                (55*C6*(41*k**3 + 10*k**2*kmax - 3*k*kmax**2 - 6*kmax**3) - 
-                  21*C7*(k - kmax)**2*
-                   (12*k**3 + 30*k**2*kmax + 25*k*kmax**2 + 10*kmax**3)) + 
-               (0+77*1j)*(-45*C7*(k - kmax)**3*
-                   (12*k**3 + 42*k**2*kmax + 49*k*kmax**2 + 14*kmax**3) + 
-                  91*C6*(103*k**4 + 29*k**3*kmax - 57*k**2*kmax**2 + 5*k*kmax**3 + 
-                     10*kmax**4))) + 
-            90090*C6*(15*beta + (0+7*1j)*k)*k**3.5*ArcTanh(Sqrt(k + kmax)/Sqrt(k)) - 
-            45045*C6*k**3.5*((0+15*1j)*beta + 7*k)*
-             Log((315*beta*(-2*Sqrt(k) - (0+1*1j)*Sqrt(-k + kmax) + Sqrt(k + kmax)))/
-               (4.*C6*k**4*((0+15*1j)*beta + 7*k)*(Sqrt(k) - Sqrt(k + kmax)))) - 
-            45045*C6*k**3.5*((0+15*1j)*beta + 7*k)*
-             Log((315*beta*(2*Sqrt(k) + (0+1*1j)*Sqrt(-k + kmax) + Sqrt(k + kmax)))/
-               (4.*C6*k**4*((0+15*1j)*beta + 7*k)*(Sqrt(k) + Sqrt(k + kmax))))))/
-        (1.4189175e7*beta**2*k**2))
+        J_D = 0
 
         return J_D
 
