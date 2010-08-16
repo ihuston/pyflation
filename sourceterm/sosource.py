@@ -15,12 +15,10 @@ import logging
 import time
 import os
 
-from romberg import romb
-from sourceterm import srccython, srcequations
+from sourceterm import srcequations 
 import run_config
 from run_config import _debug
 
-from pudb import set_trace
 
 if not "profile" in __builtins__:
     def profile(f):
