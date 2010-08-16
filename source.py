@@ -26,7 +26,8 @@ import optparse
 from run_config import _debug
 
 def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None, 
-              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None, srcclass=None):
+              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None, 
+              srcclass=None, overwrite=False):
     """Run parallel source integrand and second order calculation."""
     
     id = taskarray["id"]
@@ -77,7 +78,8 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     #get source integrand and save to file
     try:
         filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
-                                                   ntheta=ntheta, numks=numsoks, srcclass=srcclass)
+                                                   ntheta=ntheta, numks=numsoks, srcclass=srcclass,
+                                                   overwrite=overwrite)
         log.info("Source term saved as " + filesaved)
     except Exception:
         log.exception("Error getting source term.")
@@ -108,6 +110,9 @@ def main(argv=None):
     parser.add_option("-f", "--filename", action="store", dest="foresults", 
                       default=run_config.foresults, type="string", 
                       metavar="FILE", help="first order results file, default=%default")
+    parser.add_option("--overwrite", action="store_true", dest="overwrite",
+                      default=run_config.overwrite,  
+                      help="if selected source term files which already exist will be overwritten.")
     
     arraygroup = optparse.OptionGroup(parser, "Task Array Options",
                             "These options specify a task array to work inside. "
@@ -181,7 +186,7 @@ def main(argv=None):
     
     try:
         runsource(fofile=options.foresults, ninit=options.tstart, 
-                  nfinal=options.tend, taskarray=taskarray)
+                  nfinal=options.tend, taskarray=taskarray, overwrite=options.overwrite)
     except Exception:
         log.exception("Error getting source integral!")
         return 1

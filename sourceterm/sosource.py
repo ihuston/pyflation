@@ -103,7 +103,8 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     return src
 
            
-def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, ntheta=513, numks=1025):
+def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, ntheta=513, 
+                          numks=1025, overwrite=False):
     """Calculate and save integrated source term.
     
     Using first order results in the specified model, the source term for second order perturbations 
@@ -178,7 +179,7 @@ def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, n
     
     #Main try block for file IO
     try:
-        sf, sarr, narr = opensourcefile(k, savefile, sourcetype="term")
+        sf, sarr, narr = opensourcefile(k, savefile, sourcetype="term", overwrite=overwrite)
         try:
             # Begin calculation
             if _debug:
@@ -203,7 +204,7 @@ def getsourceandintegrate(m, savefile=None, srcclass=None, ninit=0, nfinal=-1, n
         raise
     return savefile
 
-def opensourcefile(k, filename=None, sourcetype=None):
+def opensourcefile(k, filename=None, sourcetype=None, overwrite=False):
     """Open the source term hdf5 file with filename."""
     import tables
     #Set up file for results
@@ -220,6 +221,18 @@ def opensourcefile(k, filename=None, sourcetype=None):
             source_logger.debug("Source array type: " + sarrname)
     else:
         raise TypeError("Incorrect source type specified!")
+    #Check if file exists and set write flags depending on overwrite option
+    if os.path.isfile(filename):
+        if overwrite:
+            
+            source_logger.info("File %s exists and will be overwritten." % filename)
+            writeflag = "w"
+        else:
+            source_logger.info("File %s exists and results will be appended." % filename)
+            writeflag = "a"
+    else:
+        writeflag = "w"
+    
     #Add compression to files and specify good chunkshape
     filters = tables.Filters(complevel=1, complib="blosc") 
     #cshape = (10,10,10) #good mix of t, k, q values
@@ -228,7 +241,7 @@ def opensourcefile(k, filename=None, sourcetype=None):
     try:
         if _debug:
             source_logger.debug("Trying to open source file " + filename)
-        rf = tables.openFile(filename, "a", "Source term result")
+        rf = tables.openFile(filename, writeflag, "Source term result")
         if not "results" in rf.root:
             if _debug:
                 source_logger.debug("Creating group 'results' in source file.")

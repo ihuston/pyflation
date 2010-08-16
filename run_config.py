@@ -65,6 +65,9 @@ foclass = c.FOCanonicalTwoStage
 srcclass = srcequations.FullSingleFieldSource
 cq = 50
 
+#If sourceterm files already exist should they be overwritten?
+overwrite = True
+
 
 
 ##############################
