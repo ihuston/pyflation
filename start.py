@@ -105,11 +105,12 @@ def source_dict(template_dict, fo_jid=None):
     src_dict["qsublogname"] += "-node-$TASK_ID"
     src_dict["extra_qsub_params"] = ("#$ -t " + src_dict["taskmin"] + "-" +
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
-                                    src_dict["hold_jid_list"])
+                                    src_dict["hold_jid_list"] +
+                                    "\n#$ -r y")
     #Formulate source term command
     src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
-                           "--taskid=$SGE_TASK_ID")
+                           "--taskid=$SGE_TASK_ID  --overwrite")
     return src_dict
 
 def merge_dict(template_dict, src_jid=None):
