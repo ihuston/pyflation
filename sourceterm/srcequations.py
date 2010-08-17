@@ -210,7 +210,7 @@ class SlowRollSource(SourceEquations):
         
         C2 = 3.5 * phidot /(aH2) * onekshape
         
-        C3 = -4.5 * k / (aH2)
+        C3 = -4.5 * phidot * k / (aH2)
         
         C4 = -phidot/(aH2 * k)
         
