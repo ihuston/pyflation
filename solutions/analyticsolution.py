@@ -227,14 +227,19 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         #Set ones array with same shape as self.k
         onekshape = np.ones(k.shape)
         
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        k2 = k**2
+        
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
+        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
         
-        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        C2 = 3.5 * phidot /(aH2) * onekshape
         
-        C3 = -4.5 * phidot / (a*H**2) * k
+        C3 = -4.5 * phidot * k / (aH2) 
         
-        C4 = -phidot/(a*H**2) / k
+        C4 = -phidot / (aH2 * k)
         
         C5 = -1.5 * phidot * onekshape
         
@@ -324,14 +329,19 @@ class ConstantPerturbationSolution(AnalyticSolution):
         #Set ones array with same shape as self.k
         onekshape = np.ones(k.shape)
         
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        k2 = k**2
+        
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
+        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
         
-        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        C2 = 3.5 * phidot /(aH2) * onekshape
         
-        C3 = -4.5 * phidot / (a*H**2) * k
+        C3 = -4.5 * phidot * k / (aH2) 
         
-        C4 = -phidot/(a*H**2) / k
+        C4 = -phidot / (aH2 * k)
         
         C5 = -1.5 * phidot * onekshape
         
@@ -1072,14 +1082,19 @@ class NoPhaseWithEtaSolution(AnalyticSolution):
         #Set ones array with same shape as self.k
         onekshape = np.ones(k.shape)
         
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        k2 = k**2
+        
         #Set C_i values
-        C1 = 1/H**2 * (Vppp + phidot/a**2 * (3 * a**2 * Vpp + 2 * k**2 ))
+        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
         
-        C2 = 3.5 * phidot /((a*H)**2) * onekshape
+        C2 = 3.5 * phidot /(aH2) * onekshape
         
-        C3 = -4.5 / (a*H**2) * k
+        C3 = -4.5 * phidot * k / (aH2) 
         
-        C4 = -phidot/(a*H**2) / k
+        C4 = -phidot / (aH2 * k)
         
         C5 = -1.5 * phidot * onekshape
         
