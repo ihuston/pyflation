@@ -477,7 +477,7 @@ class FullSingleFieldSource(SourceEquations):
         pdot2 = phidot**2
         
         #Calculate Q term
-        Q = 1/H2 * V * phidot + a2 * Vp
+        Q = a2 * (V * phidot + Vp)
       
         #Set C_i values
         C1 = (1/H2 * (Vppp + 3 * phidot * Vpp + 2 * pdot2 * Vp ) 
