@@ -98,35 +98,36 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         kmax = k[-1]
         kmin = k[0]
         
-        j1 = ((alpha**2*C5*(-3840*1j*(k - kmax)**2*kmax*Sqrt(kmax*(-k + kmax)) + 
-            3840*1j*kmax*(k + kmax)**2*Sqrt(kmax*(k + kmax)) - 
-            3840*1j*kmin*(k + kmin)**2*Sqrt(kmin*(k + kmin)) - 
-            60*1j*Sqrt((k - kmin)*kmin)*(15*k**3 - 54*k**2*kmin + 8*k*kmin**2 + 16*kmin**3) - 
-            450*1j*k**4*Pi + 900*1j*k**4*ArcTan(1/Sqrt(-1 + k/kmin))))/(14400.*beta*k)) 
-            
-        j2 = ((alpha**2*C5*(-400*(k - 4*kmax)*(3*k - 2*kmax)*Sqrt(kmax*(-k + kmax)) + 
-            400*Sqrt(kmax*(k + kmax))*(3*k + 2*kmax)*(k + 4*kmax) - 
-            400*(k - 4*kmin)*(3*k - 2*kmin)*Sqrt((k - kmin)*kmin) - 
-            400*Sqrt(kmin*(k + kmin))*(3*k + 2*kmin)*(k + 4*kmin) - 600*k**3*Pi + 
-            1200*k**3*ArcTan(1/Sqrt(-1 + k/kmin)) + 1200*k**3*(ArcSinh(1) + Log(4) + Log(k)) - 
-            1200*k**3*(ArcSinh(1) + Log(8*Sqrt(k)*(Sqrt(kmax) + Sqrt(-k + kmax))*
-                 (Sqrt(kmax) + Sqrt(k + kmax)))) + 
-            1200*k**3*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(14400.*k))
-             
-        j3 = ((alpha**2*C5*(-9*Sqrt(kmax*(-k + kmax))*
-             (15*k**4 + 10*k**3*kmax - 248*k**2*kmax**2 + 336*k*kmax**3 - 128*kmax**4) - 
-            9*Sqrt(kmax*(k + kmax))*(-15*k**4 + 10*k**3*kmax + 248*k**2*kmax**2 + 
-               336*k*kmax**3 + 128*kmax**4) + 
-            9*Sqrt((k - kmin)*kmin)*(15*k**4 + 10*k**3*kmin - 248*k**2*kmin**2 + 
-               336*k*kmin**3 - 128*kmin**4) + 
-            9*Sqrt(kmin*(k + kmin))*(-15*k**4 + 10*k**3*kmin + 248*k**2*kmin**2 + 
-               336*k*kmin**3 + 128*kmin**4) + (135*k**5*Pi)/2. - 
-            135*k**5*ArcTan(1/Sqrt(-1 + k/kmin)) + 135*k**5*(ArcSinh(1) + Log(4) + Log(k)) - 
-            135*k**5*(ArcSinh(1) + Log(8*Sqrt(k)*(Sqrt(kmax) + Sqrt(-k + kmax))*
-                 (Sqrt(kmax) + Sqrt(k + kmax)))) + 
-            135*k**5*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(14400.*beta**2*k))
-        
-        return j1 + j2 + j3
+        J_C = ((alpha**2*C5*(-(Sqrt(2)*k**3*
+              (-10000*beta**2 - (0+15360*1j)*beta*k + 6363*k**2)) - 
+           Sqrt(kmax*(-k + kmax))*
+            ((0+3840*1j)*beta*(k - kmax)**2*kmax + 
+              400*beta**2*(3*k**2 - 14*k*kmax + 8*kmax**2) + 
+              9*(15*k**4 + 10*k**3*kmax - 248*k**2*kmax**2 + 336*k*kmax**3 - 
+                 128*kmax**4)) + Sqrt(kmax*(k + kmax))*
+            ((0+3840*1j)*beta*kmax*(k + kmax)**2 + 
+              400*beta**2*(3*k**2 + 14*k*kmax + 8*kmax**2) - 
+              9*(-15*k**4 + 10*k**3*kmax + 248*k**2*kmax**2 + 336*k*kmax**3 + 
+                 128*kmax**4)) + Sqrt((k - kmin)*kmin)*
+            (-400*beta**2*(3*k**2 - 14*k*kmin + 8*kmin**2) - 
+              (0+60*1j)*beta*(15*k**3 - 54*k**2*kmin + 8*k*kmin**2 + 16*kmin**3) + 
+              9*(15*k**4 + 10*k**3*kmin - 248*k**2*kmin**2 + 336*k*kmin**3 - 
+                 128*kmin**4)) + Sqrt(kmin)*Sqrt(k + kmin)*
+            ((0+-3840*1j)*beta*kmin*(k + kmin)**2 - 
+              400*beta**2*(3*k**2 + 14*k*kmin + 8*kmin**2) + 
+              9*(-15*k**4 + 10*k**3*kmin + 248*k**2*kmin**2 + 336*k*kmin**3 + 
+                 128*kmin**4)) + (15*k**3*(-80*beta**2 - (0+60*1j)*beta*k + 9*k**2)*Pi)/
+            2. + 15*k**3*(80*beta**2 + (0+60*1j)*beta*k - 9*k**2)*
+            ArcTan(Sqrt(kmin/(k - kmin))) - 
+           15*k**3*(80*beta**2 + 9*k**2)*Log(2*(1 + Sqrt(2))*Sqrt(k)) + 
+           k**3*(Sqrt(2)*(-10000*beta**2 - (0+15360*1j)*beta*k + 6363*k**2) + 
+              15*(80*beta**2 + 9*k**2)*Log(2*Sqrt(k)) + 
+              15*(80*beta**2 + 9*k**2)*Log(2*(1 + Sqrt(2))*Sqrt(k))) - 
+           15*k**3*(80*beta**2 + 9*k**2)*Log(2*(Sqrt(kmax) + Sqrt(-k + kmax))) - 
+           15*k**3*(80*beta**2 + 9*k**2)*Log(2*(Sqrt(kmax) + Sqrt(k + kmax))) + 
+           15*k**3*(80*beta**2 + 9*k**2)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/
+       (14400.*beta**2*k))
+        return J_C
 
     def J_D(self, k, alpha, beta, C6, C7):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
