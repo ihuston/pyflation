@@ -11,13 +11,17 @@ import numpy as np
 import analyticsolution
 import calcedsolution
 import fixtures
+import run_config
 
-def compare_one_step(m, srcclass, nix, analytic_class=None, calced_class=None):
+def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=None):
     """
     Compare the analytic and calculated solutions for equations from `srclass` using the 
     results from `m` at the timestep `nix`. 
     """
     fx = fixtures.fixture_from_model(m)
+    
+    if srcclass is None:
+        srcclass = run_config.srcclass
     
     if analytic_class is None:
         analytic_class = analyticsolution.NoPhaseBunchDaviesSolution
