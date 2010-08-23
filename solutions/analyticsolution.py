@@ -39,13 +39,17 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
     
     def __init__(self, *args, **kwargs):
         super(NoPhaseBunchDaviesSolution, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
         
     
-    def J_A(self, k, alpha, C1, C2):
+    def J_A(self, k, alpha, beta, Cterms):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
         kmin = k[0]
         kmax = k[-1]
+        
+        C1 = Cterms[0]
+        C2 = Cterms[1]
         
         J_A = ((alpha ** 2 * (-(Sqrt(kmax * (-k + kmax)) * 
               (80 * C1 * (3 * k ** 2 - 14 * k * kmax + 8 * kmax ** 2) + 
@@ -65,10 +69,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_A
     
-    def J_B(self, k, alpha, C3, C4):
+    def J_B(self, k, alpha, beta, Cterms):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
         kmin = k[0]
+        
+        C3 = Cterms[2]
+        C4 = Cterms[3]
         
         J_B = ((alpha ** 2 * (Sqrt(kmax * (k + kmax)) * (112 * C3 * 
                (105 * k ** 4 + 250 * k ** 3 * kmax - 104 * k ** 2 * kmax ** 2 - 48 * k * kmax ** 3 + 96 * kmax ** 4) + 
@@ -93,10 +100,12 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_B
     
-    def J_C(self, k, alpha, beta, C5):
+    def J_C(self, k, alpha, beta, Cterms):
         """Second method for J_C"""
         kmax = k[-1]
         kmin = k[0]
+        
+        C5 = Cterms[4]
         
         J_C = (-(alpha**2*C5*(Sqrt(2)*k*
               (-10000*beta**2*k**2 - (0+15360*1j)*beta*k**3 + 
@@ -162,10 +171,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         (14400.*beta**2*k))
         return J_C
 
-    def J_D(self, k, alpha, beta, C6, C7):
+    def J_D(self, k, alpha, beta, Cterms):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
         kmax = k[-1]
         kmin = k[0]
+        
+        C6 = Cterms[5]
+        C7 = Cterms[6]
         
         j1 = ((alpha ** 2 * (-240 * Sqrt((k + kmax) / kmax) * 
              (40 * C6 * (24 * k ** 3 + 9 * k ** 2 * kmax + 2 * k * kmax ** 2 - 4 * kmax ** 3) + 
@@ -237,29 +249,17 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         
 
         return j1 + j2 + j3
-
-    def full_source_from_model(self, m, nix):
-        """Use the data from a model at a timestep nix to calculate the full source term S."""
-        try:
-            #Get background values
-            phi, phidot, H = m.yresult[nix, 0:3, 0]
-            a = m.ainit*np.exp(m.tresult[nix])
-        except AttributeError:
-            raise
-        
-        if np.any(np.isnan(phi)):
-            raise AttributeError("Background values not available for this timestep.")
-        
-        #Get potentials
-        V, Vp, Vpp, Vppp = m.potentials(np.array([phi]))
-        
-        #Set alpha and beta
-        alpha = 1/(a*np.sqrt(2))
-        beta = a*H
-        
+    
+    def calculate_Cterms(self, bgvars, a, potentials):
+        """
+        Calculate the constant terms needed for source integration.
+        """
         k = self.srceqns.k
+        phi, phidot, H = bgvars                
         #Set ones array with same shape as self.k
         onekshape = np.ones(k.shape)
+        
+        V, Vp, Vpp, Vppp = potentials
         
         a2 = a**2
         H2 = H**2
@@ -281,11 +281,39 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         
         C7 = - phidot / k
         
+        Cterms = [C1, C2, C3, C4, C5, C6, C7]
+        return Cterms
+        
+
+    def full_source_from_model(self, m, nix):
+        """Use the data from a model at a timestep nix to calculate the full source term S."""
+        try:
+            #Get background values
+            bgvars = m.yresult[nix, 0:3, 0]
+            a = m.ainit*np.exp(m.tresult[nix])
+        except AttributeError:
+            raise
+        
+        if np.any(np.isnan(bgvars[0])):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        
+        #Set alpha and beta
+        alpha = 1/(a*np.sqrt(2))
+        beta = a*bgvars[2]
+        
+        k = self.srceqns.k
+        
+        #Get potentials
+        potentials = m.potentials(np.array([bgvars[0]]))
+        
+        Cterms = self.calculate_Cterms(bgvars, a, potentials)
+        
         #Get component integrals
-        J_A = self.J_A(k, alpha, C1, C2)
-        J_B = self.J_B(k, alpha, C3, C4)
-        J_C = self.J_C(k, alpha, beta, C5)
-        J_D = self.J_D(k, alpha, beta, C6, C7)
+        J_A = self.J_A(k, alpha, beta, Cterms)
+        J_B = self.J_B(k, alpha, beta, Cterms)
+        J_C = self.J_C(k, alpha, beta, Cterms)
+        J_D = self.J_D(k, alpha, beta, Cterms)
         
         src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
         return src

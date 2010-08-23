@@ -15,6 +15,8 @@ class CalcedSolution(GeneralSolution):
     
     def __init__(self, *args, **kwargs):
         super(CalcedSolution, self).__init__(*args, **kwargs)
+        self.calculate_Cterms = self.srceqns.calculate_Cterms
+        self.J_terms = self.J_terms
         
     def preconvolution_calced(self, dp1_fullk, dp1dot_fullk):
         """Return calculates solution for pre-convolution terms."""
