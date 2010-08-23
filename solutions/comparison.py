@@ -71,6 +71,6 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     for afunc, cfunc in zip(asol.J_terms, csol.J_terms):
         analytic_result = afunc(analytic_Cterms)
         calced_result = cfunc(calced_Cterms)
-        results += (analytic_result, calced_result)
+        results += [(analytic_result, calced_result)]
         
     return results
