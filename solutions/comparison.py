@@ -42,7 +42,8 @@ def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=No
     
     return difference, error, analytic_result, calced_result, asol.srceqns.k
 
-def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=None):
+def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=None, 
+                    only_calced_Cterms=False):
     """
     Compare the analytic and calculated results for each J_term using the results 
     from model `m` at the timestep `nix`
@@ -82,8 +83,12 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
           
     theta_terms = csol.srceqns.getthetaterms(dp1, dp1dot)
     
-    analytic_Cterms = asol.calculate_Cterms(bgvars, a, potentials)
+    
     calced_Cterms = csol.calculate_Cterms(bgvars, a, potentials) 
+    if only_calced_Cterms:
+        analytic_Cterms = calced_Cterms
+    else:
+        analytic_Cterms = asol.calculate_Cterms(bgvars, a, potentials)
     
     results = []
     
