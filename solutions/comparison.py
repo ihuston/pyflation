@@ -63,14 +63,35 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     #Need to make analytic solution use 128 bit floats to avoid overruns
     asol.srceqns.k = np.float128(asol.srceqns.k)
     
-    analytic_Cterms = asol.calculate_Cterms(m, nix)
-    calced_Cterms = csol.calculate_Cterms(m, nix) 
+    #Get background values
+    bgvars = m.yresult[nix, 0:3, 0]
+    a = m.ainit*np.exp(m.tresult[nix])
+    #Get potentials
+    potentials = m.potentials(np.array([bgvars[0]]))
+    
+    #Set alpha and beta
+    alpha = 1/(a*np.sqrt(2))
+    beta = a*bgvars[2]
+    
+    dp1 = csol.get_dp1(csol.srceqns.fullk, alpha)
+    dp1dot = csol.get_dp1dot(csol.srceqns.fullk, alpha, beta)
+    
+    #Calculate dphi(q) and dphi(k-q)
+    dp1_q = dp1[:csol.srceqns.k.shape[-1]]
+    dp1dot_q = dp1dot[:csol.srceqns.k.shape[-1]]  
+          
+    theta_terms = csol.srceqns.getthetaterms(dp1, dp1dot)
+    
+    analytic_Cterms = asol.calculate_Cterms(bgvars, a, potentials)
+    calced_Cterms = csol.calculate_Cterms(bgvars, a, potentials) 
     
     results = []
     
     for afunc, cfunc in zip(asol.J_terms, csol.J_terms):
-        analytic_result = afunc(analytic_Cterms)
-        calced_result = cfunc(calced_Cterms)
-        results += [(analytic_result, calced_result)]
+        analytic_result = afunc(asol.srceqns.k, alpha, beta, analytic_Cterms)
+        calced_result = cfunc(theta_terms, dp1_q, dp1dot_q, calced_Cterms)
+        diff = analytic_result - calced_result
+        err = np.abs(diff)/np.abs(analytic_result)
+        results += [(diff, err, analytic_result, calced_result)]
         
     return results
