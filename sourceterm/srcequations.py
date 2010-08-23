@@ -241,136 +241,136 @@ class FullSingleFieldSource(SourceEquations):
         """Class for slow roll source term equations"""
         super(FullSingleFieldSource, self).__init__(*args, **kwargs)
     
-    def J_A1(self, preaterm, dp1, C1, C2):
+    def J_A1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
-        C1k = C1[..., np.newaxis]
-        C2k = C2[..., np.newaxis]
-        aterm = (C1k*q**2 + C2k*q**2*q**2) * dp1 * preaterm
+        C1k = Cterms[0][..., np.newaxis]
+        C2k = Cterms[1][..., np.newaxis]
+        aterm = (C1k*q**2 + C2k*q**2*q**2) * dp1 * preterms[0]
         J_A = romb(aterm, self.deltak)
         return J_A
     
-    def J_A2(self, preaterm, dpdot1, C17, C18):
+    def J_A2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_A2 which is the integral for A in terms of constants C17 and C18."""
                 
         q = self.k
-        C17k = C17[..., np.newaxis]
-        C18k = C18[..., np.newaxis]
-        aterm = (C17k*q**2 + C18k*q**2*q**2) * dpdot1 * preaterm
+        C17k = Cterms[16][..., np.newaxis]
+        C18k = Cterms[17][..., np.newaxis]
+        aterm = (C17k*q**2 + C18k*q**2*q**2) * dp1dot * preterms[0]
         J_A2 = romb(aterm, self.deltak)
         return J_A2
     
-    def J_B1(self, prebterm, dp1, C3, C4):
+    def J_B1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
-        C3k = C3[..., np.newaxis]
-        C4k = C4[..., np.newaxis]
-        bterm = (C3k*q**2*q + C4k*q**2*q**2*q) * dp1 * prebterm
+        C3k = Cterms[2][..., np.newaxis]
+        C4k = Cterms[3][..., np.newaxis]
+        bterm = (C3k*q**2*q + C4k*q**2*q**2*q) * dp1 * preterms[1]
         J_B1 = romb(bterm, self.deltak)
         return J_B1
     
-    def J_B2(self, prebterm, dpdot1, C19):
+    def J_B2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_B2 which is the integral for B in terms of constant C19."""
                 
         q = self.k
-        C19k = C19[..., np.newaxis]
-        bterm = (C19k*q**2*q) * dpdot1 * prebterm
+        C19k = Cterms[18][..., np.newaxis]
+        bterm = (C19k*q**2*q) * dp1dot * preterms[1]
         J_B2 = romb(bterm, self.deltak)
         return J_B2
     
-    def J_C1(self, precterm, dp1dot, C5):
+    def J_C1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
-        C5k = C5[..., np.newaxis]
-        cterm = (C5k*q**2) * dp1dot * precterm
+        C5k = Cterms[4][..., np.newaxis]
+        cterm = (C5k*q**2) * dp1dot * preterms[2]
         J_C = romb(cterm, self.deltak)
         return J_C
     
-    def J_C2(self, precterm, dp1, C20):
+    def J_C2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_C which is the integral for C in terms of constants C20."""
                 
         q = self.k
-        C20k = C20[..., np.newaxis]
-        cterm = (C20k*q**2) * dp1 * precterm
+        C20k = Cterms[19][..., np.newaxis]
+        cterm = (C20k*q**2) * dp1 * preterms[2]
         J_C2 = romb(cterm, self.deltak)
         return J_C2
     
-    def J_D1(self, predterm, dp1dot, C6, C7):
+    def J_D1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
-        C6k = C6[..., np.newaxis]
-        C7k = C7[..., np.newaxis]
-        dterm = (C6k*q + C7k*q**2*q) * dp1dot * predterm
+        C6k = Cterms[5][..., np.newaxis]
+        C7k = Cterms[6][..., np.newaxis]
+        dterm = (C6k*q + C7k*q**2*q) * dp1dot * preterms[3]
         J_D = romb(dterm, self.deltak)
         return J_D
     
-    def J_D2(self, predterm, dp1, C21):
+    def J_D2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_D which is the integral for D in terms of constant C21."""
                 
         q = self.k
-        C21k = C21[..., np.newaxis]
-        dterm = (C21k*q) * dp1 * predterm
+        C21k = Cterms[20][..., np.newaxis]
+        dterm = (C21k*q) * dp1 * preterms[3]
         J_D2 = romb(dterm, self.deltak)
         return J_D2
     
-    def J_E1(self, preeterm, dp1, C8, C9):
+    def J_E1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_E1 which is the integral for E in terms of constants C8 and C9."""
                 
         q = self.k
-        C8k = C8[..., np.newaxis]
-        C9k = C9[..., np.newaxis]
-        eterm = (C8k*q**2 + C9k*q**2*q**2) * dp1 * preeterm
+        C8k = Cterms[7][..., np.newaxis]
+        C9k = Cterms[8][..., np.newaxis]
+        eterm = (C8k*q**2 + C9k*q**2*q**2) * dp1 * preterms[4]
         J_E1 = romb(eterm, self.deltak)
         return J_E1
     
-    def J_E2(self, preeterm, dp1dot, C10):
+    def J_E2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_E2 which is the integral for E in terms of constant C10."""
                 
         q = self.k
-        C10k = C10[..., np.newaxis]
-        eterm = (C10k*q**2) * dp1dot * preeterm
+        C10k = Cterms[9][..., np.newaxis]
+        eterm = (C10k*q**2) * dp1dot * preterms[4]
         J_E2 = romb(eterm, self.deltak)
         return J_E2
     
-    def J_F1(self, prefterm, dp1, C11, C12):
+    def J_F1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_F1 which is the integral for F in terms of constants C11 and C12."""
                 
         q = self.k
-        C11k = C11[..., np.newaxis]
-        C12k = C12[..., np.newaxis]
-        fterm = (C11k*q**2 + C12k*q**2*q**2) * dp1 * prefterm
+        C11k = Cterms[10][..., np.newaxis]
+        C12k = Cterms[11][..., np.newaxis]
+        fterm = (C11k*q**2 + C12k*q**2*q**2) * dp1 * preterms[5]
         J_F1 = romb(fterm, self.deltak)
         return J_F1
     
-    def J_F2(self, prefterm, dpdot1, C13):
+    def J_F2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_F2 which is the integral for F in terms of constant C13."""
                 
         q = self.k
-        C13k = C13[..., np.newaxis]
-        fterm = (C13k*q**2) * dpdot1 * prefterm
+        C13k = Cterms[12][..., np.newaxis]
+        fterm = (C13k*q**2) * dp1dot * preterms[5]
         J_F2 = romb(fterm, self.deltak)
         return J_F2
     
-    def J_G1(self, pregterm, dp1, C14, C15):
+    def J_G1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_G1 which is the integral for G in terms of constants C14 and C15."""
                 
         q = self.k
-        C14k = C14[..., np.newaxis]
-        C15k = C15[..., np.newaxis]
-        gterm = (C14k*q**2 + C15k*q**2*q**2) * dp1 * pregterm
+        C14k = Cterms[13][..., np.newaxis]
+        C15k = Cterms[14][..., np.newaxis]
+        gterm = (C14k*q**2 + C15k*q**2*q**2) * dp1 * preterms[6]
         J_G1 = romb(gterm, self.deltak)
         return J_G1
     
-    def J_G2(self, pregterm, dpdot1, C16):
+    def J_G2(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_G2 which is the integral for G in terms of constant C16."""
                 
         q = self.k
-        C16k = C16[..., np.newaxis]
-        gterm = (C16k*q**2) * dpdot1 * pregterm
+        C16k = Cterms[15][..., np.newaxis]
+        gterm = (C16k*q**2) * dp1dot * preterms[6]
         J_G1 = romb(gterm, self.deltak)
         return J_G1
     
@@ -528,22 +528,24 @@ class FullSingleFieldSource(SourceEquations):
         C20 = Q / (aH2) * (-2 + pdot2*(1/(2*a*H) - 0.25)) * onekshape
         
         C21 = 2 * Q / (aH2) * k 
+        
+        Cterms = [C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21]
                 
         #Get component integrals
-        J_A1 = self.J_A1(theta_terms[0], dp1_q, C1, C2)
-        J_A2 = self.J_A2(theta_terms[0], dp1dot_q, C17, C18)
-        J_B1 = self.J_B1(theta_terms[1], dp1_q, C3, C4)
-        J_B2 = self.J_B2(theta_terms[1], dp1dot_q, C19)
-        J_C1 = self.J_C1(theta_terms[2], dp1dot_q, C5)
-        J_C2 = self.J_C2(theta_terms[2], dp1_q, C20)
-        J_D1 = self.J_D1(theta_terms[3], dp1dot_q, C6, C7)
-        J_D2 = self.J_D2(theta_terms[3], dp1_q, C21)
-        J_E1 = self.J_E1(theta_terms[4], dp1_q, C8, C9)
-        J_E2 = self.J_E2(theta_terms[4], dp1dot_q, C10)
-        J_F1 = self.J_F1(theta_terms[5], dp1_q, C11, C12)
-        J_F2 = self.J_F2(theta_terms[5], dp1dot_q, C13)
-        J_G1 = self.J_G1(theta_terms[6], dp1_q, C14, C15)
-        J_G2 = self.J_G2(theta_terms[6], dp1dot_q, C16)
+        J_A1 = self.J_A1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_A2 = self.J_A2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_B1 = self.J_B1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_B2 = self.J_B2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_C1 = self.J_C1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_C2 = self.J_C2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_D1 = self.J_D1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_D2 = self.J_D2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_E1 = self.J_E1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_E2 = self.J_E2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_F1 = self.J_F1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_F2 = self.J_F2(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_G1 = self.J_G1(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_G2 = self.J_G2(theta_terms, dp1_q, dp1dot_q, Cterms)
         
         
         
