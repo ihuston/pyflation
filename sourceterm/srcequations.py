@@ -590,6 +590,10 @@ class OldSlowRollSource(SourceEquations):
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
         super(OldSlowRollSource, self).__init__(*args, **kwargs)
+        self.J_terms = []
+        
+    def calculate_Cterms(self):
+        pass
         
     def getthetaterms(self,dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
