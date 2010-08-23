@@ -152,6 +152,42 @@ class SlowRollSource(SourceEquations):
             theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
         return theta_terms
 
+    def calculate_Cterms(self, bgvars, a, potentials):
+        """
+        Calculate the C terms needed for source term integration.
+        """
+        #Unpack variables
+        phi, phidot, H = bgvars
+        k = self.k
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(k.shape)
+        
+        #Get potentials
+        V, Vp, Vpp, Vppp = potentials
+        
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        k2 = k**2
+              
+        #Set C_i values
+        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
+        
+        C2 = 3.5 * phidot /(aH2) * onekshape
+        
+        C3 = -4.5 * phidot * k / (aH2)
+        
+        C4 = -phidot/(aH2 * k)
+        
+        C5 = -1.5 * phidot * onekshape
+        
+        C6 = 2 * phidot * k
+        
+        C7 = - phidot / k
+        
+        Cterms = [C1, C2, C3, C4, C5, C6, C7]
+        return Cterms
+
     def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
         """Return integrated slow roll source term.
     
@@ -186,41 +222,17 @@ class SlowRollSource(SourceEquations):
         ----------
         Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
         """
-            #Unpack variables
-        phi, phidot, H = bgvars
-        k = self.k
+            
 
         #Calculate dphi(q) and dphi(k-q)
         dp1_q = dp1[:self.k.shape[-1]]
         dp1dot_q = dp1dot[:self.k.shape[-1]]  
-        #Set ones array with same shape as self.k
-        onekshape = np.ones(k.shape)
+        
         
         theta_terms = self.getthetaterms(dp1, dp1dot)
-        #Get potentials
-        V, Vp, Vpp, Vppp = potentials
         
-        a2 = a**2
-        H2 = H**2
-        aH2 = a2*H2
-        k2 = k**2
-              
-        #Set C_i values
-        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
+        Cterms = self.calculate_Cterms(bgvars, a, potentials)
         
-        C2 = 3.5 * phidot /(aH2) * onekshape
-        
-        C3 = -4.5 * phidot * k / (aH2)
-        
-        C4 = -phidot/(aH2 * k)
-        
-        C5 = -1.5 * phidot * onekshape
-        
-        C6 = 2 * phidot * k
-        
-        C7 = - phidot / k
-        
-        Cterms = [C1, C2, C3, C4, C5, C6, C7]
         #Get component integrals
         J_A = self.J_A(theta_terms, dp1_q, dp1dot_q, Cterms)
         J_B = self.J_B(theta_terms, dp1_q, dp1dot_q, Cterms)
@@ -429,52 +441,19 @@ class FullSingleFieldSource(SourceEquations):
             
         return theta_terms
 
-    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
-        """Return unintegrated slow roll source term.
-    
-        The source term before integration is calculated here using the slow roll
-        approximation. This function follows the revised version of Eq (5.8) in 
-        Malik 06 (astro-ph/0610864v5).
-        
-        Parameters
-        ----------
-        bgvars: tuple
-                Tuple of background field values in the form `(phi, phidot, H)`
-        
-        a: float
-           Scale factor at the current timestep, `a = ainit*exp(n)`
-        
-        potentials: tuple
-                    Tuple of potential values in the form `(U, dU, dU2, dU3)`
-                
-        dp1: array_like
-             Array of known dp1 values
-                 
-        dp1dot: array_like
-                Array of dpdot1 values
-                 
-        
-        Returns
-        -------
-        src_integrand: array_like
-            Array containing the unintegrated source terms for all k and q modes.
-            
-        References
-        ----------
-        Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+    def calculate_Cterms(self, bgvars, a, potentials,):
         """
-            #Unpack variables
+        Calculate the value of the constants needed for source term integration.
+        
+        """
+        #Unpack variables
         phi, phidot, H = bgvars
         k = self.k
-        #Calculate dphi(q) and dphi(k-q)
-        dp1_q = dp1[:self.k.shape[-1]]
-        dp1dot_q = dp1dot[:self.k.shape[-1]]  
-        #Set ones array with same shape as self.k
-        onekshape = np.ones(self.k.shape)
-        
-        theta_terms = self.getthetaterms(dp1, dp1dot)
         #Get potentials
         V, Vp, Vpp, Vppp = potentials
+        
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
         
         a2 = a**2
         H2 = H**2
@@ -530,6 +509,53 @@ class FullSingleFieldSource(SourceEquations):
         C21 = 2 * Q / (aH2) * k 
         
         Cterms = [C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21]
+        
+        return Cterms
+        
+
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
+        """Return unintegrated slow roll source term.
+    
+        The source term before integration is calculated here using the slow roll
+        approximation. This function follows the revised version of Eq (5.8) in 
+        Malik 06 (astro-ph/0610864v5).
+        
+        Parameters
+        ----------
+        bgvars: tuple
+                Tuple of background field values in the form `(phi, phidot, H)`
+        
+        a: float
+           Scale factor at the current timestep, `a = ainit*exp(n)`
+        
+        potentials: tuple
+                    Tuple of potential values in the form `(U, dU, dU2, dU3)`
+                
+        dp1: array_like
+             Array of known dp1 values
+                 
+        dp1dot: array_like
+                Array of dpdot1 values
+                 
+        
+        Returns
+        -------
+        src_integrand: array_like
+            Array containing the unintegrated source terms for all k and q modes.
+            
+        References
+        ----------
+        Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+        """
+        
+        #Calculate dphi(q) and dphi(k-q)
+        dp1_q = dp1[:self.k.shape[-1]]
+        dp1dot_q = dp1dot[:self.k.shape[-1]]  
+        
+        
+        theta_terms = self.getthetaterms(dp1, dp1dot)
+        
+        Cterms = self.calculate_Cterms(bgvars, a, potentials)
                 
         #Get component integrals
         J_A1 = self.J_A1(theta_terms, dp1_q, dp1dot_q, Cterms)
