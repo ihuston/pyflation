@@ -72,6 +72,7 @@ class SlowRollSource(SourceEquations):
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
         super(SlowRollSource, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
         
     def J_A(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
@@ -111,6 +112,8 @@ class SlowRollSource(SourceEquations):
         dterm = (C6k*q + C7k*q**3) * dp1dot * preterms[3]
         J_D = romb(dterm, self.deltak)
         return J_D
+    
+    
     
     def getthetaterms(self, dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
