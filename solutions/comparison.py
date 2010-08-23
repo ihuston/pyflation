@@ -65,6 +65,7 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     asol.srceqns.k = np.float128(asol.srceqns.k)
     #Test letting calculated version use float128s
     csol.srceqns.k = np.float128(csol.srceqns.k)
+    csol.srceqns.fullk = np.float128(csol.srceqns.fullk)
         
     #Get background values
     bgvars = m.yresult[nix, 0:3, 0]
