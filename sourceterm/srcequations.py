@@ -73,42 +73,42 @@ class SlowRollSource(SourceEquations):
         """Class for slow roll source term equations"""
         super(SlowRollSource, self).__init__(*args, **kwargs)
         
-    def J_A(self, preaterm, dp1, C1, C2):
+    def J_A(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
                 
         q = self.k
-        C1k = C1[..., np.newaxis]
-        C2k = C2[..., np.newaxis]
-        aterm = (C1k*q**2 + C2k*q**4) * dp1 * preaterm
+        C1k = Cterms[0][..., np.newaxis]
+        C2k = Cterms[1][..., np.newaxis]
+        aterm = (C1k*q**2 + C2k*q**4) * dp1 * preterms[0]
         J_A = romb(aterm, self.deltak)
         return J_A
     
-    def J_B(self, prebterm, dp1, C3, C4):
+    def J_B(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
                 
         q = self.k
-        C3k = C3[..., np.newaxis]
-        C4k = C4[..., np.newaxis]
-        bterm = (C3k*q**3 + C4k*q**5) * dp1 * prebterm
+        C3k = Cterms[2][..., np.newaxis]
+        C4k = Cterms[3][..., np.newaxis]
+        bterm = (C3k*q**3 + C4k*q**5) * dp1 * preterms[1]
         J_B = romb(bterm, self.deltak)
         return J_B
     
-    def J_C(self, precterm, dp1dot, C5):
+    def J_C(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_C which is the integral for C in terms of constants C5."""
                 
         q = self.k
-        C5k = C5[..., np.newaxis]
-        cterm = (C5k*q**2) * dp1dot * precterm
+        C5k = Cterms[4][..., np.newaxis]
+        cterm = (C5k*q**2) * dp1dot * preterms[2]
         J_C = romb(cterm, self.deltak)
         return J_C
     
-    def J_D(self, predterm, dp1dot, C6, C7):
+    def J_D(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
                 
         q = self.k
-        C6k = C6[..., np.newaxis]
-        C7k = C7[..., np.newaxis]
-        dterm = (C6k*q + C7k*q**3) * dp1dot * predterm
+        C6k = Cterms[5][..., np.newaxis]
+        C7k = Cterms[6][..., np.newaxis]
+        dterm = (C6k*q + C7k*q**3) * dp1dot * preterms[3]
         J_D = romb(dterm, self.deltak)
         return J_D
     
@@ -219,12 +219,13 @@ class SlowRollSource(SourceEquations):
         C6 = 2 * phidot * k
         
         C7 = - phidot / k
-                
+        
+        Cterms = [C1, C2, C3, C4, C5, C6, C7]
         #Get component integrals
-        J_A = self.J_A(theta_terms[0], dp1_q, C1, C2)
-        J_B = self.J_B(theta_terms[1], dp1_q, C3, C4)
-        J_C = self.J_C(theta_terms[2], dp1dot_q, C5)
-        J_D = self.J_D(theta_terms[3], dp1dot_q, C6, C7)
+        J_A = self.J_A(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_B = self.J_B(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_C = self.J_C(theta_terms, dp1_q, dp1dot_q, Cterms)
+        J_D = self.J_D(theta_terms, dp1_q, dp1dot_q, Cterms)
         
         
         src = 1/((2*np.pi)**2 ) * (J_A + J_B + J_C + J_D)
