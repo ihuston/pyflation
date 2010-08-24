@@ -15,7 +15,7 @@ if not "profile" in __builtins__:
         return f
 
 def klessq(k, q, theta):
-    """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
+    """Return the scalar magnitude of k^i - q^i squared, where theta is angle between vectors.
     
     Parameters
     ----------
@@ -32,7 +32,7 @@ def klessq(k, q, theta):
     -------
     klessq: array_like
             len(q)*len(theta) array of values for
-            |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
+            |k^i - q^i|^2 = (k^2 + q^2 - 2kq cos(theta))
     """
     return k**2+q[..., np.newaxis]**2-2*k*np.outer(q,np.cos(theta))
 
