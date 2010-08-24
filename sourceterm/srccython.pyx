@@ -49,7 +49,12 @@ cpdef double klessq2(int kix, int qix, double theta, double kquot):
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
     cdef double res
+    
     res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*cos(theta)) - kquot
+    if qix==0 and theta==0.0:
+        print kix, qix, theta, kquot
+        print (kquot+kix)**2, (kquot+qix)**2, - 2*(kquot + kix)*(kquot + qix)*cos(theta)
+        print res
     return res
 
 def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
