@@ -100,6 +100,9 @@ cpdef interpdps2(object dp1_obj,  object dp1dot_obj,
     for r in range(rmax):
         for t in range(tmax):
             p = klessq2(kix, r, theta[t], kquot)
+            if r==0 and t==0:
+                print kix, r, theta[t], kquot
+                print p
             if p >= 0.0:
                 #get floor and ceiling (cast as ints)
                 fp = <int> floor(p)
