@@ -108,9 +108,15 @@ cpdef interpdps2(object dp1_obj,  object dp1dot_obj,
                     pquotient = 0.0
                 else:
                     pquotient = (p - fp)/(cp - fp)
+                #debug
+                
                 #Save results
                 dpres[0,r,t] = dp1[fp] + pquotient*(dp1[cp]-dp1[fp])
                 dpres[1,r,t] = dp1dot[fp] + pquotient*(dp1dot[cp]-dp1dot[fp])
+                if r==0 and t==0:
+                    print p, fp, cp, pquotient
+                    print dp1[fp], dp1[cp]
+                    print dpres[0,r,t]                    
             else:
                 dpres[0,r,t] = 0
                 dpres[1,r,t] = 0
