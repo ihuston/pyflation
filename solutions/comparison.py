@@ -40,7 +40,10 @@ def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=No
     difference = analytic_result - calced_result
     error = np.abs(difference)/np.abs(analytic_result)
     
-    return difference, error, analytic_result, calced_result, asol.srceqns.k
+    result = dict(difference=difference, error=error,
+                  analytic_result=analytic_result, calced_result=calced_result,
+                  k=asol.srceqns.k)
+    return result
 
 def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=None, 
                     only_calced_Cterms=False):

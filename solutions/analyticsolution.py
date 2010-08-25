@@ -382,5 +382,5 @@ class SimpleInverseSolution(AnalyticSolution):
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
-        return super(NoPhaseBunchDaviesSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
+        return super(SimpleInverseSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
     
