@@ -418,7 +418,7 @@ class FullSingleFieldSource(SourceEquations):
         cos2sinth = np.cos(self.theta)*cossinth
         sin3th = sinth*sinth*sinth
         
-        theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]])
+        theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
         lenq = len(self.k)
         for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
@@ -622,7 +622,7 @@ class OldSlowRollSource(SourceEquations):
     
         sinth = np.sin(self.theta)
         cossinth = np.cos(self.theta)*np.sin(self.theta)
-        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]])
+        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
         lenq = len(self.k)
         
         for n in xrange(len(self.k)):
