@@ -309,7 +309,7 @@ class SimpleInverseSolution(AnalyticSolution):
         C1 = Cterms[0]
         C2 = Cterms[1]
         
-        J_A = 2*C1*(-0.5*k + kmax - kmin**2/(2*k)) + 2*C2*(-1/12*k**3 + kmax**2/3 - kmin**4/(4*k))
+        J_A = 2*C1*(-0.5*k + kmax - kmin**2/(2*k)) + 2*C2*(-1/12*k**3 + kmax**3/3 - kmin**4/(4*k))
         return J_A
     
     def J_B(self, k, Cterms, **kwargs):
