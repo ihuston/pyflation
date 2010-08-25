@@ -307,7 +307,7 @@ class SimpleInverseSolution(AnalyticSolution):
         if n == 1:
             J_general = 2*C*(1/n * k**(n-1) - np.log(k) + np.log(kmax) - kmin**n/(k*n))
         else:
-            J_general = 2*C*(1/(n*(n-1))*k**(n-1) + kmax**(n-1)/(n-1) - kmin**n/(k*n))
+            J_general = 2*C*(-1/(n*(n-1))*k**(n-1) + kmax**(n-1)/(n-1) - kmin**n/(k*n))
         return J_general
     
     def J_general_Btype(self, k, C, n):
