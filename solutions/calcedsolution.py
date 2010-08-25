@@ -86,3 +86,24 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         
         return super(NoPhaseBunchDaviesCalced, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
 
+class SimpleInverseCalced(CalcedSolution):
+    """Calced solution using a simple inverse as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1(x) = 1/x 
+    \dN{\delta\varphi_1} = 1/x 
+    """
+        
+    def __init__(self, *args, **kwargs):
+        super(SimpleInverseCalced, self).__init__(*args, **kwargs)
+        
+    def get_dp1(self, k, **kwargs):
+        """Get dp1 for a certain value of alpha and beta."""
+        dp1 = 1/k + 0*1j
+        return dp1
+    
+    def get_dp1dot(self, k, **kwargs):
+        """Get dp1dot for a certain value of alpha and beta."""
+        dp1dot = 1/k + 0*1j
+        return dp1dot
+    
