@@ -43,7 +43,7 @@ class AnalyticSolution(GeneralSolution):
         potentials = m.potentials(np.array([bgvars[0]]))
         Cterms = self.calculate_Cterms(bgvars, a, potentials)
         
-        results = self.J_terms[0](k, Cterms, **kwargs)
+        results = np.complex256(self.J_terms[0](k, Cterms, **kwargs))
         #Get component integrals
         for term in self.J_terms[1:]:
             results += term(k, Cterms, **kwargs)
