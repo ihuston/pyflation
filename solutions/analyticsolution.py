@@ -27,6 +27,29 @@ class AnalyticSolution(GeneralSolution):
         """Given a fixture and a cosmomodels model instance, initialises an AnalyticSolution class instance.
         """
         super(AnalyticSolution, self).__init__(*args, **kwargs)
+        self.J_terms = []
+        
+    def full_source_from_model(self, m, nix, **kwargs):
+        """Use the data from a model at a timestep nix to calculate the full source term S."""
+        #Get background values
+        bgvars = m.yresult[nix, 0:3, 0]
+        a = m.ainit*np.exp(m.tresult[nix])
+        
+        if np.any(np.isnan(bgvars[0])):
+            raise AttributeError("Background values not available for this timestep.")
+                       
+        k = self.srceqns.k
+                #Get potentials
+        potentials = m.potentials(np.array([bgvars[0]]))
+        Cterms = self.calculate_Cterms(bgvars, a, potentials)
+        
+        results = self.J_terms[0](k, Cterms, **kwargs)
+        #Get component integrals
+        for term in self.J_terms[1:]:
+            results += term(k, Cterms, **kwargs)
+                
+        src = 1 / ((2*np.pi)**2) * results
+        return src
     
     
 class NoPhaseBunchDaviesSolution(AnalyticSolution):
@@ -244,34 +267,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
     def full_source_from_model(self, m, nix):
         """Use the data from a model at a timestep nix to calculate the full source term S."""
-        try:
-            #Get background values
-            bgvars = m.yresult[nix, 0:3, 0]
-            a = m.ainit*np.exp(m.tresult[nix])
-        except AttributeError:
-            raise
-        
-        if np.any(np.isnan(bgvars[0])):
-            raise AttributeError("Background values not available for this timestep.")
-        
+        #Get background values
+        bgvars = m.yresult[nix, 0:3, 0]
+        a = m.ainit*np.exp(m.tresult[nix])
         
         #Set alpha and beta
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
-        k = self.srceqns.k
-        
-        #Get potentials
-        potentials = m.potentials(np.array([bgvars[0]]))
-        
-        Cterms = self.calculate_Cterms(bgvars, a, potentials)
-        
-        #Get component integrals
-        J_A = self.J_A(k, alpha, beta, Cterms)
-        J_B = self.J_B(k, alpha, beta, Cterms)
-        J_C = self.J_C(k, alpha, beta, Cterms)
-        J_D = self.J_D(k, alpha, beta, Cterms)
-        
-        src = 1 / ((2*np.pi)**2) * (J_A + J_B + J_C + J_D)
-        return src
+        return super(NoPhaseBunchDaviesSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
     

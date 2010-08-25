@@ -17,41 +17,35 @@ class CalcedSolution(GeneralSolution):
         super(CalcedSolution, self).__init__(*args, **kwargs)
         self.calculate_Cterms = self.srceqns.calculate_Cterms
         self.J_terms = self.srceqns.J_terms
-        
-    def preconvolution_calced(self, dp1_fullk, dp1dot_fullk):
-        """Return calculates solution for pre-convolution terms."""
-        #Init vars
-        
-        tterms = self.srceqns.getthetaterms(dp1_fullk, dp1dot_fullk)
-        return tterms
-    
-    def postconvolution_calced(self, dp1, dp1dot, dp1_fullk, dp1dot_fullk):
-        """Return calculated solution for post convolution terms."""
-        
-        preconv = self.preconvolution_calced(dp1_fullk, dp1dot_fullk)
-        preaterm, prebterm, precterm, predterm = preconv
-        
-        q = self.srceqns.k
-        
-        aterm = 2*np.pi * q**2 * dp1 * preaterm
-        integrated_a = romb(aterm, self.srceqns.deltak)
-        
-        bterm = 2*np.pi * q**2 * dp1 * prebterm
-        integrated_b = romb(bterm, self.srceqns.deltak)
-        
-        cterm = 2*np.pi * q**2 * dp1 * precterm
-        integrated_c = romb(cterm, self.srceqns.deltak)
-        
-        dterm = 2*np.pi * q**2 * dp1 * predterm
-        integrated_d = romb(dterm, self.srceqns.deltak)
-        
-        return integrated_a, integrated_b, integrated_c, integrated_d
-    
+
     def get_dp1(self):
         pass
     
     def get_dp1dot(self):
         pass
+    
+    def full_source_from_model(self, m, nix, **kwargs):
+        """Calculate full source term from model m at timestep nix."""
+        
+        #Get background values
+        bgvars = m.yresult[nix, 0:3, 0]
+        a = m.ainit*np.exp(m.tresult[nix])
+                
+        if np.any(np.isnan(bgvars)):
+            raise AttributeError("Background values not available for this timestep.")
+        
+        phi = bgvars[0]
+        
+        dp1 = self.get_dp1(self.srceqns.fullk, **kwargs)
+        dp1dot = self.get_dp1dot(self.srceqns.fullk, **kwargs)
+        
+        #Get potentials
+        potentials = m.potentials(np.array([phi]))
+        
+        src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
+       
+        return src
+    
     
 class NoPhaseBunchDaviesCalced(CalcedSolution):
     """Calced solution using the Bunch Davies initial conditions as the first order 
@@ -64,48 +58,31 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
     def __init__(self, *args, **kwargs):
         super(NoPhaseBunchDaviesCalced, self).__init__(*args, **kwargs)
         
-    def get_dp1(self, k, alpha):
+    def get_dp1(self, k, **kwargs):
         """Get dp1 for a certain value of alpha and beta."""
+        alpha = kwargs["alpha"]
         dp1 = alpha/np.sqrt(k) + 0*1j
         return dp1
     
-    def get_dp1dot(self, k, alpha, beta):
+    def get_dp1dot(self, k, **kwargs):
         """Get dp1dot for a certain value of alpha and beta."""
+        alpha = kwargs["alpha"]
+        beta = kwargs["beta"]
         dp1dot = -alpha/np.sqrt(k) -(alpha/beta)*np.sqrt(k) * 1j
         return dp1dot
     
-    def preconvolution_calced(self, alpha, beta):
-        """Return calculates solution for pre-convolution terms."""
-        dp1_fullk = self.get_dp1(self.srceqns.fullk, alpha)
-        dp1dot_fullk = self.get_dp1dot(self.srceqns.fullk, alpha, beta)
-        return super(NoPhaseBunchDaviesCalced, self).preconvolution_calced(dp1_fullk, dp1dot_fullk)
         
     def full_source_from_model(self, m, nix):
         """Calculate full source term from model m at timestep nix."""
-        try:
-            #Get background values
-            bgvars = m.yresult[nix, 0:3, 0]
-            a = m.ainit*np.exp(m.tresult[nix])
-        except AttributeError:
-            raise
+        #Get background values
+        bgvars = m.yresult[nix, 0:3, 0]
+        a = m.ainit*np.exp(m.tresult[nix])
         
         if np.any(np.isnan(bgvars)):
             raise AttributeError("Background values not available for this timestep.")
-        
-        phi = bgvars[0]
-        
         #Set alpha and beta
         alpha = 1/(a*np.sqrt(2))
         beta = a*bgvars[2]
         
-        
-        dp1 = self.get_dp1(self.srceqns.fullk, alpha)
-        dp1dot = self.get_dp1dot(self.srceqns.fullk, alpha, beta)
-        
-        #Get potentials
-        potentials = m.potentials(np.array([phi]))
-        
-        src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
-       
-        return src
+        return super(NoPhaseBunchDaviesCalced, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
 
