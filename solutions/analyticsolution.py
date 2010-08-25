@@ -65,11 +65,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
         
     
-    def J_A(self, k, Cterms, alpha, beta):
+    def J_A(self, k, Cterms, **kwargs):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
         kmin = k[0]
         kmax = k[-1]
+        alpha = kwargs["alpha"]
+        beta = kwargs["beta"]
         
         C1 = Cterms[0]
         C2 = Cterms[1]
@@ -92,10 +94,12 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_A
     
-    def J_B(self, k, Cterms, alpha, beta):
+    def J_B(self, k, Cterms, **kwargs):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
         kmin = k[0]
+        alpha = kwargs["alpha"]
+        beta = kwargs["beta"]
         
         C3 = Cterms[2]
         C4 = Cterms[3]
@@ -123,10 +127,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_B
     
-    def J_C(self, k, Cterms, alpha, beta):
+    def J_C(self, k, Cterms, **kwargs):
         """Second method for J_C"""
         kmax = k[-1]
         kmin = k[0]
+        
+        alpha = kwargs["alpha"]
+        beta = kwargs["beta"]
         
         C5 = Cterms[4]
         
@@ -151,10 +158,13 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
            15*k**3*(80*beta**2 + 9*k**2)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(14400.*beta**2*k))
         return J_C
 
-    def J_D(self, k, Cterms, alpha, beta):
+    def J_D(self, k, Cterms, **kwargs):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
         kmax = k[-1]
         kmin = k[0]
+        
+        alpha = kwargs["alpha"]
+        beta = kwargs["beta"]
         
         C6 = Cterms[5]
         C7 = Cterms[6]
@@ -290,7 +300,7 @@ class SimpleInverseSolution(AnalyticSolution):
         self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
         
     
-    def J_A(self, k, Cterms, alpha, beta):
+    def J_A(self, k, Cterms, **kwargs):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
         kmin = k[0]
@@ -302,7 +312,7 @@ class SimpleInverseSolution(AnalyticSolution):
         J_A = 2*C1*(-0.5*k + kmax - kmin**2/(2*k)) + 2*C2*(-1/12*k**3 + kmax**2/3 - kmin**4/(4*k))
         return J_A
     
-    def J_B(self, k, Cterms, alpha, beta):
+    def J_B(self, k, Cterms, **kwargs):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
         kmin = k[0]
@@ -314,7 +324,7 @@ class SimpleInverseSolution(AnalyticSolution):
         J_B += 2/3 * C4 *(-1/6 * k**4 + 1/3 * kmax**3 * k - 1/6 * kmin**6/k**2)
         return J_B
     
-    def J_C(self, k, Cterms, alpha, beta):
+    def J_C(self, k, Cterms, **kwargs):
         """Second method for J_C"""
         kmax = k[-1]
         kmin = k[0]
@@ -324,7 +334,7 @@ class SimpleInverseSolution(AnalyticSolution):
         J_C = 2*C5*(-0.5*k + kmax - kmin**2/(2*k))         
         return J_C
 
-    def J_D(self, k, Cterms, alpha, beta):
+    def J_D(self, k, Cterms, **kwargs):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
         kmax = k[-1]
         kmin = k[0]
