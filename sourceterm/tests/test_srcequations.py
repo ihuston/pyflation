@@ -3,10 +3,10 @@ Created on 25 Aug 2010
 
 @author: ith
 '''
-import unittest
+from numpy.testing import *
 
 
-class Test(unittest.TestCase):
+class Test(TestCase):
 
 
     def testName(self):
@@ -15,4 +15,4 @@ class Test(unittest.TestCase):
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    run_module_suite()
