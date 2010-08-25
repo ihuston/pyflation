@@ -107,3 +107,25 @@ class SimpleInverseCalced(CalcedSolution):
         dp1dot = 1/k + 0*1j
         return dp1dot
     
+class ImaginaryInverseCalced(CalcedSolution):
+    """Calced solution using an imaginary inverse as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1(x) = 1/x*1j 
+    \dN{\delta\varphi_1} = 1/x*1j
+    where j=sqrt(-1)
+    """
+        
+    def __init__(self, *args, **kwargs):
+        super(ImaginaryInverseCalced, self).__init__(*args, **kwargs)
+        
+    def get_dp1(self, k, **kwargs):
+        """Get dp1 for a certain value of alpha and beta."""
+        dp1 = 0 + (1/k)*1j
+        return dp1
+    
+    def get_dp1dot(self, k, **kwargs):
+        """Get dp1dot for a certain value of alpha and beta."""
+        dp1dot = 0 + (1/k)*1j
+        return dp1dot
+    

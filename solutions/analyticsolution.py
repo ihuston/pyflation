@@ -288,17 +288,17 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         return super(NoPhaseBunchDaviesSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
     
 class SimpleInverseSolution(AnalyticSolution):
-    """Analytic solution using the Bunch Davies initial conditions as the first order 
+    """Analytic solution using a simple inverse solution as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1 = alpha/sqrt(k) 
-    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+    \delta\varphi_1 = 1/k 
+    \dN{\delta\varphi_1} = 1/k
     """
     
     def __init__(self, *args, **kwargs):
         super(SimpleInverseSolution, self).__init__(*args, **kwargs)
         self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
-        
+        self.calculate_Cterms = self.srceqns.calculate_Cterms
     
     def J_A(self, k, Cterms, **kwargs):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
@@ -346,51 +346,67 @@ class SimpleInverseSolution(AnalyticSolution):
         J_D += 2/3 * C7 *(-0.75 * k**2 + kmax*k - 0.25*kmin**4/k**2 )
          
         return J_D
+        
     
-    def calculate_Cterms(self, bgvars, a, potentials):
-        """
-        Calculate the constant terms needed for source integration.
-        """
-        k = self.srceqns.k
-        phi, phidot, H = bgvars                
-        #Set ones array with same shape as self.k
-        onekshape = np.ones(k.shape)
+class ImaginaryInverseSolution(AnalyticSolution):
+    """Analytic solution using an imaginary inverse solution as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = 1/k*1j
+    \dN{\delta\varphi_1} = 1/k*1j
+    where j=sqrt(-1) 
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super(ImaginaryInverseSolution, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
+        self.calculate_Cterms = self.srceqns.calculate_Cterms
         
-        V, Vp, Vpp, Vppp = potentials
+    
+    def J_A(self, k, Cterms, **kwargs):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+        #Set limits from k
+        kmin = k[0]
+        kmax = k[-1]
         
-        a2 = a**2
-        H2 = H**2
-        aH2 = a2*H2
-        k2 = k**2
+        C1 = Cterms[0]
+        C2 = Cterms[1]
         
-        #Set C_i values
-        C1 = 1/H2 * (Vppp + 3 * phidot * Vpp + 2 * phidot * k2 /a2 )
+        J_A = -2*C1*(-0.5*k + kmax - kmin**2/(2*k)) - 2*C2*(-1/12*k**3 + kmax**3/3 - kmin**4/(4*k))
+        return J_A
+    
+    def J_B(self, k, Cterms, **kwargs):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        kmax = k[-1]
+        kmin = k[0]
         
-        C2 = 3.5 * phidot /(aH2) * onekshape
+        C3 = Cterms[2] #multiplies q**3
+        C4 = Cterms[3] #multiplies q**5
         
-        C3 = -4.5 * phidot * k / (aH2) 
+        J_B = -2/3 * C3 *(-0.75 * k**2 + kmax*k - 0.25*kmin**4/k**2 )
+        J_B += -2/3 * C4 *(-1/6 * k**4 + 1/3 * kmax**3 * k - 1/6 * kmin**6/k**2)
+        return J_B
+    
+    def J_C(self, k, Cterms, **kwargs):
+        """Second method for J_C"""
+        kmax = k[-1]
+        kmin = k[0]
         
-        C4 = -phidot / (aH2 * k)
+        C5 = Cterms[4]
         
-        C5 = -1.5 * phidot * onekshape
-        
-        C6 = 2 * phidot * k
-        
-        C7 = - phidot / k
-        
-        Cterms = [C1, C2, C3, C4, C5, C6, C7]
-        return Cterms
-        
+        J_C = -2*C5*(-0.5*k + kmax - kmin**2/(2*k))         
+        return J_C
 
-    def full_source_from_model(self, m, nix):
-        """Use the data from a model at a timestep nix to calculate the full source term S."""
-        #Get background values
-        bgvars = m.yresult[nix, 0:3, 0]
-        a = m.ainit*np.exp(m.tresult[nix])
+    def J_D(self, k, Cterms, **kwargs):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+        kmax = k[-1]
+        kmin = k[0]
         
-        #Set alpha and beta
-        alpha = 1/(a*np.sqrt(2))
-        beta = a*bgvars[2]
+        C6 = Cterms[5]
+        C7 = Cterms[6]
         
-        return super(SimpleInverseSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
+        J_D = -2/3 * C6 * (1.5 - k/kmax - 0.5* (kmin/k)**2)
+        J_D += -2/3 * C7 *(-0.75 * k**2 + kmax*k - 0.25*kmin**4/k**2 )
+         
+        return J_D
     
