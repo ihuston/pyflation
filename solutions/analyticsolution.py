@@ -65,7 +65,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
         
     
-    def J_A(self, k, alpha, beta, Cterms):
+    def J_A(self, k, Cterms, alpha, beta):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
         #Set limits from k
         kmin = k[0]
@@ -92,7 +92,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_A
     
-    def J_B(self, k, alpha, beta, Cterms):
+    def J_B(self, k, Cterms, alpha, beta):
         """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
         kmax = k[-1]
         kmin = k[0]
@@ -123,7 +123,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
 
         return J_B
     
-    def J_C(self, k, alpha, beta, Cterms):
+    def J_C(self, k, Cterms, alpha, beta):
         """Second method for J_C"""
         kmax = k[-1]
         kmin = k[0]
@@ -151,7 +151,7 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
            15*k**3*(80*beta**2 + 9*k**2)*Log(2*(Sqrt(kmin) + Sqrt(k + kmin)))))/(14400.*beta**2*k))
         return J_C
 
-    def J_D(self, k, alpha, beta, Cterms):
+    def J_D(self, k, Cterms, alpha, beta):
         """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
         kmax = k[-1]
         kmin = k[0]
