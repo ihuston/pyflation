@@ -66,9 +66,6 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     
     #Need to make analytic solution use 128 bit floats to avoid overruns
     asol.srceqns.k = np.float128(asol.srceqns.k)
-    #Test letting calculated version use float128s
-    csol.srceqns.k = np.float128(csol.srceqns.k)
-    csol.srceqns.fullk = np.float128(csol.srceqns.fullk)
         
     #Get background values
     bgvars = m.yresult[nix, 0:3, 0]
@@ -80,8 +77,8 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     alpha = 1/(a*np.sqrt(2))
     beta = a*bgvars[2]
     
-    dp1 = csol.get_dp1(csol.srceqns.fullk, alpha)
-    dp1dot = csol.get_dp1dot(csol.srceqns.fullk, alpha, beta)
+    dp1 = csol.get_dp1(csol.srceqns.fullk, alpha=alpha)
+    dp1dot = csol.get_dp1dot(csol.srceqns.fullk, alpha=alpha, beta=beta)
     
     #Calculate dphi(q) and dphi(k-q)
     dp1_q = dp1[:csol.srceqns.k.shape[-1]]
