@@ -139,7 +139,7 @@ class SlowRollSource(SourceEquations):
         
         sinth = np.sin(self.theta)
         cossinth = np.cos(self.theta)*np.sin(self.theta)
-        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]])
+        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
         lenq = len(self.k)
         
         for n in xrange(len(self.k)):
