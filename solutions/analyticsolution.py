@@ -319,7 +319,6 @@ class SimpleInverseSolution(AnalyticSolution):
         else:
             J_general = 2/3*C*(-3/((n+1)*(n-2))*k**(n-1) + k*kmax**(n-2)/(n-2) - kmin**(n+1)/(k**2*(n+1)))
         return J_general  
-        
     
     def J_A(self, k, Cterms, **kwargs):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
@@ -389,7 +388,6 @@ class ImaginaryInverseSolution(AnalyticSolution):
         else:
             J_general = -2/3*C*(-3/((n+1)*(n-2))*k**(n-1) + k*kmax**(n-2)/(n-2) - kmin**(n+1)/(k**2*(n+1)))
         return J_general  
-        
     
     def J_A(self, k, Cterms, **kwargs):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
@@ -424,3 +422,100 @@ class ImaginaryInverseSolution(AnalyticSolution):
         J_D = self.J_general_Btype(k, C6, 1) + self.J_general_Btype(k, C7, 3) 
         return J_D
     
+class SimpleInverseFull(AnalyticSolution):
+    """Analytic solution using a simple inverse solution as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = 1/k 
+    \dN{\delta\varphi_1} = 1/k
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super(SimpleInverseFull, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A, self.J_B, self.J_C, self.J_D]
+        self.calculate_Cterms = self.srceqns.calculate_Cterms
+    
+    def J_general_Atype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 1:
+            J_general = 2*C*(1/n * k**(n-1) - np.log(k) + np.log(kmax) - kmin**n/(k*n))
+        else:
+            J_general = 2*C*(-1/(n*(n-1))*k**(n-1) + kmax**(n-1)/(n-1) - kmin**n/(k*n))
+        return J_general
+    
+    def J_general_Btype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 2:
+            J_general = 2/3*C*(1/(k**2*(n-1)) * (k**(n+1) - kmin**(n+1)) + k*np.log(kmax/k))
+        else:
+            J_general = 2/3*C*(-3/((n+1)*(n-2))*k**(n-1) + k*kmax**(n-2)/(n-2) - kmin**(n+1)/(k**2*(n+1)))
+        return J_general  
+        
+    def J_general_Etype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 1:
+            J_general = 2/3 * C * (23/15 + np.log(kmax/k) - kmin/k
+                                   -2/5 * (k/kmax)**2 + 1/3 * (kmin/k)**3)
+        elif n == 3:
+            J_general = 2/3 * C * (-13/150*k**2 + 0.5*kmax**2 - 1/3*kmin**3/k
+                                   + 2/5*(k**2*np.log(kmax/k) - 0.2*kmin**5/k**3))
+        else:
+            J_general = 2/3 * C * (-k**(n-1)*(1/(n*(n-1)) + 2/((n+2)*(n-3)))
+                                   + kmax**(n-1)/(n-1) - kmin**n/(k*n) 
+                                   + 2/5*(k**2*kmax**(n-3)/(n-3) - kmin**(n+2)/(k**3*(n+2))))
+        return J_general
+    
+    def J_general_Ftype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 1:
+            J_general = C * (2/k**2 - 4/3*kmin/k**3 - 2/(3*kmax**2)
+                             - 0.5/(k**2)*np.log(kmax/k))
+        elif n == 3:
+            J_general = C * (25/36 - 4/9 * (kmin/k)**3 -0.25*(kmax/k)**2
+                             +4/3*np.log(kmax/k))
+        else:
+            J_general = C * (k**(n-3)*(-4/(n*(n-3)) + 0.5/(n-1)) 
+                             + 4/3 * (kmax**(n-3)/(n-3) - kmin**n/(n*k**3))
+                             - kmax**(n-1)/(2*k**2*(n-1)))
+        return J_general
+    
+    def J_A(self, k, Cterms, **kwargs):
+        """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
+        C1 = Cterms[0]
+        C2 = Cterms[1]
+        
+        J_A = self.J_general_Atype(k, C1, 2) + self.J_general_Atype(k, C2, 4)
+        
+        return J_A
+    
+    def J_B(self, k, Cterms, **kwargs):
+        """Solution for J_B which is the integral for B in terms of constants C3 and C4."""
+        C3 = Cterms[2] #multiplies q**3
+        C4 = Cterms[3] #multiplies q**5
+        
+        J_B = self.J_general_Btype(k, C3, 3) + self.J_general_Btype(k, C4, 5)
+        return J_B
+    
+    def J_C(self, k, Cterms, **kwargs):
+        """Second method for J_C"""
+        C5 = Cterms[4]
+                 
+        J_C = self.J_general_Atype(k, C5, 2)
+        return J_C
+
+    def J_D(self, k, Cterms, **kwargs):
+        """Solution for J_D which is the integral for D in terms of constants C6 and C7."""
+        
+        C6 = Cterms[5]
+        C7 = Cterms[6]
+        
+        J_D = self.J_general_Btype(k, C6, 1) + self.J_general_Btype(k, C7, 3) 
+        return J_D
