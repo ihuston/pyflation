@@ -255,6 +255,10 @@ class FullSingleFieldSource(SourceEquations):
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
         super(FullSingleFieldSource, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A1, self.J_A2, self.J_B1, self.J_B2, 
+                        self.J_C1, self.J_C2, self.J_D1, self.J_D2,
+                        self.J_E1, self.J_E2, self.J_F1, self.J_F2,
+                        self.J_G1, self.J_G2]
     
     def J_A1(self, preterms, dp1, dp1dot, Cterms):
         """Solution for J_A which is the integral for A in terms of constants C1 and C2."""
