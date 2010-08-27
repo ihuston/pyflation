@@ -68,8 +68,7 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     
     #Need to make analytic solution use 128 bit floats to avoid overruns
     asol.srceqns.k = np.float128(asol.srceqns.k)
-    csol.srceqns.k = np.float128(csol.srceqns.k)
-    csol.srceqns.fullk = np.float128(csol.srceqns.fullk)
+    
         
     #Get background values
     bgvars = m.yresult[nix, 0:3, 0]
@@ -89,7 +88,8 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     dp1dot_q = dp1dot[:csol.srceqns.k.shape[-1]]  
           
     theta_terms = csol.srceqns.getthetaterms(dp1, dp1dot)
-    
+    csol.srceqns.k = np.float128(csol.srceqns.k)
+    csol.srceqns.fullk = np.float128(csol.srceqns.fullk)
     
     calced_Cterms = csol.calculate_Cterms(bgvars, a, potentials) 
     if only_calced_Cterms:
