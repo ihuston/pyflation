@@ -33,6 +33,8 @@ def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=No
     
     #Need to make analytic solution use 128 bit floats to avoid overruns
     asol.srceqns.k = np.float128(asol.srceqns.k)
+    csol.srceqns.k = np.float128(csol.srceqns.k)
+    csol.srceqns.fullk = np.float128(csol.srceqns.fullk)
     
     analytic_result = asol.full_source_from_model(m, nix)
     calced_result = csol.full_source_from_model(m, nix)
