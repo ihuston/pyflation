@@ -479,16 +479,11 @@ class SimpleInverseFull(AnalyticSolution):
         kmin = k[0]
         kmax = k[-1]
         
-        if n == 1:
-            J_general = C * (2/k**2 - 4/3*kmin/k**3 - 2/(3*kmax**2)
-                             - 0.5/(k**2)*np.log(kmax/k))
-        elif n == 3:
-            J_general = C * (25/36 - 4/9 * (kmin/k)**3 -0.25*(kmax/k)**2
-                             +4/3*np.log(kmax/k))
+        if n == 3:
+            J_general = 4/3 * C * (1/3 - 1/3 * (kmin/k)**3 + np.log(kmax/k))
         else:
-            J_general = C * (k**(n-3)*(-4/(n*(n-3)) + 0.5/(n-1)) 
-                             + 4/3 * (kmax**(n-3)/(n-3) - kmin**n/(n*k**3))
-                             - kmax**(n-1)/(2*k**2*(n-1)))
+            J_general = 4/3 * C * (k**(n-3)*3/(n*(n-3)) 
+                             + kmax**(n-3)/(n-3) - kmin**n/(n*k**3))
         return J_general
     
     
