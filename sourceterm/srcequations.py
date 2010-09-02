@@ -509,7 +509,7 @@ class FullSingleFieldSource(SourceEquations):
         
         C18 =  Q * pdot2 / (aH2 * k2)
         
-        C19 = -2 * Q * pdot2 / (aH2*k2)
+        C19 = -2 * Q * pdot2 / (aH2*k)
         
         C20 = Q / (aH2) * (-2 + pdot2*(1/(2*a*H) - 0.25)) * onekshape
         
