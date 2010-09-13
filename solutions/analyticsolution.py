@@ -482,7 +482,7 @@ class SimpleInverseFull(AnalyticSolution):
         if n == 3:
             J_general = 4/3 * C * (1/3 - 1/3 * (kmin/k)**3 + np.log(kmax/k))
         else:
-            J_general = 4/3 * C * (k**(n-3)*3/(n*(n-3)) 
+            J_general = 4/3 * C * (k**(n-3)*3/(n*(3-n)) 
                              + kmax**(n-3)/(n-3) - kmin**n/(n*k**3))
         return J_general
     
