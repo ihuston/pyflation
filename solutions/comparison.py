@@ -13,12 +13,13 @@ import calcedsolution
 import fixtures
 import run_config
 
-def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=None):
+def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=None, fx=None):
     """
     Compare the analytic and calculated solutions for equations from `srclass` using the 
     results from `m` at the timestep `nix`. 
     """
-    fx = fixtures.fixture_from_model(m)
+    if fx is None:
+        fx = fixtures.fixture_from_model(m)
     
     if srcclass is None:
         srcclass = run_config.srcclass
@@ -48,12 +49,14 @@ def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=No
     return result
 
 def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=None, 
-                    only_calced_Cterms=False):
+                    only_calced_Cterms=False, fx=None):
     """
     Compare the analytic and calculated results for each J_term using the results 
     from model `m` at the timestep `nix`
     """
-    fx = fixtures.fixture_from_model(m)
+    
+    if fx is None:
+        fx = fixtures.fixture_from_model(m)
     
     if srcclass is None:
         srcclass = run_config.srcclass
