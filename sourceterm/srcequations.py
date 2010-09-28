@@ -493,9 +493,9 @@ class FullSingleFieldSource(SourceEquations):
         
         C10 = Q * pdot2 / (2*aH2) * onekshape
         
-        C11 = -phidot * Q**2 / (4*aH2) * k2
+        C11 = -phidot * Q**2 / (4*aH2**2) * k2
         
-        C12 = -phidot * Q**2 / (2*aH2) * onekshape
+        C12 = -phidot * Q**2 / (2*aH2**2) * onekshape
         
         C13 = -pdot2 * Q / (4*aH2) * k2
         
@@ -511,7 +511,7 @@ class FullSingleFieldSource(SourceEquations):
         
         C19 = -2 * Q * pdot2 / (aH2*k)
         
-        C20 = Q / (aH2) * (-2 + pdot2*(1/(2*a*H) - 0.25)) * onekshape
+        C20 = Q / (aH2) * (-2 + pdot2*(0.25)) * onekshape
         
         C21 = 2 * Q / (aH2) * k 
         
