@@ -36,6 +36,28 @@ def klessq(k, q, theta):
     """
     return k**2+q[..., np.newaxis]**2-2*k*np.outer(q,np.cos(theta))
 
+def klessqksq(k, q, theta):
+    """Return the scalar magnitude of k^i - q^i squared* 1/k**2, where theta is angle between vectors.
+    
+    Parameters
+    ----------
+    k: float
+       Single k value to compute array for.
+    
+    q: array_like
+       1-d array of q values to use
+     
+    theta: array_like
+           1-d array of theta values to use
+           
+    Returns
+    -------
+    klessq: array_like
+            len(q)*len(theta) array of values for
+            1/k**2 * |k^i - q^i|^2 = (1 + (q/k)^2 - 2(q/k) cos(theta))
+    """
+    return 1 + (q[..., np.newaxis]/k)**2 - 2*np.outer(q/k,np.cos(theta))
+
 class SourceEquations(object):
     '''
     Class for source term equations
@@ -584,6 +606,219 @@ class FullSingleFieldSource(SourceEquations):
         
         src = 1/((2*np.pi)**2 ) * (J_A1 + J_A2 + J_B1 + J_B2 + J_C1 + J_C2 + J_D1 + J_D2 
                                   + J_E1 + J_E2 + J_F1 + J_F2 + J_G1 + J_G2)
+        return src
+    
+class NewFullSingleFieldSource(SourceEquations):
+    """
+    Full single field (non slow-roll) source term equations
+    """
+    
+    def __init__(self, *args, **kwargs):
+        """Class for slow roll source term equations"""
+        super(NewFullSingleFieldSource, self).__init__(*args, **kwargs)
+        self.Jfuncs = {"A1": {"n":2, "dphiterm": "dp1", "pretermix":0},
+                       "A2": {"n":3, "dphiterm": "dp1", "pretermix":0},
+                       "A3": {"n":4, "dphiterm": "dp1", "pretermix":0},
+                       "A4": {"n":5, "dphiterm": "dp1", "pretermix":0},
+                       "A5": {"n":2, "dphiterm": "dp1dot", "pretermix":0},
+                       "A6": {"n":3, "dphiterm": "dp1dot", "pretermix":0},
+                       "B1": {"n":4, "dphiterm": "dp1", "pretermix":1},
+                       "C1": {"n":2, "dphiterm": "dp1", "pretermix":2},
+                       "C2": {"n":2, "dphiterm": "dp1dot", "pretermix":2},
+                       "D1": {"n":1, "dphiterm": "dp1", "pretermix":3},
+                       "D2": {"n":3, "dphiterm": "dp1", "pretermix":3},
+                       "D3": {"n":1, "dphiterm": "dp1dot", "pretermix":3},
+                       "D4": {"n":3, "dphiterm": "dp1dot", "pretermix":3},
+                       "E1": {"n":2, "dphiterm": "dp1", "pretermix":4},
+                       "E2": {"n":2, "dphiterm": "dp1dot", "pretermix":4},
+                       "F1": {"n":2, "dphiterm": "dp1", "pretermix":5},
+                       "F2": {"n":2, "dphiterm": "dp1dot", "pretermix":5},
+                       "G1": {"n":2, "dphiterm": "dp1dot", "pretermix":6},
+                       }
+        self.J_terms = [self.J_A1, self.J_A2, self.J_A3, self.J_A4, 
+                        self.J_B1,  
+                        self.J_C1, self.J_C2,
+                        self.J_D1, self.J_D2, self.J_D3, self.J_D4,
+                        self.J_E1, self.J_E2, 
+                        self.J_F1, self.J_F2,
+                        self.J_G1]
+    
+    
+    def J_func(self, preterms, dp1, dp1dot, Cterms, Jkey):
+        """Generic solution for J_func integral."""
+        q = self.k
+        #Set up variables from list of Jterms and constants
+        #Constant term
+        Cterm = Cterms[Jkey][..., np.newaxis]
+        #Index of q
+        n = self.J_terms[Jkey]["n"]
+        #Get text of dphiterm and set variable
+        dphitermtext = self.J_terms[Jkey]["dphiterm"]
+        if dphitermtext == "dp1":
+            dphiterm = dp1
+        elif dphitermtext == "dp1dot":
+            dphiterm = dp1dot
+        #Get preterm index
+        pretermix = self.J_terms[Jkey]["pretermix"]
+        preterm = preterms[pretermix]
+        
+        integrand = (Cterm*q**n) * dphiterm * preterm
+        J_integral = romb(integrand, self.deltak)
+        return J_integral
+    
+    
+    @profile
+    def getthetaterms(self, dp1, dp1dot):
+        """Return array of integrated values for specified theta function and dphi function.
+        
+        Parameters
+        ----------
+        dp1: array_like
+             Array of values for dphi1
+        
+        dp1dot: array_like
+                Array of values for dphi1dot
+                                      
+        Returns
+        -------
+        theta_terms: tuple
+                     Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                     (\int(sin(theta) dp1(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                      \int(sin(theta) dp1dot(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                     
+        """
+        
+        # Sinusoidal theta terms
+        sinth = np.sin(self.theta)
+        cossinth = np.cos(self.theta)*sinth
+        cos2sinth = np.cos(self.theta)*cossinth
+        sin3th = sinth*sinth*sinth
+        
+        theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
+        lenq = len(self.k)
+        for n in xrange(len(self.k)):
+            #klq = klessq(onek, q, theta)
+            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
+            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
+            
+            #New terms for full solution
+            # E term integration
+            theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=self.dtheta)
+            #Get klessq for F and G terms
+            klq2 = klessqksq(self.k[n], self.k, self.theta)
+            sinklq = sin3th/klq2
+            #Get rid of NaNs in places where dphi_res=0 or equivalently klq2<self.kmin**2
+            sinklq[klq2<self.kmin**2] = 0
+            # F term integration
+            theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=self.dtheta)
+            # G term integration
+            theta_terms[6,n] = romb(sinklq *dphi_res[1], dx=self.dtheta)
+            
+        return theta_terms
+
+    def calculate_Cterms(self, bgvars, a, potentials,):
+        """
+        Calculate the value of the constants needed for source term integration.
+        
+        """
+        #Unpack variables
+        phi, phidot, H = bgvars
+        k = self.k
+        #Get potentials
+        V, Vp, Vpp, Vppp = potentials
+        
+        #Set ones array with same shape as self.k
+        onekshape = np.ones(self.k.shape)
+        
+        a2 = a**2
+        H2 = H**2
+        aH2 = a2*H2
+        pdot2 = phidot**2
+        
+        #Calculate Q term
+        Q = a2 * (V * phidot + Vp)
+        
+        C_A1 = (1/H2 * (Vppp + 3*phidot*Vpp + 2*pdot2*Vp) 
+                + 1/aH2 * (-0.75*pdot2*Q**2/aH2 + Q*pdot2) ) * onekshape
+        
+        Cterms = dict(A1 = C_A1,
+                      A2 = -0.5*phidot/aH2*k,
+                      A3 = 1/(aH2) * (3.5*phidot - 0.25*phidot**3) * onekshape,
+                      A4 = -phidot/(k*aH2),
+                      A5 = 2*Q/aH2 * onekshape,
+                      A6 = -pdot2/aH2*Q/k,
+                      B1 = 0.25*phidot**3/aH2 * onekshape,
+                      C1 = 2*Q/aH2 * onekshape,
+                      C2 = (0.25*phidot**3 - 1.5*phidot)* onekshape,
+                      D1 = 2*Q*k/aH2,
+                      D2 = 2*Q/(aH2*k),
+                      D3 = phidot*2*k,
+                      D4 = -phidot/k,
+                      E1 = Q**2/(aH2**2)*phidot * onekshape,
+                      E2 = pdot2/aH2 * Q * onekshape,
+                      F1 = -0.25 * Q**2/(aH2**2)*phidot * onekshape,
+                      F2 = -0.5*pdot2*Q/aH2 * onekshape,
+                      G1 = -0.25*phidot**3 * onekshape)
+        
+        return Cterms
+        
+
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
+        """Return unintegrated slow roll source term.
+    
+        The source term before integration is calculated here using the slow roll
+        approximation. This function follows the revised version of Eq (5.8) in 
+        Malik 06 (astro-ph/0610864v5).
+        
+        Parameters
+        ----------
+        bgvars: tuple
+                Tuple of background field values in the form `(phi, phidot, H)`
+        
+        a: float
+           Scale factor at the current timestep, `a = ainit*exp(n)`
+        
+        potentials: tuple
+                    Tuple of potential values in the form `(U, dU, dU2, dU3)`
+                
+        dp1: array_like
+             Array of known dp1 values
+                 
+        dp1dot: array_like
+                Array of dpdot1 values
+                 
+        
+        Returns
+        -------
+        src_integrand: array_like
+            Array containing the unintegrated source terms for all k and q modes.
+            
+        References
+        ----------
+        Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+        """
+        
+        #Calculate dphi(q) and dphi(k-q)
+        dp1_q = dp1[:self.k.shape[-1]]
+        dp1dot_q = dp1dot[:self.k.shape[-1]]  
+        
+        
+        theta_terms = self.getthetaterms(dp1, dp1dot)
+        
+        Cterms = self.calculate_Cterms(bgvars, a, potentials)
+            
+        J_result = np.zeros(self.k.shape, dtype=dp1.dtype) 
+        #Get component integrals
+        for Jkey in self.J_terms.iterkeys():
+            J_result += self.J_func(theta_terms, dp1_q, dp1dot_q, Cterms, Jkey)
+        
+        src = 1/((2*np.pi)**2 ) * J_result
         return src
     
 class OldSlowRollSource(SourceEquations):
