@@ -616,7 +616,7 @@ class NewFullSingleFieldSource(SourceEquations):
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
         super(NewFullSingleFieldSource, self).__init__(*args, **kwargs)
-        self.Jfuncs = {"A1": {"n":2, "dphiterm": "dp1", "pretermix":0},
+        self.J_params = {"A1": {"n":2, "dphiterm": "dp1", "pretermix":0},
                        "A2": {"n":3, "dphiterm": "dp1", "pretermix":0},
                        "A3": {"n":4, "dphiterm": "dp1", "pretermix":0},
                        "A4": {"n":5, "dphiterm": "dp1", "pretermix":0},
@@ -635,14 +635,15 @@ class NewFullSingleFieldSource(SourceEquations):
                        "F2": {"n":2, "dphiterm": "dp1dot", "pretermix":5},
                        "G1": {"n":2, "dphiterm": "dp1dot", "pretermix":6},
                        }
-        self.J_terms = [self.J_A1, self.J_A2, self.J_A3, self.J_A4, 
-                        self.J_B1,  
-                        self.J_C1, self.J_C2,
-                        self.J_D1, self.J_D2, self.J_D3, self.J_D4,
-                        self.J_E1, self.J_E2, 
-                        self.J_F1, self.J_F2,
-                        self.J_G1]
+        
+
+        
+        self.J_terms = [self.J_factory(Jkey) for Jkey in J_params.iterkeys()]
     
+    def J_factory(self, Jkey):
+        def newJfunc(preterms, dp1, dp1dot, Cterms):
+            return self.J_func(preterms, dp1, dp1dot, Cterms, Jkey)
+        return newJfunc
     
     def J_func(self, preterms, dp1, dp1dot, Cterms, Jkey):
         """Generic solution for J_func integral."""
@@ -815,7 +816,7 @@ class NewFullSingleFieldSource(SourceEquations):
             
         J_result = np.zeros(self.k.shape, dtype=dp1.dtype) 
         #Get component integrals
-        for Jkey in self.J_terms.iterkeys():
+        for Jkey in self.J_params.iterkeys():
             J_result += self.J_func(theta_terms, dp1_q, dp1dot_q, Cterms, Jkey)
         
         src = 1/((2*np.pi)**2 ) * J_result
