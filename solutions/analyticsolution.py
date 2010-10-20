@@ -603,3 +603,90 @@ class SimpleInverseFull(AnalyticSolution):
         J_G2 = self.J_general_Ftype(k, C16, 2) 
         return J_G2
     
+    
+class NewSimpleInverseFull(AnalyticSolution):
+    """Analytic solution using a simple inverse solution as the first order 
+    solution and with no phase information.
+    
+    \delta\varphi_1 = 1/k 
+    \dN{\delta\varphi_1} = 1/k
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super(NewSimpleInverseFull, self).__init__(*args, **kwargs)
+        self.J_terms = [self.J_A1, self.J_A2, self.J_B1, self.J_B2, 
+                        self.J_C1, self.J_C2, self.J_D1, self.J_D2,
+                        self.J_E1, self.J_E2, self.J_F1, self.J_F2,
+                        self.J_G1, self.J_G2]
+        self.calculate_Cterms = self.srceqns.calculate_Cterms
+        self.J_params = self.srceqns.J_params
+        
+        self.J_terms = [self.J_factory(Jkey) for Jkey in self.J_params.iterkeys()]
+    
+    def J_factory(self, Jkey):
+        pretermix = self.J_params[Jkey]["pretermix"]
+        if pretermix == 0:
+            J_func = self.J_general_Atype
+        elif pretermix == 1:
+            J_func = self.J_general_Btype
+        elif pretermix == 2:
+            J_func = self.J_general_Atype
+        elif pretermix == 3:
+            J_func = self.J_general_Btype
+        elif pretermix == 4:
+            J_func = self.J_general_Etype
+        elif pretermix == 5:
+            J_func = self.J_general_Ftype
+        elif pretermix == 6:
+            J_func = self.J_general_Ftype    
+        def newJfunc(k, Cterms, **kwargs):
+            return J_func(k, Cterms[Jkey], self.J_params[Jkey]["n"])
+        return newJfunc
+    
+    def J_general_Atype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 1:
+            J_general = 2*C*(1/n * k**(n-1) - np.log(k) + np.log(kmax) - kmin**n/(k*n))
+        else:
+            J_general = 2*C*(-1/(n*(n-1))*k**(n-1) + kmax**(n-1)/(n-1) - kmin**n/(k*n))
+        return J_general
+    
+    def J_general_Btype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 2:
+            J_general = 2/3*C*(1/(k**2*(n-1)) * (k**(n+1) - kmin**(n+1)) + k*np.log(kmax/k))
+        else:
+            J_general = 2/3*C*(-3/((n+1)*(n-2))*k**(n-1) + k*kmax**(n-2)/(n-2) - kmin**(n+1)/(k**2*(n+1)))
+        return J_general  
+        
+    def J_general_Etype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 1:
+            J_general = 2/3 * C * (23/15 + np.log(kmax/k) - kmin/k
+                                   -2/5 * (k/kmax)**2 + 1/3 * (kmin/k)**3)
+        elif n == 3:
+            J_general = 2/3 * C * (-13/150*k**2 + 0.5*kmax**2 - 1/3*kmin**3/k
+                                   + 2/5*(k**2*np.log(kmax/k) - 0.2*kmin**5/k**3))
+        else:
+            J_general = 2/3 * C * (-k**(n-1)*(1/(n*(n-1)) + 2/((n+2)*(n-3)))
+                                   + kmax**(n-1)/(n-1) - kmin**n/(k*n) 
+                                   + 2/5*(k**2*kmax**(n-3)/(n-3) - kmin**(n+2)/(k**3*(n+2))))
+        return J_general
+    
+    def J_general_Ftype(self, k, C, n):
+        kmin = k[0]
+        kmax = k[-1]
+        
+        if n == 3:
+            J_general = 4/3 * C * (1/3 - 1/3 * (kmin/k)**3 + np.log(kmax/k))
+        else:
+            J_general = 4/3 * C * (k**(n-3)*3/(n*(3-n)) 
+                             + kmax**(n-3)/(n-3) - kmin**n/(n*k**3))
+        return J_general
+    
