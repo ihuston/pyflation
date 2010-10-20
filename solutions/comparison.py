@@ -109,6 +109,6 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
         calced_result = cfunc(theta_terms, dp1_q, dp1dot_q, calced_Cterms)
         diff = analytic_result - calced_result
         err = np.abs(diff)/np.abs(analytic_result)
-        results += [(diff, err, analytic_result, calced_result)]
+        results[Jkey] = (diff, err, analytic_result, calced_result)
         
     return results
