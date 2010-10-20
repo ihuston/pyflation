@@ -102,7 +102,9 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     
     results = []
     
-    for afunc, cfunc in zip(asol.J_terms, csol.J_terms):
+    for Jkey in csol.J_terms.iterkeys():
+        afunc = asol.J_terms[Jkey]
+        cfunc = csol.J_terms[Jkey]
         analytic_result = afunc(asol.srceqns.k, analytic_Cterms, alpha=alpha, beta=beta)
         calced_result = cfunc(theta_terms, dp1_q, dp1dot_q, calced_Cterms)
         diff = analytic_result - calced_result
