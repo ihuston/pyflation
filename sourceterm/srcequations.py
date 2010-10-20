@@ -652,15 +652,15 @@ class NewFullSingleFieldSource(SourceEquations):
         #Constant term
         Cterm = Cterms[Jkey][..., np.newaxis]
         #Index of q
-        n = self.J_terms[Jkey]["n"]
+        n = self.J_params[Jkey]["n"]
         #Get text of dphiterm and set variable
-        dphitermtext = self.J_terms[Jkey]["dphiterm"]
+        dphitermtext = self.J_params[Jkey]["dphiterm"]
         if dphitermtext == "dp1":
             dphiterm = dp1
         elif dphitermtext == "dp1dot":
             dphiterm = dp1dot
         #Get preterm index
-        pretermix = self.J_terms[Jkey]["pretermix"]
+        pretermix = self.J_params[Jkey]["pretermix"]
         preterm = preterms[pretermix]
         
         integrand = (Cterm*q**n) * dphiterm * preterm
