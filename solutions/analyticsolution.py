@@ -614,10 +614,7 @@ class NewSimpleInverseFull(AnalyticSolution):
     
     def __init__(self, *args, **kwargs):
         super(NewSimpleInverseFull, self).__init__(*args, **kwargs)
-        self.J_terms = [self.J_A1, self.J_A2, self.J_B1, self.J_B2, 
-                        self.J_C1, self.J_C2, self.J_D1, self.J_D2,
-                        self.J_E1, self.J_E2, self.J_F1, self.J_F2,
-                        self.J_G1, self.J_G2]
+        
         self.calculate_Cterms = self.srceqns.calculate_Cterms
         self.J_params = self.srceqns.J_params
         
