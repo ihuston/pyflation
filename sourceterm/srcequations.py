@@ -638,7 +638,7 @@ class NewFullSingleFieldSource(SourceEquations):
         
 
         
-        self.J_terms = [self.J_factory(Jkey) for Jkey in self.J_params.iterkeys()]
+        self.J_terms = dict([(Jkey,self.J_factory(Jkey)) for Jkey in self.J_params.iterkeys()])
     
     def J_factory(self, Jkey):
         def newJfunc(preterms, dp1, dp1dot, Cterms):

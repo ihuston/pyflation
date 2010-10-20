@@ -618,7 +618,7 @@ class NewSimpleInverseFull(AnalyticSolution):
         self.calculate_Cterms = self.srceqns.calculate_Cterms
         self.J_params = self.srceqns.J_params
         
-        self.J_terms = [self.J_factory(Jkey) for Jkey in self.J_params.iterkeys()]
+        self.J_terms = dict([(Jkey,self.J_factory(Jkey)) for Jkey in self.J_params.iterkeys()])
     
     def J_factory(self, Jkey):
         pretermix = self.J_params[Jkey]["pretermix"]
