@@ -100,7 +100,7 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     else:
         analytic_Cterms = asol.calculate_Cterms(bgvars, a, potentials)
     
-    results = []
+    results = {}
     
     for Jkey in csol.J_terms.iterkeys():
         afunc = asol.J_terms[Jkey]
