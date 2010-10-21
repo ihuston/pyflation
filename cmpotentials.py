@@ -290,6 +290,10 @@ def step_potential(y, params=None):
         c = params.get("c", 0.0018)
         d = params.get("d", 0.022) #Units of Mpl
         phi_s = params.get("phi_s", 14.84) #Units of Mpl
+    else:
+        c = 0.0018
+        d = 0.022
+        phi_s = 14.84
     
     #Use inflaton mass
     mass2 = m**2
