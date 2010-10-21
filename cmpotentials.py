@@ -8,7 +8,6 @@
     
 from __future__ import division
 import numpy as np
-from pdb import set_trace
 
 def msqphisq(y, params=None):
     """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2
@@ -262,3 +261,52 @@ def msqphisq_withV0(y, params=None):
     
     return U, dUdphi, d2Udphi2, d3Udphi3
     
+def step_potential(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V=1/2 m^2 phi^2 ( 1 + c*tanh((phi-phi_s) / d)
+    where m is the mass of the inflaton field and c, d and phi_s are provided.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             
+    m can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use WMAP value of mass (in Mpl)
+        m = 6.3267e-6
+    if params is not None:
+        c = params.get("c", 0.0018)
+        d = params.get("d", 0.022) #Units of Mpl
+        phi_s = params.get("phi_s", 14.84) #Units of Mpl
+    
+    #Use inflaton mass
+    mass2 = m**2
+    #potential U = 1/2 m^2 \phi^2
+    
+    phisq = y[0]**2
+    
+    phiterm = (y[0]-phi_s)/d
+    s = 1/np.cosh(phiterm)
+    t = np.tanh(phiterm)
+    
+    U = 0.5*(mass2)*(y[0]**2) * (1 + c * t)
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*y[0] * (1 + c*t) + c * mass2 * phisq * s**2 / (2*d)
+    #2nd deriv
+    d2Udphi2 = 0.5*mass2*(4*c*y[0]*s**2/d - 2*c*phisq*s**2*t/(d**2) + 2*(1+c*t))
+    #3rd deriv
+    d3Udphi3 = 0.5*mass2*(6*c*s**2/d - 12*c*y[0]*s**2*t/(d**2) 
+                          + c*phisq*(-2*s**4/(d**3) + 4*s**2*t**2/(d**3)))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
