@@ -52,7 +52,7 @@ class CosmologicalModel(object):
     plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
-                 dxsav=0.0, solver="scipy_odeint", potential_func=None, pot_params=None, **kwargs):
+                 dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -335,7 +335,7 @@ class BasicBgModel(CosmologicalModel):
     ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
-                    tstep_wanted=0.02, tstep_min=0.0001, solver="scipy_odeint"):
+                    tstep_wanted=0.02, tstep_min=0.0001, solver="rkdriver_withks"):
         
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
         #Mass of inflaton in Planck masses
@@ -1113,7 +1113,7 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="scipy_odeint", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0, **kwargs):
+    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
