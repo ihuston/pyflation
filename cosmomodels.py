@@ -400,7 +400,7 @@ class CosmologicalModel(object):
                 elif filemode is "a":
                     try:
                         resgroup = rf.getNode(rf.root, grpname)
-                        paramstab = resgroup.parameters
+                        #paramstab = resgroup.parameters
                         yresarr = resgroup.yresult
                         tres = resgroup.tresult[:]
                         if grpname is "results":
@@ -418,12 +418,12 @@ class CosmologicalModel(object):
                     raise IOError("Can only write or append to files!")
                 #Now save data
                 #Save parameters
-                paramstabrow = paramstab.row
-                params = self.callingparams()
-                for key in params:
-                    paramstabrow[key] = params[key]
-                paramstabrow.append() #Add to table
-                paramstab.flush()
+                #paramstabrow = paramstab.row
+                #params = self.callingparams()
+                #for key in params:
+                #    paramstabrow[key] = params[key]
+                #paramstabrow.append() #Add to table
+                #paramstab.flush()
                 #Save first order results
                 if grpname is "results":
                     yresarr.append(self.yresult)
