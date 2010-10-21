@@ -4,26 +4,21 @@
     Provides generic class CosmologicalModel that can be used as a base for explicit models."""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
-import numpy as np
 
-import rk4
-import sys
+#system modules
+import numpy as np
 import os.path
 import datetime
-import pickle
-from scipy.integrate import odeint as scipy_odeint
-from scipy import integrate
 from scipy import interpolate
-import helpers 
-import cmpotentials
-import gzip
 import tables 
 import logging
 
+#local modules from pyflation
 import configuration
+import helpers 
+import cmpotentials
+import rk4
 
-#debugging
-from pdb import set_trace
 
 #Start logging
 root_log_name = logging.getLogger().name
@@ -106,7 +101,6 @@ class CosmologicalModel(object):
         
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
-        self.runcount = 0 #How many times has the model been run?
         self.resultlist = [] #List of all completed results.
         
     def derivs(self, yarray, t):
@@ -142,10 +136,7 @@ class CosmologicalModel(object):
         
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
-        
         self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
-        self.runcount += 1
-        
         if saveresults:
             try:
                 fname = self.saveallresults()
@@ -390,16 +381,6 @@ class BasicBgModel(CosmologicalModel):
         
         return dydx
     
-    def plotresults(self, saveplot = False):
-        """Plot results of simulation run on a graph."""
-        
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!", self.tresult, self.yresult)
-        
-        CosmologicalModel.plotresults(self, varindex=[0,2], saveplot=saveplot)
-        
-        return
-    
 class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
     #Graph titles
@@ -428,9 +409,6 @@ class PhiModels(CosmologicalModel):
             i.e. the hubble flow parameter epsilon >1.
             Returns tuple of endefold and endindex (in tresult)."""
         
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot find inflation end!")
-        
         self.epsilon = self.getepsilon()
         if not any(self.epsilon>1):
             raise ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
@@ -448,9 +426,6 @@ class PhiModels(CosmologicalModel):
     
     def getepsilon(self):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
-        if self.runcount == 0:
-            raise ModelError("Model has not been run yet, cannot plot results!")
-
         #Find Hdot
         if len(self.yresult.shape) == 3:
             Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
@@ -962,8 +937,6 @@ class MultiStageModel(CosmologicalModel):
      
     def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode."""
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         #If k is not defined, get value at all self.k
         if k is None:
@@ -1191,10 +1164,6 @@ class TwoStageModel(MultiStageModel):
         #debug
         #set_trace()
         
-        #Check if bg run is completed
-        if self.bgmodel.runcount == 0:
-            raise ModelError("Background system must be run first before setting 1st order ICs!")
-        
         #Find initial conditions for 1st order model
         #Find a_end using instantaneous reheating
         #Need to change to find using splines
@@ -1299,7 +1268,6 @@ class TwoStageModel(MultiStageModel):
         self.lastparams = self.callingparams()
         
         self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
-        self.runcount += 1
         
         if saveresults:
             try:
@@ -1308,13 +1276,6 @@ class TwoStageModel(MultiStageModel):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    def checkruncomplete(self):
-        """Raise an error if first order model has not been run."""
-        #Check if firstorder run is completed
-        if self.firstordermodel.runcount == 0:
-            raise ModelError("First order system must be run before calculating spectrum or other observables!")
-        return
-            
 
 class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
     """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
@@ -1473,8 +1434,6 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
             self.deltaphi = (2*np.pi**2)/(self.k**3) * (self.yresult[:,3,:] + self.yresult[:,5,:]*1j) #complex deltaphi
@@ -1559,14 +1518,11 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 self.bgmodel.yresult = self._rf.root.bgresults.yresult
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain background results!")
-            self.bgmodel.runcount = 1
             #Get epsilon
             self._log.debug("Calculating self.bgepsilon...")
             self.bgepsilon = self.bgmodel.getepsilon()
             #Success
             self._log.info("Successfully imported data from file into model instance.")
-            #Update model runcount
-            self.runcount = 1
         
         def __del__(self):
             """Close file when object destroyed."""
@@ -1657,7 +1613,6 @@ class ThirdStageModel(MultiStageModel):
         self.lastparams = self.callingparams()
         
         self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
-        self.runcount += 1
         
         if saveresults:
             try:
@@ -1666,11 +1621,7 @@ class ThirdStageModel(MultiStageModel):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    def checkruncomplete(self):
-        """Check if model run is complete."""
-        if self.somodel.runcount == 0:
-            raise ModelError("Second order system must be run before calculating spectrum or other observables!")
-        return
+    
             
 class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
     """Concrete implementation of ThirdStageCanonical to include second order calculation including
@@ -1709,8 +1660,6 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
             dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
@@ -1765,9 +1714,6 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
-        
         if not hasattr(self, "deltaphi") or recompute:
             dp1 = self.dp1
             dp2 = self.dp2
@@ -1777,7 +1723,7 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
     @property
     def dp1(self, recompute=False):
         """Return (and save) the first order perturbation."""
-        self.checkruncomplete()
+        
         if not hasattr(self, "_dp1") or recompute:
             dp1 = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
             self._dp1 = dp1
@@ -1786,17 +1732,11 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
     @property
     def dp2(self, recompute=False):
         """Return (and save) the first order perturbation."""
-        self.checkruncomplete()
+        
         if not hasattr(self, "_dp2") or recompute:
             dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
             self._dp2 = dp2
         return self._dp2
-        
-    def checkruncomplete(self):
-        """Check that model has been run"""
-        if not self.yresult:
-            raise ModelError("No yresult found, model run not complete.")
-        return
     
 
 class OneZeroIcsTwoStage(TwoStageModel):
@@ -1851,8 +1791,6 @@ class OneZeroIcsTwoStage(TwoStageModel):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
             self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi
@@ -1910,8 +1848,6 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         deltaphi: array_like
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
-        #Raise error if first order not run yet
-        self.checkruncomplete()
         
         if not hasattr(self, "deltaphi") or recompute:
             self.deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex deltaphi

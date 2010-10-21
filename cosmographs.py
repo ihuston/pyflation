@@ -77,9 +77,6 @@ def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
 def plotresults(m, fig=None, show=True, varindex=None, klist=None, saveplot=False, numks=5):
     """Plot results of simulation run on a graph.
         Return figure instance used."""
-    if m.runcount == 0:
-        raise CosmoGraphError("Model has not been run yet, cannot plot results!")
-    
     if varindex is None:
         varindex = 0 #Set default list of variables to plot
     

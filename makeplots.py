@@ -751,7 +751,6 @@ def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, mod
     for m, mleg in zip(models, models_legends):
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
-        m.runcount = 1
         dp = m.yresult[tix,3,:] + m.yresult[tix,5,:]*1j
         scPr = m.k**3/(2*np.pi**2) * (dp*dp.conj()) / (m.yresult[tix,1,:]**2)
         P.semilogx(m.k, scPr, label=mleg)
@@ -772,7 +771,6 @@ def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, m
     for m, mleg in zip(models, models_legends):
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
-        m.runcount = 1
         dp2 = m.yresult[tix,7,:] + m.yresult[tix,9,:]*1j
         scdp = m.k**1.5/(np.sqrt(2)*np.pi) * np.abs(dp2) / (m.yresult[tix,1,:]**2)
         P.loglog(m.k, scdp, label=mleg)

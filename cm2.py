@@ -138,9 +138,6 @@ class RingevalTwoStage(TwoStageModel):
         """Find the spectrum of perturbations for each k. 
            Return Pr.
            """
-        #Check if bg run is completed
-        if self.firstordermodel.runcount == 0:
-            raise ModelError("First order system must be run trying to find spectrum!")
         
         #Set nice variable names
         dphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j #complex dphi
