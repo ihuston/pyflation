@@ -265,6 +265,7 @@ def step_potential(y, params=None):
     """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
     V=1/2 m^2 phi^2 ( 1 + c*tanh((phi-phi_s) / d)
     where m is the mass of the inflaton field and c, d and phi_s are provided.
+    Form is taken from Chen etal. arxiv:0801.3295.
     
     Arguments:
     y - Array of variables with background phi as y[0]
