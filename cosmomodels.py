@@ -239,20 +239,13 @@ class CosmologicalModel(object):
         else:
             raise IOError("Directory 'results' does not exist")
         
-        if filetype is "gz":
-            try:
-                resultsfile = gzip.GzipFile(filename, filemode)
-                try:
-                    pickle.dump(self.resultlist, resultsfile)
-                finally:
-                    resultsfile.close()
-            except IOError:
-                raise
-        elif filetype is "hf5":
+        if filetype is "hf5":
             try:
                 self.saveresultsinhdf5(filename, filemode)
             except IOError:
                 raise
+        else:
+            raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
         self.lastsavedfile = filename
         return filename
         
