@@ -51,7 +51,7 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["odeint", "rkdriver_dumb", "scipy_odeint", "scipy_vode", "rkdriver_withks", "rkdriver_new"]
+    solverlist = ["rkdriver_withks", "rkdriver_new"]
     ynames = ["First dependent variable"]
     tname = "Time"
     plottitle = "A generic Cosmological Model"
@@ -127,31 +127,6 @@ class CosmologicalModel(object):
             raise ModelError("Unknown solver!")
         #Test whether k exists and if so change init conditions
                
-        if self.solver == "odeint":
-            try:
-                self.tresult, self.yresult, self.nok, self.nbad = rk4.odeint(self.ystart, self.tstart,
-                    self.tend, self.tstep_wanted, self.tstep_min, self.derivs, self.eps, self.dxsav)
-                #Commented out next line to work with array of k values
-                #self.yresult = np.hsplit(self.yresult, self.yresult.shape[1])
-            except rk4.SimRunError, er:
-                self.yresult = np.array(er.yresult)
-                self.tresult = np.array(er.tresult)
-                self._log.error("Error during run, but some results obtained: "+ er.message)
-            except StandardError, er:
-                #raise ModelError("Error running odeint", self.tresult, self.yresult)
-                raise
-        
-        if self.solver == "rkdriver_dumb":
-            #set_trace()
-            #Loosely estimate number of steps based on requested step size
-            nstep = np.ceil((self.tend - self.tstart)/self.tstep_wanted)
-            try:
-                self.tresult, yreslist = rk4.rkdriver_dumb(self.ystart, self.tstart, self.tend, nstep, self.derivs)
-            except StandardError, er:
-                merror = ModelError("Error running rkdriver_dumb:\n" + er.message)
-                raise merror
-            self.yresult = np.vstack(yreslist)
-
         if self.solver in ["rkdriver_withks", "rkdriver_new"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
@@ -164,83 +139,7 @@ class CosmologicalModel(object):
                 self._log.exception("Error running %s!", self.solver)
                 raise
             
-        if self.solver == "scipy_odeint":
-            #Use scipy solver. Need to massage derivs into right form.
-            #swap_derivs = lambda y, t : self.derivs(t,y)
-                        
-            #Now split depending on whether k exists
-            if type(self.k) is np.ndarray or type(self.k) is list:
-                #Get set of times for each k
-                if type(self.tstart) is np.ndarray or type(self.tstart) is list:
-                    times = np.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [np.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
-                else:
-                    times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [0]
-                #Make a copy of k and ystart while we work
-                klist = np.copy(self.k)
-                yslist = np.rollaxis(np.copy(self.ystart),1,0)
-                
-                #Do calculation
-                #Compute list of ks in a row
-                yres = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
-                ylist = [yr[0] for yr in yres]
-                self.solverinfo = [yr[1] for yr in yres] #information about solving routine
-                ylistlengths = [len(ys) for ys in ylist]
-                ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
-                #Now stack results to look like as normal (time,variable,k)
-                self.yresult = np.dstack(ylist)
-                self.tresult = times
-                #Return klist to normal
-                self.k = klist
-            else:
-                times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                yres = scipy_odeint(self.derivs, self.ystart, times)
-                self.yresult = yres
-                
-                self.tresult = times
-                
-        if self.solver == "scipy_vode":
-            #Use scipy solver. Need to massage derivs into right form.
-            swap_derivs = (lambda t, y : self.derivs(y,t))
-            #Now split depending on whether k exists
-            if type(self.k) is np.ndarray or type(self.k) is list:
-                #Get set of times for each k
-                if type(self.tstart) is np.ndarray or type(self.tstart) is list:
-                    times = np.arange(self.tstart.min(), self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [np.where(abs(ts - times)<self.eps)[0][0] for ts in self.tstart]
-                else:
-                    times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                    startindices = [0]
-                #Make a copy of k and ystart while we work
-                klist = np.copy(self.k)
-                yslist = np.rollaxis(np.copy(self.ystart),1,0)
-                
-                #Do calculation
-                #Compute list of ks in a row
-                ylist = []
-                for self.k, ys, ts in zip(klist,yslist,startindices):
-                    r = integrate.ode(swap_derivs)
-                    r = r.set_integrator('vode')
-                    r = r.set_initial_value(ys, times[ts])
-                    yr = []
-                    while r.successful() and r.t <= self.tend :
-                        yr += [r.integrate(r.t+self.tstep_wanted)]
-                    ylist += [np.array(yr)]
-                    del r
-                #ylist = [scipy_odeint(self.derivs, ys, times[ts:]) for self.k, ys, ts in zip(klist,yslist,startindices)]
-                
-                ylistlengths = [len(ys) for ys in ylist]
-                ylist = [helpers.nanfillstart(y, max(ylistlengths)) for y in ylist]
-                #Now stack results to look like as normal (time,variable,k)
-                self.yresult = np.dstack(ylist)
-                self.tresult = times
-                #Return klist to normal
-                self.k = klist
-            else:
-                times = np.arange(self.tstart, self.tend + self.tstep_wanted, self.tstep_wanted)
-                self.yresult = scipy_odeint(self.derivs, self.ystart, times)
-                self.tresult = times
+        
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
         
