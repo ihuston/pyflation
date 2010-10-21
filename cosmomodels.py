@@ -203,23 +203,6 @@ class CosmologicalModel(object):
         a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
         a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
         return a
-    
-    def saveplot(self, fig):
-        """Save figure fig in directory graphs"""
-        time = self.lastparams["datetime"]
-        filename = "./graphs/run" + time + ".png"
-            
-        if os.path.isdir(os.path.dirname(filename)):
-            if os.path.isfile(filename):
-                raise IOError("File already exists!")
-        else:
-            raise IOError("Directory 'graphs' does not exist")
-        try:
-            fig.savefig(filename)
-            self._log.info("Plot saved as " + filename)
-        except IOError:
-            raise
-        return
            
     def saveallresults(self, filename=None, filetype="hf5"):
         """Tries to save file as a pickled object in directory 'results'."""
