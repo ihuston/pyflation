@@ -198,11 +198,6 @@ class CosmologicalModel(object):
             yresdict["foystart"] = tables.Float64Col(self.foystart[:,0].shape)
             yresdict["fotstart"] = tables.Float64Col()
         return yresdict        
-    
-    def argstring(self):
-        a = r"; Arguments: ystart="+ str(self.ystart) + r", tstart=" + str(self.tstart) 
-        a += r", tend=" + str(self.tend) + r", mass=" + str(self.mass)
-        return a
            
     def saveallresults(self, filename=None, filetype="hf5"):
         """Tries to save file as a pickled object in directory 'results'."""
