@@ -309,24 +309,6 @@ class CosmologicalModel(object):
                 rf.close()
         except IOError:
             raise
-        
-    def loadresults(self, filename):
-        """Loads results from a file and appends them to current results list."""
-        
-        if not os.path.isfile(filename):
-            raise IOError("File does not exist!")
-        
-        try:
-            resultsfile = open(filename, "r")
-            try:
-                newresults = pickle.load(resultsfile)
-                #The following doesn't check to see if type of object is right!
-                self.resultlist.extend(newresults) 
-                self.runcount = len(self.resultlist)
-            finally:
-                resultsfile.close()
-        except IOError:
-                raise
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
