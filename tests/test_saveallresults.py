@@ -25,8 +25,8 @@ def main():
     hf5dict = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
-        "ystart" : tables.Float64Col(self.ystart.shape),
-        "tstart" : tables.Float64Col(np.shape(self.tstart)),
+        "ystart" : tables.Float64Col(ystart.shape),
+        "tstart" : tables.Float64Col(),
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
