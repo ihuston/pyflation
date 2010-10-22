@@ -22,7 +22,9 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
             "phi2over3":       {"potential_func": "phi2over3",
                                 "ystart": np.array([10.0, 0,0,0,0,0,0])},
             "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
-                                "ystart": np.array([18.0, 0,0,0,0,0,0])}
+                                "ystart": np.array([18.0, 0,0,0,0,0,0])},
+            "step_potential":  {"potential_func": "step_potential",
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             }
 
 ##############################
