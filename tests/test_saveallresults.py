@@ -9,7 +9,7 @@ import sys
 
 def main():
     ystart = np.zeros((4,1025))
-    callingparams = {'ainit': 7.8372191345921218e-65,
+    callingparams = {
               'classname': 'SOCanonicalThreeStage',
               'datetime': '20101022173354',
               'dxsav': 0.0,
@@ -28,7 +28,6 @@ def main():
         "ystart" : tables.Float64Col(ystart.shape),
         "tstart" : tables.Float64Col(),
         "simtstart" : tables.Float64Col(),
-        "ainit" : tables.Float64Col(),
         "potential_func" : tables.StringCol(255),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
