@@ -157,7 +157,6 @@ class CosmologicalModel(object):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.233 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -167,7 +166,6 @@ class CosmologicalModel(object):
         params = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
-        "CVSRevision" : tables.StringCol(255),
         "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
@@ -279,12 +277,12 @@ class CosmologicalModel(object):
                     raise IOError("Can only write or append to files!")
                 #Now save data
                 #Save parameters
-                #paramstabrow = paramstab.row
-                #params = self.callingparams()
-                #for key in params:
-                #    paramstabrow[key] = params[key]
-                #paramstabrow.append() #Add to table
-                #paramstab.flush()
+                paramstabrow = paramstab.row
+                params = self.callingparams()
+                for key in params:
+                    paramstabrow[key] = params[key]
+                paramstabrow.append() #Add to table
+                paramstab.flush()
                 #Save first order results
                 if grpname is "results":
                     yresarr.append(self.yresult)
@@ -982,7 +980,6 @@ class MultiStageModel(CosmologicalModel):
                   "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "CVSRevision":"$Revision: 1.233 $",
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                   }
         return params
@@ -992,7 +989,6 @@ class MultiStageModel(CosmologicalModel):
         params = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
-        "CVSRevision" : tables.StringCol(255),
         "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
