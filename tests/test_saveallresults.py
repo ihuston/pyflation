@@ -28,6 +28,8 @@ def main():
         "ystart" : tables.Float64Col(ystart.shape),
         "tstart" : tables.Float64Col(),
         "simtstart" : tables.Float64Col(),
+        "ainit" : tables.Float64Col(),
+        "potential_func" : tables.StringCol(255),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
         "tstep_min" : tables.Float64Col(),
