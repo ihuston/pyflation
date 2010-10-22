@@ -38,11 +38,11 @@ def main():
     
     rf = tables.openFile("./test.hf5", "w")
     filters = tables.Filters(complevel=2, complib="blosc")
-    resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
-    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
+    resgroup = rf.createGroup(rf.root, "results", "Results of simulation")
+    paramstab = rf.createTable(resgroup, "parameters", hf5dict, filters=filters)
     #Save parameters
     paramstabrow = paramstab.row
-    params = self.callingparams()
+    params = callingparams
     for key in params:
         paramstabrow[key] = params[key]
     paramstabrow.append() #Add to table
