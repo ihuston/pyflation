@@ -10,7 +10,6 @@ import sys
 def main():
     ystart = np.zeros((4,1025))
     callingparams = {
-              'classname': 'SOCanonicalThreeStage',
               'datetime': '20101022173354',
               'dxsav': 0.0,
               'eps': 1e-10,
@@ -24,7 +23,6 @@ def main():
     
     hf5dict = {
         "solver" : tables.StringCol(50),
-        "classname" : tables.StringCol(255),
         "ystart" : tables.Float64Col(ystart.shape),
         "tstart" : tables.Float64Col(),
         "simtstart" : tables.Float64Col(),
