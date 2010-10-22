@@ -8,7 +8,7 @@ import numpy as np
 import sys
 
 def main():
-    ystart = np.zeros((4,1025))
+    ystart = np.zeros((4,))
     callingparams = {
               'datetime': '20101022173354',
               'dxsav': 0.0,
