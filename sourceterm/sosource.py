@@ -78,18 +78,24 @@ def calculatesource(m, nix, integrand_elements, srceqns):
         myr[are_nan] = nanfiller[are_nan]
         if _debug:
             source_logger.debug("NaNs filled. Setting dynamical variables...")
+            
     #Get first order results
+    #The background variables can just be taken as the first k value
     bgvars = myr[0:3,0]
+    #The first order variables need the full k values
     dphi1 = myr[3,:] + myr[5,:]*1j
     dphi1dot = myr[4,:] + myr[6,:]*1j
     #Setup interpolation
     if _debug:
         source_logger.debug("Variables set. Getting potentials for this timestep...")
+    #To get the potentials we send the recorded values to the potentials function
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
-        if np.shape(p) != np.shape(potentials[3]):
-            potentials[pix] = p[0]
+        #Check if the shape of the potentials is the same as the reduced k
+        if np.shape(p) != np.shape(k):
+            #Change to be the same shape as the reduced k
+            potentials[pix] = p[:k.shape[0]]
     #Value of a for this time step
     a = m.ainit*np.exp(m.tresult[nix])
     if _debug:
