@@ -148,8 +148,7 @@ class CosmologicalModel(object):
     def callingparams(self):
         """Returns list of parameters to save with results."""      
         #Form dictionary of inputs
-        params = {"ystart":self.ystart, 
-                  "tstart":self.tstart,
+        params = {"tstart":self.tstart,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
                   "tstep_min":self.tstep_min,
@@ -166,7 +165,6 @@ class CosmologicalModel(object):
         params = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
-        "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
@@ -969,8 +967,7 @@ class MultiStageModel(CosmologicalModel):
         except (NameError, AttributeError):
             self.k=None
         #Form dictionary of inputs
-        params = {"ystart":self.ystart, 
-                  "tstart":self.tstart,
+        params = {"tstart":self.tstart,
                   "ainit":self.ainit,
                   "potential_func":self.potentials.__name__,
                   "tend":self.tend,
@@ -989,7 +986,6 @@ class MultiStageModel(CosmologicalModel):
         params = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
-        "ystart" : tables.Float64Col(self.ystart.shape),
         "tstart" : tables.Float64Col(np.shape(self.tstart)),
         "simtstart" : tables.Float64Col(),
         "ainit" : tables.Float64Col(),
