@@ -92,10 +92,13 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     potentials = list(m.potentials(myr))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
-        #Check if the shape of the potentials is the same as the reduced k
-        if np.shape(p) != np.shape(k):
-            #Change to be the same shape as the reduced k
-            potentials[pix] = p[:k.shape[0]]
+        #Check if the shape of the potentials is a scalar
+        if np.shape(p) != ():
+            #Change to be a scalar
+            potentials[pix] = p[0]
+            #If the potential is k dependent this needs to be changed to include full
+            #k behaviour. The bgvars variable should also include the full k range in
+            #this case.
     #Value of a for this time step
     a = m.ainit*np.exp(m.tresult[nix])
     if _debug:
