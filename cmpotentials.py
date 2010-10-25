@@ -32,6 +32,8 @@ def msqphisq(y, params=None):
     else:
         #Use WMAP value of mass (in Mpl)
         m = 6.3267e-6
+        
+    yshape = np.ones_like(y[0])
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
@@ -39,9 +41,9 @@ def msqphisq(y, params=None):
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[0]
     #2nd deriv
-    d2Udphi2 = mass2
+    d2Udphi2 = mass2*yshape
     #3rd deriv
-    d3Udphi3 = 0
+    d3Udphi3 = 0*yshape
     
     return U, dUdphi, d2Udphi2, d3Udphi3
 
@@ -248,6 +250,8 @@ def msqphisq_withV0(y, params=None):
         V0 = params["V0"]
     else:
         V0 = 5e-10 # Units Mpl^4
+    
+    yshape = np.ones_like(y[0])
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
@@ -255,9 +259,9 @@ def msqphisq_withV0(y, params=None):
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[0]
     #2nd deriv
-    d2Udphi2 = mass2
+    d2Udphi2 = mass2*yshape
     #3rd deriv
-    d3Udphi3 = 0
+    d3Udphi3 = 0*yshape
     
     return U, dUdphi, d2Udphi2, d3Udphi3
     
