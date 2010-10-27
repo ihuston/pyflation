@@ -120,7 +120,9 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     yshape.extend(v.shape)
     yarr = np.ones(yshape)*np.nan
     
-    #Change yresults at each timestep in tsix to value in ystart:
+    #Change yresults at each timestep in tsix to value in ystart
+    #The transpose of ystart is used so that the start_value variable is an array
+    #of all the dynamical variables at the start time given by timeindex.
     for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart.transpose())):
         yarr[timeindex, ..., kindex] = start_value
     
@@ -131,7 +133,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         last_x = simtstart + (xix-1)*h
         
         #Setup any arguments that are needed to send to derivs function
-        dargs = {}
+        dargs = {"k": allks}
         #Find first derivative term for the last time step
         dv = derivs(yarr[xix-1], last_x, **dargs)
         #Do a rk4 step starting from last time step
