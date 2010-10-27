@@ -46,7 +46,7 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["rkdriver_withks", "rkdriver_new"]
+    solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
     ynames = ["First dependent variable"]
     tname = "Time"
     plottitle = "A generic Cosmological Model"
@@ -128,6 +128,20 @@ class CosmologicalModel(object):
             solver = rk4.__getattribute__(self.solver)
             try:
                 self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstart, self.tend, self.k, 
+                self.tstep_wanted, self.derivs)
+            except StandardError:
+                self._log.exception("Error running %s!", self.solver)
+                raise
+            
+        if self.solver in ["rkdriver_tsix"]:
+            #set_trace()
+            #Loosely estimate number of steps based on requested step size
+            if not hasattr(self, "tstartindex"):
+                raise ModelError("Need to specify initial starting indices!")
+            self._log.debug("Starting simulation with %s.", self.solver)
+            solver = rk4.__getattribute__(self.solver)
+            try:
+                self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstartindex, self.tend, self.k, 
                 self.tstep_wanted, self.derivs)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
