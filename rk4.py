@@ -130,14 +130,18 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         #last_x is the timestep before, which we will need to use for calc
         last_x = simtstart + (xix-1)*h
         
+        #Setup any arguments that are needed to send to derivs function
         dargs = {}
+        #Find first derivative term for the last time step
         dv = derivs(yarr[xix-1], last_x, **dargs)
+        #Do a rk4 step starting from last time step
         v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs)
+        #This masks all the NaNs in the v result so that they are not copied
         v_nonan = ~np.isnan(v)
         
         #Save current timestep
         xarr[xix] = current_x.copy()
-        #Save current result
+        #Save current result without overwriting with NaNs
         yarr[xix, v_nonan] = v.copy()[v_nonan]
     #Get results 
     
