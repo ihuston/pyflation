@@ -51,7 +51,7 @@ class CosmologicalModel(object):
     tname = "Time"
     plottitle = "A generic Cosmological Model"
     
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
+    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
@@ -59,6 +59,11 @@ class CosmologicalModel(object):
         
         self.ystart = ystart
         self.k = getattr(self, "k", None) #so we can test whether k is set
+        
+        if tstartindex is None:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
         
         if np.all(tstart < tend): 
             self.tstart, self.tend = tstart, tend
@@ -1227,9 +1232,10 @@ class TwoStageModel(MultiStageModel):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
-        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
-                                tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit, potential_func=self.potential_func, pot_params=self.pot_params)
+        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tstartindex = self.fotstartindex, 
+                                            tend=self.fotend, tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, 
+                                            solver=self.solver,k=self.k, ainit=self.ainit, potential_func=self.potential_func, 
+                                            pot_params=self.pot_params)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
