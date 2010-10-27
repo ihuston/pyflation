@@ -124,15 +124,21 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart)):
         yarr[timeindex, kindex] = start_value
     
-    x = simtstart
-    for xix in range(0, number_steps-1):
-        x = simtstart + xix*h
-        xarr[xix] = x.copy()
+    for xix in range(1, number_steps):
+        # xix labels the current timestep to be saved
+        current_x = simtstart + xix*h
+        #last_x is the timestep before, which we will need to use for calc
+        last_x = simtstart + (xix-1)*h
+        
         dargs = {}
-        dv = derivs(yarr[xix], x, **dargs)
-        v = rk4stepks(x, yarr[xix], h, dv, dargs, derivs)
+        dv = derivs(yarr[xix-1], last_x, **dargs)
+        v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs)
         v_nonan = ~np.isnan(v)
-        yarr[xix+1, v_nonan] = v.copy()[v_nonan]
+        
+        #Save current timestep
+        xarr[xix] = current_x.copy()
+        #Save current result
+        yarr[xix, v_nonan] = v.copy()[v_nonan]
     #Get results 
     
     return xarr, yarr
