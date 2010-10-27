@@ -90,6 +90,52 @@ def rk4stepxix(x, y, h, dargs, derivs):
     
     return yout
 
+def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
+    """Driver function for classical Runge Kutta 4th Order method.
+    Uses indexes of starting time values instead of actual times.
+    Indexes are number of steps of size h away from initial time simtstart."""
+    #Make sure h is specified
+    if h is None:
+        raise SimRunError("Need to specify h.")
+    
+    #Set up x counter and index for x
+    xix = 0 # first index
+    
+    #The number of steps could be either the floor or ceiling of the following calc
+    #In the previous code, the floor was used, but then the rk step add another step on
+    #Additional +1 is to match with extra step as x is incremented at beginning of loop
+    number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
+    if np.any(tsix>number_steps):
+        raise SimRunError("Start times outside range of steps.")
+    
+    #Set up x results array
+    xarr = np.zeros((number_steps,))
+    #Record first x value
+    xarr[xix] = simtstart
+        
+    v = np.ones_like(ystart)*np.nan
+    
+    #New y results array
+    yshape = [number_steps]
+    yshape.extend(v.shape)
+    yarr = np.ones(yshape)*np.nan
+    
+    #Change yresults at each timestep in tsix to value in ystart:
+    for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart)):
+        yarr[timeindex, kindex] = start_value
+    
+    x = simtstart
+    for xix in range(0, number_steps):
+        x = simtstart + xix*h
+        xarr[xix] = x.copy()
+        dargs = {}
+        dv = derivs(v, x, **dargs)
+        v = rk4stepks(x, v, h, dv, dargs, derivs)
+        v_nonan = ~np.isnan(v)
+        yarr[xix, v_nonan] = v.copy()[v_nonan]
+    #Get results 
+    
+    return xarr, yarr
    
 @profile 
 def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
