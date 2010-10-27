@@ -125,14 +125,14 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         yarr[timeindex, kindex] = start_value
     
     x = simtstart
-    for xix in range(0, number_steps):
+    for xix in range(0, number_steps-1):
         x = simtstart + xix*h
         xarr[xix] = x.copy()
         dargs = {}
-        dv = derivs(v, x, **dargs)
-        v = rk4stepks(x, v, h, dv, dargs, derivs)
+        dv = derivs(yarr[xix], x, **dargs)
+        v = rk4stepks(x, yarr[xix], h, dv, dargs, derivs)
         v_nonan = ~np.isnan(v)
-        yarr[xix, v_nonan] = v.copy()[v_nonan]
+        yarr[xix+1, v_nonan] = v.copy()[v_nonan]
     #Get results 
     
     return xarr, yarr
