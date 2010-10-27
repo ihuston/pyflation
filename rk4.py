@@ -121,7 +121,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     yarr = np.ones(yshape)*np.nan
     
     #Change yresults at each timestep in tsix to value in ystart:
-    for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart)):
+    for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart.transpose())):
         yarr[timeindex, ..., kindex] = start_value
     
     for xix in range(1, number_steps):
