@@ -122,7 +122,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     
     #Change yresults at each timestep in tsix to value in ystart:
     for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart)):
-        yarr[timeindex, kindex] = start_value
+        yarr[timeindex, ..., kindex] = start_value
     
     for xix in range(1, number_steps):
         # xix labels the current timestep to be saved
