@@ -1661,7 +1661,7 @@ class ThirdStageModel(MultiStageModel):
         #Need to make sure that the tstartindex terms are changed over to new timestep.
         fotstep = self.second_stage.tstep_wanted
         sotstep = fotstep*2
-        sotstartindex = np.int(np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2))
+        sotstartindex = np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
         
         kwargs = dict(ystart=ystart,
                       tstart=self.second_stage.tresult[0],
