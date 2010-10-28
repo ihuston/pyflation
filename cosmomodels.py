@@ -498,7 +498,7 @@ class CanonicalBackground(PhiModels):
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
         #Set derivatives
-        dydx = np.zeros(3)
+        dydx = np.zeros_like(y)
         
         #d\phi_0/dn = y_1
         dydx[0] = y[1] 
