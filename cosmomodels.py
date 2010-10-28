@@ -1658,12 +1658,17 @@ class ThirdStageModel(MultiStageModel):
         if ystart is None:
             ystart = np.zeros((4, len(self.k)))
             
+        #Need to make sure that the tstartindex terms are changed over to new timestep.
+        fotstep = self.second_stage.tstep_wanted
+        sotstep = fotstep*2
+        sotstartindex = np.int(np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2))
+        
         kwargs = dict(ystart=ystart,
                       tstart=self.second_stage.tresult[0],
-                      tstartindex=self.fotstartindex,
+                      tstartindex=sotstartindex,
                       simtstart=self.simtstart,
                       tend=self.second_stage.tresult[-1],
-                      tstep_wanted=self.second_stage.tstep_wanted*2,
+                      tstep_wanted=sotstep,
                       tstep_min=self.second_stage.tstep_min*2,
                       solver="rkdriver_new",
                       potential_func=self.second_stage.potential_func,
