@@ -121,5 +121,3 @@ pattern = "src-(\d*).hf5"
 srcresults = os.path.join(RESULTSDIR, "src.hf5")
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
-
-
