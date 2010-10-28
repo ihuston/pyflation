@@ -18,6 +18,7 @@ import configuration
 import helpers 
 import cmpotentials
 import rk4
+from run_config import _debug
 
 
 #Start logging
@@ -656,21 +657,17 @@ class CanonicalSecondOrder(PhiModels):
         
         if kix is None:
             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-        #Need t index to use first order data
-        if kwargs["tix"] is None:
-            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
-        else:
-            tix = kwargs["tix"]
-        fotix = np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted)
+        
+        fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
         
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f, fotix=%f", tix, t, self.second_stage.tresult[tix], fotix)
+        self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
         #Get first order results for this time step
-        fovars = self.second_stage.yresult[tix].copy()[:,kix]
+        fovars = self.second_stage.yresult[fotix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
-        epsilon = self.second_stage.bgepsilon[tix]
+        epsilon = self.second_stage.bgepsilon[fotix]
         #Get source terms
-        src = self.source[tix][kix]
+        src = self.source[fotix][kix]
         srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
