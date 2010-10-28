@@ -140,7 +140,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         last_x = simtstart + (xix-1)*h
         
         #Setup any arguments that are needed to send to derivs function
-        dargs = {"k": allks}
+        dargs = {}
         #Find first derivative term for the last time step
         dv = derivs(yarr[xix-1], last_x, **dargs)
         #Do a rk4 step starting from last time step
