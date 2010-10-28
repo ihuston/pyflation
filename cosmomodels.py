@@ -1376,20 +1376,29 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,2]
+        Hzero = bgyresult[0,2]
+        
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         try:
             etadiff = etastar - self.etainit
         except AttributeError:
-            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(np.sqrt(2*self.k)))
