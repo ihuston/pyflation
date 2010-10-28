@@ -1213,10 +1213,20 @@ class TwoStageModel(MultiStageModel):
             ys = self.ystart[0:3]
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
-        self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
-                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                            potential_func=self.potential_func, pot_params=self.pot_params)
+        #Choose tstartindex to be simply the first timestep.
+        tstartindex = np.array([0])
         
+        kwargs = dict(ystart=ys, 
+                      tstart=self.tstart,
+                      tstartindex=tstartindex, 
+                      tend=self.tend,
+                      tstep_wanted=self.tstep_wanted, 
+                      tstep_min=self.tstep_min, 
+                      solver=self.solver,
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+         
+        self.bgmodel = self.bgclass(**kwargs)
         #Start background run
         self._log.info("Running background model...")
         try:
