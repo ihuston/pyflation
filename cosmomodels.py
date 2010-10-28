@@ -661,7 +661,7 @@ class CanonicalSecondOrder(PhiModels):
             raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
         else:
             tix = kwargs["tix"]
-        fotix = np.int((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted)
+        fotix = np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted)
         
         #debug logging
         self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f, fotix=%f", tix, t, self.second_stage.tresult[tix], fotix)
