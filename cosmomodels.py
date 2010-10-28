@@ -1124,7 +1124,9 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0, **kwargs):
+    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, 
+                 k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
+                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
@@ -1140,9 +1142,23 @@ class TwoStageModel(MultiStageModel):
                                     ])
         else:
             self.ystart = ystart
+        if not tstartindex:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
         #Call superclass
-        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, 
-                tstep_min, solver=solver, potential_func=potential_func, pot_params=pot_params, **kwargs)
+        newkwargs = dict(ystart=self.ystart, 
+                         tstart=tstart,
+                         tstartindex=self.tstartindex, 
+                         tend=tend, 
+                         tstep_wanted=tstep_wanted, 
+                         tstep_min=tstep_min, 
+                         solver=solver, 
+                         potential_func=potential_func, 
+                         pot_params=pot_params, 
+                         **kwargs)
+        
+        super(TwoStageModel, self).__init__(**newkwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1242,10 +1258,19 @@ class TwoStageModel(MultiStageModel):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
-        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tstartindex = self.fotstartindex, 
-                                            tend=self.fotend, tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, 
-                                            solver=self.solver,k=self.k, ainit=self.ainit, potential_func=self.potential_func, 
-                                            pot_params=self.pot_params)
+        kwargs = dict(ystart=self.foystart, 
+                      tstart=self.fotstart, 
+                      tstartindex = self.fotstartindex, 
+                      tend=self.fotend, 
+                      tstep_wanted=self.tstep_wanted, 
+                      tstep_min=self.tstep_min, 
+                      solver=self.solver,
+                      k=self.k, 
+                      ainit=self.ainit, 
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+        
+        self.firstordermodel = self.foclass(**kwargs)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
