@@ -33,7 +33,14 @@ QSUBLOGSDIR = os.path.join(RUNDIR, QSUBLOGSDIRNAME)
 
 # The logging level changes how much is saved to logging files. 
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
-LOGLEVEL = logging.INFO 
+LOGLEVEL = logging.INFO
+
+##################################################
+# debug logging control
+# 0 for off, 1 for on
+# This can be changed using command line arguments
+##################################################
+_debug = 1
 
 #Program name
 PROGRAM_NAME = "Pyflation"

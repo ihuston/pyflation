@@ -15,10 +15,10 @@ import logging
 
 #local modules from pyflation
 import configuration
+from configuration import _debug
 import helpers 
 import cmpotentials
 import rk4
-from run_config import _debug
 
 
 #Start logging

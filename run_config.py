@@ -77,7 +77,7 @@ overwrite = True
 # THIS LINE
 ##############################
 
-from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR
+from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR, _debug
 
 if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
@@ -123,9 +123,3 @@ mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
 
 
-##################################################
-# debug logging control
-# 0 for off, 1 for on
-# This can be changed using command line arguments
-##################################################
-_debug = 1 #
