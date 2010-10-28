@@ -113,6 +113,9 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #Record first x value
     xarr[xix] = simtstart
         
+    #Check whether ystart is one dimensional and change to at least two dimensions
+    if ystart.ndim == 1:
+        ystart = ystart[..., np.newaxis]
     v = np.ones_like(ystart)*np.nan
     
     #New y results array
@@ -123,6 +126,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #Change yresults at each timestep in tsix to value in ystart
     #The transpose of ystart is used so that the start_value variable is an array
     #of all the dynamical variables at the start time given by timeindex.
+    #Test whether the timeindex array has more than one value, i.e. more than one k value
     for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart.transpose())):
         yarr[timeindex, ..., kindex] = start_value
     
