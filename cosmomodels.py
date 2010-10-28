@@ -159,7 +159,7 @@ class CosmologicalModel(object):
             solver = rk4.__getattribute__(self.solver)
             try:
                 self.tresult, self.yresult = solver(ystart=self.ystart, 
-                                                    simstart=self.simtstart, 
+                                                    simtstart=self.simtstart, 
                                                     tsix=self.tstartindex, 
                                                     tend=self.tend, 
                                                     allks=self.k, 
