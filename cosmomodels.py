@@ -137,7 +137,8 @@ class CosmologicalModel(object):
         if self.solver in ["rkdriver_withks", "rkdriver_new"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
-            self._log.debug("Starting simulation with %s.", self.solver)
+            if _debug:
+                self._log.debug("Starting simulation with %s.", self.solver)
             solver = rk4.__getattribute__(self.solver)
             try:
                 self.tresult, self.yresult = solver(vstart=self.ystart, 
@@ -156,7 +157,8 @@ class CosmologicalModel(object):
             #Loosely estimate number of steps based on requested step size
             if not hasattr(self, "tstartindex"):
                 raise ModelError("Need to specify initial starting indices!")
-            self._log.debug("Starting simulation with %s.", self.solver)
+            if _debug:
+                self._log.debug("Starting simulation with %s.", self.solver)
             solver = rk4.__getattribute__(self.solver)
             try:
                 self.tresult, self.yresult = solver(ystart=self.ystart, 
@@ -233,10 +235,12 @@ class CosmologicalModel(object):
             
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
-                self._log.debug("File already exists! Using append data mode.")
+                if _debug:
+                    self._log.debug("File already exists! Using append data mode.")
                 filemode = "a"
             else:
-                self._log.debug("File does not exist, using write mode.")
+                if _debug:
+                    self._log.debug("File does not exist, using write mode.")
                 filemode = "w" #Writing to new file
         else:
             raise IOError("Directory 'results' does not exist")
@@ -328,7 +332,8 @@ class CosmologicalModel(object):
                         fotsxarr.append(self.fotstartindex)
                 rf.flush()
                 #Log success
-                self._log.debug("Successfully wrote results to file " + filename)
+                if _debug:
+                    self._log.debug("Successfully wrote results to file " + filename)
             finally:
                 rf.close()
         except IOError:
@@ -646,7 +651,8 @@ class CanonicalSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -661,7 +667,8 @@ class CanonicalSecondOrder(PhiModels):
         fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
         
         #debug logging
-        self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
+        if _debug:
+            self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
         #Get first order results for this time step
         fovars = self.second_stage.yresult[fotix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -735,7 +742,8 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -752,7 +760,8 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         else:
             tix = kwargs["tix"]
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        if _debug:
+            self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -837,7 +846,8 @@ class CanonicalRampedSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -854,7 +864,8 @@ class CanonicalRampedSecondOrder(PhiModels):
         else:
             tix = kwargs["tix"]
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        if _debug:
+            self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -1365,7 +1376,8 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1452,7 +1464,8 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1558,7 +1571,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             if not os.path.isfile(filename):
                 raise IOError("File does not exist!")
             try:
-                self._log.debug("Opening file " + filename + " to read results.")
+                if _debug:
+                    self._log.debug("Opening file " + filename + " to read results.")
                 try:
                     self._rf = tables.openFile(filename, "r")
                     self.yresult = self._rf.root.results.yresult
@@ -1575,7 +1589,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 try:
                     self.source = self._rf.root.results.sourceterm
                 except tables.NoSuchNodeError:
-                    self._log.debug("First order file does not have a source term.")
+                    if _debug:
+                        self._log.debug("First order file does not have a source term.")
                     self.source = None
                 #Put params in right slots
                 for ix, val in enumerate(params[0]):
@@ -1596,13 +1611,15 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                             potential_func=self.potential_func, pot_params=self.pot_params)
             #Put in data
             try:
-                self._log.debug("Trying to get background results...")
+                if _debug:
+                    self._log.debug("Trying to get background results...")
                 self.bgmodel.tresult = self._rf.root.bgresults.tresult[:]
                 self.bgmodel.yresult = self._rf.root.bgresults.yresult
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain background results!")
             #Get epsilon
-            self._log.debug("Calculating self.bgepsilon...")
+            if _debug:
+                self._log.debug("Calculating self.bgepsilon...")
             self.bgepsilon = self.bgmodel.getepsilon()
             #Success
             self._log.info("Successfully imported data from file into model instance.")
@@ -1610,7 +1627,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
         def __del__(self):
             """Close file when object destroyed."""
             try:
-                self._log.debug("Trying to close file...")
+                if _debug:
+                    self._log.debug("Trying to close file...")
                 self._rf.close()
             except IOError:
                 raise
@@ -1735,7 +1753,8 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         """Initialize variables and call super class __init__ method."""
         super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
         #try to set source term
-        self._log.debug("Trying to set source term for second order model...")
+        if _debug:
+            self._log.debug("Trying to set source term for second order model...")
         self.source = self.second_stage.source[:]
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
@@ -1846,7 +1865,8 @@ class OneZeroIcsTwoStage(TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1909,7 +1929,8 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
