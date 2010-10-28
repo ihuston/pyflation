@@ -51,7 +51,7 @@ class CosmologicalModel(object):
     tname = "Time"
     plottitle = "A generic Cosmological Model"
     
-    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
+    def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
@@ -71,6 +71,13 @@ class CosmologicalModel(object):
             raise ValueError, "End time is the same as start time!"
         else:
             raise ValueError, "Ending time is before starting time!"
+        
+        if np.all(simtstart < tend): 
+            self.simtstart = simtstart
+        elif simtstart == tend:
+            raise ValueError("End time is same a simulation start time!")
+        else:
+            raise ValueError("End time is before simulation start time!")
         
         if tstep_wanted >= tstep_min:
             self.tstep_wanted, self.tstep_min = tstep_wanted, tstep_min
@@ -120,7 +127,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True, simtstart=None):
+    def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -132,8 +139,13 @@ class CosmologicalModel(object):
             self._log.debug("Starting simulation with %s.", self.solver)
             solver = rk4.__getattribute__(self.solver)
             try:
-                self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstart, self.tend, self.k, 
-                self.tstep_wanted, self.derivs)
+                self.tresult, self.yresult = solver(vstart=self.ystart, 
+                                                    simtstart=self.simtstart, 
+                                                    ts=self.tstart, 
+                                                    te=self.tend, 
+                                                    allks=self.k, 
+                                                    h=self.tstep_wanted, 
+                                                    derivs=self.derivs)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
@@ -146,8 +158,13 @@ class CosmologicalModel(object):
             self._log.debug("Starting simulation with %s.", self.solver)
             solver = rk4.__getattribute__(self.solver)
             try:
-                self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstartindex, self.tend, self.k, 
-                self.tstep_wanted, self.derivs)
+                self.tresult, self.yresult = solver(ystart=self.ystart, 
+                                                    simstart=self.simtstart, 
+                                                    tsix=self.tstartindex, 
+                                                    tend=self.tend, 
+                                                    allks=self.k, 
+                                                    h=self.tstep_wanted, 
+                                                    derivs=self.derivs)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
@@ -1259,7 +1276,8 @@ class TwoStageModel(MultiStageModel):
 
         #Initialize first order model
         kwargs = dict(ystart=self.foystart, 
-                      tstart=self.fotstart, 
+                      tstart=self.fotstart,
+                      simtstart=self.simtstart, 
                       tstartindex = self.fotstartindex, 
                       tend=self.fotend, 
                       tstep_wanted=self.tstep_wanted, 
@@ -1276,7 +1294,7 @@ class TwoStageModel(MultiStageModel):
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
-            self.firstordermodel.run(saveresults=False, simtstart=self.simtstart)
+            self.firstordermodel.run(saveresults=False)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
@@ -1607,6 +1625,7 @@ class ThirdStageModel(MultiStageModel):
         kwargs = dict(ystart=ystart,
                       tstart=self.second_stage.tresult[0],
                       tstartindex=self.fotstartindex,
+                      simtstart=self.simtstart,
                       tend=self.second_stage.tresult[-1],
                       tstep_wanted=self.second_stage.tstep_wanted*2,
                       tstep_min=self.second_stage.tstep_min*2,
@@ -1630,6 +1649,7 @@ class ThirdStageModel(MultiStageModel):
         "ystart": self.ystart,
         "tstart": self.fotstart,
         "tstartindex": self.fotstartindex,
+        "simtstart": self.simtstart,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
         "tstep_min": self.tstep_min,
@@ -1652,7 +1672,7 @@ class ThirdStageModel(MultiStageModel):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=False, simtstart=self.simtstart)
+            self.somodel.run(saveresults=False)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
