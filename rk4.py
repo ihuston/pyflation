@@ -113,6 +113,13 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     xarr = np.zeros((number_steps,))
     #Record first x value
     xarr[xix] = simtstart
+    
+    first_real_step = tsix.min()
+    if first_real_step > xix:
+        if _debug:
+            rk_log.debug("rkdriver_tsix: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
+        xarr[xix+1:first_real_step+1] = simtstart + np.arange(xix+1, first_real_step+1)*h
+        xix = first_real_step
         
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
@@ -131,7 +138,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart.transpose())):
         yarr[timeindex, ..., kindex] = start_value
     
-    for xix in range(1, number_steps):
+    for xix in range(first_real_step + 1, number_steps):
         if _debug:
             rk_log.debug("rkdriver_tsix: xix=%f", xix)
         # xix labels the current timestep to be saved
