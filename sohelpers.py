@@ -69,6 +69,7 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
         yres = fres.yresult.copy(nres, stop=numks)
         tres = fres.tresult.copy(nres)
         tstart = fres.fotstart.copy(nres, stop=numks)
+        tstartindex = fres.fotstartindex.copy(nres, stop=numks)
         ystart = fres.foystart.copy(nres, stop=numks)
         params = fres.parameters.copy(nres)
         bgres = nf.copyNode(ff.root.bgresults, nf.root, recursive=True)
@@ -133,7 +134,8 @@ def combine_results(fofile, sofile, newfile=None):
         if "foystart" in ff.root.results:
             foystarr = nf.copyNode(ff.root.results.foystart, comgrp)
             fotstarr = nf.copyNode(ff.root.results.fotstart, comgrp)
-            _log.debug("foystart, fotstart arrays copied.")
+            fotstixarr = nf.copyNode(ff.root.results.fotstartindex, comgrp)
+            _log.debug("foystart, fotstart, fotstartindex arrays copied.")
         #Get results from first and second order
         fyr = ff.root.results.yresult
         syr = sf.root.results.yresult
