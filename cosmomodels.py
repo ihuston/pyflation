@@ -1561,16 +1561,26 @@ class ThirdStageModel(MultiStageModel):
             self.k = np.copy(self.second_stage.k)
             self.simtstart = self.second_stage.tresult[0]
             self.fotstart = np.copy(self.second_stage.fotstart)
+            self.fotstartindex = np.copy(self.second_stage.fotstartindex)
             self.ainit = self.second_stage.ainit
             self.potentials = self.second_stage.potentials
             self.potential_func = self.second_stage.potential_func
         
         if ystart is None:
             ystart = np.zeros((4, len(self.k)))
+            
+        kwargs = dict(ystart=ystart,
+                      tstart=self.second_stage.tresult[0],
+                      tstartindex=self.fotstartindex,
+                      tend=self.second_stage.tresult[-1],
+                      tstep_wanted=self.second_stage.tstep_wanted*2,
+                      tstep_min=self.second_stage.tstep_min*2,
+                      solver="rkdriver_new",
+                      potential_func=self.second_stage.potential_func,
+                      pot_params=self.second_stage.pot_params
+                      )
         #Call superclass
-        super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
-        self.second_stage.tstep_wanted*2, self.second_stage.tstep_min*2, solver="rkdriver_new", 
-        potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
+        super(ThirdStageModel, self).__init__(**kwargs)
         
         if soclass is None:
             self.soclass = CanonicalSecondOrder
@@ -1584,6 +1594,7 @@ class ThirdStageModel(MultiStageModel):
         sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
+        "tstartindex": self.fotstartindex,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
         "tstep_min": self.tstep_min,
