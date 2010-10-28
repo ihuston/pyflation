@@ -10,6 +10,7 @@ import logging
 
 from helpers import seq #Proper sequencing of floats
 import helpers
+from configuration import _debug
 
 if not "profile" in __builtins__:
     def profile(f):
@@ -131,6 +132,8 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         yarr[timeindex, ..., kindex] = start_value
     
     for xix in range(1, number_steps):
+        if _debug:
+            rk_log.debug("rkdriver_tsix: xix=%f", xix)
         # xix labels the current timestep to be saved
         current_x = simtstart + xix*h
         #last_x is the timestep before, which we will need to use for calc
@@ -302,10 +305,12 @@ def rkdriver_new(vstart, simtstart, ts, te, allks, h, derivs):
                 if np.any(np.isnan(v[:,oneix])):
                     v[:,oneix] = vstart[:,oneix]
             #Change last y result to initial conditions
-            y[-1][:,kix] = v[:,kix]    
-            rk_log.debug("xstart=%f, xend=%f", xstart, xend)
+            y[-1][:,kix] = v[:,kix]
+            if _debug:    
+                rk_log.debug("rkdriver_new: xstart=%f, xend=%f", xstart, xend)
             for x in seq(xstart, xend, h):
-                rk_log.debug("x=%f, xix=%d", x, xix)
+                if _debug:
+                    rk_log.debug("rkdriver_new: x=%f, xix=%d", x, xix)
                 xx.append(x.copy() + h)
                 if len(kix) != 0:
                     dargs = {"k": ks, "kix":kix, "tix":xix}
