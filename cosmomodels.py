@@ -931,6 +931,9 @@ class MultiStageModel(CosmologicalModel):
         if factor is None:
             factor = self.cq #time before horizon crossing
         #get aHs
+        if H.ndim > 1:
+            #Use only one dimensional H
+            H = H[:,0]
         aH = self.ainit*np.exp(t)*H
         try:
             kcrindex = np.where(np.sign(k - (factor*aH))<0)[0][0]
