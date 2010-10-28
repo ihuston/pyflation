@@ -1739,7 +1739,7 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
         #try to set source term
         self._log.debug("Trying to set source term for second order model...")
-        self.source = self.second_stage.source
+        self.source = self.second_stage.source[:]
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
         
