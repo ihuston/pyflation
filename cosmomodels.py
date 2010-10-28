@@ -1638,7 +1638,7 @@ class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
 
-    def __init__(self, second_stage, soclass=None, ystart=None):
+    def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
         """Initialize variables and check that tsmodel exists and is correct form."""
         
         #Test whether tsmodel is of correct type
@@ -1669,6 +1669,10 @@ class ThirdStageModel(MultiStageModel):
                       potential_func=self.second_stage.potential_func,
                       pot_params=self.second_stage.pot_params
                       )
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            kwargs.update(soclassargs)
+            
         #Call superclass
         super(ThirdStageModel, self).__init__(**kwargs)
         
@@ -1678,7 +1682,7 @@ class ThirdStageModel(MultiStageModel):
             self.soclass = soclass
         self.somodel = None
         
-    def runso(self, soclassargs=None):
+    def runso(self):
         """Run second order model."""
         
         sokwargs = {
@@ -1717,10 +1721,10 @@ class ThirdStageModel(MultiStageModel):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True, soclassargs=None):
+    def run(self, saveresults=True):
         """Run simulation and save results."""
         #Run second order model
-        self.runso(soclassargs=soclassargs)
+        self.runso()
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
