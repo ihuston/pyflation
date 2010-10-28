@@ -1700,9 +1700,6 @@ class ThirdStageModel(MultiStageModel):
         "pot_params": self.pot_params,
         "cq": self.cq}
         
-        #Update sokwargs with any arguments from soclassargs
-        if soclassargs is not None:
-            sokwargs.update(soclassargs)
         
         self.somodel = self.soclass(**sokwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
