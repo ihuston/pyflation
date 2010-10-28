@@ -1693,7 +1693,7 @@ class ThirdStageModel(MultiStageModel):
         sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
-        "tstartindex": self.fotstartindex,
+        "tstartindex": self.tstartindex,
         "simtstart": self.simtstart,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
