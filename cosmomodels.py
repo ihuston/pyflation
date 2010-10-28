@@ -1463,20 +1463,27 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,2]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         try:
             etadiff = etastar - self.etainit
         except AttributeError:
-            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+            etadiff = etastar + 1/(self.ainit*bgyresult[0,2]*(1-self.bgepsilon[0]))
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = np.sqrt(self.k**3/(2*np.pi**2))/(astar*(np.sqrt(2*self.k)))
@@ -1848,11 +1855,17 @@ class OneZeroIcsTwoStage(TwoStageModel):
         #Reset starting conditions at new time
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+        
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0
@@ -1905,11 +1918,17 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         #Reset starting conditions at new time
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+        
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0
