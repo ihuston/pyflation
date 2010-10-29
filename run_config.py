@@ -25,6 +25,8 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "ystart": np.array([18.0, 0,0,0,0,0,0])},
             "step_potential":  {"potential_func": "step_potential",
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+            "bump_potential":  {"potential_func": "bump_potential",
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])}
             }
 
 ##############################
