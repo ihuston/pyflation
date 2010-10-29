@@ -1,5 +1,5 @@
 #
-#Runge-Kutta ODE solver
+#Runge-Kutta ODE solver Cython version
 #Author: Ian Huston
 #CVS: $Id: rk4.py,v 1.38 2010/01/18 16:57:02 ith Exp $
 #
@@ -12,16 +12,10 @@ from helpers import seq #Proper sequencing of floats
 import helpers
 from configuration import _debug
 
-if not "profile" in __builtins__:
-    def profile(f):
-        return f
-
 #Start logging
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
-
-@profile
 def rk4stepks(x, y, h, dydx, dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
@@ -91,7 +85,7 @@ def rk4stepxix(x, y, h, dargs, derivs):
     
     return yout
 
-@profile
+
 def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
@@ -163,8 +157,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #Get results 
     
     return xarr, yarr
-   
-@profile 
+
 def rkdriver_withks(vstart, simtstart, ts, te, allks, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method. 
     Starting at x1 and proceeding to x2 in nstep number of steps.
