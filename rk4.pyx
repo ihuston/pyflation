@@ -18,7 +18,7 @@ from configuration import _debug
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
-cdef rk4stepks(np.ndarray x, np.ndarray y, float h, np.ndarray dydx, dict dargs, derivs):
+cdef rk4stepks(float x, np.ndarray y, float h, np.ndarray dydx, dict dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
