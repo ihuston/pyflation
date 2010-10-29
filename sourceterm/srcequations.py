@@ -7,8 +7,8 @@ from __future__ import division
 
 import numpy as np
 
-from romberg import romb
-from sourceterm import srccython
+from romberg import romb #@UnresolvedImport
+from sourceterm import srccython #@UnresolvedImport
 
 if not "profile" in __builtins__:
     def profile(f):
@@ -269,14 +269,15 @@ class SlowRollSource(SourceEquations):
         return src
 
 
-class FullSingleFieldSource(SourceEquations):
+class OldFullSingleFieldSource(SourceEquations):
     """
     Full single field (non slow-roll) source term equations
+    Uses the old equations and conventions and should not be used in production.
     """
     
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
-        super(FullSingleFieldSource, self).__init__(*args, **kwargs)
+        super(OldFullSingleFieldSource, self).__init__(*args, **kwargs)
         self.J_terms = [self.J_A1, self.J_A2, self.J_B1, self.J_B2, 
                         self.J_C1, self.J_C2, self.J_D1, self.J_D2,
                         self.J_E1, self.J_E2, self.J_F1, self.J_F2,
@@ -608,14 +609,14 @@ class FullSingleFieldSource(SourceEquations):
                                   + J_E1 + J_E2 + J_F1 + J_F2 + J_G1 + J_G2)
         return src
     
-class NewFullSingleFieldSource(SourceEquations):
+class FullSingleFieldSource(SourceEquations):
     """
     Full single field (non slow-roll) source term equations
     """
     
     def __init__(self, *args, **kwargs):
         """Class for slow roll source term equations"""
-        super(NewFullSingleFieldSource, self).__init__(*args, **kwargs)
+        super(FullSingleFieldSource, self).__init__(*args, **kwargs)
         self.J_params = {"A1": {"n":2, "dphiterm": "dp1", "pretermix":0},
                        "A2": {"n":3, "dphiterm": "dp1", "pretermix":0},
                        "A3": {"n":4, "dphiterm": "dp1", "pretermix":0},
