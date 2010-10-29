@@ -8,6 +8,8 @@ from __future__ import division # Get rid of integer division problems, i.e. 1/2
 import numpy as np
 import logging
 
+cimport numpy as np
+
 from helpers import seq #Proper sequencing of floats
 import helpers
 from configuration import _debug
@@ -16,16 +18,18 @@ from configuration import _debug
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
-cdef rk4stepks(x, y, h, dydx, dict dargs, derivs):
+cdef rk4stepks(np.ndarray x, np.ndarray y, float h, np.ndarray dydx, dict dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
-    hh = h*0.5 #Half time step
-    h6 = h/6.0 #Sixth of time step
-    xh = x + hh # Halfway point in x direction
+    cdef float hh = h*0.5 #Half time step
+    cdef float h6 = h/6.0 #Sixth of time step
+    cdef float xh = x + hh # Halfway point in x direction
     
     #First step, we already have derivatives from dydx
-    yt = y + hh*dydx
+    cdef np.ndarray yt = y + hh*dydx
+    
+    cdef np.ndarray dyt, dym, yout
     
     #Second step, get new derivatives
     dyt = derivs(yt, xh, **dargs)
@@ -86,7 +90,8 @@ cdef rk4stepxix(x, y, h, dict dargs, derivs):
     return yout
 
 
-def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
+def rkdriver_tsix(np.ndarray ystart, np.float simtstart, np.ndarray tsix, np.float tend,
+                  np.ndarray allks, np.float h, derivs):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
