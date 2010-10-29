@@ -18,7 +18,7 @@ import configuration
 from configuration import _debug
 import helpers 
 import cmpotentials
-import rk4
+import rk4cython as rk4
 
 
 #Start logging
