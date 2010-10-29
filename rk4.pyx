@@ -16,7 +16,7 @@ from configuration import _debug
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
-def rk4stepks(x, y, h, dydx, dargs, derivs):
+cdef rk4stepks(x, y, h, dydx, dict dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
@@ -46,7 +46,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     
     return yout
 
-def rk4stepxix(x, y, h, dargs, derivs):
+cdef rk4stepxix(x, y, h, dict dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
