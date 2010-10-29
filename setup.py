@@ -14,7 +14,7 @@ ext_modules = [Extension("sourceterm.srccython", ["sourceterm/srccython.pyx"],
                extra_link_args=["-g"],
                include_dirs=[numpy.get_include()]),
                #
-               Extension("rk4cython", ["rk4.pyx"], 
+               Extension("rk4cython", ["rk4cython.pyx"], 
                extra_compile_args=["-g"], 
                extra_link_args=["-g"],
                include_dirs=[numpy.get_include()]),
