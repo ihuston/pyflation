@@ -941,7 +941,7 @@ class MultiStageModel(CosmologicalModel):
         if factor is None:
             factor = self.cq #time before horizon crossing
         #get aHs
-        if H.ndim > 1:
+        if len(H.shape) > 1:
             #Use only one dimensional H
             H = H[:,0]
         aH = self.ainit*np.exp(t)*H
@@ -1255,9 +1255,9 @@ class TwoStageModel(MultiStageModel):
         """Run bg model after setting initial conditions."""
 
         #Check ystart is in right form (1-d array of three values)
-        if self.ystart.ndim == 1:
+        if len(self.ystart.shape) == 1:
             ys = self.ystart[0:3]
-        elif self.ystart.ndim == 2:
+        elif len(self.ystart.shape) == 2:
             ys = self.ystart[0:3,0]
         #Choose tstartindex to be simply the first timestep.
         tstartindex = np.array([0])
@@ -1389,7 +1389,7 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         astar = self.ainit*np.exp(ts)
         
         #Truncate bgmodel yresult down if there is an extra dimension
-        if self.bgmodel.yresult.ndim > 2:
+        if len(self.bgmodel.yresult.shape) > 2:
             bgyresult = self.bgmodel.yresult[..., 0]
         else:
             bgyresult = self.bgmodel.yresult
@@ -1477,7 +1477,7 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         astar = self.ainit*np.exp(ts)
         
         #Truncate bgmodel yresult down if there is an extra dimension
-        if self.bgmodel.yresult.ndim > 2:
+        if len(self.bgmodel.yresult.shape) > 2:
             bgyresult = self.bgmodel.yresult[..., 0]
         else:
             bgyresult = self.bgmodel.yresult
@@ -1602,9 +1602,9 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             
             #Fix bgmodel to actual instance
             #Check ystart is in right form (1-d array of three values)
-            if self.ystart.ndim == 1:
+            if len(self.ystart.shape) == 1:
                 ys = self.ystart[0:3]
-            elif self.ystart.ndim == 2:
+            elif len(self.ystart.shape) == 2:
                 ys = self.ystart[0:3,0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
@@ -1881,7 +1881,7 @@ class OneZeroIcsTwoStage(TwoStageModel):
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
         #Truncate bgmodel yresult down if there is an extra dimension
-        if self.bgmodel.yresult.ndim > 2:
+        if len(self.bgmodel.yresult.shape) > 2:
             bgyresult = self.bgmodel.yresult[..., 0]
         else:
             bgyresult = self.bgmodel.yresult
@@ -1945,7 +1945,7 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
         #Truncate bgmodel yresult down if there is an extra dimension
-        if self.bgmodel.yresult.ndim > 2:
+        if len(self.bgmodel.yresult.shape) > 2:
             bgyresult = self.bgmodel.yresult[..., 0]
         else:
             bgyresult = self.bgmodel.yresult
