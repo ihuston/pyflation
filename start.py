@@ -28,6 +28,7 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  srcscriptname = run_config.srcscriptname,
                  mrgscriptname = run_config.mrgscriptname,
                  soscriptname = run_config.soscriptname,
+                 cmbscriptname = run_config.cmbscriptname,
                  foresults = run_config.foresults,
                  srcstub = run_config.srcstub,
                  extra_qsub_params = "",
@@ -236,9 +237,9 @@ def main(argv=None):
     
     #Combination of final results
     cmb_dict = combine_dict(template_dict, so_jid=so_jid)
-    write_out_template(cmb_dict["templatefile"], cmb_dict["soscriptname"], cmb_dict)
+    write_out_template(cmb_dict["templatefile"], cmb_dict["cmbscriptname"], cmb_dict)
     #Launch full script and get job id
-    cmb_jid = launch_qsub(cmb_dict["soscriptname"])
+    cmb_jid = launch_qsub(cmb_dict["cmbscriptname"])
         
     return 0
             
