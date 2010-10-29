@@ -105,7 +105,7 @@ def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, double tend
     #The number of steps could be either the floor or ceiling of the following calc
     #In the previous code, the floor was used, but then the rk step add another step on
     #Additional +1 is to match with extra step as x is incremented at beginning of loop
-    cdef double number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
+    cdef int number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
     
     #Set up x results array
     cdef np.ndarray xarr = np.zeros((number_steps,))
