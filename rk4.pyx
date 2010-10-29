@@ -90,8 +90,8 @@ cdef rk4stepxix(x, y, h, dict dargs, derivs):
     return yout
 
 
-def rkdriver_tsix(np.ndarray ystart, np.float simtstart, np.ndarray tsix, np.float tend,
-                  np.ndarray allks, np.float h, derivs):
+def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, float tend,
+                  np.ndarray allks, float h, derivs):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
