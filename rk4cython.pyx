@@ -18,13 +18,13 @@ from configuration import _debug
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
-cdef rk4stepks(float x, np.ndarray y, float h, np.ndarray dydx, dict dargs, derivs):
+cdef rk4stepks(float x, np.ndarray y, double h, np.ndarray dydx, dict dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
-    cdef float hh = h*0.5 #Half time step
-    cdef float h6 = h/6.0 #Sixth of time step
-    cdef float xh = x + hh # Halfway point in x direction
+    cdef double hh = h*0.5 #Half time step
+    cdef double h6 = h/6.0 #Sixth of time step
+    cdef double xh = x + hh # Halfway point in x direction
     
     #First step, we already have derivatives from dydx
     cdef np.ndarray yt = y + hh*dydx
@@ -90,27 +90,34 @@ cdef rk4stepxix(x, y, h, dict dargs, derivs):
     return yout
 
 
-def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, float tend,
-                  np.ndarray allks, float h, derivs):
+def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, double tend,
+                  np.ndarray allks, double h, derivs):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
     #Make sure h is specified
-    if h is None:
-        raise SimRunError("Need to specify h.")
+#    if h is None:
+#        raise SimRunError("Need to specify h.")
     
     #Set up x counter and index for x
-    xix = 0 # first index
+    cdef int xix = 0 # first index
     
     #The number of steps could be either the floor or ceiling of the following calc
     #In the previous code, the floor was used, but then the rk step add another step on
     #Additional +1 is to match with extra step as x is incremented at beginning of loop
-    number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
-    if np.any(tsix>number_steps):
-        raise SimRunError("Start times outside range of steps.")
+    cdef double number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
     
     #Set up x results array
-    xarr = np.zeros((number_steps,))
+    cdef np.ndarray xarr = np.zeros((number_steps,))
+    
+    cdef double first_real_step
+    cdef np.ndarray v, yarr
+    cdef int kindex, timeindex
+    cdef np.ndarray startvalue
+    
+    if np.any(tsix>number_steps):
+        raise SimRunError("Start times outside range of steps.")
+        
     #Record first x value
     xarr[xix] = simtstart
     
