@@ -423,16 +423,17 @@ class ImaginaryInverseSolution(AnalyticSolution):
         J_D = self.J_general_Btype(k, C6, 1) + self.J_general_Btype(k, C7, 3) 
         return J_D
     
-class SimpleInverseFull(AnalyticSolution):
+class OldSimpleInverseFull(AnalyticSolution):
     """Analytic solution using a simple inverse solution as the first order 
-    solution and with no phase information.
+    solution and with no phase information. This uses the solutions of the old equations
+    and is not reliable. Should not be used in production.
     
     \delta\varphi_1 = 1/k 
     \dN{\delta\varphi_1} = 1/k
     """
     
     def __init__(self, *args, **kwargs):
-        super(SimpleInverseFull, self).__init__(*args, **kwargs)
+        super(OldSimpleInverseFull, self).__init__(*args, **kwargs)
         self.J_terms = [self.J_A1, self.J_A2, self.J_B1, self.J_B2, 
                         self.J_C1, self.J_C2, self.J_D1, self.J_D2,
                         self.J_E1, self.J_E2, self.J_F1, self.J_F2,
@@ -604,7 +605,7 @@ class SimpleInverseFull(AnalyticSolution):
         return J_G2
     
     
-class NewSimpleInverseFull(AnalyticSolution):
+class SimpleInverseFull(AnalyticSolution):
     """Analytic solution using a simple inverse solution as the first order 
     solution and with no phase information.
     
@@ -613,7 +614,7 @@ class NewSimpleInverseFull(AnalyticSolution):
     """
     
     def __init__(self, *args, **kwargs):
-        super(NewSimpleInverseFull, self).__init__(*args, **kwargs)
+        super(SimpleInverseFull, self).__init__(*args, **kwargs)
         
         self.calculate_Cterms = self.srceqns.calculate_Cterms
         self.J_params = self.srceqns.J_params
