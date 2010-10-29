@@ -110,7 +110,7 @@ def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, double tend
     #Set up x results array
     cdef np.ndarray xarr = np.zeros((number_steps,))
     
-    cdef double first_real_step
+    cdef int first_real_step
     cdef np.ndarray v, yarr
     cdef int kindex, timeindex
     cdef np.ndarray startvalue
