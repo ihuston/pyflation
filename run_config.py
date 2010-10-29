@@ -111,6 +111,7 @@ foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
 soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
+cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5
@@ -121,3 +122,5 @@ pattern = "src-(\d*).hf5"
 srcresults = os.path.join(RESULTSDIR, "src.hf5")
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
+cmbresults = os.path.join(RESULTSDIR, "cmb.hf5")
+
