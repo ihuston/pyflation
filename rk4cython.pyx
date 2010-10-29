@@ -132,10 +132,10 @@ def rkdriver_tsix(np.ndarray ystart, int simtstart, np.ndarray tsix, double tend
     if ystart.ndim == 1:
         ystart = ystart[..., np.newaxis]
     v = np.ones_like(ystart)*np.nan
-    
+    vshape = v.shape
     #New y results array
     yshape = [number_steps]
-    yshape.extend(v.shape)
+    yshape.extend(vshape)
     yarr = np.ones(yshape)*np.nan
     
     #Change yresults at each timestep in tsix to value in ystart
