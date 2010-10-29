@@ -77,7 +77,7 @@ overwrite = True
 # THIS LINE
 ##############################
 
-from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR
+from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR, _debug
 
 if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
@@ -111,6 +111,7 @@ foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
 soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
+cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5
@@ -121,11 +122,5 @@ pattern = "src-(\d*).hf5"
 srcresults = os.path.join(RESULTSDIR, "src.hf5")
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
+cmbresults = os.path.join(RESULTSDIR, "cmb.hf5")
 
-
-##################################################
-# debug logging control
-# 0 for off, 1 for on
-# This can be changed using command line arguments
-##################################################
-_debug = 1 #

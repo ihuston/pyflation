@@ -15,6 +15,7 @@ import logging
 
 #local modules from pyflation
 import configuration
+from configuration import _debug
 import helpers 
 import cmpotentials
 import rk4
@@ -46,12 +47,12 @@ class CosmologicalModel(object):
        
        lastparams is formatted as in the function callingparams(self) below
     """
-    solverlist = ["rkdriver_withks", "rkdriver_new"]
+    solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
     ynames = ["First dependent variable"]
     tname = "Time"
     plottitle = "A generic Cosmological Model"
     
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
+    def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
@@ -60,12 +61,24 @@ class CosmologicalModel(object):
         self.ystart = ystart
         self.k = getattr(self, "k", None) #so we can test whether k is set
         
+        if tstartindex is None:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
+        
         if np.all(tstart < tend): 
             self.tstart, self.tend = tstart, tend
         elif np.all(tstart==tend):
             raise ValueError, "End time is the same as start time!"
         else:
             raise ValueError, "Ending time is before starting time!"
+        
+        if np.all(simtstart < tend): 
+            self.simtstart = simtstart
+        elif simtstart == tend:
+            raise ValueError("End time is same a simulation start time!")
+        else:
+            raise ValueError("End time is before simulation start time!")
         
         if tstep_wanted >= tstep_min:
             self.tstep_wanted, self.tstep_min = tstep_wanted, tstep_min
@@ -115,7 +128,7 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True, simtstart=None):
+    def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
@@ -124,11 +137,37 @@ class CosmologicalModel(object):
         if self.solver in ["rkdriver_withks", "rkdriver_new"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
-            self._log.debug("Starting simulation with %s.", self.solver)
+            if _debug:
+                self._log.debug("Starting simulation with %s.", self.solver)
             solver = rk4.__getattribute__(self.solver)
             try:
-                self.tresult, self.yresult = solver(self.ystart, simtstart, self.tstart, self.tend, self.k, 
-                self.tstep_wanted, self.derivs)
+                self.tresult, self.yresult = solver(vstart=self.ystart, 
+                                                    simtstart=self.simtstart, 
+                                                    ts=self.tstart, 
+                                                    te=self.tend, 
+                                                    allks=self.k, 
+                                                    h=self.tstep_wanted, 
+                                                    derivs=self.derivs)
+            except StandardError:
+                self._log.exception("Error running %s!", self.solver)
+                raise
+            
+        if self.solver in ["rkdriver_tsix"]:
+            #set_trace()
+            #Loosely estimate number of steps based on requested step size
+            if not hasattr(self, "tstartindex"):
+                raise ModelError("Need to specify initial starting indices!")
+            if _debug:
+                self._log.debug("Starting simulation with %s.", self.solver)
+            solver = rk4.__getattribute__(self.solver)
+            try:
+                self.tresult, self.yresult = solver(ystart=self.ystart, 
+                                                    simtstart=self.simtstart, 
+                                                    tsix=self.tstartindex, 
+                                                    tend=self.tend, 
+                                                    allks=self.k, 
+                                                    h=self.tstep_wanted, 
+                                                    derivs=self.derivs)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
@@ -196,10 +235,12 @@ class CosmologicalModel(object):
             
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
-                self._log.debug("File already exists! Using append data mode.")
+                if _debug:
+                    self._log.debug("File already exists! Using append data mode.")
                 filemode = "a"
             else:
-                self._log.debug("File does not exist, using write mode.")
+                if _debug:
+                    self._log.debug("File does not exist, using write mode.")
                 filemode = "w" #Writing to new file
         else:
             raise IOError("Directory 'results' does not exist")
@@ -291,7 +332,8 @@ class CosmologicalModel(object):
                         fotsxarr.append(self.fotstartindex)
                 rf.flush()
                 #Log success
-                self._log.debug("Successfully wrote results to file " + filename)
+                if _debug:
+                    self._log.debug("Successfully wrote results to file " + filename)
             finally:
                 rf.close()
         except IOError:
@@ -462,7 +504,7 @@ class CanonicalBackground(PhiModels):
         U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
         
         #Set derivatives
-        dydx = np.zeros(3)
+        dydx = np.zeros_like(y)
         
         #d\phi_0/dn = y_1
         dydx[0] = y[1] 
@@ -609,7 +651,8 @@ class CanonicalSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -620,19 +663,18 @@ class CanonicalSecondOrder(PhiModels):
         
         if kix is None:
             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-        #Need t index to use first order data
-        if kwargs["tix"] is None:
-            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
-        else:
-            tix = kwargs["tix"]
+        
+        fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
+        
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        if _debug:
+            self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
         #Get first order results for this time step
-        fovars = self.second_stage.yresult[tix].copy()[:,kix]
+        fovars = self.second_stage.yresult[fotix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
-        epsilon = self.second_stage.bgepsilon[tix]
+        epsilon = self.second_stage.bgepsilon[fotix]
         #Get source terms
-        src = self.source[tix][kix]
+        src = self.source[fotix][kix]
         srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
@@ -700,7 +742,8 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -717,7 +760,8 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         else:
             tix = kwargs["tix"]
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        if _debug:
+            self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -802,7 +846,8 @@ class CanonicalRampedSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        self._log.debug("args: %s", str(kwargs))
+        if _debug:
+            self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -819,7 +864,8 @@ class CanonicalRampedSecondOrder(PhiModels):
         else:
             tix = kwargs["tix"]
         #debug logging
-        self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+        if _debug:
+            self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
         #Get first order results for this time step
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
@@ -895,6 +941,9 @@ class MultiStageModel(CosmologicalModel):
         if factor is None:
             factor = self.cq #time before horizon crossing
         #get aHs
+        if H.ndim > 1:
+            #Use only one dimensional H
+            H = H[:,0]
         aH = self.ainit*np.exp(t)*H
         try:
             kcrindex = np.where(np.sign(k - (factor*aH))<0)[0][0]
@@ -1105,7 +1154,9 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, potential_func=None, pot_params=None, simtstart=0, **kwargs):
+    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, 
+                 k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
+                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
@@ -1121,9 +1172,23 @@ class TwoStageModel(MultiStageModel):
                                     ])
         else:
             self.ystart = ystart
+        if not tstartindex:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
         #Call superclass
-        super(TwoStageModel, self).__init__(self.ystart, tstart, tend, tstep_wanted, 
-                tstep_min, solver=solver, potential_func=potential_func, pot_params=pot_params, **kwargs)
+        newkwargs = dict(ystart=self.ystart, 
+                         tstart=tstart,
+                         tstartindex=self.tstartindex, 
+                         tend=tend, 
+                         tstep_wanted=tstep_wanted, 
+                         tstep_min=tstep_min, 
+                         solver=solver, 
+                         potential_func=potential_func, 
+                         pot_params=pot_params, 
+                         **kwargs)
+        
+        super(TwoStageModel, self).__init__(**newkwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1194,10 +1259,20 @@ class TwoStageModel(MultiStageModel):
             ys = self.ystart[0:3]
         elif self.ystart.ndim == 2:
             ys = self.ystart[0:3,0]
-        self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
-                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                            potential_func=self.potential_func, pot_params=self.pot_params)
+        #Choose tstartindex to be simply the first timestep.
+        tstartindex = np.array([0])
         
+        kwargs = dict(ystart=ys, 
+                      tstart=self.tstart,
+                      tstartindex=tstartindex, 
+                      tend=self.tend,
+                      tstep_wanted=self.tstep_wanted, 
+                      tstep_min=self.tstep_min, 
+                      solver=self.solver,
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+         
+        self.bgmodel = self.bgclass(**kwargs)
         #Start background run
         self._log.info("Running background model...")
         try:
@@ -1213,15 +1288,26 @@ class TwoStageModel(MultiStageModel):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
-        self.firstordermodel = self.foclass(ystart=self.foystart, tstart=self.fotstart, tend=self.fotend,
-                                tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
-                                k=self.k, ainit=self.ainit, potential_func=self.potential_func, pot_params=self.pot_params)
+        kwargs = dict(ystart=self.foystart, 
+                      tstart=self.fotstart,
+                      simtstart=self.simtstart, 
+                      tstartindex = self.fotstartindex, 
+                      tend=self.fotend, 
+                      tstep_wanted=self.tstep_wanted, 
+                      tstep_min=self.tstep_min, 
+                      solver=self.solver,
+                      k=self.k, 
+                      ainit=self.ainit, 
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+        
+        self.firstordermodel = self.foclass(**kwargs)
         #Set names as in ComplexModel
         self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
-            self.firstordermodel.run(saveresults=False, simtstart=self.simtstart)
+            self.firstordermodel.run(saveresults=False)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
@@ -1290,7 +1376,8 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1300,20 +1387,29 @@ class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,2]
+        Hzero = bgyresult[0,2]
+        
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         try:
             etadiff = etastar - self.etainit
         except AttributeError:
-            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(np.sqrt(2*self.k)))
@@ -1368,7 +1464,8 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1378,20 +1475,27 @@ class FONewCanonicalTwoStage(FOCanonicalTwoStage):
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
-        Hstar = self.bgmodel.yresult[tsix,2]
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,2]
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
         try:
             etadiff = etastar - self.etainit
         except AttributeError:
-            etadiff = etastar + 1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+            etadiff = etastar + 1/(self.ainit*bgyresult[0,2]*(1-self.bgepsilon[0]))
         keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = np.sqrt(self.k**3/(2*np.pi**2))/(astar*(np.sqrt(2*self.k)))
@@ -1467,7 +1571,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             if not os.path.isfile(filename):
                 raise IOError("File does not exist!")
             try:
-                self._log.debug("Opening file " + filename + " to read results.")
+                if _debug:
+                    self._log.debug("Opening file " + filename + " to read results.")
                 try:
                     self._rf = tables.openFile(filename, "r")
                     self.yresult = self._rf.root.results.yresult
@@ -1484,7 +1589,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 try:
                     self.source = self._rf.root.results.sourceterm
                 except tables.NoSuchNodeError:
-                    self._log.debug("First order file does not have a source term.")
+                    if _debug:
+                        self._log.debug("First order file does not have a source term.")
                     self.source = None
                 #Put params in right slots
                 for ix, val in enumerate(params[0]):
@@ -1505,13 +1611,15 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                             potential_func=self.potential_func, pot_params=self.pot_params)
             #Put in data
             try:
-                self._log.debug("Trying to get background results...")
+                if _debug:
+                    self._log.debug("Trying to get background results...")
                 self.bgmodel.tresult = self._rf.root.bgresults.tresult[:]
                 self.bgmodel.yresult = self._rf.root.bgresults.yresult
             except tables.NoSuchNodeError:
                 raise ModelError("File does not contain background results!")
             #Get epsilon
-            self._log.debug("Calculating self.bgepsilon...")
+            if _debug:
+                self._log.debug("Calculating self.bgepsilon...")
             self.bgepsilon = self.bgmodel.getepsilon()
             #Success
             self._log.info("Successfully imported data from file into model instance.")
@@ -1519,7 +1627,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
         def __del__(self):
             """Close file when object destroyed."""
             try:
-                self._log.debug("Trying to close file...")
+                if _debug:
+                    self._log.debug("Trying to close file...")
                 self._rf.close()
             except IOError:
                 raise
@@ -1529,7 +1638,7 @@ class ThirdStageModel(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
 
-    def __init__(self, second_stage, soclass=None, ystart=None):
+    def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
         """Initialize variables and check that tsmodel exists and is correct form."""
         
         #Test whether tsmodel is of correct type
@@ -1541,16 +1650,36 @@ class ThirdStageModel(MultiStageModel):
             self.k = np.copy(self.second_stage.k)
             self.simtstart = self.second_stage.tresult[0]
             self.fotstart = np.copy(self.second_stage.fotstart)
+            self.fotstartindex = np.copy(self.second_stage.fotstartindex)
             self.ainit = self.second_stage.ainit
             self.potentials = self.second_stage.potentials
             self.potential_func = self.second_stage.potential_func
         
         if ystart is None:
             ystart = np.zeros((4, len(self.k)))
+            
+        #Need to make sure that the tstartindex terms are changed over to new timestep.
+        fotstep = self.second_stage.tstep_wanted
+        sotstep = fotstep*2
+        sotstartindex = np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
+        
+        kwargs = dict(ystart=ystart,
+                      tstart=self.second_stage.tresult[0],
+                      tstartindex=sotstartindex,
+                      simtstart=self.simtstart,
+                      tend=self.second_stage.tresult[-1],
+                      tstep_wanted=sotstep,
+                      tstep_min=self.second_stage.tstep_min*2,
+                      solver="rkdriver_new",
+                      potential_func=self.second_stage.potential_func,
+                      pot_params=self.second_stage.pot_params
+                      )
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            kwargs.update(soclassargs)
+            
         #Call superclass
-        super(ThirdStageModel, self).__init__(ystart, self.second_stage.tresult[0], self.second_stage.tresult[-1], 
-        self.second_stage.tstep_wanted*2, self.second_stage.tstep_min*2, solver="rkdriver_new", 
-        potential_func=self.second_stage.potential_func, pot_params=self.second_stage.pot_params)
+        super(ThirdStageModel, self).__init__(**kwargs)
         
         if soclass is None:
             self.soclass = CanonicalSecondOrder
@@ -1558,12 +1687,14 @@ class ThirdStageModel(MultiStageModel):
             self.soclass = soclass
         self.somodel = None
         
-    def runso(self, soclassargs=None):
+    def runso(self):
         """Run second order model."""
         
         sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
+        "tstartindex": self.tstartindex,
+        "simtstart": self.simtstart,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
         "tstep_min": self.tstep_min,
@@ -1574,9 +1705,6 @@ class ThirdStageModel(MultiStageModel):
         "pot_params": self.pot_params,
         "cq": self.cq}
         
-        #Update sokwargs with any arguments from soclassargs
-        if soclassargs is not None:
-            sokwargs.update(soclassargs)
         
         self.somodel = self.soclass(**sokwargs)
         self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
@@ -1586,7 +1714,7 @@ class ThirdStageModel(MultiStageModel):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=False, simtstart=self.simtstart)
+            self.somodel.run(saveresults=False)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
@@ -1595,10 +1723,10 @@ class ThirdStageModel(MultiStageModel):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True, soclassargs=None):
+    def run(self, saveresults=True):
         """Run simulation and save results."""
         #Run second order model
-        self.runso(soclassargs=soclassargs)
+        self.runso()
         
         #Save results in resultlist and file
         #Aggregrate results and calling parameters into results list
@@ -1631,8 +1759,9 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         """Initialize variables and call super class __init__ method."""
         super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
         #try to set source term
-        self._log.debug("Trying to set source term for second order model...")
-        self.source = self.second_stage.source
+        if _debug:
+            self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source[:]
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
         
@@ -1742,7 +1871,8 @@ class OneZeroIcsTwoStage(TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1750,11 +1880,17 @@ class OneZeroIcsTwoStage(TwoStageModel):
         #Reset starting conditions at new time
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+        
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0
@@ -1799,7 +1935,8 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
-        self._log.debug("Executing getfoystart to get initial conditions.")
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
         #Set variables in standard case:
         if ts is None or tsix is None:
             ts, tsix = self.fotstart, self.fotstartindex
@@ -1807,11 +1944,17 @@ class NonPhysicalNoImagTwoStage(TwoStageModel):
         #Reset starting conditions at new time
         foystart = np.zeros((len(self.ystart), len(self.k)))
         
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if self.bgmodel.yresult.ndim > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+        
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:].transpose()
+            foystart[0:3] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = self.bgmodel.yresult[tsix,:][:, np.newaxis]
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
         
         #Set Re\delta\phi_1 initial condition
         foystart[3,:] = 1.0

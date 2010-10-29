@@ -135,6 +135,17 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["command"] = "python secondorder.py"
     return so_dict
 
+def combine_dict(template_dict, so_jid=None):
+    """Return dictionary for first order qsub script.
+    Copies template_dict so as not to change values."""
+    cmb_dict = template_dict.copy()
+    cmb_dict["runname"] += "-cmb"
+    cmb_dict["hold_jid_list"] = so_jid
+    cmb_dict["qsublogname"] += "-cmb"
+    cmb_dict["extra_qsub_params"] = ("#$ -hold_jid " + cmb_dict["hold_jid_list"])
+    cmb_dict["command"] = "python combine.py"
+    return cmb_dict
+
 def main(argv=None):
     """Process command line options, create qsub scripts and start execution."""
 
@@ -223,6 +234,11 @@ def main(argv=None):
     #Launch full script and get job id
     so_jid = launch_qsub(so_dict["soscriptname"])
     
+    #Combination of final results
+    cmb_dict = combine_dict(template_dict, so_jid=so_jid)
+    write_out_template(cmb_dict["templatefile"], cmb_dict["soscriptname"], cmb_dict)
+    #Launch full script and get job id
+    cmb_jid = launch_qsub(cmb_dict["soscriptname"])
         
     return 0
             

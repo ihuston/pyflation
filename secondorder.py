@@ -51,7 +51,7 @@ def runsomodel(mrgfile, filename=None, soargs=None):
         log.exception("Error wrapping model file.")
         raise
     if soargs is None:
-        soargs = {}
+        soargs = run_config.soargs
     #Create second order model instance
     somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
     try:
