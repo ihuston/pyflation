@@ -15,6 +15,6 @@ subroutine rk4stepks(x, y, h, yout, n, m, derivs)
 !f2py real(8), external, dimension(0:n-1, 0:m-1) :: derivs
 
 
-  yout = y
+  yout = derivs(y, x)
     return
     end subroutine
