@@ -6,8 +6,7 @@ subroutine rk4stepks(x, y, h, n, m, yout)
     real, intent(in) :: x
     real, intent(in) :: y
     real, intent(in) :: h
-    integer, intent(in) :: n
-    integer, intent(in) :: m
+    integer :: n, m
     !external derivs
 
     real :: hh, h6, xh
