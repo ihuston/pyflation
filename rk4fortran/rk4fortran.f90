@@ -1,21 +1,18 @@
-subroutine rk4stepks(x, y, h, out_vector, n,m,p, in_out_vec)
+subroutine rk4stepks(x, y, h, out_vector, n,m)
 !   Do one step of the classical 4th order Runge Kutta method,
 !   starting from y at x with time step h and derivatives given by derivs
   implicit none
-  integer :: n,m,p
+  integer :: n,m
   real(8) :: x, h
   real(8) :: y(n,m)
   real(8) :: out_vector(n+m-1)
-  real(8) :: in_out_vec(p)
 
 !f2py real(8), intent(in) :: x, h
 !f2py real(8), intent(out), dimension(n+m-1) :: out_matix
 !f2py real(8), intent(in), dimension(n,m) :: y
-!f2py real(8), intent(inout), dimension(p) :: in_out_vec
-!f2py integer, intent(in) :: n,m, p
+!f2py integer, intent(in) :: n,m
 
 
   out_vector = (/ y(:,1), y(:,2) /)
-  in_out_vec = in_out_vec*5
     return
     end subroutine
