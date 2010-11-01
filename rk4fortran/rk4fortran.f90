@@ -13,7 +13,7 @@ subroutine rk4stepks(x, y, h, n, m, yout)
     real :: hh, h6, xh
     real, dimension(0:n-1,0:m-1) :: yt, dyt, dym
     real, dimension(0:n-1,0:m-1), intent(out) :: yout
-
+!f2py depend(n,m) yt, dyt, dym, yout
 
     hh = h*0.5 !Half time step
     h6 = h/6.0 !Sixth of time step
