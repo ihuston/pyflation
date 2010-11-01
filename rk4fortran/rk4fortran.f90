@@ -4,9 +4,9 @@ subroutine rk4stepks(x, y, h, n, m, yout, derivs)
     implicit none
 
     real, intent(in) :: x
-    real, intent(in) :: y
     real, intent(in) :: h
     integer :: n, m
+    real, dimension(0:n-1,0:m-1) intent(in) :: y
 
 
     real :: hh, h6, xh
