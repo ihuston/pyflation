@@ -7,11 +7,12 @@ subroutine rk4stepks(x, y, h, n, m, yout, derivs)
     real, intent(in) :: y
     real, intent(in) :: h
     integer :: n, m
-    external derivs
+
 
     real :: hh, h6, xh
-    real, dimension(0:n-1,0:m-1) :: yt, dyt, dym, dydx
+    real, dimension(0:n-1,0:m-1) :: yt, dyt, dym, dydx, derivs
     real, dimension(0:n-1,0:m-1), intent(out) :: yout
+    external derivs
 !f2py depend(n,m) :: yt, dyt, dym, yout
 
     hh = h*0.5 !Half time step
