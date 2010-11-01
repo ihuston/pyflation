@@ -4,7 +4,7 @@
 !     CALCULATE FIRST N FIBONACCI NUMBERS
 !
       implicit none
-      integer, intent(in) :: N
+      integer :: N, I
       REAL*8 :: A(N)
       DO I=1,N
          IF (I.EQ.1) THEN
