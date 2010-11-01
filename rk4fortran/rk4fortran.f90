@@ -38,5 +38,6 @@ subroutine rk4stepks(x, y, h, n, m, yout)
 
     !Accumulate increments with proper weights
     !yout = y + h6*(dydx + dyt + 2*dym)
+    yout = y
 
     return
