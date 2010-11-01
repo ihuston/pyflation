@@ -15,7 +15,7 @@ subroutine rk4stepks(x, y, h, yout, n, m, derivs)
 !f2py integer, intent(in) :: n,m
 
 
-  x = derivs(n,m)
+  x = derivs(y,m)
   yout = y
     return
     end subroutine
