@@ -1,4 +1,4 @@
-subroutine rk4stepks(x, h, n, m, yout, derivs)
+subroutine rk4stepks(in_matrix, out_vector, n,m,p, in_out_vec)
 !   Do one step of the classical 4th order Runge Kutta method,
 !   starting from y at x with time step h and derivatives given by derivs
   implicit none
