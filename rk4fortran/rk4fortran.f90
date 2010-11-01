@@ -1,4 +1,4 @@
-subroutine rk4stepks(x, y, h, n, m, yout, derivs)
+subroutine rk4stepks(x, h, n, m, yout, derivs)
 !   Do one step of the classical 4th order Runge Kutta method,
 !   starting from y at x with time step h and derivatives given by derivs
     implicit none
@@ -6,7 +6,7 @@ subroutine rk4stepks(x, y, h, n, m, yout, derivs)
     real, intent(in) :: x
     real, intent(in) :: h
     integer :: n, m
-    real, intent(in) :: y(0:n-1,0:m-1)
+!    real, intent(in) :: y(0:n-1,0:m-1)
 
 
     real :: hh, h6, xh
@@ -14,17 +14,18 @@ subroutine rk4stepks(x, y, h, n, m, yout, derivs)
     real :: derivs
     real, dimension(0:n-1,0:m-1), intent(out) :: yout
     external derivs
-!f2py real, intent(in), dimension(0:n-1,0:m-1) :: y
+
+
 !f2py real, intent(out), dimension(0:n-1,0:m-1) :: yout
 !f2py integer, intent(in) :: n, m
 !f2py real, intent(in) :: x, h
-!f2py depend(n,m) :: y, yt, dyt, dym, yout, derivs
+!f2py depend(n,m) :: yt, dyt, dym, yout, derivs
 
     hh = h*0.5 !Half time step
     h6 = h/6.0 !Sixth of time step
     xh = x + hh ! Halfway point in x direction
 
-    dydx = derivs(y,x)
+!    dydx = derivs(y,x)
 
     !First step, we already have derivatives from dydx
     !yt = y + hh*dydx
@@ -45,7 +46,7 @@ subroutine rk4stepks(x, y, h, n, m, yout, derivs)
 
     !Accumulate increments with proper weights
     !yout = y + h6*(dydx + dyt + 2*dym)
-    yout = dydx
+    yout = x
 
     return
     end subroutine
