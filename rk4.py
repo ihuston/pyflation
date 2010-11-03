@@ -159,7 +159,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         #Save current timestep
         xarr[xix] = np.copy(current_x)
         #Save current result without overwriting with NaNs
-        yarr[xix, v_nonan] = np.copy(v)[v_nonan]
+        yarr[xix, v_nonan] = v[v_nonan]
     #Get results 
     
     return xarr, yarr
