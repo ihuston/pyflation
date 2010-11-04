@@ -20,7 +20,9 @@ from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
 
-provenance_template = """Provenance document for the code in this Pyflation run.
+provenance_template = """Provenance document for this Pyflation run
+------------------------------------------
+                    
 Bazaar Revision Control Information (if available)
 -------------------------------------------------
 Branch name: %(nick)s
@@ -39,8 +41,11 @@ Python version: %(python_version)s
 Numpy version: %(numpy_version)s
 Scipy version: %(scipy_version)s
 PyTables version: %(tables_version)s
+
+This information added on: %(now)s.
+-----------------------------------------------
         
-        """
+"""
 
 
 def create_run_directory(newrundir, codedir, bzr_checkout=False):
