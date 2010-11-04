@@ -20,21 +20,25 @@ from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
 
-provenance_template = """Provenance document for this Pyflation run.
-        Bazaar branch name: %(nick)s
-        Bazaar branch revision number: %(revno)s
-        Bazaar branch revision id: %(revid)s
-        
-        Original code directory: %(codedir)s
-        New run directory: %(newrundir)s
-        Date run directory was created: %(now)s
-        
-        Version information at time of run creation
-        -------------------------------------------
-        Python version: %(python_version)s
-        Numpy version: %(numpy_version)s
-        Scipy version: %(scipy_version)s
-        PyTables version: %(tables_version)s
+provenance_template = """Provenance document for the code in this Pyflation run.
+Bazaar Revision Control Information (if available)
+-------------------------------------------------
+Branch name: %(nick)s
+Branch revision number: %(revno)s
+Branch revision id: %(revid)s
+ 
+Code Directory Information
+--------------------------   
+Original code directory: %(codedir)s
+New run directory: %(newrundir)s
+Date run directory was created: %(now)s
+       
+Version information at time of run creation
+-------------------------------------------
+Python version: %(python_version)s
+Numpy version: %(numpy_version)s
+Scipy version: %(scipy_version)s
+PyTables version: %(tables_version)s
         
         """
 
@@ -114,7 +118,7 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
         provenance_dict["nick"] = "Unavailable"
         provenance_dict["revno"] = "Unavailable" 
         provenance_dict["revid"] = "Unavailable" 
-    provenance_file = os.path.join(newrundir, configuration.CODEDIRNAME, "provenance.log") 
+    provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, "provenance.log") 
     with open(provenance_file, "w") as f:
         f.write(provenance_template % provenance_dict)
         logging.info("Created provenance file %s." % provenance_file)
