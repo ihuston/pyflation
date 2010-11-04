@@ -123,7 +123,8 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
         provenance_dict["nick"] = "Unavailable"
         provenance_dict["revno"] = "Unavailable" 
         provenance_dict["revid"] = "Unavailable" 
-    provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, "provenance.log") 
+    provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
+                                   configuration.provenancefilename) 
     with open(provenance_file, "w") as f:
         f.write(provenance_template % provenance_dict)
         logging.info("Created provenance file %s." % provenance_file)

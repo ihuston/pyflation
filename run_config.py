@@ -78,11 +78,13 @@ overwrite = True
 ##############################
 
 from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR, _debug
+from configuration import provenancefilename
 
 if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
 
 logfile = os.path.join(LOGDIR, "run.log")
+provenancefile = os.path.join(LOGDIR, provenancefilename)
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
