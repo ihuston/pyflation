@@ -121,7 +121,10 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
             rk_log.debug("rkdriver_tsix: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
         xarr[xix+1:first_real_step+1] = simtstart + np.arange(xix+1, first_real_step+1)*h
         xix = first_real_step
-        
+    
+    #Get the last start step. Only need to check for NaNs before this.
+    last_start_step = tsix.max()    
+    
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
         ystart = ystart[..., np.newaxis]
@@ -154,12 +157,15 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         #Do a rk4 step starting from last time step
         v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs)
         #This masks all the NaNs in the v result so that they are not copied
-        v_nonan = ~np.isnan(v)
-        
+        if xix <= last_start_step:
+            v_nonan = ~np.isnan(v)
+            #Save current result without overwriting with NaNs
+            yarr[xix, v_nonan] = v[v_nonan]
+        else:
+            yarr[xix] = np.copy(v)
         #Save current timestep
         xarr[xix] = np.copy(current_x)
-        #Save current result without overwriting with NaNs
-        yarr[xix, v_nonan] = np.copy(v)[v_nonan]
+        
     #Get results 
     
     return xarr, yarr
