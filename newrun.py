@@ -13,6 +13,32 @@ import time
 from optparse import OptionParser
 from setup import setup, setup_args
 
+#Version information
+from sys import version as python_version
+from numpy import __version__ as numpy_version
+from scipy import __version__ as scipy_version
+from tables import __version__ as tables_version 
+
+
+provenance_template = """Provenance document for this Pyflation run.
+        Bazaar branch name: %(nick)s
+        Bazaar branch revision number: %(revno)s
+        Bazaar branch revision id: %(revid)s
+        
+        Original code directory: %(codedir)s
+        New run directory: %(newrundir)s
+        Date run directory was created: %(now)s
+        
+        Version information at time of run creation
+        -------------------------------------------
+        Python version: %(python_version)s
+        Numpy version: %(numpy_version)s
+        Scipy version: %(scipy_version)s
+        PyTables version: %(tables_version)s
+        
+        """
+
+
 def create_run_directory(newrundir, codedir, bzr_checkout=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir):
@@ -72,8 +98,28 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
     except:
         logging.exception("Compiling additional modules did not work. Please do so by hand!")
     
-    return
+    #Create provenance file detailing revision and branch used
+    provenance_dict = dict(python_version=python_version,
+                           numpy_version=numpy_version,
+                           scipy_version=scipy_version,
+                           tables_version=tables_version,
+                           codedir=codedir,
+                           newrundir=newrundir,
+                           now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
+    if bzr_available:
+        provenance_dict["nick"] = mytree.branch.nick
+        provenance_dict["revno"] = mytree.branch.revno()
+        provenance_dict["revid"] = mytree.branch.last_revision()
+    else:
+        provenance_dict["nick"] = "Unavailable"
+        provenance_dict["revno"] = "Unavailable" 
+        provenance_dict["revid"] = "Unavailable" 
+    with open(os.path.join(newrundir, configuration.CODEDIRNAME, "provenance.log")) as f:
+        f.write(provenance_template % provenance_dict)
     
+    return
+ 
+
 def main(argv = None):
     """Check command line options and start directory creation."""
     if not argv:
