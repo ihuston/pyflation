@@ -1686,10 +1686,9 @@ class ThirdStageModel(MultiStageModel):
         else:
             self.soclass = soclass
         self.somodel = None
-        
-    def runso(self):
-        """Run second order model."""
-        
+    
+    def setup_soclass(self):
+        """Initialize the second order class that will be used to run simulation."""
         sokwargs = {
         "ystart": self.ystart,
         "tstart": self.fotstart,
@@ -1711,6 +1710,13 @@ class ThirdStageModel(MultiStageModel):
         #Set second stage and source terms for somodel
         self.somodel.source = self.source
         self.somodel.second_stage = self.second_stage
+        return
+    
+    def runso(self):
+        """Run second order model."""
+        
+        #Initialize second order class
+        self.setup_soclass()
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
