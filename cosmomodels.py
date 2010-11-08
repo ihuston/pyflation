@@ -894,7 +894,7 @@ class CanonicalRampedSecondOrder(PhiModels):
             #Get the second order timestep value
             sotix = t / self.tstep_wanted
             #Compare with tstartindex values. Set the ramp to zero for any that are equal
-            ramp[self.tstartindex==fotix] = 0
+            ramp[self.tstartindex==sotix] = 0
             #Scale the source term by the ramp value.
             src[abs(tanharg)<self.rampargs["e"]] = ramp*src
         
