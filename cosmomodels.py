@@ -896,6 +896,8 @@ class CanonicalRampedSecondOrder(PhiModels):
             #Compare with tstartindex values. Set the ramp to zero for any that are equal
             ramp[self.tstartindex==sotix] = 0
             #Scale the source term by the ramp value.
+            if _debug:
+                self._log.debug("Ramp value set as %s.", ramp[abs(tanharg<self.rampargs["e"])])
             src[abs(tanharg)<self.rampargs["e"]] = ramp*src
         
         #Split source into real and imaginary parts.
