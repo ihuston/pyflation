@@ -656,6 +656,7 @@ class CanonicalSecondOrder(PhiModels):
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
+            nokix = True
             kix = np.arange(len(k))
         else:
             k = kwargs["k"]
@@ -670,11 +671,16 @@ class CanonicalSecondOrder(PhiModels):
         if _debug:
             self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
         #Get first order results for this time step
-        fovars = self.second_stage.yresult[fotix].copy()[:,kix]
+        if nokix:
+            fovars = self.second_stage.yresult[fotix].copy()
+            src = self.source[fotix]
+        else:
+            fovars = self.second_stage.yresult[fotix].copy()[:,kix]
+            src = self.source[fotix][kix]
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[fotix]
         #Get source terms
-        src = self.source[fotix][kix]
+        
         srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
@@ -851,6 +857,7 @@ class CanonicalRampedSecondOrder(PhiModels):
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
+            nokix = True
             kix = np.arange(len(k))
         else:
             k = kwargs["k"]
@@ -858,25 +865,26 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         if kix is None:
             raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-        #Need t index to use first order data
-        if kwargs["tix"] is None:
-            raise ModelError("Need to specify tix in order to calculate 2nd order perturbation!")
-        else:
-            tix = kwargs["tix"]
+        
+        fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
+        
         #debug logging
         if _debug:
-            self._log.debug("tix=%f, t=%f, fo.tresult[tix]=%f", tix, t, self.second_stage.tresult[tix])
+            self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
         #Get first order results for this time step
-        fovars = self.second_stage.yresult[tix].copy()[:,kix]
+        if nokix:
+            fovars = self.second_stage.yresult[fotix].copy()
+            src = self.source[fotix]
+        else:
+            fovars = self.second_stage.yresult[fotix].copy()[:,kix]
+            src = self.source[fotix][kix]
         phi, phidot, H = fovars[0:3]
-        epsilon = self.second_stage.bgepsilon[tix]
+        epsilon = self.second_stage.bgepsilon[fotix]
         
         #Get source terms and multiply by ramp
         tanharg =  t-self.tstart[kix] - self.rampargs["b"]
         ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
-        #Get source from file
-        src = self.source[tix][kix]
-        
+                
         #When absolute value of tanharg is less than e then multiply source by ramp for those values.
         src[abs(tanharg)<self.rampargs["e"]] = ramp*src
         
