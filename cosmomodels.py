@@ -889,8 +889,13 @@ class CanonicalRampedSecondOrder(PhiModels):
                 
         #When absolute value of tanharg is less than e then multiply source by ramp for those values.
         if np.any(abs(tanharg)<self.rampargs["e"]):
+            #Calculate the ramp
             ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
-            ramp[self.second_stage.fotstartindex==fotix] = 0
+            #Get the second order timestep value
+            sotix = t / self.tstep_wanted
+            #Compare with tstartindex values. Set the ramp to zero for any that are equal
+            ramp[self.tstartindex==fotix] = 0
+            #Scale the source term by the ramp value.
             src[abs(tanharg)<self.rampargs["e"]] = ramp*src
         
         #Split source into real and imaginary parts.
