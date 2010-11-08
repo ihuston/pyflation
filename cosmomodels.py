@@ -882,11 +882,16 @@ class CanonicalRampedSecondOrder(PhiModels):
         epsilon = self.second_stage.bgepsilon[fotix]
         
         #Get source terms and multiply by ramp
-        tanharg =  t-self.tstart[kix] - self.rampargs["b"]
-        ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+        if nokix:
+            tanharg = t - self.tstart - self.rampargs["b"]
+        else:
+            tanharg =  t-self.tstart[kix] - self.rampargs["b"]
                 
         #When absolute value of tanharg is less than e then multiply source by ramp for those values.
-        src[abs(tanharg)<self.rampargs["e"]] = ramp*src
+        if np.any(abs(tanharg)<self.rampargs["e"]):
+            ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+            ramp[self.second_stage.fotstartindex==fotix] = 0
+            src[abs(tanharg)<self.rampargs["e"]] = ramp*src
         
         #Split source into real and imaginary parts.
         srcreal, srcimag = src.real, src.imag
