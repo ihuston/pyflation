@@ -103,10 +103,11 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #Set up x counter and index for x
     xix = 0 # first index
     
-    #The number of steps could be either the floor or ceiling of the following calc
-    #In the previous code, the floor was used, but then the rk step add another step on
-    #Additional +1 is to match with extra step as x is incremented at beginning of loop
-    number_steps = np.ceil((tend - simtstart)/h) + 1#floor might be needed for compatibility
+    #The number of steps is now calculated using around. This matches with the
+    #expression used in second order classes to calculate the first order timestep.
+    #Around rounds .5 values towards even numbers so 0.5->0 and 1.5->2.
+    #The added one is because the step at simtstart should also be counted.
+    number_steps = np.around((tend - simtstart)/h) + 1
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
