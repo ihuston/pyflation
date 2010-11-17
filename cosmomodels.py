@@ -1621,11 +1621,14 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 raise
             
             #Fix bgmodel to actual instance
-            #Check ystart is in right form (1-d array of three values)
-            if len(self.ystart.shape) == 1:
-                ys = self.ystart[0:3]
-            elif len(self.ystart.shape) == 2:
-                ys = self.ystart[0:3,0]
+            if self.ystart:
+                #Check ystart is in right form (1-d array of three values)
+                if len(self.ystart.shape) == 1:
+                    ys = self.ystart[0:3]
+                elif len(self.ystart.shape) == 2:
+                    ys = self.ystart[0:3,0]
+            else:
+                ys = self.foystart[0:3,0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
                             potential_func=self.potential_func, pot_params=self.pot_params)
