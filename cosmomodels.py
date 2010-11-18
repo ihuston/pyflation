@@ -1621,7 +1621,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 raise
             
             #Fix bgmodel to actual instance
-            if self.ystart:
+            if self.ystart is not None:
                 #Check ystart is in right form (1-d array of three values)
                 if len(self.ystart.shape) == 1:
                     ys = self.ystart[0:3]
