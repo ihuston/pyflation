@@ -67,6 +67,7 @@ kend = getkend(kinit, deltak, numsoks)
 ntheta = 513
 foclass = c.FOCanonicalTwoStage
 srcclass = srcequations.FullSingleFieldSource
+soclass = c.CanonicalRampedSecondOrder
 cq = 50
 
 #If sourceterm files already exist should they be overwritten?
@@ -96,7 +97,8 @@ foargs = {"potential_func": pot_func,
             "ystart": ystart,
             "cq": cq,
             "solver": "rkdriver_tsix"}
-soargs = {"solver": "rkdriver_tsix"}
+soargs = {"solver": "rkdriver_tsix",
+          "soclass": soclass}
  
 ##############################
 # qsub submission values
