@@ -12,20 +12,28 @@ from sourceterm import srcequations
 import os.path
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
+                                "pot_params": None,
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             "lambdaphi4":      {"potential_func": "lambdaphi4",
+                                "pot_params": None,
                                 "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "hybrid2and4":     {"potential_func": "hybrid2and4",
+                                "pot_params": None,
                                 "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "linde":           {"potential_func": "linde",
+                                "pot_params": None,
                                 "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "phi2over3":       {"potential_func": "phi2over3",
+                                "pot_params": None,
                                 "ystart": np.array([10.0, 0,0,0,0,0,0])},
             "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
+                                "pot_params": None,
                                 "ystart": np.array([18.0, 0,0,0,0,0,0])},
             "step_potential":  {"potential_func": "step_potential",
+                                "pot_params": None,
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             "bump_potential":  {"potential_func": "bump_potential",
+                                "pot_params": None,
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])}
             }
 
@@ -91,12 +99,14 @@ provenancefile = os.path.join(LOGDIR, provenancefilename)
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
+pot_params = fx["pot_params"]
 ystart = fx["ystart"]
 
 foargs = {"potential_func": pot_func,
-            "ystart": ystart,
-            "cq": cq,
-            "solver": "rkdriver_tsix"}
+          "pot_params": pot_params,
+          "ystart": ystart,
+          "cq": cq,
+          "solver": "rkdriver_tsix"}
 soargs = {"solver": "rkdriver_tsix",
           "soclass": soclass}
  
