@@ -350,8 +350,8 @@ def bump_potential(y, params=None):
         d = params.get("d", 0.01) #Units of Mpl
         phi_b = params.get("phi_b", 14.84) #Units of Mpl
     else:
-        c = 0.0018
-        d = 0.022
+        c = 0.0005
+        d = 0.01
         phi_b = 14.84
     
     #Use inflaton mass
