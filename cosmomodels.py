@@ -105,6 +105,11 @@ class CosmologicalModel(object):
             potential_func = "msqphisq"
         self.potentials = cmpotentials.__getattribute__(potential_func)
         self.potential_func = potential_func
+        
+        #Set potential parameters to default to empty dictionary.
+        if pot_params is None:
+            pot_params = {}
+        self.pot_params = pot_params
                 
         #Set self.pot_params to argument
         if not isinstance(pot_params, dict) and pot_params is not None:
@@ -201,6 +206,7 @@ class CosmologicalModel(object):
     
     def gethf5paramsdict(self):
         """Describes the fields required to save the calling parameters."""
+        
         params = {
         "solver" : tables.StringCol(50),
         "classname" : tables.StringCol(255),
@@ -278,6 +284,8 @@ class CosmologicalModel(object):
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
                     paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
+                    
+                    
                     #Need to check if results are k dependent
                     if grpname is "results":
                         if hasattr(self, "bgmodel"):
@@ -1059,6 +1067,9 @@ class MultiStageModel(CosmologicalModel):
         "simtstart" : tables.Float64Col(),
         "ainit" : tables.Float64Col(),
         "potential_func" : tables.StringCol(255),
+        "pot_params" : {
+                        "name": tables.StringCol(255),
+                        "value": tables.Float64Col()},
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
         "tstep_min" : tables.Float64Col(),
