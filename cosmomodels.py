@@ -1637,16 +1637,14 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self.source = None
                 # Put potential parameters into right variable
                 try:
-                    potparamstab = self._rf.root.results.potparamstab
+                    potparamstab = self._rf.root.results.pot_params
                     for row in potparamstab:
                         key = row["name"]
                         val = row["value"]
                         self.pot_params[key] = val
                 except tables.NoSuchNodeError:
                     if _debug:
-                        self._log.debug("No pot_params table, defaulting to empty dictionary.")
-                    self.pot_params = {}
-                
+                        self._log.debug("No pot_params table in file.")                
                 
                 #Put params in right slots
                 for ix, val in enumerate(params[0]):
