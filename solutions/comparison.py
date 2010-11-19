@@ -77,7 +77,7 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
     bgvars = m.yresult[nix, 0:3, 0]
     a = m.ainit*np.exp(m.tresult[nix])
     #Get potentials
-    potentials = m.potentials(np.array([bgvars[0]]))
+    potentials = m.potentials(np.array([bgvars[0]]), m.pot_params)
     
     #Set alpha and beta
     alpha = 1/(a*np.sqrt(2))

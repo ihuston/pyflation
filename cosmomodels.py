@@ -399,7 +399,7 @@ class BasicBgModel(CosmologicalModel):
         #Mass of inflaton in Planck masses
         self.mass = 1.0
         
-    def potentials(self, y):
+    def potentials(self, y, pot_params=None):
         """Return value of potential at y, along with first and second derivs."""
         
         #Use inflaton mass

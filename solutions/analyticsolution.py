@@ -40,7 +40,7 @@ class AnalyticSolution(GeneralSolution):
                        
         k = self.srceqns.k
                 #Get potentials
-        potentials = m.potentials(np.array([bgvars[0]]))
+        potentials = m.potentials(np.array([bgvars[0]]), m.pot_params)
         Cterms = self.calculate_Cterms(bgvars, a, potentials)
         
         results = np.complex256(self.J_terms[0](k, Cterms, **kwargs))

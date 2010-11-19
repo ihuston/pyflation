@@ -40,7 +40,7 @@ class CalcedSolution(GeneralSolution):
         dp1dot = self.get_dp1dot(self.srceqns.fullk, **kwargs)
         
         #Get potentials
-        potentials = m.potentials(np.array([phi]))
+        potentials = m.potentials(np.array([phi]), m.pot_params)
         
         src = self.srceqns.sourceterm(bgvars, a, potentials, dp1, dp1dot)
        

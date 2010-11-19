@@ -286,7 +286,7 @@ def src_term_integrands(m, fixture, nix=0):
     B = a*bgvars[2]
     dp1 = A/sqrt(fullk)
     dp1dot = -A/sqrt(fullk) -(A/B)*sqrt(fullk)*1j
-    potentials = m.potentials(m.bgmodel.yresult[nix])
+    potentials = m.potentials(m.bgmodel.yresult[nix], m.pot_params)
     
     log.info("Getting thetaterms...")
     tterms = getthetaterms(ie, dp1, dp1dot)
@@ -308,7 +308,7 @@ def get_both_src_integrands(m, fixture, nix=0):
     B = a*bgvars[2]
     dp1 = A/sqrt(fullk)
     dp1dot = -A/sqrt(fullk) -(A/B)*sqrt(fullk)*1j
-    potentials = m.potentials(m.bgmodel.yresult[nix])
+    potentials = m.potentials(m.bgmodel.yresult[nix], m.pot_params)
     
     log.info("Getting thetaterms...")
     calced_tterms = preconvolution_calced(fixture)

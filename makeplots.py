@@ -573,7 +573,7 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
 def plot_potential_phi(fname="plot_potential", size="large", m=cmbmsq):
     #Get background results and potential
     ym = m.bgmodel.yresult
-    vm = np.array([m.potentials(y) for y in ym])
+    vm = np.array([m.potentials(y, m.pot_params) for y in ym])
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
@@ -654,7 +654,7 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
                               r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
     yms = [m.bgmodel.yresult[:] for m in models]
-    vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
+    vms = [np.array([m.potentials(y, m.pot_params) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
@@ -689,7 +689,7 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
     #Get background results and potential
     
     yms = [m.bgmodel.yresult[int(m.tresult[0]/(m.tstep_wanted/2.0)):int((m.tend-m.tresult[0])/(m.tstep_wanted/2.0))] for m in models]
-    vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
+    vms = [np.array([m.potentials(y, m.pot_params) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
