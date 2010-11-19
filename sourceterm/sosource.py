@@ -89,7 +89,7 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     if _debug:
         source_logger.debug("Variables set. Getting potentials for this timestep...")
     #To get the potentials we send the recorded values to the potentials function
-    potentials = list(m.potentials(myr))
+    potentials = list(m.potentials(myr, m.pot_params))
     #Get potentials in right shape
     for pix, p in enumerate(potentials):
         #Check if the shape of the potentials is a scalar
