@@ -1079,9 +1079,6 @@ class MultiStageModel(CosmologicalModel):
         "simtstart" : tables.Float64Col(),
         "ainit" : tables.Float64Col(),
         "potential_func" : tables.StringCol(255),
-        "pot_params" : {
-                        "name": tables.StringCol(255),
-                        "value": tables.Float64Col()},
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
         "tstep_min" : tables.Float64Col(),
