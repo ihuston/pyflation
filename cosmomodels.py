@@ -1708,6 +1708,7 @@ class ThirdStageModel(MultiStageModel):
             self.ainit = self.second_stage.ainit
             self.potentials = self.second_stage.potentials
             self.potential_func = self.second_stage.potential_func
+            self.pot_params = self.second_stage.pot_params
         
         if ystart is None:
             ystart = np.zeros((4, len(self.k)))
