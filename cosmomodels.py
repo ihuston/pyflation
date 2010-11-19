@@ -333,6 +333,15 @@ class CosmologicalModel(object):
                     paramstabrow[key] = params[key]
                 paramstabrow.append() #Add to table
                 paramstab.flush()
+                
+                #Save potential parameters
+                potparamsrow = potparamstab.row
+                for key in self.pot_params:
+                    potparamsrow["name"] = key
+                    potparamsrow["value"] = self.pot_params[key]
+                    potparamsrow.append()
+                potparamstab.flush()
+                 
                 #Save first order results
                 if grpname is "results":
                     yresarr.append(self.yresult)
@@ -1626,6 +1635,19 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     if _debug:
                         self._log.debug("First order file does not have a source term.")
                     self.source = None
+                # Put potential parameters into right variable
+                try:
+                    potparamstab = self._rf.root.results.potparamstab
+                    for row in potparamstab:
+                        key = row["name"]
+                        val = row["value"]
+                        self.pot_params[key] = val
+                except tables.NoSuchNodeError:
+                    if _debug:
+                        self._log.debug("No pot_params table, defaulting to empty dictionary.")
+                    self.pot_params = {}
+                
+                
                 #Put params in right slots
                 for ix, val in enumerate(params[0]):
                     self.__setattr__(params.colnames[ix], val)
