@@ -284,7 +284,10 @@ class CosmologicalModel(object):
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
                     paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
-                    
+                    #Add in potential parameters pot_params as a table
+                    potparamsshape = {"name": tables.StringCol(255),
+                                      "value": tables.Float64Col()}
+                    potparamstab = rf.createTable(resgroup, "pot_params", potparamsshape , filters=filters)
                     
                     #Need to check if results are k dependent
                     if grpname is "results":
