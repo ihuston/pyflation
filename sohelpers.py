@@ -72,6 +72,7 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
         tstartindex = fres.fotstartindex.copy(nres, stop=numks)
         ystart = fres.foystart.copy(nres, stop=numks)
         params = fres.parameters.copy(nres)
+        pot_params = fres.pot_params.copy(nres)
         bgres = nf.copyNode(ff.root.bgresults, nf.root, recursive=True)
         #Copy source term
         nf.copyNode(sterm, nres)
