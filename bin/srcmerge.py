@@ -11,10 +11,18 @@ import re
 import sys
 import optparse
 
-#Local imports from pyflation package
-from pyflation import run_config, helpers, sohelpers
-from run_config import _debug
-
+try:
+    #Local modules from pyflation package
+    from pyflation import run_config, helpers, sohelpers
+    from run_config import _debug
+except ImportError,e:
+    if __name__ == "__main__":
+        msg = """Pyflation module needs to be available. 
+Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
 
 
 def joinsrcfiles(newfile, dirname, pattern=None):
