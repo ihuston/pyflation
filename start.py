@@ -28,6 +28,7 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  srcscriptname = run_config.srcscriptname,
                  mrgscriptname = run_config.mrgscriptname,
                  soscriptname = run_config.soscriptname,
+                 cmbscriptname = run_config.cmbscriptname,
                  foresults = run_config.foresults,
                  srcstub = run_config.srcstub,
                  extra_qsub_params = "",
@@ -105,11 +106,12 @@ def source_dict(template_dict, fo_jid=None):
     src_dict["qsublogname"] += "-node-$TASK_ID"
     src_dict["extra_qsub_params"] = ("#$ -t " + src_dict["taskmin"] + "-" +
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
-                                    src_dict["hold_jid_list"])
+                                    src_dict["hold_jid_list"] +
+                                    "\n#$ -r y")
     #Formulate source term command
     src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
-                           "--taskid=$SGE_TASK_ID")
+                           "--taskid=$SGE_TASK_ID  --overwrite")
     return src_dict
 
 def merge_dict(template_dict, src_jid=None):
@@ -120,7 +122,7 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
     mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
-    mrg_dict["command"] = "python srcmerge.py --merge"
+    mrg_dict["command"] = "python sourceterm/srcmerge.py --merge"
     return mrg_dict
 
 def second_order_dict(template_dict, mrg_jid=None):
@@ -133,6 +135,17 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["extra_qsub_params"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
     so_dict["command"] = "python secondorder.py"
     return so_dict
+
+def combine_dict(template_dict, so_jid=None):
+    """Return dictionary for first order qsub script.
+    Copies template_dict so as not to change values."""
+    cmb_dict = template_dict.copy()
+    cmb_dict["runname"] += "-cmb"
+    cmb_dict["hold_jid_list"] = so_jid
+    cmb_dict["qsublogname"] += "-cmb"
+    cmb_dict["extra_qsub_params"] = ("#$ -hold_jid " + cmb_dict["hold_jid_list"])
+    cmb_dict["command"] = "python combine.py"
+    return cmb_dict
 
 def main(argv=None):
     """Process command line options, create qsub scripts and start execution."""
@@ -222,6 +235,11 @@ def main(argv=None):
     #Launch full script and get job id
     so_jid = launch_qsub(so_dict["soscriptname"])
     
+    #Combination of final results
+    cmb_dict = combine_dict(template_dict, so_jid=so_jid)
+    write_out_template(cmb_dict["templatefile"], cmb_dict["cmbscriptname"], cmb_dict)
+    #Launch full script and get job id
+    cmb_jid = launch_qsub(cmb_dict["cmbscriptname"])
         
     return 0
             

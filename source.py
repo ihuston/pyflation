@@ -7,14 +7,16 @@ Created on 6 Jul 2010
 '''
 from __future__ import division
 
-import cosmomodels as c
-import run_config
-import sosource
 import time
 import helpers
 import os.path
-import numpy as N
-import srcmerge
+import numpy as np
+
+import cosmomodels as c
+import run_config
+from sourceterm import sosource
+
+from sourceterm import srcmerge
 import sohelpers
 import logging
 import sys
@@ -24,7 +26,8 @@ import optparse
 from run_config import _debug
 
 def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None, 
-              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None):
+              ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None, 
+              srcclass=None, overwrite=False):
     """Run parallel source integrand and second order calculation."""
     
     id = taskarray["id"]
@@ -43,22 +46,40 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     nfostart = min(m.fotstartindex).astype(int)
     nstar = max(nfostart, ninit)
     totalnrange = len(m.tresult[nstar:nfinal])
-    nrange = N.ceil(totalnrange/ntasks)
+    nrange = np.ceil(totalnrange/ntasks)
     
     #Change myninit to match task id
     if id == 1:
-        myninit = ninit
+        #First task should start at very beginning
+        myninit = ninit 
     else:
+        #Other tasks start where last one ended
         myninit = nstar + (id-1)*nrange
+    #Each task ends after doing it's range of steps
     mynend = nstar + id*nrange
     if mynend > nfinal:
+        #Make sure not to go any further than the end
         mynend = nfinal
+    if id == taskarray["max"]:
+        #Make up any leftover steps
+        mynend = nfinal
+    
     log.info("Process rank: %d, ninit: %d, nend: %d", id, myninit, mynend)
+    if myninit > mynend:
+        #No timesteps left so stop
+        log.info("Process with rank %d has not timesteps to complete. Quitting!", id)
+        return None
+    
+    #Set source class using run_config
+    if srcclass is None:
+        srcclass = run_config.srcclass
+    
     
     #get source integrand and save to file
     try:
         filesaved = sosource.getsourceandintegrate(m, sourcefile, ninit=myninit, nfinal=mynend,
-                                                   ntheta=ntheta, numks=numsoks)
+                                                   ntheta=ntheta, numks=numsoks, srcclass=srcclass,
+                                                   overwrite=overwrite)
         log.info("Source term saved as " + filesaved)
     except Exception:
         log.exception("Error getting source term.")
@@ -89,6 +110,9 @@ def main(argv=None):
     parser.add_option("-f", "--filename", action="store", dest="foresults", 
                       default=run_config.foresults, type="string", 
                       metavar="FILE", help="first order results file, default=%default")
+    parser.add_option("--overwrite", action="store_true", dest="overwrite",
+                      default=run_config.overwrite,  
+                      help="if selected source term files which already exist will be overwritten.")
     
     arraygroup = optparse.OptionGroup(parser, "Task Array Options",
                             "These options specify a task array to work inside. "
@@ -162,7 +186,7 @@ def main(argv=None):
     
     try:
         runsource(fofile=options.foresults, ninit=options.tstart, 
-                  nfinal=options.tend, taskarray=taskarray)
+                  nfinal=options.tend, taskarray=taskarray, overwrite=options.overwrite)
     except Exception:
         log.exception("Error getting source integral!")
         return 1

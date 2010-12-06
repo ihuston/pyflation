@@ -7,7 +7,7 @@ from __future__ import division
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.integrate import romb
-import sosource
+from sourceterm import sosource
 
 fixtures = [
     {"kmin": 0.001, "fullkmax": 1.026, "deltak": 0.001, "numsoks": 513, "nthetas": 129, "A": 1, "B": 1},

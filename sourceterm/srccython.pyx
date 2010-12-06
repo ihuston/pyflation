@@ -28,7 +28,7 @@ cdef extern from "math.h":
     double floor(double x)
     double cos(double x)
 
-cpdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
+cpdef double klessq2(int kix, int qix, double theta, double kquot):
     """Return the scalar magnitude of k^i - q^i where theta is angle between vectors.
     
     Parameters
@@ -49,7 +49,7 @@ cpdef double klessq2(int kix, int qix, double theta, double kmin, double kquot):
             |k^i - q^i| = \sqrt(k^2 + q^2 - 2kq cos(theta))
     """
     cdef double res
-    res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*cos(theta)) - kmin
+    res = sqrt((kquot + kix)**2 + (kquot + qix)**2 - 2*(kquot + kix)*(kquot + qix)*cos(theta)) - kquot
     return res
 
 def interpdps(N.ndarray[DTYPEF_t, ndim=2] dp1, N.ndarray[DTYPEF_t, ndim=2] dp1dot,
@@ -99,7 +99,7 @@ cpdef interpdps2(object dp1_obj,  object dp1dot_obj,
     
     for r in range(rmax):
         for t in range(tmax):
-            p = klessq2(kix, r, theta[t], kmin, kquot)
+            p = klessq2(kix, r, theta[t], kquot)
             if p >= 0.0:
                 #get floor and ceiling (cast as ints)
                 fp = <int> floor(p)
@@ -108,9 +108,14 @@ cpdef interpdps2(object dp1_obj,  object dp1dot_obj,
                     pquotient = 0.0
                 else:
                     pquotient = (p - fp)/(cp - fp)
+                #debug
+                
                 #Save results
                 dpres[0,r,t] = dp1[fp] + pquotient*(dp1[cp]-dp1[fp])
-                dpres[1,r,t] = dp1dot[fp] + pquotient*(dp1dot[cp]-dp1dot[fp])
+                dpres[1,r,t] = dp1dot[fp] + pquotient*(dp1dot[cp]-dp1dot[fp])                 
+            else:
+                dpres[0,r,t] = 0
+                dpres[1,r,t] = 0
     return dpres
 
 

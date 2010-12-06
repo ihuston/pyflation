@@ -30,10 +30,10 @@ def generate_fixtures(kmins=kmins_default, deltaks=deltaks_default, numsoks=nums
 def fixture_from_model(m, numsoks=None, nthetas=nthetas_default[-1]):
     """Generate a single fixture from a cosmomodels model.
     
-    If numsoks is not specified, then m.k is presumed to be the second order extent of k.
+    If numsoks is not specified, then use the last value in the defaults.
     """
     if not numsoks:
-        numsoks = len(m.k)
+        numsoks = numsoks_default[-1]
         
     fullkmax = getkend(m.k[0], m.k[1]-m.k[0], numsoks)
     

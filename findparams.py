@@ -2,16 +2,16 @@
 #Run multiple cm2 models
 from __future__ import division
 import cosmomodels as c
-import numpy as N
+import numpy as np
 from copy import deepcopy
 import helpers
 
-WMAP5PIVOT = N.array([5.25e-60])
+WMAP5PIVOT = np.array([5.25e-60])
 
 fixtures = {
-    "mass": {"vars": ["mass"], "values":[N.linspace(6.3265e-6, 6.3427e-6)],
+    "mass": {"vars": ["mass"], "values":[np.linspace(6.3265e-6, 6.3427e-6)],
              "pivotk":WMAP5PIVOT, "pot": "msqphisq",
-             "ystart":N.array([18.0, # \phi_0
+             "ystart":np.array([18.0, # \phi_0
                         -0.1, # \dot{\phi_0}
                          0.0, # H - leave as 0.0 to let program determine
                          1.0, # Re\delta\phi_1
@@ -20,9 +20,9 @@ fixtures = {
                          0.0  # Im\dot{\delta\phi_1}
                          ])},
         #
-    "lambda": {"vars":["lambda"], "values": [N.linspace(1e-10, 1e-8)], 
+    "lambda": {"vars":["lambda"], "values": [np.linspace(1e-10, 1e-8)], 
                "pivotk":WMAP5PIVOT, "pot": "lambdaphi4",
-               "ystart": N.array([25.0,
+               "ystart": np.array([25.0,
                                   -1.0,
                                   0.0,
                                   1.0,
@@ -30,9 +30,9 @@ fixtures = {
                                   1.0,
                                   0])},
     #
-    "phi2over3": {"vars":["sigma"], "values": [N.linspace(1e-10, 1e-8)], 
+    "phi2over3": {"vars":["sigma"], "values": [np.linspace(1e-10, 1e-8)], 
                "pivotk":WMAP5PIVOT, "pot": "phi2over3",
-               "ystart": N.array([10.0,
+               "ystart": np.array([10.0,
                                   0.0,
                                   0.0,
                                   1.0,
@@ -40,9 +40,9 @@ fixtures = {
                                   1.0,
                                   0])},
      #
-     "linde": {"vars":["mass","lambda"], "values": [N.linspace(4.9e-8,6e-8), N.linspace(1.54e-13, 1.57e-13)], 
+     "linde": {"vars":["mass","lambda"], "values": [np.linspace(4.9e-8,6e-8), np.linspace(1.54e-13, 1.57e-13)], 
                "pivotk":WMAP5PIVOT, "pot": "linde",
-               "ystart": N.array([25.0,
+               "ystart": np.array([25.0,
                                    0.0,
                                    0.0,
                                    1.0,
@@ -50,9 +50,9 @@ fixtures = {
                                    1.0,
                                    0])},
                                    
-     "hybrid2and4": {"vars":["mass","lambda"], "values": [N.linspace(4.9e-8,6e-8), N.linspace(1.54e-13, 1.57e-13)], 
+     "hybrid2and4": {"vars":["mass","lambda"], "values": [np.linspace(4.9e-8,6e-8), np.linspace(1.54e-13, 1.57e-13)], 
                "pivotk":WMAP5PIVOT, "pot": "hybrid2and4",
-               "ystart": N.array([25.0,
+               "ystart": np.array([25.0,
                                    0.0,
                                    0.0,
                                    1.0,
@@ -76,14 +76,14 @@ def param_vs_spectrum(fixture, nefolds=5):
         
         try:
             sim.run(saveresults=False)
-            scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
+            scaledPr = sim.k**3/(2*np.pi**2)*sim.Pr
             tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
             Pres = scaledPr[tres.astype(int)].diagonal()[0]
             print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
             if results is not None:
-                results = N.vstack((results, N.hstack([ps, Pres])))
+                results = np.vstack((results, np.hstack([ps, Pres])))
             else:
-                results = N.hstack([ps, Pres])
+                results = np.hstack([ps, Pres])
             del sim, tres, Pres
         except c.ModelError:
             print "Error with %s." % str(dict(zip(fx["vars"], ps)))
@@ -110,18 +110,18 @@ def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
                 sim.runbg()
             except c.ModelError:
                 pass
-            sim.fotend = N.float64(tend)
-            sim.fotendindex = N.int(sim.fotend/sim.tstep_wanted)
+            sim.fotend = np.float64(tend)
+            sim.fotendindex = np.int(sim.fotend/sim.tstep_wanted)
             sim.setfoics()
             sim.runfo()
-            scaledPr = sim.k**3/(2*N.pi**2)*sim.Pr
+            scaledPr = sim.k**3/(2*np.pi**2)*sim.Pr
             tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
             Pres = scaledPr[tres.astype(int)].diagonal()[0]
             print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
             if results is not None:
-                results = N.vstack((results, N.hstack([ps, Pres])))
+                results = np.vstack((results, np.hstack([ps, Pres])))
             else:
-                results = N.hstack([ps, Pres])
+                results = np.hstack([ps, Pres])
             del sim, tres, Pres
         except c.ModelError:
             print "Error with %s." % str(dict(zip(fx["vars"], ps)))

@@ -7,8 +7,7 @@
     specified as a dictionary."""
     
 from __future__ import division
-import numpy as N
-from pdb import set_trace
+import numpy as np
 
 def msqphisq(y, params=None):
     """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2
@@ -33,6 +32,8 @@ def msqphisq(y, params=None):
     else:
         #Use WMAP value of mass (in Mpl)
         m = 6.3267e-6
+        
+    yshape = np.ones_like(y[0])
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
@@ -40,9 +41,9 @@ def msqphisq(y, params=None):
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[0]
     #2nd deriv
-    d2Udphi2 = mass2
+    d2Udphi2 = mass2*yshape
     #3rd deriv
-    d3Udphi3 = 0
+    d3Udphi3 = 0*yshape
     
     return U, dUdphi, d2Udphi2, d3Udphi3
 
@@ -249,6 +250,8 @@ def msqphisq_withV0(y, params=None):
         V0 = params["V0"]
     else:
         V0 = 5e-10 # Units Mpl^4
+    
+    yshape = np.ones_like(y[0])
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
@@ -256,9 +259,118 @@ def msqphisq_withV0(y, params=None):
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[0]
     #2nd deriv
-    d2Udphi2 = mass2
+    d2Udphi2 = mass2*yshape
     #3rd deriv
-    d3Udphi3 = 0
+    d3Udphi3 = 0*yshape
     
     return U, dUdphi, d2Udphi2, d3Udphi3
     
+def step_potential(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V=1/2 m^2 phi^2 ( 1 + c*tanh((phi-phi_s) / d)
+    where m is the mass of the inflaton field and c, d and phi_s are provided.
+    Form is taken from Chen etal. arxiv:0801.3295.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             
+    m can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use WMAP value of mass (in Mpl)
+        m = 6.3267e-6
+    if params is not None:
+        c = params.get("c", 0.0018)
+        d = params.get("d", 0.022) #Units of Mpl
+        phi_s = params.get("phi_s", 14.84) #Units of Mpl
+    else:
+        c = 0.0018
+        d = 0.022
+        phi_s = 14.84
+    
+    #Use inflaton mass
+    mass2 = m**2
+    #potential U = 1/2 m^2 \phi^2
+    
+    phisq = y[0]**2
+    
+    phiterm = (y[0]-phi_s)/d
+    s = 1/np.cosh(phiterm)
+    t = np.tanh(phiterm)
+    
+    U = 0.5*(mass2)*(y[0]**2) * (1 + c * t)
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*y[0] * (1 + c*t) + c * mass2 * phisq * s**2 / (2*d)
+    #2nd deriv
+    d2Udphi2 = 0.5*mass2*(4*c*y[0]*s**2/d - 2*c*phisq*s**2*t/(d**2) + 2*(1+c*t))
+    #3rd deriv
+    d3Udphi3 = 0.5*mass2*(6*c*s**2/d - 12*c*y[0]*s**2*t/(d**2) 
+                          + c*phisq*(-2*s**4/(d**3) + 4*s**2*t**2/(d**3)))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
+
+def bump_potential(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V=1/2 m^2 phi^2 ( 1 + c*sech((phi-phi_b) / d)
+    where m is the mass of the inflaton field and c, d and phi_b are provided.
+    Form is taken from Chen etal. arxiv:0801.3295.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             
+    m can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use WMAP value of mass (in Mpl)
+        m = 6.3267e-6
+    if params is not None:
+        c = params.get("c", 0.0005)
+        d = params.get("d", 0.01) #Units of Mpl
+        phi_b = params.get("phi_b", 14.84) #Units of Mpl
+    else:
+        c = 0.0005
+        d = 0.01
+        phi_b = 14.84
+    
+    #Use inflaton mass
+    mass2 = m**2
+    #potential U = 1/2 m^2 \phi^2
+    
+    phisq = y[0]**2
+    
+    phiterm = (y[0]-phi_b)/d
+    s = 1/np.cosh(phiterm)
+    t = np.tanh(phiterm)
+    
+    U = 0.5*(mass2)*(y[0]**2) * (1 + c * s)
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*y[0] * (1 + c*s) - c * mass2 * phisq * s*t / (2*d)
+    #2nd deriv
+    d2Udphi2 = 0.5*mass2*(-4*c*y[0]*s*t/d + c*phisq*(-s**3/(d**2) + s*(t**2)/(d**2)) + 2*(1+c*s))
+    #3rd deriv
+    d3Udphi3 = 0.5*mass2*(-6*c*s*t/d + 6*c*y[0]*(-s**3/(d**2) + s*(t**2)/(d**2)) 
+                          + c*phisq*(5*s**3*t/(d**3) - s*t**3/(d**3)))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3

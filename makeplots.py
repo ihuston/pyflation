@@ -573,7 +573,7 @@ def msqphisq_withV0_params(fname="msqphisq_withV0_params", size="large"):
 def plot_potential_phi(fname="plot_potential", size="large", m=cmbmsq):
     #Get background results and potential
     ym = m.bgmodel.yresult
-    vm = np.array([m.potentials(y) for y in ym])
+    vm = np.array([m.potentials(y, m.pot_params) for y in ym])
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
@@ -654,7 +654,7 @@ def compare_potential_phi(fname="compare_potential_phi", size="large", models=No
                               r"$V(\varphi)=U_0 + \frac{1}{2}m_0^2\varphi^2$"]
     #Get background results and potential
     yms = [m.bgmodel.yresult[:] for m in models]
-    vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
+    vms = [np.array([m.potentials(y, m.pot_params) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
@@ -689,7 +689,7 @@ def compare_potential_n(fname="compare_potential_n", size="large", models=None, 
     #Get background results and potential
     
     yms = [m.bgmodel.yresult[int(m.tresult[0]/(m.tstep_wanted/2.0)):int((m.tend-m.tresult[0])/(m.tstep_wanted/2.0))] for m in models]
-    vms = [np.array([m.potentials(y) for y in ym]) for m, ym in zip(models, yms)]
+    vms = [np.array([m.potentials(y, m.pot_params) for y in ym]) for m, ym in zip(models, yms)]
     fig = P.figure()
     set_size(fig, size)
     #Plot potential versus phi
@@ -751,7 +751,6 @@ def cmp_Pr_allks(fname="cmp_Pr_allks", size="large", nefolds=5, models=None, mod
     for m, mleg in zip(models, models_legends):
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
-        m.runcount = 1
         dp = m.yresult[tix,3,:] + m.yresult[tix,5,:]*1j
         scPr = m.k**3/(2*np.pi**2) * (dp*dp.conj()) / (m.yresult[tix,1,:]**2)
         P.semilogx(m.k, scPr, label=mleg)
@@ -772,7 +771,6 @@ def cmp_dp2_allks(fname="cmp_dp2_allks", size="large", nefolds=5, models=None, m
     for m, mleg in zip(models, models_legends):
         kcrossend = m.findkcrossing(m.k[-1], m.tresult, m.yresult[:,2,-1], factor=1)[0]
         tix = int(kcrossend + nefolds/m.tstep_wanted)
-        m.runcount = 1
         dp2 = m.yresult[tix,7,:] + m.yresult[tix,9,:]*1j
         scdp = m.k**1.5/(np.sqrt(2)*np.pi) * np.abs(dp2) / (m.yresult[tix,1,:]**2)
         P.loglog(m.k, scdp, label=mleg)

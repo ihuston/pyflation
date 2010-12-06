@@ -33,7 +33,7 @@ if [ $RETVAL -eq 0 ]; then
     echo Command executed successfully
     exit $RETVAL
 fi
-if [ $RETVAL -neq 0 ]; then
+if [ $RETVAL -ne 0 ]; then
     echo Command did not finish successfully
     # Need to change exit value to 100 to stop qsub jobs
     exit 100

@@ -5,23 +5,36 @@ Created on 30 Jun 2010
 @author: Ian Huston
 '''
 
-import numpy as N
+import numpy as np
 import cosmomodels as c
 from configuration import PROGRAM_NAME, LOGLEVEL
+from sourceterm import srcequations
 import os.path
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
-                                "ystart": N.array([18.0, -0.1,0,0,0,0,0])},
+                                "pot_params": None,
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             "lambdaphi4":      {"potential_func": "lambdaphi4",
-                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+                                "pot_params": None,
+                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "hybrid2and4":     {"potential_func": "hybrid2and4",
-                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+                                "pot_params": None,
+                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "linde":           {"potential_func": "linde",
-                                "ystart": N.array([25.0, 0,0,0,0,0,0])},
+                                "pot_params": None,
+                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
             "phi2over3":       {"potential_func": "phi2over3",
-                                "ystart": N.array([10.0, 0,0,0,0,0,0])},
+                                "pot_params": None,
+                                "ystart": np.array([10.0, 0,0,0,0,0,0])},
             "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
-                                "ystart": N.array([18.0, 0,0,0,0,0,0])}
+                                "pot_params": None,
+                                "ystart": np.array([18.0, 0,0,0,0,0,0])},
+            "step_potential":  {"potential_func": "step_potential",
+                                "pot_params": None,
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+            "bump_potential":  {"potential_func": "bump_potential",
+                                "pot_params": None,
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])}
             }
 
 ##############################
@@ -61,7 +74,12 @@ kend = getkend(kinit, deltak, numsoks)
 
 ntheta = 513
 foclass = c.FOCanonicalTwoStage
+srcclass = srcequations.FullSingleFieldSource
+soclass = c.CanonicalRampedSecondOrder
 cq = 50
+
+#If sourceterm files already exist should they be overwritten?
+overwrite = True
 
 
 
@@ -70,22 +88,27 @@ cq = 50
 # THIS LINE
 ##############################
 
-from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR
+from configuration import CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR, _debug
+from configuration import provenancefilename
 
 if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
 
 logfile = os.path.join(LOGDIR, "run.log")
+provenancefile = os.path.join(LOGDIR, provenancefilename)
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
+pot_params = fx["pot_params"]
 ystart = fx["ystart"]
 
 foargs = {"potential_func": pot_func,
-            "ystart": ystart,
-            "cq": cq,
-            "solver": "rkdriver_withks"}
-soargs = {}
+          "pot_params": pot_params,
+          "ystart": ystart,
+          "cq": cq,
+          "solver": "rkdriver_tsix"}
+soargs = {"solver": "rkdriver_tsix",
+          "soclass": soclass}
  
 ##############################
 # qsub submission values
@@ -104,6 +127,7 @@ foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
 soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
+cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
 
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5
@@ -114,11 +138,5 @@ pattern = "src-(\d*).hf5"
 srcresults = os.path.join(RESULTSDIR, "src.hf5")
 mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
 soresults = os.path.join(RESULTSDIR, "so.hf5")
+cmbresults = os.path.join(RESULTSDIR, "cmb.hf5")
 
-
-##################################################
-# debug logging control
-# 0 for off, 1 for on
-# This can be changed using command line arguments
-##################################################
-_debug = 1 #
