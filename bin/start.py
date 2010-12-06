@@ -5,15 +5,27 @@ Author: Ian Huston
 from __future__ import print_function
 
 import os.path
-import run_config
 import sys
-from helpers import ensurepath
 from optparse import OptionParser, OptionGroup
 import logging
 import subprocess
-import helpers
-from run_config import _debug
 import re
+
+
+try:
+    #Local modules from pyflation package
+    from pyflation import run_config, helpers
+    from run_config import _debug
+    from helpers import ensurepath
+except ImportError,e:
+    if __name__ == "__main__":
+        msg = """Pyflation module needs to be available. 
+Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
+
 
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
@@ -94,7 +106,7 @@ def first_order_dict(template_dict):
     fo_dict = template_dict.copy()
     fo_dict["runname"] += "-fo"
     fo_dict["qsublogname"] += "-fo"
-    fo_dict["command"] = "python firstorder.py"
+    fo_dict["command"] = "python bin/firstorder.py"
     return fo_dict
 
 def source_dict(template_dict, fo_jid=None):
@@ -109,7 +121,7 @@ def source_dict(template_dict, fo_jid=None):
                                     src_dict["hold_jid_list"] +
                                     "\n#$ -r y")
     #Formulate source term command
-    src_dict["command"] = ("python source.py --taskmin=$SGE_TASK_FIRST "
+    src_dict["command"] = ("python bin/source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
                            "--taskid=$SGE_TASK_ID  --overwrite")
     return src_dict
@@ -122,7 +134,7 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
     mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
-    mrg_dict["command"] = "python sourceterm/srcmerge.py --merge"
+    mrg_dict["command"] = "python bin/srcmerge.py --merge"
     return mrg_dict
 
 def second_order_dict(template_dict, mrg_jid=None):
@@ -133,7 +145,7 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["hold_jid_list"] = mrg_jid
     so_dict["qsublogname"] += "-so"
     so_dict["extra_qsub_params"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
-    so_dict["command"] = "python secondorder.py"
+    so_dict["command"] = "python bin/secondorder.py"
     return so_dict
 
 def combine_dict(template_dict, so_jid=None):
@@ -144,7 +156,7 @@ def combine_dict(template_dict, so_jid=None):
     cmb_dict["hold_jid_list"] = so_jid
     cmb_dict["qsublogname"] += "-cmb"
     cmb_dict["extra_qsub_params"] = ("#$ -hold_jid " + cmb_dict["hold_jid_list"])
-    cmb_dict["command"] = "python combine.py"
+    cmb_dict["command"] = "python bin/combine.py"
     return cmb_dict
 
 def main(argv=None):

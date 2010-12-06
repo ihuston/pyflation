@@ -8,13 +8,21 @@ import numpy as np
 import os
 import logging
 
-import run_config
-
-from run_config import _debug
 import sys
-import helpers
 import optparse
-import sohelpers
+
+try:
+    #Local modules from pyflation package
+    from pyflation import run_config, helpers, sohelpers
+    from run_config import _debug
+except ImportError,e:
+    if __name__ == "__main__":
+        msg = """Pyflation module needs to be available. 
+Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
 
 
 def combine_results(fofile, sofile, newfile=None):

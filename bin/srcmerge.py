@@ -8,14 +8,13 @@ import numpy as np
 import os
 import logging
 import re
-
-import run_config
-
-from run_config import _debug
 import sys
-import helpers
 import optparse
-import sohelpers
+
+#Local imports from pyflation package
+from pyflation import run_config, helpers, sohelpers
+from run_config import _debug
+
 
 
 def joinsrcfiles(newfile, dirname, pattern=None):
