@@ -3,7 +3,7 @@ Created on 25 Jun 2010
 
 @author: Ian Huston
 '''
-import configuration
+from pyflation import configuration
 import os
 import os.path
 import helpers
