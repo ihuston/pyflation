@@ -3,21 +3,23 @@ Created on 25 Jun 2010
 
 @author: Ian Huston
 '''
-from pyflation import configuration
+
 import os
 import os.path
-import helpers
 import logging
 import sys
 import time
 from optparse import OptionParser
-from setup import setup, setup_args
 
 #Version information
 from sys import version as python_version
 from numpy import __version__ as numpy_version
 from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
+
+#Local modules from pyflation package
+from pyflation import configuration, helpers
+from pyflation.setup import setup, setup_args
 
 
 provenance_template = """Provenance document for this Pyflation run
