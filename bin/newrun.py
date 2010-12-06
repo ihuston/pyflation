@@ -21,10 +21,12 @@ try:
     #Local modules from pyflation package
     from pyflation import configuration, helpers
     from pyflation.setup import setup, setup_args
-except ImportError:
+except ImportError,e:
     if __name__ == "__main__":
-        print """Pyflation module needs to be available. 
-        Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+        msg = """Pyflation module needs to be available. 
+Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print msg, e
+        sys.exit(1)
     else:
         raise
 
