@@ -17,10 +17,16 @@ from numpy import __version__ as numpy_version
 from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
-#Local modules from pyflation package
-from pyflation import configuration, helpers
-from pyflation.setup import setup, setup_args
-
+try:
+    #Local modules from pyflation package
+    from pyflation import configuration, helpers
+    from pyflation.setup import setup, setup_args
+except ImportError:
+    if __name__ == "__main__":
+        print """Pyflation module needs to be available. 
+        Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
+    else:
+        raise
 
 provenance_template = """Provenance document for this Pyflation run
 ------------------------------------------
