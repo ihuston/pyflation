@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """start.py - Generate bash scripts for qsub and execute.
 Author: Ian Huston
 """
@@ -11,7 +10,6 @@ import logging
 import subprocess
 import re
 
-
 try:
     #Local modules from pyflation package
     from pyflation import run_config, helpers
@@ -20,8 +18,8 @@ try:
 except ImportError,e:
     if __name__ == "__main__":
         msg = """Pyflation module needs to be available. 
-Either run this script from the base directory as bin/start.py or add directory enclosing pyflation package to PYTHONPATH."""
-        print msg, e
+Either run this script from the base directory as bin/srcmerge.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print(msg, e)
         sys.exit(1)
     else:
         raise
