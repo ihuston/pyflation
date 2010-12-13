@@ -7,23 +7,26 @@ Created on 6 Jul 2010
 '''
 from __future__ import division
 
-import time
-import helpers
 import os.path
 import numpy as np
-
-import cosmomodels as c
-import run_config
-from sourceterm import sosource
-
-from sourceterm import srcmerge
-import sohelpers
 import logging
 import sys
 import optparse
 
-#Set logging of debug messages on or off
-from run_config import _debug
+try:
+    #Local modules from pyflation package
+    from pyflation import run_config, helpers, sohelpers
+    from pyflation import cosmomodels as c
+    from run_config import _debug
+    from pyflation.sourceterm import sosource, srcmerge
+except ImportError,e:
+    if __name__ == "__main__":
+        msg = """Pyflation module needs to be available. 
+Either run this script from the base directory as bin/source.py or add directory enclosing pyflation package to PYTHONPATH."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
 
 def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None, 
               ntheta=run_config.ntheta, numsoks=run_config.numsoks, taskarray=None, 
