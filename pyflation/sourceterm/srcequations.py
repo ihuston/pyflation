@@ -8,7 +8,7 @@ from __future__ import division
 import numpy as np
 
 from pyflation.romberg import romb #@UnresolvedImport
-from sourceterm import srccython #@UnresolvedImport
+from pyflation.sourceterm import srccython #@UnresolvedImport
 
 if not "profile" in __builtins__:
     def profile(f):
