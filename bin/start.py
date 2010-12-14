@@ -13,8 +13,7 @@ import re
 try:
     #Local modules from pyflation package
     from pyflation import run_config, helpers
-    from run_config import _debug
-    from helpers import ensurepath
+    _debug = run_config._debug
 except ImportError,e:
     if __name__ == "__main__":
         msg = """Pyflation module needs to be available. 
@@ -86,7 +85,7 @@ def write_out_template(templatefile, newfile, textdict):
         raise IOError("File %s already exists! Please delete or use another filename." % newfile)
     #Ensure directory exists for new file
     try:
-        ensurepath(newfile)
+        helpers.ensurepath(newfile)
     except IOError:
         raise
     try: 

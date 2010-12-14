@@ -15,10 +15,10 @@ import optparse
 
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers, sohelpers
+    from pyflation import run_config, helpers
     from pyflation import cosmomodels as c
-    from run_config import _debug
-    from pyflation.sourceterm import sosource, srcmerge
+    _debug = run_config._debug
+    from pyflation.sourceterm import sosource
 except ImportError,e:
     if __name__ == "__main__":
         msg = """Pyflation module needs to be available. 
