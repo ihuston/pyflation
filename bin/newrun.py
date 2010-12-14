@@ -96,21 +96,22 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
         
     logging.debug("bzr_available=%s", bzr_available)
     
+    newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
+    
     if bzr_available:
         mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
         if bzr_checkout:
-            newtree = mytree.branch.create_checkout(os.path.join(newrundir, 
-                            configuration.CODEDIRNAME), lightweight=True)
+            newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
         else:
-            bzrlib.export.export(mytree, os.path.join(newrundir, configuration.CODEDIRNAME))
+            bzrlib.export.export(mytree, newcodedir)
         
     else:
-        raise NotImplementedError("Bazaar is needed to copy code directory. Please do this manually.")
+        raise NotImplementedError("Bazaar is needed to copy code directories. Please do this manually.")
     
     #Try to run setup to create .so files
     try:
         olddir = os.getcwd()
-        os.chdir(os.path.join(newrundir, configuration.CODEDIRNAME))
+        os.chdir(newcodedir)
         logging.info("Preparing to compile non-python files.")
         setup(script_args=["build_ext", "-i"], **setup_args)
         os.chdir(olddir)
