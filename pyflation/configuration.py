@@ -17,7 +17,8 @@ CODEDIR = os.path.dirname(os.path.abspath(__package__))
 
 
 # Change the names of various directories
-CODEDIRNAME = "code"
+#Change to using the base run directory with bin, pyflation, scripts immediately below.
+CODEDIRNAME = "." 
 RUNDIRNAME = "runs"
 RESULTSDIRNAME = "results"
 LOGDIRNAME = "applogs"
@@ -25,7 +26,7 @@ QSUBSCRIPTSDIRNAME = "qsubscripts"
 QSUBLOGSDIRNAME = "qsublogs"
 
 #Directory names computed from current code directory
-RUNDIR = os.path.dirname(CODEDIR)
+RUNDIR = CODEDIR
 RESULTSDIR = os.path.join(RUNDIR, RESULTSDIRNAME)
 LOGDIR = os.path.join(RUNDIR, LOGDIRNAME)
 QSUBSCRIPTSDIR = os.path.join(RUNDIR, QSUBSCRIPTSDIRNAME)
