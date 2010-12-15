@@ -146,6 +146,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     for xix in range(first_real_step + 1, number_steps):
         if _debug:
             rk_log.debug("rkdriver_tsix: xix=%f", xix)
+        
         # xix labels the current timestep to be saved
         current_x = simtstart + xix*h
         #last_x is the timestep before, which we will need to use for calc
@@ -168,7 +169,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
         xarr[xix] = np.copy(current_x)
         
     #Get results 
-    
+    rk_log.info("Execution of Runge-Kutta method has finished.")
     return xarr, yarr
    
 @profile 
