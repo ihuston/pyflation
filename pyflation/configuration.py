@@ -12,8 +12,9 @@ import os.path
 
 # Directory structure
 
-# Calculate base directory as being below $HOME
-CODEDIR = os.path.dirname(os.path.abspath(__package__))
+# Calculate base directory as being below the current file
+packagedir = os.path.dirname(os.path.abspath(__file__))
+CODEDIR = os.path.abspath(os.path.join(packagedir, os.path.pardir))
 
 
 # Change the names of various directories
