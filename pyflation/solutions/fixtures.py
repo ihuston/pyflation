@@ -6,8 +6,8 @@ Created on 22 Apr 2010
 @author: Ian Huston
 '''
 
-from run_config import getkend
-import helpers
+from pyflation.run_config import getkend
+from pyflation import helpers
 
 kmins_default = [1e-61, 3e-61, 1e-60]
 deltaks_default = [1e-61, 3e-61, 1e-60]
