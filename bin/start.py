@@ -35,6 +35,7 @@ base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  templatefile = run_config.templatefile,
                  foscriptname = run_config.foscriptname,
                  srcscriptname = run_config.srcscriptname,
+                 src_indivscriptname = run_config.src_indivscriptname,
                  mrgscriptname = run_config.mrgscriptname,
                  soscriptname = run_config.soscriptname,
                  cmbscriptname = run_config.cmbscriptname,
@@ -117,6 +118,23 @@ def source_dict(template_dict, fo_jid=None):
                                     src_dict["taskmax"] +"\n#$ -hold_jid " + 
                                     src_dict["hold_jid_list"] +
                                     "\n#$ -r y")
+    #Formulate source term command
+    src_dict["command"] = ("python bin/source.py --taskmin=$SGE_TASK_FIRST "
+                           "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
+                           "--taskid=$SGE_TASK_ID  --overwrite")
+    return src_dict
+
+def source_indiv_dict(template_dict):
+    """Return dictionary for source qsub script."""
+    #Write second order file with job_id from first
+    src_dict = template_dict.copy()
+    src_dict["hold_jid_list"] = ""
+    src_dict["runname"] += "-src-indiv"
+    src_dict["qsublogname"] += "-node-$TASK_ID"
+    src_dict["extra_qsub_params"] = "\n".join("SGE_TASK_FIRST=" + src_dict["taskmin"],
+                                              "SGE_TASK_LAST=" + src_dict["taskmax"],
+                                              "SGE_TASK_STEPSIZE=1",
+                                              "SGE_TASK_ID=$1")
     #Formulate source term command
     src_dict["command"] = ("python bin/source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
@@ -250,6 +268,10 @@ def main(argv=None):
     #Launch full script and get job id
     cmb_jid = launch_qsub(cmb_dict["cmbscriptname"])
         
+    #Write out individual source term qsub file
+    src_indiv_dict = source_indiv_dict(template_dict)
+    write_out_template(src_indiv_dict["templatefile"],src_indiv_dict["srcscriptname"], src_indiv_dict)
+    
     return 0
             
 

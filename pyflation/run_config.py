@@ -125,6 +125,7 @@ templatefile = os.path.join(CODEDIR, "qsub-template.sh")
 
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
+src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
 mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
 soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
 cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
