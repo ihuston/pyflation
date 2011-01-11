@@ -413,7 +413,7 @@ def resonance(y, params=None):
     #potential U = 1/2 m^2 \phi^2
     
     phi = y[0]
-    phisq = phi*2
+    phisq = phi**2
     
     phiterm = phi/d
     sphi = np.sin(phiterm)
