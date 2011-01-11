@@ -374,3 +374,57 @@ def bump_potential(y, params=None):
                           + c*phisq*(5*s**3*t/(d**3) - s*t**3/(d**3)))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def resonance(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V=1/2 m^2 phi^2 ( 1 + c*sin(phi / d) )
+    where m is the mass of the inflaton field and c, d and phi_b are provided.
+    Form is taken from Chen etal. arxiv:0801.3295.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above, 
+             and the parameters "c" and "d" which tune the oscillation.
+             
+    m can be specified in the dictionary params or otherwise
+    it defaults to the mass as normalized with the WMAP spectrum
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+    
+    #Check if mass is specified in params
+    if params is not None and "mass" in params:
+        m = params["mass"]
+    else:
+        #Use WMAP value of mass (in Mpl)
+        m = 6.3267e-6
+    if params is not None:
+        c = params.get("c", 5e-7)
+        d = params.get("d", 0.0007) #Units of Mpl
+    else:
+        c = 5e-7
+        d = 0.0007
+    
+    #Use inflaton mass
+    mass2 = m**2
+    #potential U = 1/2 m^2 \phi^2
+    
+    phi = y[0]
+    phisq = phi**2
+    
+    phiterm = phi/d
+    sphi = np.sin(phiterm)
+    cphi = np.cos(phiterm)
+    
+    U = 0.5*(mass2)*(phisq) * (1 + c * sphi)
+    #deriv of potential wrt \phi
+    dUdphi =  (mass2)*phi * (1 + c*sphi) + c * mass2 * phisq * cphi / (2*d)
+    #2nd deriv
+    d2Udphi2 = mass2*((1+c*sphi) + 2*c/d * cphi * phi)
+    #3rd deriv
+    d3Udphi3 = mass2*(3*c/d*cphi -3*c/d**2*sphi * phi -0.5*c/d**3 *cphi * phisq)
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
