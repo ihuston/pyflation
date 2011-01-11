@@ -6,7 +6,15 @@ Graphing functions for cosmomodels
 """
 import pylab as P
 import os
+
 import helpers
+import run_config
+
+#Name of the directory with results directories inside
+resdir = run_config.RESULTSDIR
+#Name of directory to store graphs 
+graphdir = os.path.abspath(os.path.join(resdir, "graphs"))
+helpers.ensurepath(graphdir)
 
 class CosmoGraphError(StandardError):
     """Generic error for graphing facilities."""
@@ -73,6 +81,38 @@ def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
             raise
         savedfiles.append(filename)
     return savedfiles
+    
+def save(fname, fig=None):
+    if fig is None:
+        fig = P.gcf()
+    multi_format_save(os.path.join(graphdir, fname), fig, formats=["pdf", "png", "eps"])
+
+def save_with_prompt(fname):
+    save = raw_input("Do you want to save the figure, filename:" + fname + "? (y/n) ")
+    if save.lower() == "y":
+        save(fname)
+
+def set_size_small(fig):
+    fig.set_size_inches((4,3))
+    fig.subplots_adjust(left=0.17, bottom=0.15, right=0.95, top=0.93)
+    
+def set_size_large(fig):
+    fig.set_size_inches((6,4.5))
+    fig.subplots_adjust(left=0.12, bottom=0.10, right=0.90, top=0.90)
+    
+def set_size_half(fig):
+    fig.set_size_inches((6,3))
+    fig.subplots_adjust(left=0.12, bottom=0.15, right=0.95, top=0.95)
+
+def set_size(fig, size="large"):
+    if size=="small":
+        set_size_small(fig)
+    elif size=="large":
+        set_size_large(fig)
+    elif size=="half":
+        set_size_half(fig)
+    else:
+        raise ValueError("Variable size should be either \"large\", \"half\" or \"small\"!")
     
 def plotresults(m, fig=None, show=True, varindex=None, klist=None, saveplot=False, numks=5):
     """Plot results of simulation run on a graph.
