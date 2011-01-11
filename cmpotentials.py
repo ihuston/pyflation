@@ -377,7 +377,7 @@ def bump_potential(y, params=None):
 
 def resonance(y, params=None):
     """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
-    V=1/2 m^2 phi^2 ( 1 + c*sin(phi / lambda)
+    V=1/2 m^2 phi^2 ( 1 + c*sin(phi / d) )
     where m is the mass of the inflaton field and c, d and phi_b are provided.
     Form is taken from Chen etal. arxiv:0801.3295.
     
@@ -388,7 +388,8 @@ def resonance(y, params=None):
         variables, using newaxis if necessary.
     
     params - Dictionary of parameter values in this case should
-             hold the parameter "mass" which specifies m above.
+             hold the parameter "mass" which specifies m above, 
+             and the parameters "c" and "d" which tune the oscillation.
              
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
