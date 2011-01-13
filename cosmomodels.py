@@ -53,7 +53,7 @@ class CosmologicalModel(object):
     plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
-                 dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
+                 dxsav=0.0, solver="rkdriver_tsix", potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -1195,7 +1195,7 @@ class TwoStageModel(MultiStageModel):
         Variables finally stored are as in first order class.
     """                
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, 
-                 k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
+                 k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
