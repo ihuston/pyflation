@@ -54,7 +54,7 @@ class CosmologicalModel(object):
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
                  dxsav=0.0, solver="rkdriver_tsix", potential_func=None, pot_params=None, **kwargs):
-        """Initialize model variables, some with default values. Default solver is odeint."""
+        """Initialize model variables, some with default values."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
         
