@@ -115,7 +115,7 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
     start = stop = step = Ninterv
     for i in range(2,k+1):
         start >>= 1
-        R[(i,1)] = 0.5*(R[(i-1,1)] + h*sum(y[:,start:stop:step],1))
+        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[:,start:stop:step],1))
         step >>= 1
         for j in range(2,i+1):
             R[(i,j)] = R[(i,j-1)] + \
