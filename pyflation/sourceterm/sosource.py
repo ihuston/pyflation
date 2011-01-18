@@ -15,9 +15,9 @@ import logging
 import time
 import os
 
-from sourceterm import srcequations 
-import run_config
-from run_config import _debug
+from pyflation.sourceterm import srcequations 
+from pyflation import run_config
+_debug = run_config._debug
 
 
 if not "profile" in __builtins__:
