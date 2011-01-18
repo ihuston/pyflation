@@ -4,8 +4,7 @@ Created on 14 Jul 2010
 Romb integration for samples from two dimensional complex arrays.
 
 Adapted by Ian Huston. 
-Includes code modified from scipy.integrate.romb and scipy.integrate.tupleset 
-released under BSD license:
+Includes code modified from scipy.integrate.romb released under BSD license:
 
 Copyright (c) 2001, 2002 Enthought, Inc.
 All rights reserved.
@@ -56,7 +55,7 @@ ctypedef N.complex128_t DTYPEC_t
 
 
 
-# Modified from scipy.integrate.romb and tupleset released under BSD license:
+# Modified from scipy.integrate.romb released under BSD license:
 #
 #Copyright (c) 2001, 2002 Enthought, Inc.
 #All rights reserved.
@@ -89,11 +88,6 @@ ctypedef N.complex128_t DTYPEC_t
 #OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 #DAMAGE.
 
-def tupleset(t, i, value):
-    l = list(t)
-    l[i] = value
-    return tuple(l)
-
 
 def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
     """Romberg integration of two dimensional complex array
@@ -118,11 +112,10 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
     R = {}
     h = Ninterv*asarray(dx)*1.0
     R[(1,1)] = (y[:,0] + y[:,-1])/2.0*h
-    slice_R = (slice(None),slice(None))
     start = stop = step = Ninterv
     for i in range(2,k+1):
         start >>= 1
-        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[:,start:stop:step],1))
+        R[(i,1)] = 0.5*(R[(i-1,1)] + h*sum(y[:,start:stop:step],1))
         step >>= 1
         for j in range(2,i+1):
             R[(i,j)] = R[(i,j-1)] + \
