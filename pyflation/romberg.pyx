@@ -1,7 +1,42 @@
-'''romberg.py
+'''romberg.pyx
 Created on 14 Jul 2010
 
-Adapted from scipy.integrate by Ian Huston
+Romb integration for samples from two dimensional complex arrays.
+
+Adapted by Ian Huston. 
+Includes code modified from scipy.integrate.romb and scipy.integrate.tupleset 
+released under BSD license:
+
+Copyright (c) 2001, 2002 Enthought, Inc.
+All rights reserved.
+
+Copyright (c) 2003-2009 SciPy Developers.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+  a. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+  b. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+  c. Neither the name of the Enthought nor the names of its contributors
+     may be used to endorse or promote products derived from this software
+     without specific prior written permission.
+
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
 
 '''
 
@@ -20,6 +55,40 @@ ctypedef N.complex128_t DTYPEC_t
 
 
 
+
+# Modified from scipy.integrate.romb and tupleset released under BSD license:
+#
+#Copyright (c) 2001, 2002 Enthought, Inc.
+#All rights reserved.
+#
+#Copyright (c) 2003-2009 SciPy Developers.
+#All rights reserved.
+#
+#Redistribution and use in source and binary forms, with or without
+#modification, are permitted provided that the following conditions are met:
+#
+#  a. Redistributions of source code must retain the above copyright notice,
+#     this list of conditions and the following disclaimer.
+#  b. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  c. Neither the name of the Enthought nor the names of its contributors
+#     may be used to endorse or promote products derived from this software
+#     without specific prior written permission.
+#
+#
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+#DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+#SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+#OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+#DAMAGE.
+
 def tupleset(t, i, value):
     l = list(t)
     l[i] = value
@@ -27,34 +96,11 @@ def tupleset(t, i, value):
 
 
 def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
-    """Romberg integration using samples of a function
-
-    Inputs:
-
-       y    -  a vector of 2**k + 1 equally-spaced samples of a function
-       dx   -  the sample spacing.
-       axis -  the axis along which to integrate
-       show -  When y is a single 1-d array, then if this argument is True
-               print the table showing Richardson extrapolation from the
-               samples.
-
-    Output: ret
-
-       ret  - The integrated result for each axis.
-
-    See also:
-
-      quad - adaptive quadrature using QUADPACK
-      romberg - adaptive Romberg quadrature
-      quadrature - adaptive Gaussian quadrature
-      fixed_quad - fixed-order Gaussian quadrature
-      dblquad, tplquad - double and triple integrals
-      simps, trapz - integrators for sampled data
-      cumtrapz - cumulative integration for sampled data
-      ode, odeint - ODE integrators
+    """Romberg integration of two dimensional complex array
+    
+    Modified from scipy.integrate.romb
     """
 #    y = asarray(y)
-    cdef DTYPEI_t nd = 2
     cdef DTYPEI_t Nsamps = y.shape[1]
     cdef DTYPEI_t Ninterv = Nsamps-1
     cdef DTYPEI_t n = 1
@@ -70,18 +116,14 @@ def romb(N.ndarray[DTYPEC_t, ndim=2] y, DTYPED_t dx=1.0):
               "Number of samples must be one plus a non-negative power of 2."
 
     R = {}
-    all = (slice(None),) * nd
-    slice0 = tupleset(all, 1, 0)
-    slicem1 = tupleset(all, 1, -1)
     h = Ninterv*asarray(dx)*1.0
-    R[(1,1)] = (y[slice0] + y[slicem1])/2.0*h
-    slice_R = all
+    R[(1,1)] = (y[:,0] + y[:,-1])/2.0*h
+    slice_R = (slice(None),slice(None))
     start = stop = step = Ninterv
     for i in range(2,k+1):
         start >>= 1
-        slice_R = tupleset(slice_R, 1, slice(start,stop,step))
+        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[:,start:stop:step],1))
         step >>= 1
-        R[(i,1)] = 0.5*(R[(i-1,1)] + h*add.reduce(y[slice_R],1))
         for j in range(2,i+1):
             R[(i,j)] = R[(i,j-1)] + \
                        (R[(i,j-1)]-R[(i-1,j-1)]) / ((1 << (2*(j-1)))-1)
