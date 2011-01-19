@@ -24,6 +24,7 @@ from tables import __version__ as tables_version
 
 try:
     #Local modules from pyflation package
+    from pyflation import __version__ as pyflation_version
     from pyflation import configuration, helpers
 except ImportError,e:
     if __name__ == "__main__":
@@ -45,6 +46,10 @@ except ImportError:
 
 provenance_template = """Provenance document for this Pyflation run
 ------------------------------------------
+
+Pyflation Version
+-----------------
+Version: %(version)s
                     
 Bazaar Revision Control Information (if available)
 -------------------------------------------------
@@ -58,7 +63,7 @@ Original code directory: %(codedir)s
 New run directory: %(newrundir)s
 Date run directory was created: %(now)s
        
-Version information at time of run creation
+Library version information at time of run creation
 -------------------------------------------
 Python version: %(python_version)s
 Numpy version: %(numpy_version)s
@@ -160,25 +165,27 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     
     
     #Create provenance file detailing revision and branch used
-    provenance_dict = dict(python_version=python_version,
-                           numpy_version=numpy_version,
-                           scipy_version=scipy_version,
-                           tables_version=tables_version,
-                           codedir=codedir,
-                           newrundir=newrundir,
-                           now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
+    prov_dict = dict(version=pyflation_version,
+                     python_version=python_version,
+                     numpy_version=numpy_version,
+                     scipy_version=scipy_version,
+                     tables_version=tables_version,
+                     codedir=codedir,
+                     newrundir=newrundir,
+                     now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
     if bzr_available and copy_code:
-        provenance_dict["nick"] = mytree.branch.nick
-        provenance_dict["revno"] = mytree.branch.revno()
-        provenance_dict["revid"] = mytree.branch.last_revision()
+        prov_dict["nick"] = mytree.branch.nick
+        prov_dict["revno"] = mytree.branch.revno()
+        prov_dict["revid"] = mytree.branch.last_revision()
+    elif bzr_available and not copy_code:
+        prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Code not copied"
     else:
-        provenance_dict["nick"] = "Unavailable"
-        provenance_dict["revno"] = "Unavailable" 
-        provenance_dict["revid"] = "Unavailable" 
+        prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Bazaar not available"
+         
     provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
                                    configuration.provenancefilename) 
     with open(provenance_file, "w") as f:
-        f.write(provenance_template % provenance_dict)
+        f.write(provenance_template % prov_dict)
         logging.info("Created provenance file %s." % provenance_file)
     
     return
