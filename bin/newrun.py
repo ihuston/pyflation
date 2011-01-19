@@ -146,11 +146,16 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     
     newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
     
-    if bzr_available:
-        mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
+    if copy_code:
+        logging.debug("Attempting to copy code directory...")
+        if bzr_available:
+            mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
+        else:
+            raise NotImplementedError("Bazaar is needed to create and copy code" +  
+                "directories. Please do this manually if needed.")
+        logging.debug("Code directory copied successfully.")
     else:
-        raise NotImplementedError("Bazaar is needed to create and copy code" +  
-            "directories. Please do this manually if needed.")
+        logging.debug("No copying of code directory.")
     
     
     #Create provenance file detailing revision and branch used
