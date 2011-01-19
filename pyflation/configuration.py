@@ -39,7 +39,7 @@ provenancefilename = "provenance.log"
 
 # Compression type to be used with PyTables:
 # PyTables stores results in HDF5 files. The compression it uses can be 
-# selected here. For maximum compatability with other HDF5 utilities use "zlib".
+# selected here. For maximum compatibility with other HDF5 utilities use "zlib".
 # For maximum efficiency in both storage space and recall time use "blosc".
 hdf5complib = "blosc"
 
@@ -57,4 +57,4 @@ _debug = 1
 
 #Program name
 PROGRAM_NAME = "Pyflation"
-VERSION = "0.2"
+VERSION = "0.1.0"
