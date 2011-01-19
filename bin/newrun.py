@@ -151,6 +151,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
         if bzr_available:
             mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
         else:
+            mytree = None
             raise NotImplementedError("Bazaar is needed to create and copy code" +  
                 "directories. Please do this manually if needed.")
         logging.debug("Code directory copied successfully.")
@@ -166,7 +167,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
                            codedir=codedir,
                            newrundir=newrundir,
                            now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
-    if bzr_available:
+    if bzr_available and copy_code:
         provenance_dict["nick"] = mytree.branch.nick
         provenance_dict["revno"] = mytree.branch.revno()
         provenance_dict["revid"] = mytree.branch.last_revision()
