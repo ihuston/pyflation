@@ -186,10 +186,10 @@ def main(argv = None):
         logging.debug("Variable newdir created with value %s", newdir)
     
     if options.codedir:
-        codedir = options.codedir
+        codedir = os.path.abspath(options.codedir)
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
-        codedir = os.path.join(configuration.CODEDIR)
+        codedir = os.path.abspath(configuration.CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:
