@@ -16,8 +16,12 @@ import time
 import os
 
 from pyflation.sourceterm import srcequations 
-from pyflation import run_config, configuration
+from pyflation import configuration
+
+#Set debug flag
 _debug = configuration._debug
+#This is the results directory which will be used if no filenames are specified
+RESULTSDIR = configuration.RESULTSDIR
 
 
 if not "profile" in __builtins__:
@@ -25,8 +29,6 @@ if not "profile" in __builtins__:
         return f
 
 
-#This is the results directory which will be used if no filenames are specified
-RESULTSDIR = run_config.RESULTSDIR
 
 #Start logging
 source_logger = logging.getLogger(__name__)
