@@ -166,7 +166,7 @@ class SlowRollSource(SourceEquations):
         
         for n in xrange(len(self.k)):
             #Calculate interpolated values of dphi and dphidot
-            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
             #Integrate theta dependence of interpolated values
             # dphi terms
@@ -449,7 +449,7 @@ class OldFullSingleFieldSource(SourceEquations):
         lenq = len(self.k)
         for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
-            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
             theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
             theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
@@ -868,7 +868,7 @@ class OldSlowRollSource(SourceEquations):
         
         for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
-            dphi_res = srccython.interpdps2(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
             theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
             theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
