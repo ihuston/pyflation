@@ -8,10 +8,10 @@ import pylab as P
 import os
 
 import helpers
-import run_config
+import configuration
 
 #Name of the directory with results directories inside
-resdir = run_config.RESULTSDIR
+resdir = configuration.RESULTSDIR
 #Name of directory to store graphs 
 graphdir = os.path.abspath(os.path.join(resdir, "graphs"))
 helpers.ensurepath(graphdir)
