@@ -84,7 +84,11 @@ cq = 50
 #If sourceterm files already exist should they be overwritten?
 overwrite = True
 
-
+# Compression type to be used with PyTables:
+# PyTables stores results in HDF5 files. The compression it uses can be 
+# selected here. For maximum compatability with other HDF5 utilities use "zlib".
+# For maximum efficiency in both storage space and recall time use "blosc".
+hdf5complib = "blosc"
 
 ##############################
 # DO NOT CHANGE ANYTHING BELOW
