@@ -13,7 +13,7 @@ import optparse
 
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers, sohelpers
+    from pyflation import run_config, helpers, sohelpers, configuration
     _debug = run_config._debug
 except ImportError,e:
     if __name__ == "__main__":
@@ -40,7 +40,7 @@ def combine_results(fofile, sofile, newfile=None):
     else:
         raise IOError("Directory 'results' does not exist")
     #Add compression
-    filters = tables.Filters(complevel=2, complib="blosc")
+    filters = tables.Filters(complevel=2, complib=configuration.hdf5complib)
     try:
         sf = tables.openFile(sofile, "r")
         ff = tables.openFile(fofile, "r")

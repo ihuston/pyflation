@@ -16,7 +16,7 @@ import time
 import os
 
 from pyflation.sourceterm import srcequations 
-from pyflation import run_config
+from pyflation import run_config, configuration
 _debug = run_config._debug
 
 
@@ -243,7 +243,7 @@ def opensourcefile(k, filename=None, sourcetype=None, overwrite=False):
         writeflag = "w"
     
     #Add compression to files and specify good chunkshape
-    filters = tables.Filters(complevel=1, complib="blosc") 
+    filters = tables.Filters(complevel=1, complib=configuration.hdf5complib) 
     #cshape = (10,10,10) #good mix of t, k, q values
     #Get atom shape for earray
     atomshape = (0, len(k))

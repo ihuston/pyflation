@@ -36,9 +36,17 @@ QSUBLOGSDIR = os.path.join(RUNDIR, QSUBLOGSDIRNAME)
 #Name of provenance file which records the code revisions and results files added
 provenancefilename = "provenance.log"
 
+
+# Compression type to be used with PyTables:
+# PyTables stores results in HDF5 files. The compression it uses can be 
+# selected here. For maximum compatability with other HDF5 utilities use "zlib".
+# For maximum efficiency in both storage space and recall time use "blosc".
+hdf5complib = "blosc"
+
 # The logging level changes how much is saved to logging files. 
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
 LOGLEVEL = logging.INFO
+
 
 ##################################################
 # debug logging control

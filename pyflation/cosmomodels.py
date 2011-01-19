@@ -277,9 +277,9 @@ class CosmologicalModel(object):
             try:
                 if filemode is "w":
                     #Add compression
-                    #Changed to test blosc
-                    filters = tables.Filters(complevel=2, complib="blosc")
-                    #filters = tables.Filters(complevel=1, complib="zlib")
+                    # Select which compression library to use in configuration
+                    filters = tables.Filters(complevel=2, complib=configuration.hdf5complib)
+                    
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
                     tresarr = rf.createArray(resgroup, "tresult", self.tresult)
