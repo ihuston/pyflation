@@ -11,7 +11,7 @@ import numpy as np
 import analyticsolution
 import calcedsolution
 import fixtures
-import run_config
+from pyflation.sourceterm.srcequations import FullSingleFieldSource
 
 def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=None, fx=None):
     """
@@ -22,7 +22,7 @@ def compare_one_step(m, nix, srcclass=None, analytic_class=None, calced_class=No
         fx = fixtures.fixture_from_model(m)
     
     if srcclass is None:
-        srcclass = run_config.srcclass
+        srcclass = FullSingleFieldSource
     
     if analytic_class is None:
         analytic_class = analyticsolution.NoPhaseBunchDaviesSolution
@@ -59,7 +59,7 @@ def compare_J_terms(m, nix, srcclass=None, analytic_class=None, calced_class=Non
         fx = fixtures.fixture_from_model(m)
     
     if srcclass is None:
-        srcclass = run_config.srcclass
+        srcclass = FullSingleFieldSource
     
     if analytic_class is None:
         analytic_class = analyticsolution.NoPhaseBunchDaviesSolution
