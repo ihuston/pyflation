@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """start.py - Generate bash scripts for qsub and execute.
 Author: Ian Huston
 """

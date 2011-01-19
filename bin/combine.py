@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """combine.py - Combine second order, first order and source results in one file.
 Author: Ian Huston
 """

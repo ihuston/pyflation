@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''source.py - Compute the source term integral given first order results
 This should be run as a standalone script.
 

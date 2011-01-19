@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """secondorder.py - Run a second order simulation
 Created on 6 Jul 2010
 

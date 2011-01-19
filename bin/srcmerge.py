@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """srcmerge.py - Combine sourcefiles in a directory into one master file by n index
 Author: Ian Huston
 """
