@@ -107,7 +107,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #expression used in second order classes to calculate the first order timestep.
     #Around rounds .5 values towards even numbers so 0.5->0 and 1.5->2.
     #The added one is because the step at simtstart should also be counted.
-    number_steps = np.around((tend - simtstart)/h) + 1
+    number_steps = np.int(np.around((tend - simtstart)/h) + 1)
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
@@ -116,7 +116,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #Record first x value
     xarr[xix] = simtstart
     
-    first_real_step = tsix.min()
+    first_real_step = np.int(tsix.min())
     if first_real_step > xix:
         if _debug:
             rk_log.debug("rkdriver_tsix: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
