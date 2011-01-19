@@ -11,3 +11,5 @@ Configuration of the simulation runs can be changed in the configuration.py and 
 
 
 """
+
+__version__ = "0.1.0"
