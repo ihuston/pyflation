@@ -23,6 +23,12 @@ def nanfillstart(a, l):
         c = np.concatenate((b,a))
         return c
 
+def getkend(kinit, deltak, numsoks):
+    """Correct kend value given the values of kinit, deltak and numsoks.
+    """
+    #Change from numsoks-1 to numsoks to include extra point when deltak!=kinit
+    return 2*((numsoks)*deltak + kinit)
+
 def eto10(number):
     """Convert scientific notation e.g. 1e-5 to 1x10^{-5} for use in LaTeX, converting to string."""
     s = re.sub(r'e(\S\d+)', r'\\times 10^{\1}', str(number))

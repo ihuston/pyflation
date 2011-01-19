@@ -6,10 +6,14 @@ Created on 30 Jun 2010
 '''
 
 import numpy as np
+import os.path
+
+#Local imports
 import cosmomodels as c
 from configuration import PROGRAM_NAME, LOGLEVEL
 from sourceterm import srcequations
-import os.path
+from helpers import getkend
+
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "pot_params": None,
@@ -61,12 +65,6 @@ kinit = K_range["kinit"]
 deltak = K_range["deltak"]
 numsoks = K_range["numsoks"]  #Should be power of two + 1
 
-def getkend(kinit, deltak, numsoks):
-    """Correct kend value given the values of kinit, deltak and numsoks.
-    """
-    #Change from numsoks-1 to numsoks to include extra point when deltak!=kinit
-    return 2*((numsoks)*deltak + kinit)
-    
 kend = getkend(kinit, deltak, numsoks)
 
 ##############################
