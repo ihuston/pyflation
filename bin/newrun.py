@@ -5,12 +5,16 @@ Created on 25 Jun 2010
 @author: Ian Huston
 '''
 
-import os
 import os.path
 import logging
 import sys
 import time
 from optparse import OptionParser
+
+from distutils.core import setup
+from distutils.extension import Extension
+from Cython.Distutils import build_ext #@UnresolvedImport
+import numpy
 
 #Version information
 from sys import version as python_version
@@ -21,7 +25,6 @@ from tables import __version__ as tables_version
 try:
     #Local modules from pyflation package
     from pyflation import configuration, helpers
-    from pyflation.setup import setup, setup_args
 except ImportError,e:
     if __name__ == "__main__":
         msg = """Pyflation module needs to be available. 
@@ -30,6 +33,15 @@ Either run this script from the base directory as bin/newrun.py or add directory
         sys.exit(1)
     else:
         raise
+    
+
+
+# Test whether Bazaar is available
+try:
+    import bzrlib.export, bzrlib.workingtree
+    bzr_available = True
+except ImportError:
+    bzr_available = False
 
 provenance_template = """Provenance document for this Pyflation run
 ------------------------------------------
@@ -58,8 +70,48 @@ This information added on: %(now)s.
         
 """
 
+def copy_code_directory(codedir, newcodedir, bzr_checkout):
+    """Create code directory and copy from Bazaar repository."""
+    mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
+    if bzr_checkout:
+        newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
+    else:
+        bzrlib.export.export(mytree, newcodedir)
+    
+    ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"], 
+               extra_compile_args=["-g"], 
+               extra_link_args=["-g"],
+               include_dirs=[numpy.get_include()]),
+               #
+               Extension("pyflation.romberg", ["pyflation/romberg.pyx"], 
+               extra_compile_args=["-g"], 
+               extra_link_args=["-g"],
+               include_dirs=[numpy.get_include()]),
+               #
+               ]
+    
+    setup_args = dict(name='Pyflation',
+                  author='Ian Huston',
+                  author_email='ian.huston@gmail.com',
+                  url='http://www.maths.qmul.ac.uk/~ith/pyflation',
+                  description='Cosmological Inflation in Python',
+                  cmdclass = {'build_ext': build_ext},
+                  ext_modules = ext_modules)
+    
+    #Try to run setup to create .so files
+    try:
+        olddir = os.getcwd()
+        os.chdir(newcodedir)
+        logging.info("Preparing to compile non-python files.")
+        setup(script_args=["build_ext", "-i"], **setup_args)
+        os.chdir(olddir)
+    except:
+        logging.exception("Compiling additional modules did not work. Please do so by hand!")
+    
+    return mytree
 
-def create_run_directory(newrundir, codedir, bzr_checkout=False):
+def create_run_directory(newrundir, codedir, copy_code=False, 
+                         bzr_checkout=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir):
         raise IOError("New run directory already exists!")
@@ -88,36 +140,18 @@ def create_run_directory(newrundir, codedir, bzr_checkout=False):
         logging.error("Creating subdirectories in new run directory failed.")
         raise
     
-    #Try to do Bazaar checkout of code
-    try:
-        import bzrlib.export, bzrlib.workingtree
-        bzr_available = True
-    except ImportError:
-        bzr_available = False
+    
         
     logging.debug("bzr_available=%s", bzr_available)
     
     newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
     
     if bzr_available:
-        mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
-        if bzr_checkout:
-            newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
-        else:
-            bzrlib.export.export(mytree, newcodedir)
-        
+        mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
     else:
-        raise NotImplementedError("Bazaar is needed to copy code directories. Please do this manually.")
+        raise NotImplementedError("Bazaar is needed to create and copy code" +  
+            "directories. Please do this manually if needed.")
     
-    #Try to run setup to create .so files
-    try:
-        olddir = os.getcwd()
-        os.chdir(newcodedir)
-        logging.info("Preparing to compile non-python files.")
-        setup(script_args=["build_ext", "-i"], **setup_args)
-        os.chdir(olddir)
-    except:
-        logging.exception("Compiling additional modules did not work. Please do so by hand!")
     
     #Create provenance file detailing revision and branch used
     provenance_dict = dict(python_version=python_version,
@@ -168,6 +202,8 @@ def main(argv = None):
     parser.add_option("--debug",
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
                   help="print lots of debugging information")
+    parser.add_option("--copy-code", action="store_true", dest="copy_code",
+                      default=False, help="copy code directory into run directory (using Bazaar)")
     parser.add_option("--checkout", action="store_true", dest="bzr_checkout",
                       default=True, help="create a bzr checkout instead of export")
         
@@ -193,7 +229,8 @@ def main(argv = None):
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:
-        create_run_directory(newdir, codedir, options.bzr_checkout)
+        create_run_directory(newdir, codedir, options.copy_code,
+                             options.bzr_checkout)
     except Exception, e:
         logging.critical("Something went wrong! Quitting.")
         sys.exit(e)
