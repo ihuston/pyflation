@@ -17,7 +17,7 @@ import os
 
 from pyflation.sourceterm import srcequations 
 from pyflation import run_config, configuration
-_debug = run_config._debug
+_debug = configuration._debug
 
 
 if not "profile" in __builtins__:
