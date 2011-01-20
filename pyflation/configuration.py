@@ -25,6 +25,7 @@ provenancefilename = "provenance.log"
 hdf5complib = "blosc"
 hdf5complevel = 2
 
+#This is the default log level which can be overridden in run_config.
 # The logging level changes how much is saved to logging files. 
 # Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
 LOGLEVEL = logging.INFO
