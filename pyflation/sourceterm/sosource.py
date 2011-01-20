@@ -20,14 +20,11 @@ from pyflation import configuration
 
 #Set debug flag
 _debug = configuration._debug
-#This is the results directory which will be used if no filenames are specified
-RESULTSDIR = configuration.RESULTSDIR
 
 
 if not "profile" in __builtins__:
     def profile(f):
         return f
-
 
 
 #Start logging
@@ -222,7 +219,7 @@ def opensourcefile(k, filename=None, sourcetype=None, overwrite=False):
     if not filename or not os.path.isdir(os.path.dirname(filename)):
         source_logger.info("File or path to file %s does not exist." % filename)
         date = time.strftime("%Y%m%d%H%M%S")
-        filename = RESULTSDIR + "src" + date + ".hf5"
+        filename = os.path.join(os.getcwd(), "src" + date + ".hf5")
         source_logger.info("Saving source results in file " + filename)
     if not sourcetype:
         raise TypeError("Need to specify filename and type of source data to store [int(egrand)|(full)term]!")
