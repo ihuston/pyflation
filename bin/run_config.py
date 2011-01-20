@@ -80,16 +80,23 @@ srcclass = srcequations.FullSingleFieldSource
 soclass = c.CanonicalRampedSecondOrder
 cq = 50
 
-#If sourceterm files already exist should they be overwritten?
-overwrite = True
-
-
+#Arguments for first and second order models
+foargs = {"potential_func": fx["potential_func"],
+          "pot_params": fx["pot_params"],
+          "ystart": fx["ystart"],
+          "cq": cq,
+          "solver": "rkdriver_tsix"}
+soargs = {"solver": "rkdriver_tsix",
+          "soclass": soclass}
 
 
 ##############################
 # DO NOT CHANGE ANYTHING BELOW
 # THIS LINE
 ##############################
+
+#If sourceterm files already exist should they be overwritten?
+overwrite = True
 
 # Calculate base directory as being below the current file
 packagedir = os.path.dirname(os.path.abspath(__file__))
@@ -107,18 +114,7 @@ if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])
 
 logfile = os.path.join(LOGDIR, "run.log")
 
-#Arguments for first and second order models
-pot_func = fx["potential_func"]
-pot_params = fx["pot_params"]
-ystart = fx["ystart"]
 
-foargs = {"potential_func": pot_func,
-          "pot_params": pot_params,
-          "ystart": ystart,
-          "cq": cq,
-          "solver": "rkdriver_tsix"}
-soargs = {"solver": "rkdriver_tsix",
-          "soclass": soclass}
  
 ##############################
 # qsub submission values
