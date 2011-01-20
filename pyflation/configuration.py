@@ -51,7 +51,6 @@ LOGLEVEL = logging.INFO
 ##################################################
 # debug logging control
 # 0 for off, 1 for on
-# This can be changed using command line arguments
 ##################################################
 _debug = 1
 
