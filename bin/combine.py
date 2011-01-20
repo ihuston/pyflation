@@ -41,7 +41,8 @@ def combine_results(fofile, sofile, newfile=None):
     else:
         raise IOError("Directory 'results' does not exist")
     #Add compression
-    filters = tables.Filters(complevel=2, complib=run_config.hdf5complib)
+    filters = tables.Filters(complevel=run_config.hdf5complevel, 
+                             complib=run_config.hdf5complib)
     try:
         sf = tables.openFile(sofile, "r")
         ff = tables.openFile(fofile, "r")
