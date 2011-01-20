@@ -98,9 +98,9 @@ soargs = {"solver": "rkdriver_tsix",
 #If sourceterm files already exist should they be overwritten?
 overwrite = True
 
-# Calculate base directory as being below the current file
-packagedir = os.path.dirname(os.path.abspath(__file__))
-CODEDIR = os.path.abspath(os.path.join(packagedir, os.path.pardir))
+# Calculate base directory as being directory in which run_config.py
+# is situated. This should be changed if a more portable system is used.
+CODEDIR = os.path.abspath(__file__)
 
 #Directory names computed from current code directory
 RUNDIR = CODEDIR
