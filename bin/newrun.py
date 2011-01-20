@@ -22,6 +22,17 @@ from numpy import __version__ as numpy_version
 from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
+#Try to import run configuration file
+try:
+    from run_config import CODEDIR
+except ImportError, e:
+    if __name__ == "__main__":
+        msg = """Configuration file run_config.py needs to be available."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
+
 try:
     #Local modules from pyflation package
     from pyflation import __version__ as pyflation_version
@@ -238,7 +249,7 @@ def main(argv = None):
         codedir = os.path.abspath(options.codedir)
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
-        codedir = os.path.abspath(configuration.CODEDIR)
+        codedir = os.path.abspath(CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
         
     try:
