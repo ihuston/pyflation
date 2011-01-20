@@ -99,7 +99,9 @@ def runfomodel(filename=None, foargs=None, foclass=None):
     try:
         log.debug("Trying to save model data to %s...", filename)
         helpers.ensurepath(filename)
-        model.saveallresults(filename=filename)
+        model.saveallresults(filename=filename, 
+                             hdf5complevel=run_config.hdf5complevel,
+                             hdf5complib=run_config.hdf5complib)
         #Success!
         log.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:

@@ -29,8 +29,6 @@ module_logger = logging.getLogger(root_log_name + "." + __name__)
 WMAP_PIVOT = 5.25e-60 #WMAP pivot scale in Mpl
 WMAP_PR = 2.457e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
 
-#Results directory
-RESULTS_PATH = configuration.RESULTSDIR
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -231,12 +229,12 @@ class CosmologicalModel(object):
             yresdict["fotstart"] = tables.Float64Col()
         return yresdict        
            
-    def saveallresults(self, filename=None, filetype="hf5"):
+    def saveallresults(self, filename=None, filetype="hf5", **kwargs):
         """Tries to save file as a pickled object in directory 'results'."""
         
         now = self.lastparams["datetime"]
         if not filename:
-            filename = RESULTS_PATH + "run" + now + "." + filetype
+            filename = os.path.join(os.getcwd(), "run" + now + "." + filetype)
             self._log.info("Filename set to " + filename)
             
         if os.path.isdir(os.path.dirname(filename)):
@@ -253,7 +251,7 @@ class CosmologicalModel(object):
         
         if filetype is "hf5":
             try:
-                self.saveresultsinhdf5(filename, filemode)
+                self.saveresultsinhdf5(filename, filemode, **kwargs)
             except IOError:
                 raise
         else:
@@ -261,11 +259,13 @@ class CosmologicalModel(object):
         self.lastsavedfile = filename
         return filename
         
-    def saveresultsinhdf5(self, filename, filemode):
+    def saveresultsinhdf5(self, filename, filemode, hdf5complevel=2, hdf5complib="blosc"):
         """Save simulation results in a HDF5 format file with filename.
             filename - full path and name of file (should end in hf5 for consistency.
             filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
                         "a" specifies append to current file or create if does not exist.
+            hdf5complevel - Compression level to use with PyTables, default 2.
+            hdf5complib - Compression library to use with PyTables, default "blosc".
         """
         #Check whether we should store ks and set group name accordingly
         if self.k is None:
@@ -278,7 +278,7 @@ class CosmologicalModel(object):
                 if filemode is "w":
                     #Add compression
                     # Select which compression library to use in configuration
-                    filters = tables.Filters(complevel=2, complib=configuration.hdf5complib)
+                    filters = tables.Filters(complevel=hdf5complevel, complib=hdf5complib)
                     
                     #Create groups required
                     resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")

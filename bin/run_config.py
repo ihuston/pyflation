@@ -8,11 +8,12 @@ Created on 30 Jun 2010
 import numpy as np
 import os.path
 
-#Local imports
-import cosmomodels as c
-from configuration import PROGRAM_NAME, LOGLEVEL
-from sourceterm import srcequations
-from helpers import getkend
+#Pyflation imports
+
+from pyflation import cosmomodels as c
+from pyflation import configuration
+from pyflation.sourceterm import srcequations
+from pyflation.helpers import getkend
 
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
@@ -82,21 +83,28 @@ cq = 50
 #If sourceterm files already exist should they be overwritten?
 overwrite = True
 
+# Compression type to be used with PyTables:
+# PyTables stores results in HDF5 files. The compression it uses can be 
+# selected here. For maximum compatibility with other HDF5 utilities use "zlib".
+# For maximum efficiency in both storage space and recall time use "blosc".
+hdf5complib = "blosc"
+hdf5complevel = 2
 
 
 ##############################
 # DO NOT CHANGE ANYTHING BELOW
 # THIS LINE
 ##############################
+directory_list = [configuration.CODEDIR, configuration.RESULTSDIR, 
+                  configuration.LOGDIR, configuration.QSUBSCRIPTSDIR, 
+                  configuration.QSUBLOGSDIR]
 
-from configuration import RUNDIR, CODEDIR, RESULTSDIR, LOGDIR, QSUBLOGSDIR, QSUBSCRIPTSDIR, _debug
-from configuration import provenancefilename
-
-if not all(map(os.path.isdir, [CODEDIR, RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
+if not all(map(os.path.isdir, )):
     raise IOError("Directory structure is not correct!")
 
-logfile = os.path.join(LOGDIR, "run.log")
-provenancefile = os.path.join(LOGDIR, provenancefilename)
+logfile = os.path.join(configuration.LOGDIR, "run.log")
+provenancefile = os.path.join(configuration.LOGDIR, 
+                              configuration.provenancefilename)
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
@@ -115,30 +123,30 @@ soargs = {"solver": "rkdriver_tsix",
 # qsub submission values
 #
 ##############################
-runname = PROGRAM_NAME[0:4]
-qsublogname = os.path.join(QSUBLOGSDIR, "log" )
+runname = configuration.PROGRAM_NAME[0:4]
+qsublogname = os.path.join(configuration.QSUBLOGSDIR, "log" )
 timelimit = "23:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
 taskmax= "100" #finishing task id number
 hold_jid_list= "" # List of jobs this task depends on 
 
-templatefile = os.path.join(CODEDIR, "qsub-template.sh")
+templatefile = os.path.join(configuration.CODEDIR, "qsub-template.sh")
 
-foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
-srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
-src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
-mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
-soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
-cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
+foscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "fo.qsub")
+srcscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "src.qsub")
+src_indivscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "src_individual.qsub")
+mrgscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "mrg.qsub")
+soscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "so.qsub")
+cmbscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "cmb.qsub")
 
-foresults = os.path.join(RESULTSDIR, "fo.hf5")
+foresults = os.path.join(configuration.RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5
-srcstub = os.path.join(RESULTSDIR, "src-")
+srcstub = os.path.join(configuration.RESULTSDIR, "src-")
 #This is the pattern that is checked when results are merged
 pattern = "src-(\d*).hf5" 
 
-srcresults = os.path.join(RESULTSDIR, "src.hf5")
-mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
-soresults = os.path.join(RESULTSDIR, "so.hf5")
-cmbresults = os.path.join(RESULTSDIR, "cmb.hf5")
+srcresults = os.path.join(configuration.RESULTSDIR, "src.hf5")
+mrgresults = os.path.join(configuration.RESULTSDIR, "mrg.hf5")
+soresults = os.path.join(configuration.RESULTSDIR, "so.hf5")
+cmbresults = os.path.join(configuration.RESULTSDIR, "cmb.hf5")
 

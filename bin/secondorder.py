@@ -80,7 +80,9 @@ def runsomodel(mrgfile, filename=None, soargs=None):
         if _debug:
             log.debug("Trying to save model data to %s...", filename)
         helpers.ensurepath(filename)
-        somodel.saveallresults(filename=filename)
+        somodel.saveallresults(filename=filename, 
+                             hdf5complevel=run_config.hdf5complevel,
+                             hdf5complib=run_config.hdf5complib)
     except Exception:
         log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
