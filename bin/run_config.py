@@ -90,16 +90,22 @@ overwrite = True
 # DO NOT CHANGE ANYTHING BELOW
 # THIS LINE
 ##############################
-directory_list = [configuration.CODEDIR, configuration.RESULTSDIR, 
-                  configuration.LOGDIR, configuration.QSUBSCRIPTSDIR, 
-                  configuration.QSUBLOGSDIR]
 
-if not all(map(os.path.isdir, )):
+# Calculate base directory as being below the current file
+packagedir = os.path.dirname(os.path.abspath(__file__))
+CODEDIR = os.path.abspath(os.path.join(packagedir, os.path.pardir))
+
+#Directory names computed from current code directory
+RUNDIR = CODEDIR
+RESULTSDIR = os.path.join(RUNDIR, configuration.RESULTSDIRNAME)
+LOGDIR = os.path.join(RUNDIR, configuration.LOGDIRNAME)
+QSUBSCRIPTSDIR = os.path.join(RUNDIR, configuration.QSUBSCRIPTSDIRNAME)
+QSUBLOGSDIR = os.path.join(RUNDIR, configuration.QSUBLOGSDIRNAME)
+
+if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
     raise IOError("Directory structure is not correct!")
 
-logfile = os.path.join(configuration.LOGDIR, "run.log")
-provenancefile = os.path.join(configuration.LOGDIR, 
-                              configuration.provenancefilename)
+logfile = os.path.join(LOGDIR, "run.log")
 
 #Arguments for first and second order models
 pot_func = fx["potential_func"]
@@ -119,29 +125,29 @@ soargs = {"solver": "rkdriver_tsix",
 #
 ##############################
 runname = configuration.PROGRAM_NAME[0:4]
-qsublogname = os.path.join(configuration.QSUBLOGSDIR, "log" )
+qsublogname = os.path.join(QSUBLOGSDIR, "log" )
 timelimit = "23:00:00" # Time needed for each array job
 taskmin= "1" #starting task id number
 taskmax= "100" #finishing task id number
 hold_jid_list= "" # List of jobs this task depends on 
 
-templatefile = os.path.join(configuration.CODEDIR, "qsub-template.sh")
+templatefile = os.path.join(CODEDIR, "qsub-template.sh")
 
-foscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "fo.qsub")
-srcscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "src.qsub")
-src_indivscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "src_individual.qsub")
-mrgscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "mrg.qsub")
-soscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "so.qsub")
-cmbscriptname = os.path.join(configuration.QSUBSCRIPTSDIR, "cmb.qsub")
+foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
+srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
+src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
+mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
+soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
+cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
 
-foresults = os.path.join(configuration.RESULTSDIR, "fo.hf5")
+foresults = os.path.join(RESULTSDIR, "fo.hf5")
 #Source results will be stored in src-#.hf5
-srcstub = os.path.join(configuration.RESULTSDIR, "src-")
+srcstub = os.path.join(RESULTSDIR, "src-")
 #This is the pattern that is checked when results are merged
 pattern = "src-(\d*).hf5" 
 
-srcresults = os.path.join(configuration.RESULTSDIR, "src.hf5")
-mrgresults = os.path.join(configuration.RESULTSDIR, "mrg.hf5")
-soresults = os.path.join(configuration.RESULTSDIR, "so.hf5")
-cmbresults = os.path.join(configuration.RESULTSDIR, "cmb.hf5")
+srcresults = os.path.join(RESULTSDIR, "src.hf5")
+mrgresults = os.path.join(RESULTSDIR, "mrg.hf5")
+soresults = os.path.join(RESULTSDIR, "so.hf5")
+cmbresults = os.path.join(RESULTSDIR, "cmb.hf5")
 
