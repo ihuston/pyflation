@@ -10,12 +10,6 @@ import os
 import helpers
 import configuration
 
-#Name of the directory with results directories inside
-resdir = configuration.RESULTSDIR
-#Name of directory to store graphs 
-graphdir = os.path.abspath(os.path.join(resdir, "graphs"))
-helpers.ensurepath(graphdir)
-
 class CosmoGraphError(StandardError):
     """Generic error for graphing facilities."""
     pass
@@ -82,10 +76,12 @@ def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
         savedfiles.append(filename)
     return savedfiles
     
-def save(fname, fig=None):
+def save(fname, dir=None, fig=None):
     if fig is None:
         fig = P.gcf()
-    multi_format_save(os.path.join(graphdir, fname), fig, formats=["pdf", "png", "eps"])
+    if dir is None:
+        dir = os.getcwd()
+    multi_format_save(os.path.join(dir, fname), fig, formats=["pdf", "png", "eps"])
 
 def save_with_prompt(fname):
     save = raw_input("Do you want to save the figure, filename:" + fname + "? (y/n) ")
