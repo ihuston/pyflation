@@ -14,11 +14,22 @@ import logging
 import sys
 import optparse
 
+#Try to import run configuration file
+try:
+    import run_config
+except ImportError, e:
+    if __name__ == "__main__":
+        msg = """Configuration file run_config.py needs to be available."""
+        print msg, e
+        sys.exit(1)
+    else:
+        raise
+
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers
+    from pyflation import helpers, configuration
     from pyflation import cosmomodels as c
-    _debug = run_config._debug
+    _debug = configuration._debug
     from pyflation.sourceterm import sosource
 except ImportError,e:
     if __name__ == "__main__":
