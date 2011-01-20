@@ -26,6 +26,13 @@ from tables import __version__ as tables_version
 try:
     from run_config import CODEDIR
 except ImportError, e:
+    # Add parent directory of script if not found
+    parentdir = os.path.dirname(os.path.dirname(__file__)) 
+    sys.path.insert(0, os.path.abspath(parentdir))
+
+try:
+    from run_config import CODEDIR
+except ImportError, e:
     if __name__ == "__main__":
         msg = """Configuration file run_config.py needs to be available."""
         print msg, e
