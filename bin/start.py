@@ -17,7 +17,7 @@ try:
 except ImportError, e:
     if __name__ == "__main__":
         msg = """Configuration file run_config.py needs to be available."""
-        print msg, e
+        print(msg, e)
         sys.exit(1)
     else:
         raise
