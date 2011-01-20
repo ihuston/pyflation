@@ -14,7 +14,7 @@ import optparse
 
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers, sohelpers, configuration
+    from pyflation import run_config, helpers, configuration
     _debug = run_config._debug
 except ImportError,e:
     if __name__ == "__main__":
