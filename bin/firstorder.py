@@ -20,7 +20,7 @@ import logging
 
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers
+    from pyflation import run_config, helpers, configuration
     from pyflation import cosmomodels as c
     _debug = run_config._debug
 except ImportError,e:
@@ -100,8 +100,8 @@ def runfomodel(filename=None, foargs=None, foclass=None):
         log.debug("Trying to save model data to %s...", filename)
         helpers.ensurepath(filename)
         model.saveallresults(filename=filename, 
-                             hdf5complevel=run_config.hdf5complevel,
-                             hdf5complib=run_config.hdf5complib)
+                             hdf5complevel=configuration.hdf5complevel,
+                             hdf5complib=configuration.hdf5complib)
         #Success!
         log.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:

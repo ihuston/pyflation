@@ -14,7 +14,7 @@ import optparse
 
 try:
     #Local modules from pyflation package
-    from pyflation import run_config, helpers
+    from pyflation import run_config, helpers, configuration
     from pyflation import cosmomodels as c
     _debug = run_config._debug
 except ImportError,e:
@@ -81,8 +81,8 @@ def runsomodel(mrgfile, filename=None, soargs=None):
             log.debug("Trying to save model data to %s...", filename)
         helpers.ensurepath(filename)
         somodel.saveallresults(filename=filename, 
-                             hdf5complevel=run_config.hdf5complevel,
-                             hdf5complib=run_config.hdf5complib)
+                             hdf5complevel=configuration.hdf5complevel,
+                             hdf5complib=configuration.hdf5complib)
     except Exception:
         log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
