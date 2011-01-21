@@ -23,16 +23,7 @@ from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
 
-try:
-    from run_config import CODEDIR
-except ImportError, e:
-    if __name__ == "__main__":
-        msg = """Configuration file run_config.py needs to be available.
-        Use --codedir command line option to specify its location."""
-        print msg, e
-        sys.exit(1)
-    else:
-        raise
+
 
 try:
     #Local modules from pyflation package
@@ -221,7 +212,7 @@ def main(argv = None):
     parser.add_option("-n", "--name", dest="dirname",
                       help="new run directory name")
     parser.add_option("-c", "--codedir", dest="codedir",
-                  help="copy code from CODEDIR", metavar="CODEDIR")
+                  help="copy code from CODEDIR (where run_config.py resides)", metavar="CODEDIR")
     parser.add_option("-q", "--quiet",
                   action="store_const", const=logging.FATAL, dest="loglevel", 
                   help="only print fatal error messages")
@@ -254,6 +245,13 @@ def main(argv = None):
         codedir = os.path.abspath(options.codedir)
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
+        try:
+            from run_config import CODEDIR
+        except ImportError, e:
+            msg = """Configuration file run_config.py needs to be available.
+                Use --codedir command line option to specify its location."""
+            print msg, e
+            sys.exit(1)
         codedir = os.path.abspath(CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
         
