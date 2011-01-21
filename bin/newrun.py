@@ -22,19 +22,13 @@ from numpy import __version__ as numpy_version
 from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 
-#Try to import run configuration file
-try:
-    from run_config import CODEDIR
-except ImportError, e:
-    # Add parent directory of script if not found
-    parentdir = os.path.dirname(os.path.dirname(__file__)) 
-    sys.path.insert(0, os.path.abspath(parentdir))
 
 try:
     from run_config import CODEDIR
 except ImportError, e:
     if __name__ == "__main__":
-        msg = """Configuration file run_config.py needs to be available."""
+        msg = """Configuration file run_config.py needs to be available.
+        Use --codedir command line option to specify its location."""
         print msg, e
         sys.exit(1)
     else:
