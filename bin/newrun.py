@@ -248,8 +248,8 @@ def main(argv = None):
         try:
             from run_config import CODEDIR
         except ImportError, e:
-            msg = """Configuration file run_config.py needs to be available.
-                Use --codedir command line option to specify its location."""
+            msg = "Configuration file run_config.py needs to be available. \
+                Use --codedir command line option to specify its location."
             print msg, e
             sys.exit(1)
         codedir = os.path.abspath(CODEDIR)
