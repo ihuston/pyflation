@@ -169,17 +169,21 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     
     newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
     
+    mytree = None
     if copy_code:
         logging.debug("Attempting to copy code directory...")
         if bzr_available:
-            mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
+            try:
+                mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
+                logging.debug("Code directory copied successfully.")
+            except bzrlib.errors.NotBranchError, e:
+                mytree = None
+                logging.debug("Error using bazaar: %s", e)
         else:
-            mytree = None
-            raise NotImplementedError("Bazaar is needed to create and copy code" +  
-                "directories. Please do this manually if needed.")
-        logging.debug("Code directory copied successfully.")
+            logging.info("Bazaar is needed to create and copy code" +  
+                "directories. Please do this manually if needed.")    
     else:
-        logging.debug("No copying of code directory.")
+        logging.debug("No copying of code directory attempted.")
     
     
     #Create provenance file detailing revision and branch used
@@ -191,11 +195,11 @@ def create_run_directory(newrundir, codedir, copy_code=False,
                      codedir=codedir,
                      newrundir=newrundir,
                      now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
-    if bzr_available and copy_code:
+    if mytree:
         prov_dict["nick"] = mytree.branch.nick
         prov_dict["revno"] = mytree.branch.revno()
         prov_dict["revid"] = mytree.branch.last_revision()
-    elif bzr_available and not copy_code:
+    elif not mytree and bzr_available:
         prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Code not copied"
     else:
         prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Bazaar not available"
