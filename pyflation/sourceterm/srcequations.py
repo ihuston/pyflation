@@ -482,3 +482,128 @@ class FullSingleFieldSource(SourceEquations):
         src = 1/((2*np.pi)**2 ) * J_result
         return src
     
+class SelectedkOnlyFullSource(FullSingleFieldSource):
+    """Convenience class to the source term for selected k values."""
+    
+    def __init__(self, *args, **kwargs):
+        """Class for slow roll source term equations"""
+        super(SelectedkOnlyFullSource, self).__init__(*args, **kwargs)
+        if "kix_wanted" in kwargs:
+            self.kix_wanted = kwargs["kix_wanted"]
+        else:
+            self.kix_wanted = 52 #Hard coded for quick hack.
+        
+    def getthetaterms(self, dp1, dp1dot):
+        """Return array of integrated values for specified theta function and dphi function.
+        This modified version only returns the result for one k value.
+        
+        Parameters
+        ----------
+        dp1: array_like
+             Array of values for dphi1
+        
+        dp1dot: array_like
+                Array of values for dphi1dot
+                                      
+        Returns
+        -------
+        theta_terms: tuple
+                     Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                     (\int(sin(theta) dp1(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                      \int(sin(theta) dp1dot(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                     
+        """
+        
+        # Sinusoidal theta terms
+        sinth = np.sin(self.theta)
+        cossinth = np.cos(self.theta)*sinth
+        cos2sinth = np.cos(self.theta)*cossinth
+        sin3th = sinth*sinth*sinth
+        
+        theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
+        lenq = len(self.k)
+        for n in np.asarray(self.kix_wanted):
+            #klq = klessq(onek, q, theta)
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
+            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
+            
+            #New terms for full solution
+            # E term integration
+            theta_terms[4,n] = romb(cos2sinth*dphi_res[0], dx=self.dtheta)
+            #Get klessq for F and G terms
+            klq2 = klessqksq(self.k[n], self.k, self.theta)
+            sinklq = sin3th/klq2
+            #Get rid of NaNs in places where dphi_res=0 or equivalently klq2<self.kmin**2
+            sinklq[klq2<self.kmin**2] = 0
+            # F term integration
+            theta_terms[5,n] = romb(sinklq *dphi_res[0], dx=self.dtheta)
+            # G term integration
+            theta_terms[6,n] = romb(sinklq *dphi_res[1], dx=self.dtheta)
+            
+        return theta_terms
+
+
+class ConvolutionOnlyFullSource(SelectedkOnlyFullSource):
+    """Convenience class to calculate the convolution for selected k values."""
+    
+    def __init__(self, *args, **kwargs):
+        """Class for slow roll source term equations"""
+        super(ConvolutionOnlyFullSource, self).__init__(*args, **kwargs)
+        
+    def sourceterm(self, bgvars, a, potentials, dp1, dp1dot):
+        """Return unintegrated slow roll source term.
+    
+        The source term before integration is calculated here using the slow roll
+        approximation. This function follows the revised version of Eq (5.8) in 
+        Malik 06 (astro-ph/0610864v5).
+        
+        Parameters
+        ----------
+        bgvars: tuple
+                Tuple of background field values in the form `(phi, phidot, H)`
+        
+        a: float
+           Scale factor at the current timestep, `a = ainit*exp(n)`
+        
+        potentials: tuple
+                    Tuple of potential values in the form `(U, dU, dU2, dU3)`
+                
+        dp1: array_like
+             Array of known dp1 values
+                 
+        dp1dot: array_like
+                Array of dpdot1 values
+                 
+        
+        Returns
+        -------
+        src_integrand: array_like
+            Array containing the unintegrated source terms for all k and q modes.
+            
+        References
+        ----------
+        Malik, K. 2006, JCAP03(2007)004, astro-ph/0610864v5
+        """
+        
+        #Calculate dphi(q) and dphi(k-q)
+        dp1_q = dp1[:self.k.shape[-1]]
+        dp1dot_q = dp1dot[:self.k.shape[-1]]  
+        
+        
+        theta_terms = self.getthetaterms(dp1, dp1dot)
+        
+        Cterms = {"A1": np.ones(self.k.shape)}
+            
+         
+        #Get component integrals for convolution only
+        
+        J_result = self.J_func(theta_terms, dp1_q, dp1dot_q, Cterms, "A1")
+        
+        src = 1/((2*np.pi)**2 ) * J_result
+        return src
