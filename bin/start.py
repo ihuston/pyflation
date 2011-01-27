@@ -282,7 +282,7 @@ def main(argv=None):
         
     #Write out individual source term qsub file
     src_indiv_dict = source_indiv_dict(template_dict)
-    write_out_template(src_indiv_dict["templatefile"],src_indiv_dict["srcscriptname"], src_indiv_dict)
+    write_out_template(src_indiv_dict["templatefile"],src_indiv_dict["src_indivscriptname"], src_indiv_dict)
     
     return 0
             
