@@ -491,7 +491,7 @@ class SelectedkOnlyFullSource(FullSingleFieldSource):
         if "kix_wanted" in kwargs:
             self.kix_wanted = kwargs["kix_wanted"]
         else:
-            self.kix_wanted = 52 #Hard coded for quick hack.
+            self.kix_wanted = [52] #Hard coded for quick hack.
         
     def getthetaterms(self, dp1, dp1dot):
         """Return array of integrated values for specified theta function and dphi function.
