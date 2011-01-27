@@ -524,7 +524,7 @@ class SelectedkOnlyFullSource(FullSingleFieldSource):
         
         theta_terms = np.empty([7, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
         lenq = len(self.k)
-        for n in np.asarray(self.kix_wanted):
+        for n in np.atleast_1d(self.kix_wanted): 
             #klq = klessq(onek, q, theta)
             dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
             
