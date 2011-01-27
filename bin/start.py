@@ -143,10 +143,10 @@ def source_indiv_dict(template_dict):
     src_dict["hold_jid_list"] = ""
     src_dict["runname"] += "-src-indiv"
     src_dict["qsublogname"] += "-node-$TASK_ID"
-    src_dict["extra_qsub_params"] = "\n".join("SGE_TASK_FIRST=" + src_dict["taskmin"],
+    src_dict["extra_qsub_params"] = "\n".join(["SGE_TASK_FIRST=" + src_dict["taskmin"],
                                               "SGE_TASK_LAST=" + src_dict["taskmax"],
                                               "SGE_TASK_STEPSIZE=1",
-                                              "SGE_TASK_ID=$1")
+                                              "SGE_TASK_ID=$1"])
     #Formulate source term command
     src_dict["command"] = ("python bin/source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
