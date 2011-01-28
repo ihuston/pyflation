@@ -30,7 +30,7 @@ def reversexaxis(a=None):
     a.set_xlim(a.get_xlim()[::-1])
     return
     
-def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
+def multi_format_save(filenamestub, fig=None, formats=None, overwrite=False, **kwargs):
     """Save figure in multiple formats at once.
     
     Parameters
@@ -68,7 +68,8 @@ def multi_format_save(filenamestub, fig=None, formats=None, **kwargs):
     for f in formats:
         filename = filenamestub + "." + f
         if os.path.isfile(filename):
-            raise IOError("File " + filename + " already exists! File not overwritten.")
+            if not overwrite:
+                raise IOError("File " + filename + " already exists! File not overwritten.")
         try:
             fig.savefig(filename, format = f, **kwargs)
         except IOError:
