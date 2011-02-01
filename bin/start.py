@@ -36,6 +36,8 @@ Either run this script from the base directory as bin/srcmerge.py or add directo
         raise
 
 
+                                  
+
 #Dictionary of qsub configuration values
 base_qsub_dict = dict(codedir = run_config.CODEDIR,
                  runname = run_config.runname,
@@ -243,6 +245,23 @@ def main(argv=None):
     for key in template_dict.keys():
         if getattr(options, key, None):
             template_dict[key] = getattr(options, key, None)
+    
+    #Find templatefile
+    if os.path.isfile(options.templatefile):
+        goodtemplatefile = options.templatefile
+    elif os.path.isfile(run_config.templatefile):
+        goodtemplatefile = run_config.templatefile
+    elif os.path.isfile(os.path.join([os.path.abspath(run_config.__file__), 
+                                      run_config.templatefilename])):
+        goodtemplatefile = os.path.join([os.path.abspath(run_config.__file__), 
+                                      run_config.templatefilename])
+    elif os.path.isfile(os.path.join([os.getcwd(), run_config.templatefilename])):
+        goodtemplatefile = os.path.join([os.getcwd(), run_config.templatefilename])
+    else:
+        #Can't find templatefile
+        raise IOError("Can't find the qsub template file named %s." % run_config.templatefilename)
+    template_dict["templatefile"] = goodtemplatefile
+    
     
     helpers.startlogging(log, run_config.logfile, options.loglevel)
     

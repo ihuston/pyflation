@@ -184,9 +184,11 @@ if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])
 logfile = os.path.join(LOGDIR, "run.log")
  
 # qsub script values
+
 runname = configuration.PROGRAM_NAME[0:4]
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
-templatefile = os.path.join(CODEDIR, "qsub-template.sh")
+templatefilename = "qsub-template.sh"
+templatefile = os.path.join(CODEDIR, templatefilename)
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
 src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
