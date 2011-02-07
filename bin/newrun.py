@@ -153,7 +153,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     pkgdir = os.path.dirname(os.path.abspath(configuration.__file__))
     runconfigtemplate = os.path.join([pkgdir, configuration.RUNCONFIGTEMPLATE])
     if not os.path.isfile(runconfigtemplate):
-        raise IOError("File %s is not available to be copied!" % configuration.RUNCONFIGTEMPLATE) 
+        raise IOError("File run_config.template is not available to be copied!") 
     else:
         try:
             shutil.copyfile(runconfigtemplate, os.path.join(newrundir, "run_config.py"))
