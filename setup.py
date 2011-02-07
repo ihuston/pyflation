@@ -39,7 +39,11 @@ setup_args = dict(name='Pyflation',
                   package_data={'pyflation': ['qsub-sh.template', 
                                               'run_config.template']},
                   cmdclass = {'build_ext': build_ext},
-                  ext_modules = ext_modules)
+                  ext_modules = ext_modules,
+                  license="Modified BSD license",
+                  description="""Pyflation is a Python package for calculating 
+                  cosmological perturbations during
+                  inflationary expansion of the universe.""")
 
 if __name__ == "__main__":
     setup(**setup_args)
