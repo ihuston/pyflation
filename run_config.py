@@ -131,7 +131,7 @@ cq = 50
 
 ################ QSUB SUBMISSION OPTIONS ######################################
 # These parameters are inserted into the qsub submission scripts
-# which are generated and submitted by start.py.
+# which are generated and submitted by pyflation-qsubstart.py.
 # Please contact your local cluster administrator and consult the qsub man page
 # for good values for your local configuration.
 
