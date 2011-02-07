@@ -166,12 +166,12 @@ soargs = {"solver": "rkdriver_tsix",
 #If sourceterm files already exist should they be overwritten?
 overwrite = True
 
-# Calculate base directory as being directory in which run_config.py
+# Calculate code directory as being directory in which cosmomodels.py
 # is situated. This should be changed if a more portable system is used.
-CODEDIR = os.path.abspath(os.path.dirname(__file__))
+CODEDIR = os.path.abspath(os.path.dirname(c.__file__))
 
-#Directory names computed from current code directory
-RUNDIR = CODEDIR
+#Directory names computed from directory in which run_config.py is based.
+RUNDIR = os.path.abspath(os.path.dirname(__file__))
 RESULTSDIR = os.path.join(RUNDIR, configuration.RESULTSDIRNAME)
 LOGDIR = os.path.join(RUNDIR, configuration.LOGDIRNAME)
 QSUBSCRIPTSDIR = os.path.join(RUNDIR, configuration.QSUBSCRIPTSDIRNAME)
@@ -187,7 +187,7 @@ logfile = os.path.join(LOGDIR, "run.log")
 
 runname = configuration.PROGRAM_NAME[0:4]
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
-templatefilename = "qsub-template.sh"
+templatefilename = "qsub-sh.template"
 templatefile = os.path.join(CODEDIR, templatefilename)
 foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
 srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
