@@ -147,18 +147,15 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     except OSError:
         logging.error("Creating subdirectories in new run directory failed.")
         raise
-    
-    
-        
+                
     logging.debug("bzr_available=%s", bzr_available)
-    
-    newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
-    
+            
     mytree = None
     if copy_code:
         logging.debug("Attempting to copy code directory...")
         if bzr_available:
             try:
+                newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
                 mytree = copy_code_directory(codedir, newcodedir, bzr_checkout)
                 logging.debug("Code directory copied successfully.")
             except bzrlib.errors.NotBranchError, e:
