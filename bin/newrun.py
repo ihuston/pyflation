@@ -241,7 +241,7 @@ def main(argv = None):
     if options.codedir and options.copy_code:
         codedir = os.path.abspath(options.codedir)
         logging.debug("Option codedir specified with value %s.", options.codedir)
-    else:
+    elif options.copy_code:
         try:
             from run_config import CODEDIR
         except ImportError, e:
