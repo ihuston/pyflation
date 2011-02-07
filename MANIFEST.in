@@ -1,4 +1,4 @@
-include *.txt
-include *.template
+recursive-include *.txt
+recursive-include *.template
 include *.in
 prune paperscripts
