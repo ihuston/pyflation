@@ -251,7 +251,8 @@ def main(argv = None):
             sys.exit(1)
         codedir = os.path.abspath(CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
-    
+    else:
+        codedir = None
         
     try:
         create_run_directory(newdir, codedir, options.copy_code,
