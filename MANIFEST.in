@@ -1,3 +1,4 @@
 include *.txt
-include bin/*.sh
+include *.template
+include *.in
 prune paperscripts
