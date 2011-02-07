@@ -209,8 +209,8 @@ def main(argv = None):
     
     parser.add_option("-d", "--dir", dest="dir", default=os.getcwd(),
                   help="create run directory in DIR, default is current directory", metavar="DIR")
-    parser.add_option("-n", "--name", dest="dirname",
-                      help="new run directory name")
+    parser.add_option("-n", "--name", dest="dirname", default="pyflation_run",
+                      help="new run directory name, default is pyflation_run")
     parser.add_option("-c", "--codedir", dest="codedir",
                   help="copy code from CODEDIR (where run_config.py resides)", metavar="CODEDIR")
     parser.add_option("-q", "--quiet",
@@ -241,7 +241,7 @@ def main(argv = None):
         newdir = os.path.join(options.dir, time.strftime("%Y%m%d%H%M%S"))
         logging.debug("Variable newdir created with value %s", newdir)
     
-    if options.codedir:
+    if options.codedir and options.copy_code:
         codedir = os.path.abspath(options.codedir)
         logging.debug("Option codedir specified with value %s.", options.codedir)
     else:
@@ -254,6 +254,7 @@ def main(argv = None):
             sys.exit(1)
         codedir = os.path.abspath(CODEDIR)
         logging.debug("Variable codedir created with value %s.", codedir)
+    
         
     try:
         create_run_directory(newdir, codedir, options.copy_code,
