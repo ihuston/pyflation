@@ -151,13 +151,13 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     
     #Copy run_config template file into new run directory
     pkgdir = os.path.dirname(os.path.abspath(configuration.__file__))
-    runconfigtemplate = os.path.join([pkgdir, configuration.RUNCONFIGTEMPLATE])
+    runconfigtemplate = os.path.join(pkgdir, configuration.RUNCONFIGTEMPLATE)
     logging.debug("run_config template file is %s" % runconfigtemplate)
     if not os.path.isfile(runconfigtemplate):
         raise IOError("File run_config.template is not available to be copied!") 
     else:
         try:
-            shutil.copyfile(runconfigtemplate, os.path.join([newrundir, "run_config.py"]))
+            shutil.copyfile(runconfigtemplate, os.path.join(newrundir, "run_config.py"))
             logging.debug("run_config file copied successfully.")
         except:
             logging.error("Error copying run_config template file.")
