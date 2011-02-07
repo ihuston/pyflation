@@ -39,7 +39,7 @@ Either run this script from the base directory as bin/srcmerge.py or add directo
                                   
 
 #Dictionary of qsub configuration values
-base_qsub_dict = dict(codedir = run_config.CODEDIR,
+base_qsub_dict = dict(rundir = run_config.RUNDIR,
                  runname = run_config.runname,
                  timelimit = run_config.timelimit,
                  qsublogname = run_config.qsublogname,

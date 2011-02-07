@@ -16,10 +16,10 @@ if [ -n "$SGE_TASK_ID" ]; then
     fi
 fi
 
-CODEDIR=%(codedir)s
+RUNDIR=%(rundir)s
 
-cd $CODEDIR
-echo In directory $CODEDIR
+cd $RUNDIR
+echo In directory $RUNDIR
 
 
 FOFILE=%(foresults)s
