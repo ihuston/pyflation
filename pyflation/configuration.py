@@ -13,6 +13,8 @@ RESULTSDIRNAME = "results"
 LOGDIRNAME = "applogs"
 QSUBSCRIPTSDIRNAME = "qsubscripts"
 QSUBLOGSDIRNAME = "qsublogs"
+RUNCONFIGTEMPLATE = "run_config.template"
+
 
 #Name of provenance file which records the code revisions and results files added
 provenancefilename = "provenance.log"
