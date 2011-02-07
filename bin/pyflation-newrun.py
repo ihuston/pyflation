@@ -149,19 +149,6 @@ def create_run_directory(newrundir, codedir, copy_code=False,
         logging.error("Creating subdirectories in new run directory failed.")
         raise
     
-    #Copy run_config template file into new run directory
-    pkgdir = os.path.dirname(os.path.abspath(configuration.__file__))
-    runconfigtemplate = os.path.join(pkgdir, configuration.RUNCONFIGTEMPLATE)
-    logging.debug("run_config template file is %s" % runconfigtemplate)
-    if not os.path.isfile(runconfigtemplate):
-        raise IOError("File run_config.template is not available to be copied!") 
-    else:
-        try:
-            shutil.copyfile(runconfigtemplate, os.path.join(newrundir, "run_config.py"))
-            logging.debug("run_config file copied successfully.")
-        except:
-            logging.error("Error copying run_config template file.")
-            raise
         
     #Check for bzr
     logging.debug("bzr_available=%s", bzr_available)
@@ -183,6 +170,21 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     else:
         logging.debug("No copying of code directory attempted.")
     
+    #Copy run_config template file into new run directory if not already
+    #copied by bzr.
+    if not os.path.isfile(os.path.join(newrundir, "run_config.py")):
+        pkgdir = os.path.dirname(os.path.abspath(configuration.__file__))
+        runconfigtemplate = os.path.join(pkgdir, configuration.RUNCONFIGTEMPLATE)
+        logging.debug("run_config template file is %s" % runconfigtemplate)
+        if not os.path.isfile(runconfigtemplate):
+            raise IOError("File run_config.template is not available to be copied!") 
+        else:
+            try:
+                shutil.copyfile(runconfigtemplate, os.path.join(newrundir, "run_config.py"))
+                logging.debug("run_config file copied successfully.")
+            except:
+                logging.error("Error copying run_config template file.")
+                raise
     
     #Create provenance file detailing revision and branch used
     prov_dict = dict(version=pyflation_version,
