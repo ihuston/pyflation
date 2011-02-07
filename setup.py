@@ -2,10 +2,10 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy
-from pyflation import configuration
+from pyflation import __version__ as pyflation_version
 
 ###############
-VERSION = '0.1.0'
+VERSION = pyflation_version
 
 
 ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"], 
@@ -33,7 +33,7 @@ setup_args = dict(name='Pyflation',
                            'bin/secondorder.py', 'bin/combine.py',
                            'bin/srcmerge.py', 'bin/start.py',
                            'bin/newrun.py'],
-                  data_files=[('bin', ['bin/qsub-template.sh'])],
+                  package_data={'pyflation': ['qsub-sh.template']},
                   cmdclass = {'build_ext': build_ext},
                   ext_modules = ext_modules)
 
