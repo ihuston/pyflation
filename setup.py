@@ -33,7 +33,8 @@ setup_args = dict(name='Pyflation',
                            'bin/secondorder.py', 'bin/combine.py',
                            'bin/srcmerge.py', 'bin/start.py',
                            'bin/newrun.py'],
-                  package_data={'pyflation': ['qsub-sh.template']},
+                  package_data={'pyflation': ['qsub-sh.template', 
+                                              "run_config.template"]},
                   cmdclass = {'build_ext': build_ext},
                   ext_modules = ext_modules)
 
