@@ -1,7 +1,10 @@
-"""Cosmological Model simulations by Ian Huston
-    $Id: cosmomodels.py,v 1.233 2010/01/18 16:50:57 ith Exp $
-    
-    Provides generic class CosmologicalModel that can be used as a base for explicit models."""
+"""cosmomodels.py - Cosmological Model simulations
+
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+Provides classes for modelling cosmological inflationary scenarios.
+"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 

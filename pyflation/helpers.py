@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Helper functions by Ian Huston
-    $Id: helpers.py,v 1.19 2010/01/18 16:50:34 ith Exp $
-    
-    Provides helper functions for use elsewhere"""
+"""helpers.py - Helper functions
+
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+Provides helper functions for use by the package elsewhere.
+"""
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as np

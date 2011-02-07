@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Cosmological potentials for cosmomodels.py by Ian Huston
-    $Id: cmpotentials.py,v 1.18 2009/10/07 16:07:45 ith Exp $
+"""cmpotentials.py - Cosmological potentials for cosmomodels.py
+
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
     
-    Provides functions which can be used with cosmomodels.py. 
-    Default parameter values are included but can also be 
-    specified as a dictionary."""
-    
+Provides functions which can be used with cosmomodels.py. 
+Default parameter values are included but can also be 
+specified as a dictionary.
+"""
 from __future__ import division
 import numpy as np
 

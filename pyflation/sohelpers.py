@@ -1,7 +1,10 @@
-"""Second order helper functions by Ian Huston
-    $Id: sohelpers.py,v 1.12 2009/07/02 10:00:08 ith Exp $
-    
-    Provides helper functions for second order data from cosmomodels.py"""
+"""sohelpers.py - Second order helper functions
+
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+Provides helper functions for second order data from cosmomodels.py.
+"""
     
 import tables
 import logging
