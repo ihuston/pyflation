@@ -1,0 +1,55 @@
+Installing Pyflation is as simple as typing
+
+$ python setup.py install
+
+inside the directory where this file is located. 
+First unpack the pyflation-x.x.x.tar.gz file in a suitable location. From the 
+command line this can be done by using
+
+$ tar xzvf pyflation-x.x.x.tar.gz
+
+Then enter the created directory using
+
+$ cd pyflation-x.x.x
+
+The setup.py script will install pyflation in your local python installation. 
+If you want to change the location of the installation list the possible options
+using
+
+$ python setup.py install --help
+
+The most important option is --prefix which will change the base directory used
+in deciding where to store the installation. The default depends on your 
+installation and local python executable but is often /usr. For example if you 
+want everything installed under the directory /home/me/localinstall/ then use
+
+$ python setup.py install --prefix=/home/me/localinstall/
+
+If you do not have the appropriate permissions you may not be able to install
+to a system directory. In this case using the prefix option with a directory
+you can write to is the best option.
+
+Alternatively the virtualenv python module provides a useful way of keeping
+python libraries in separate installations. This is useful if you work with
+more than one version of a particular library and want to be able to run them
+side by side. See http://virtualenv.openplans.org/ for more information.
+
+Developer Installation
+----------------------
+
+If you do not want to install Pyflation into your system or local python 
+site-packages directory, then it is possible to use it from within a separate
+directory structure. This is how development of the code is carried out.
+This method requires the Bazaar version control system to be installed.
+In the unpacked directory run
+
+$ bzr init
+$ bzr add
+$ bzr commit -m "New Install"
+
+to initialise a Bazaar branch with the current directory as its contents.
+To start a new run with the code copied into the run directory use the 
+bin/pyflation-newrun.py script with the --copy-code and --codedir options.
+Execution of the other scripts should be done from within the new run directory,
+i.e. where run_config.py resides, or the run directory should be added to the
+PYTHONPATH environment variable. 
