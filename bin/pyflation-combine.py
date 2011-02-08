@@ -92,6 +92,7 @@ def combine_results(fofile, sofile, newfile=None):
         #Copy source terms if it exists, with stepsize 2
         if "sourceterm" in ff.root.results:
             srcarr = nf.copyNode(ff.root.results.sourceterm, comgrp, step=2)
+            log.debug("Sourceterm exists in first order file and has been copied.")
         #Get results from first and second order
         fyr = ff.root.results.yresult
         syr = sf.root.results.yresult
