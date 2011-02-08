@@ -920,7 +920,7 @@ class CanonicalRampedSecondOrder(PhiModels):
             #Scale the source term by the ramp value.
             needramp = abs(tanharg)<self.rampargs["e"]
             if _debug:
-                self._log.debug("Limits of indices which need ramp are %s.", np.where[needramp][0][[0,-1]])
+                self._log.debug("Limits of indices which need ramp are %s.", np.where(needramp)[0][[0,-1]])
             src[needramp] = ramp[needramp]*src[needramp]
         
         #Split source into real and imaginary parts.
