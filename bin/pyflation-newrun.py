@@ -81,7 +81,7 @@ This information added on: %(now)s.
 
 def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False):
     """Create code directory and copy from Bazaar repository."""
-    
+    mytree = None
     if bzr_available and use_bzr:
         try:            
             mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
