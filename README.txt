@@ -2,6 +2,8 @@ Pyflation
 Author: Ian Huston
 For copyright and license information please see the LICENSE.txt file. 
 
+For installation information see the INSTALL.txt file.
+
 Introduction
 ------------
 
