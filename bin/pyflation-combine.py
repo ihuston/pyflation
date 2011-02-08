@@ -126,7 +126,7 @@ def main(argv=None):
     mrggroup.add_option("--merge", action="store_true", dest="merge",
                         default=False, help="combine first order and source results in one file")
     mrggroup.add_option("--fofile", action="store", dest="foresults",
-                        default=run_config.foresults, type="string",
+                        default=run_config.mrgresults, type="string",
                         metavar="FILE", help="first order or merged fo and src results file, default=%default")
     mrggroup.add_option("--sofile", action="store", dest="soresults",
                         default=run_config.soresults, type="string",
