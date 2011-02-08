@@ -247,7 +247,7 @@ def main(argv=None):
             template_dict[key] = getattr(options, key, None)
     
     #Find templatefile
-    if os.path.isfile(options.templatefile):
+    if options.templatefile and os.path.isfile(options.templatefile):
         goodtemplatefile = options.templatefile
     elif os.path.isfile(run_config.templatefile):
         goodtemplatefile = run_config.templatefile
