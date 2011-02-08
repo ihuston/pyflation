@@ -1,8 +1,24 @@
+Quick Installation
+------------------
+
 Installing Pyflation is as simple as typing
 
 $ python setup.py install
 
-inside the directory where this file is located. 
+inside the directory where this file is located.
+
+Requirements
+------------
+Pyflation has the following requirements:
+
+Python 2.6 or higher (tested with 2.6.4 compiled with GCC 4.1.2)
+Numpy (tested with 1.3.0)
+Scipy (tested with 0.7.1)
+PyTables 2.2 or higher (tested with 2.2)
+
+Basic Installation
+------------------
+ 
 First unpack the pyflation-x.x.x.tar.gz file in a suitable location. From the 
 command line this can be done by using
 
@@ -39,9 +55,16 @@ Developer Installation
 
 If you do not want to install Pyflation into your system or local python 
 site-packages directory, then it is possible to use it from within a separate
-directory structure. This is how development of the code is carried out.
-This method requires the Bazaar version control system to be installed.
-In the unpacked directory run
+directory structure. Use the --copy-code flag and the --codedir option of 
+pyflation-newrun.py to specify where the code directory is (possibly the current 
+directory).
+Execution of the other scripts should be done from within the new run directory,
+i.e. where run_config.py resides, or the run directory should be added to the
+PYTHONPATH environment variable. 
+
+It is also possible to use the Bazaar version control system to keep track of
+changes made and propogate them to newly created runs. This method requires bzr 
+to be available. In the unpacked directory run
 
 $ bzr init
 $ bzr add
@@ -49,7 +72,5 @@ $ bzr commit -m "New Install"
 
 to initialise a Bazaar branch with the current directory as its contents.
 To start a new run with the code copied into the run directory use the 
-bin/pyflation-newrun.py script with the --copy-code and --codedir options.
-Execution of the other scripts should be done from within the new run directory,
-i.e. where run_config.py resides, or the run directory should be added to the
-PYTHONPATH environment variable. 
+bin/pyflation-newrun.py script with the --copy-code and --codedir options and 
+the --bzr flag to specify use of Bazaar.
