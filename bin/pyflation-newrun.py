@@ -95,6 +95,7 @@ def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False)
             logging.error("Bazaar not available, copying code instead.")
         try:
             shutil.copytree(codedir, newcodedir)
+            logging.debug("Copying of code successful.")
         except:
             logging.error("Error copying code. Please do so manually.")
     
