@@ -21,7 +21,7 @@ ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceter
                ]
 
 
-setup_args = dict(name='Pyflation',
+setup_args = dict(name='pyflation',
                   version=VERSION,
                   author='Ian Huston',
                   author_email='ian.huston@gmail.com',
