@@ -79,21 +79,20 @@ This information added on: %(now)s.
         
 """
 
-def copy_code_directory(codedir, newcodedir, bzr_checkout, bzr_available=False):
+def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False):
     """Create code directory and copy from Bazaar repository."""
     
-    if bzr_available:
+    if bzr_available and use_bzr:
         try:            
             mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
-            if bzr_checkout:
-                newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
-            else:
-                bzrlib.export.export(mytree, newcodedir)
+            newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
             logging.debug("Bazaar code copied successfully.")
         except bzrlib.errors.NotBranchError, e:
             mytree = None
             logging.error("Error using bazaar. Directory %s is not a branch." % codedir)
     else:
+        if use_bzr:
+            logging.error("Bazaar not available, copying code instead.")
         try:
             shutil.copytree(codedir, newcodedir)
         except:
@@ -133,7 +132,7 @@ def copy_code_directory(codedir, newcodedir, bzr_checkout, bzr_available=False):
     return mytree
 
 def create_run_directory(newrundir, codedir, copy_code=False, 
-                         bzr_checkout=False):
+                         use_bzr=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir):
         raise IOError("New run directory already exists!")
@@ -146,9 +145,11 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     
     mytree = None
     if copy_code:
+        #Check for bzr
+        logging.debug("bzr_available=%s", bzr_available)
         newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
         logging.debug("Attempting to copy code directory...")
-        mytree = copy_code_directory(codedir, newcodedir, bzr_checkout, bzr_available)    
+        mytree = copy_code_directory(codedir, newcodedir, use_bzr, bzr_available)    
     else:
         logging.debug("No copying of code directory attempted.")
     
@@ -175,13 +176,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     except OSError:
         logging.error("Creating subdirectories in new run directory failed.")
         raise
-    
         
-    #Check for bzr
-    logging.debug("bzr_available=%s", bzr_available)
-
-    
-    
     #Copy run_config template file into new run directory if not already
     #copied by bzr.
     if not os.path.isfile(os.path.join(newrundir, "run_config.py")):
@@ -251,8 +246,8 @@ def main(argv = None):
                   help="print lots of debugging information")
     parser.add_option("--copy-code", action="store_true", dest="copy_code",
                       default=False, help="copy code directory into run directory (using Bazaar)")
-    parser.add_option("--checkout", action="store_true", dest="bzr_checkout",
-                      default=True, help="create a bzr checkout instead of export")
+    parser.add_option("--bzr", action="store_true", dest="use_bzr",
+                      default=False, help="use Bazaar to create branch of code")
         
     (options, args) = parser.parse_args(args=argv[1:])
     
@@ -286,7 +281,7 @@ def main(argv = None):
         
     try:
         create_run_directory(newdir, codedir, options.copy_code,
-                             options.bzr_checkout)
+                             options.use_bzr)
     except Exception, e:
         logging.critical("Something went wrong! Quitting.")
         sys.exit(e)
