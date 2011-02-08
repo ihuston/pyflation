@@ -873,8 +873,8 @@ class CanonicalRampedSecondOrder(PhiModels):
                     
     def derivs(self, y, t, **kwargs):
         """Equation of motion for second order perturbations including source term"""
-        if _debug:
-            self._log.debug("args: %s", str(kwargs))
+        #if _debug:
+        #    self._log.debug("args: %s", str(kwargs))
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
@@ -892,13 +892,14 @@ class CanonicalRampedSecondOrder(PhiModels):
         #debug logging
         if _debug:
             self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
+        
         #Get first order results for this time step
         if nokix:
             fovars = self.second_stage.yresult[fotix].copy()
-            src = self.source[fotix]
+            src = self.source[fotix].copy()
         else:
             fovars = self.second_stage.yresult[fotix].copy()[:,kix]
-            src = self.source[fotix][kix]
+            src = self.source[fotix][kix].copy()
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[fotix]
         
@@ -917,9 +918,10 @@ class CanonicalRampedSecondOrder(PhiModels):
             #Compare with tstartindex values. Set the ramp to zero for any that are equal
             ramp[self.tstartindex==sotix] = 0
             #Scale the source term by the ramp value.
+            needramp = abs(tanharg)<self.rampargs["e"]
             if _debug:
-                self._log.debug("Ramp value set as %s.", ramp[abs(tanharg<self.rampargs["e"])])
-            src[abs(tanharg)<self.rampargs["e"]] = ramp*src
+                self._log.debug("Limits of indices which need ramp are %s.", np.where[needramp][0][[0,-1]])
+            src[needramp] = ramp[needramp]*src[needramp]
         
         #Split source into real and imaginary parts.
         srcreal, srcimag = src.real, src.imag
