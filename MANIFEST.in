@@ -3,4 +3,4 @@ recursive-include pyflation *.template
 include *.in
 include bin/pyflation-*
 prune paperscripts
-prune solutions
+prune pyflation/solutions
