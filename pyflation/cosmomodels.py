@@ -30,6 +30,9 @@ module_logger = logging.getLogger(root_log_name + "." + __name__)
 WMAP_PIVOT = 5.25e-60 #WMAP pivot scale in Mpl
 WMAP_PR = 2.457e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
 
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
 
 class ModelError(StandardError):
     """Generic error for model simulating. Attributes include current results stack."""
@@ -1922,3 +1925,135 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
             dp2 = self.yresult[:,7,:] + self.yresult[:,9,:]*1j
             self._dp2 = dp2
         return self._dp2
+
+
+class SpeedTestRampedSecondOrder(PhiModels):
+    """Test model that changes derivs function to assess speed.
+    Second order model using efold as time variable.
+       y[0] - \delta\varphi_2 : Second order perturbation [Real Part]
+       y[1] - \delta\varphi_2^\prime : Derivative of second order perturbation [Real Part]
+       y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
+       y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
+       """
+    #Text for graphs
+    plottitle = "Complex Second Order Malik Model with source term in Efold time"
+    tname = r"$n$"
+    ynames = [r"Real $\delta\varphi_2$",
+                    r"Real $\dot{\delta\varphi_2}$",
+                    r"Imag $\delta\varphi_2$",
+                    r"Imag $\dot{\delta\varphi_2}$"]
+                    
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(SpeedTestRampedSecondOrder, self).__init__(*args, **kwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Let k roam for a start if not given
+        if k is None:
+            self.k = 10**(np.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart = np.array([0.0,0.0,0.0,0.0])   
+            
+        #Ramp arguments in form
+        # Ramp = (tanh(a*(t - t_ic - b) + c))/d if abs(t-t_ic+b) < e
+        if "rampargs" not in kwargs:
+            self.rampargs = {"a": 15.0,
+                        "b": 0.3,
+                        "c": 1,
+                        "d": 2, 
+                        "e": 1}
+        else:
+            self.rampargs = kwargs["rampargs"]
+    
+    @profile                
+    def derivs(self, y, t, **kwargs):
+        """Equation of motion for second order perturbations including source term"""
+        #if _debug:
+        #    self._log.debug("args: %s", str(kwargs))
+        #If k not given select all
+        if "k" not in kwargs or kwargs["k"] is None:
+            k = self.k
+            nokix = True
+            kix = np.arange(len(k))
+        else:
+            k = kwargs["k"]
+            kix = kwargs["kix"]
+        
+        if kix is None:
+            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
+        
+        fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
+        
+        #debug logging
+        if _debug:
+            self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
+        
+        #Get first order results for this time step
+        if nokix:
+            fovars = self.second_stage.yresult[fotix].copy()
+            src = self.source[fotix].copy()
+        else:
+            fovars = self.second_stage.yresult[fotix].copy()[:,kix]
+            src = self.source[fotix][kix].copy()
+        phi, phidot, H = fovars[0:3]
+        epsilon = self.second_stage.bgepsilon[fotix]
+        
+        #Get source terms and multiply by ramp
+        if nokix:
+            tanharg = t - self.tstart - self.rampargs["b"]
+        else:
+            tanharg =  t-self.tstart[kix] - self.rampargs["b"]
+                
+        #When absolute value of tanharg is less than e then multiply source by ramp for those values.
+        if np.any(abs(tanharg)<self.rampargs["e"]):
+            #Calculate the ramp
+            ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
+            #Get the second order timestep value
+            sotix = t / self.tstep_wanted
+            #Compare with tstartindex values. Set the ramp to zero for any that are equal
+            ramp[self.tstartindex==sotix] = 0
+            #Scale the source term by the ramp value.
+            needramp = abs(tanharg)<self.rampargs["e"]
+            if _debug:
+                self._log.debug("Limits of indices which need ramp are %s.", np.where(needramp)[0][[0,-1]])
+            src[needramp] = ramp[needramp]*src[needramp]
+        
+        #Split source into real and imaginary parts.
+        srcreal, srcimag = src.real, src.imag
+        #get potential from function
+        U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((4,len(k)))
+        else:
+            dydx = np.zeros(4)
+            
+        #Get a
+        a = self.ainit*np.exp(t)
+        #Real parts
+        #d\deltaphi_2/dn = y[1]
+        dydx[0] = y[1]
+        
+        #d\deltaphi_2^prime/dn  #
+        dydx[1] = (-(3 - epsilon)*y[1] - ((k/(a*H))**2)*y[0]
+                    -(d2U/H**2 - 3*(phidot**2))*y[0] - srcreal)
+                
+        #Complex \deltaphi_2
+        dydx[2] = y[3]
+        
+        #Complex derivative
+        dydx[3] = (-(3 - epsilon)*y[3] - ((k/(a*H))**2)*y[2]
+                    -(d2U/H**2 - 3*(phidot**2))*y[2] - srcimag)
+        
+        return dydx
