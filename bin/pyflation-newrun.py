@@ -56,11 +56,7 @@ Pyflation Version
 -----------------
 Version: %(version)s
                     
-Bazaar Revision Control Information (if available)
--------------------------------------------------
-Branch name: %(nick)s
-Branch revision number: %(revno)s
-Branch revision id: %(revid)s
+%(bzrinfo)s
  
 Code Directory Information
 --------------------------   
@@ -207,13 +203,16 @@ def create_run_directory(newrundir, codedir, copy_code=False,
                      newrundir=newrundir,
                      now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
     if mytree:
-        prov_dict["nick"] = mytree.branch.nick
-        prov_dict["revno"] = mytree.branch.revno()
-        prov_dict["revid"] = mytree.branch.last_revision()
-    elif not mytree and bzr_available:
-        prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Code not copied"
+        prov_dict["bzrinfo"] = """
+Bazaar Revision Control Information
+-------------------------------------------------
+Branch name: %(nick)s
+Branch revision number: %(revno)s
+Branch revision id: %(revid)s""" % {"nick": mytree.branch.nick,
+                                    "revno": mytree.branch.revno(),
+                                    "revid": mytree.branch.last_revision()}
     else:
-        prov_dict["nick"] = prov_dict["revno"] = prov_dict["revid"] = "Bazaar not available"
+        prov_dict["bzrinfo"] = ""
          
     provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
                                    configuration.provenancefilename) 
