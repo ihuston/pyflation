@@ -1831,6 +1831,9 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
         self.source = self.second_stage.source[:]
         if self.source is None:
             raise ModelError("First order model does not have a source term!")
+        #Try to put yresult array in memory
+        self.second_stage.yresultarr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresultarr[:]
         
     def getdeltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times and modes.
@@ -1926,51 +1929,3 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
             self._dp2 = dp2
         return self._dp2
 
-
-class SpeedTestThreeStage(CanonicalMultiStage, ThirdStageModel):
-    """Concrete implementation of ThirdStageCanonical to include second order calculation including
-    source term from a first order model."""
-    
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
-    def __init__(self, *args, **kwargs):
-        """Initialize variables and call super class __init__ method."""
-        super(SpeedTestThreeStage, self).__init__(*args, **kwargs)
-        #try to set source term
-        if _debug:
-            self._log.debug("Trying to set source term for second order model...")
-        self.source = self.second_stage.source[:]
-        if self.source is None:
-            raise ModelError("First order model does not have a source term!")
-        #Try to put yresult array in memory
-        self.second_stage.yresultarr = self.second_stage.yresult
-        self.second_stage.yresult = self.second_stage.yresultarr[:]
-        
-    def getdeltaphi(self, recompute=False):
-        """Return the calculated values of $\delta\phi$ for all times and modes.
-        
-        The result is stored as the instance variable self.deltaphi but will be recomputed
-        if `recompute` is True.
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should the values be recomputed? Default is False.
-                   
-        Returns
-        -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
-        """
-        
-        if not hasattr(self, "deltaphi") or recompute:
-            dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
-            dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
-            self.deltaphi = dp1 + 0.5*dp2
-        return self.deltaphi
