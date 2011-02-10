@@ -1927,14 +1927,10 @@ class CombinedCanonicalFromFile(CanonicalMultiStage):
         return self._dp2
 
 
-class SpeedTestRampedSecondOrder(PhiModels):
-    """Test model that changes derivs function to assess speed.
-    Second order model using efold as time variable.
-       y[0] - \delta\varphi_2 : Second order perturbation [Real Part]
-       y[1] - \delta\varphi_2^\prime : Derivative of second order perturbation [Real Part]
-       y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
-       y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
-       """
+class SpeedTestThreeStage(CanonicalMultiStage, ThirdStageModel):
+    """Concrete implementation of ThirdStageCanonical to include second order calculation including
+    source term from a first order model."""
+    
     #Text for graphs
     plottitle = "Complex Second Order Malik Model with source term in Efold time"
     tname = r"$n$"
@@ -1943,121 +1939,38 @@ class SpeedTestRampedSecondOrder(PhiModels):
                     r"Imag $\delta\varphi_2$",
                     r"Imag $\dot{\delta\varphi_2}$"]
                     
-    def __init__(self,  k=None, ainit=None, *args, **kwargs):
-        """Initialize variables and call superclass"""
-        
-        super(SpeedTestRampedSecondOrder, self).__init__(*args, **kwargs)
-        
-        #Test whether copying array into memory is quicker
-        self.second_stage.yresult_arr = self.second_stage.yresult
-        self.second_stage.yresult = self.second_stage.yresult_arr[:]
-        
-        if ainit is None:
-            #Don't know value of ainit yet so scale it to 1
-            self.ainit = 1
-        else:
-            self.ainit = ainit
-        
-        #Let k roam for a start if not given
-        if k is None:
-            self.k = 10**(np.arange(10.0)-8)
-        else:
-            self.k = k
-        
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            self.ystart = np.array([0.0,0.0,0.0,0.0])   
-            
-        #Ramp arguments in form
-        # Ramp = (tanh(a*(t - t_ic - b) + c))/d if abs(t-t_ic+b) < e
-        if "rampargs" not in kwargs:
-            self.rampargs = {"a": 15.0,
-                        "b": 0.3,
-                        "c": 1,
-                        "d": 2, 
-                        "e": 1}
-        else:
-            self.rampargs = kwargs["rampargs"]
-    
-    @profile                
-    def derivs(self, y, t, **kwargs):
-        """Equation of motion for second order perturbations including source term"""
-        #if _debug:
-        #    self._log.debug("args: %s", str(kwargs))
-        #If k not given select all
-        if "k" not in kwargs or kwargs["k"] is None:
-            k = self.k
-            nokix = True
-            kix = np.arange(len(k))
-        else:
-            k = kwargs["k"]
-            kix = kwargs["kix"]
-        
-        if kix is None:
-            raise ModelError("Need to specify kix in order to calculate 2nd order perturbation!")
-        
-        fotix = np.int(np.around((t - self.second_stage.simtstart)/self.second_stage.tstep_wanted))
-        
-        #debug logging
+    def __init__(self, *args, **kwargs):
+        """Initialize variables and call super class __init__ method."""
+        super(SpeedTestThreeStage, self).__init__(*args, **kwargs)
+        #try to set source term
         if _debug:
-            self._log.debug("t=%f, fo.tresult[tix]=%f, fotix=%f", t, self.second_stage.tresult[fotix], fotix)
+            self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source[:]
+        if self.source is None:
+            raise ModelError("First order model does not have a source term!")
+        #Try to put yresult array in memory
+        self.second_stage.yresultarr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresultarr[:]
         
-        #Get first order results for this time step
-        if nokix:
-            fovars = self.second_stage.yresult[fotix].copy()
-            src = self.source[fotix].copy()
-        else:
-            fovars = self.second_stage.yresult[fotix].copy()[:,kix]
-            src = self.source[fotix][kix].copy()
-        phi, phidot, H = fovars[0:3]
-        epsilon = self.second_stage.bgepsilon[fotix]
+    def getdeltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
         
-        #Get source terms and multiply by ramp
-        if nokix:
-            tanharg = t - self.tstart - self.rampargs["b"]
-        else:
-            tanharg =  t-self.tstart[kix] - self.rampargs["b"]
-                
-        #When absolute value of tanharg is less than e then multiply source by ramp for those values.
-        if np.any(abs(tanharg)<self.rampargs["e"]):
-            #Calculate the ramp
-            ramp = (np.tanh(self.rampargs["a"]*tanharg) + self.rampargs["c"])/self.rampargs["d"]
-            #Get the second order timestep value
-            sotix = t / self.tstep_wanted
-            #Compare with tstartindex values. Set the ramp to zero for any that are equal
-            ramp[self.tstartindex==sotix] = 0
-            #Scale the source term by the ramp value.
-            needramp = abs(tanharg)<self.rampargs["e"]
-            if _debug:
-                self._log.debug("Limits of indices which need ramp are %s.", np.where(needramp)[0][[0,-1]])
-            src[needramp] = ramp[needramp]*src[needramp]
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
         
-        #Split source into real and imaginary parts.
-        srcreal, srcimag = src.real, src.imag
-        #get potential from function
-        U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
         
-        #Set derivatives taking care of k type
-        if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((4,len(k)))
-        else:
-            dydx = np.zeros(4)
-            
-        #Get a
-        a = self.ainit*np.exp(t)
-        #Real parts
-        #d\deltaphi_2/dn = y[1]
-        dydx[0] = y[1]
-        
-        #d\deltaphi_2^prime/dn  #
-        dydx[1] = (-(3 - epsilon)*y[1] - ((k/(a*H))**2)*y[0]
-                    -(d2U/H**2 - 3*(phidot**2))*y[0] - srcreal)
-                
-        #Complex \deltaphi_2
-        dydx[2] = y[3]
-        
-        #Complex derivative
-        dydx[3] = (-(3 - epsilon)*y[3] - ((k/(a*H))**2)*y[2]
-                    -(d2U/H**2 - 3*(phidot**2))*y[2] - srcimag)
-        
-        return dydx
+        if not hasattr(self, "deltaphi") or recompute:
+            dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
+            dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
+            self.deltaphi = dp1 + 0.5*dp2
+        return self.deltaphi
