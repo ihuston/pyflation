@@ -1948,6 +1948,10 @@ class SpeedTestRampedSecondOrder(PhiModels):
         
         super(SpeedTestRampedSecondOrder, self).__init__(*args, **kwargs)
         
+        #Test whether copying array into memory is quicker
+        self.second_stage.yresult_arr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresult_arr[:]
+        
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
             self.ainit = 1
