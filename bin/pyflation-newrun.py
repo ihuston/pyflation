@@ -22,6 +22,7 @@ from sys import version as python_version
 from numpy import __version__ as numpy_version
 from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
+from Cython.Compiler.Version import version as cython_version
 
 
 
@@ -73,6 +74,7 @@ Python version: %(python_version)s
 Numpy version: %(numpy_version)s
 Scipy version: %(scipy_version)s
 PyTables version: %(tables_version)s
+Cython version: %(cython_version)s
 
 This information added on: %(now)s.
 -----------------------------------------------
@@ -200,6 +202,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
                      numpy_version=numpy_version,
                      scipy_version=scipy_version,
                      tables_version=tables_version,
+                     cython_version=cython_version,
                      codedir=codedir,
                      newrundir=newrundir,
                      now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
