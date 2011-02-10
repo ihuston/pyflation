@@ -11,10 +11,11 @@ Requirements
 ------------
 Pyflation has the following requirements:
 
-Python 2.6 or higher (tested with 2.6.4 compiled with GCC 4.1.2)
-Numpy (tested with 1.3.0)
-Scipy (tested with 0.7.1)
-PyTables 2.2 or higher (tested with 2.2)
+Python 2.6 or higher (tested with 2.6.4) - http://www.python.org
+Numpy (tested with 1.3.0) - http://www.numpy.org
+Scipy (tested with 0.7.1) - http://www.scipy.org
+Cython (tested with 0.12.1) - http://www.cython.org
+PyTables 2.2 or higher (tested with 2.2) - http://www.pytables.org
 
 Basic Installation
 ------------------
