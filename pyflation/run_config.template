@@ -64,6 +64,9 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
             "resonance":       {"potential_func": "resonance",
                                 "pot_params": None,
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+            "bump_nothirdderiv":  {"potential_func": "bump_nothirdderiv",
+                                "pot_params": None,
+                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             }
 
 ##############################
