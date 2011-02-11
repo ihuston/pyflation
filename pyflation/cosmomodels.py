@@ -63,6 +63,9 @@ class CosmologicalModel(object):
     tstartindex - array, individual start time indices for each k mode
     tend - float, overall end time for simulation
     tstep_wanted - float, size of time step to use in evolution
+    solver - string, the name of the rk4 driver function to use
+    potential_func - string, the name of the potential function in cmpotentials
+    pot_params - dict, any modifications to the default parameters in the potential
     
     """
     solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
