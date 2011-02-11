@@ -144,7 +144,7 @@ def source_indiv_dict(template_dict):
     src_dict = template_dict.copy()
     src_dict["hold_jid_list"] = ""
     src_dict["runname"] += "-src-indiv"
-    src_dict["qsublogname"] += "-node-$TASK_ID"
+    src_dict["qsublogname"] += "-node-$1"
     src_dict["extra_qsub_params"] = "\n".join(["SGE_TASK_FIRST=" + src_dict["taskmin"],
                                               "SGE_TASK_LAST=" + src_dict["taskmax"],
                                               "SGE_TASK_STEPSIZE=1",
