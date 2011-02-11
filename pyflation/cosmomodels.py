@@ -4,9 +4,23 @@ Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 
 Provides classes for modelling cosmological inflationary scenarios.
+Especially important classes are:
+
+FOCanonicalTwoStage - drives first order calculation 
+SOCanonicalThreeStage - drives second order calculation
+
+CanonicalFirstOrder - the class containing derivatives for first order calculation
+CanonicalRampedSecondOrder - the class containing derivatives and ramped
+                             source term for second order calculation.
+
+The make_wrapper_model function takes a filename and returns a model instance
+corresponding to the one stored in the file. This allows easier access to the
+results than through a direct inspection of the HDF5 results file.
+
+
 """
 
-from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
+from __future__ import division
 
 #system modules
 import numpy as np
@@ -26,10 +40,7 @@ import rk4
 root_log_name = logging.getLogger().name
 module_logger = logging.getLogger(root_log_name + "." + __name__)
 
-#WMAP pivot scale and Power spectrum
-WMAP_PIVOT = 5.25e-60 #WMAP pivot scale in Mpl
-WMAP_PR = 2.457e-09 #Power spectrum calculated at the WMAP_PIVOT scale. Real WMAP result quoted as 2.07e-9
-
+#Profiling decorator when not using profiling.
 if not "profile" in __builtins__:
     def profile(f):
         return f
@@ -40,22 +51,28 @@ class ModelError(StandardError):
 
 class CosmologicalModel(object):
     """Generic class for cosmological model simulations.
-    Has no derivs function to pass to ode solver, but does have
-    plotting function and initial conditions check.
+    Contains run() method which chooses a solver and runs the simulation.
     
-    Results can be saved in a pickled file as a list of tuples of the following
-    structure:
-       resultset = (lastparams, tresult, yresult)
-       
-       lastparams is formatted as in the function callingparams(self) below
+    All cosmological model classes are subclassed from this one.
+    
+    Initialization arguments
+    ------------------------
+    ystart - array_like, initial values for y variables
+    simtstart - float, initial overall time for simulation to start
+    tstart - array, individual start times for each k mode
+    tstartindex - array, individual start time indices for each k mode
+    tend - float, overall end time for simulation
+    tstep_wanted - float, size of time step to use in evolution
+    
     """
     solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
     ynames = ["First dependent variable"]
     tname = "Time"
     plottitle = "A generic Cosmological Model"
     
-    def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.001, eps=1.0e-10,
-                 dxsav=0.0, solver="rkdriver_withks", potential_func=None, pot_params=None, **kwargs):
+    def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
+                 tend=83.0, tstep_wanted=0.01, solver="rkdriver_withks", 
+                 potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -82,20 +99,7 @@ class CosmologicalModel(object):
         else:
             raise ValueError("End time is before simulation start time!")
         
-        if tstep_wanted >= tstep_min:
-            self.tstep_wanted, self.tstep_min = tstep_wanted, tstep_min
-        else:
-            raise ValueError, "Desired time step is smaller than specified minimum!"
-        
-        if eps < 1:
-            self.eps = eps
-        else:
-            raise ValueError, "Not enough accuracy! Change eps < 1."
-        
-        if dxsav >=0.0:
-            self.dxsav = dxsav
-        else:
-            raise ValueError, "Data saving step must be 0 or positive!"
+        self.tstep_wanted = tstep_wanted
         
         if solver in self.solverlist:
             self.solver = solver
@@ -197,9 +201,6 @@ class CosmologicalModel(object):
         params = {"tstart":self.tstart,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
-                  "tstep_min":self.tstep_min,
-                  "eps":self.eps,
-                  "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -216,9 +217,6 @@ class CosmologicalModel(object):
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "tstep_min" : tables.Float64Col(),
-        "eps" : tables.Float64Col(),
-        "dxsav" : tables.Float64Col(),
         "datetime" : tables.Float64Col()
         }
         return params
@@ -370,8 +368,8 @@ class TestModel(CosmologicalModel):
     plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
     tname = "Time"
             
-    def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01, tstep_min=0.001):
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min)
+    def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01):
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted)
         
 
     
@@ -397,9 +395,9 @@ class BasicBgModel(CosmologicalModel):
     ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
-                    tstep_wanted=0.02, tstep_min=0.0001, solver="rkdriver_withks"):
+                    tstep_wanted=0.02, solver="rkdriver_withks"):
         
-        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, tstep_min, solver=solver)
+        CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, solver=solver)
         #Mass of inflaton in Planck masses
         self.mass = 1.0
         
@@ -1067,9 +1065,6 @@ class MultiStageModel(CosmologicalModel):
                   "potential_func":self.potentials.__name__,
                   "tend":self.tend,
                   "tstep_wanted":self.tstep_wanted,
-                  "tstep_min":self.tstep_min,
-                  "eps":self.eps,
-                  "dxsav":self.dxsav,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -1087,9 +1082,6 @@ class MultiStageModel(CosmologicalModel):
         "potential_func" : tables.StringCol(255),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "tstep_min" : tables.Float64Col(),
-        "eps" : tables.Float64Col(),
-        "dxsav" : tables.Float64Col(),
         "datetime" : tables.Float64Col()
         }
         return params
@@ -1200,7 +1192,7 @@ class TwoStageModel(MultiStageModel):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """                
-    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01, tstep_min=0.0001, 
+    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
@@ -1227,8 +1219,7 @@ class TwoStageModel(MultiStageModel):
                          tstart=tstart,
                          tstartindex=self.tstartindex, 
                          tend=tend, 
-                         tstep_wanted=tstep_wanted, 
-                         tstep_min=tstep_min, 
+                         tstep_wanted=tstep_wanted,
                          solver=solver, 
                          potential_func=potential_func, 
                          pot_params=pot_params, 
@@ -1313,7 +1304,6 @@ class TwoStageModel(MultiStageModel):
                       tstartindex=tstartindex, 
                       tend=self.tend,
                       tstep_wanted=self.tstep_wanted, 
-                      tstep_min=self.tstep_min, 
                       solver=self.solver,
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params)
@@ -1339,8 +1329,7 @@ class TwoStageModel(MultiStageModel):
                       simtstart=self.simtstart, 
                       tstartindex = self.fotstartindex, 
                       tend=self.fotend, 
-                      tstep_wanted=self.tstep_wanted, 
-                      tstep_min=self.tstep_min, 
+                      tstep_wanted=self.tstep_wanted,
                       solver=self.solver,
                       k=self.k, 
                       ainit=self.ainit, 
@@ -1667,7 +1656,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             else:
                 ys = self.foystart[0:3,0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
-                            tstep_wanted=self.tstep_wanted, tstep_min=self.tstep_min, solver=self.solver,
+                            tstep_wanted=self.tstep_wanted, solver=self.solver,
                             potential_func=self.potential_func, pot_params=self.pot_params)
             #Put in data
             try:
@@ -1730,7 +1719,6 @@ class ThirdStageModel(MultiStageModel):
                       simtstart=self.simtstart,
                       tend=self.second_stage.tresult[-1],
                       tstep_wanted=sotstep,
-                      tstep_min=self.second_stage.tstep_min*2,
                       solver="rkdriver_new",
                       potential_func=self.second_stage.potential_func,
                       pot_params=self.second_stage.pot_params
@@ -1757,7 +1745,6 @@ class ThirdStageModel(MultiStageModel):
         "simtstart": self.simtstart,
         "tend": self.tend,
         "tstep_wanted": self.tstep_wanted,
-        "tstep_min": self.tstep_min,
         "solver": self.solver,
         "k": self.k,
         "ainit": self.ainit,
