@@ -1795,3 +1795,58 @@ class CombinedCanonicalFromFile(MultiStageDriver):
             self._dp2 = dp2
         return self._dp2
 
+class FixedainitTwoStage(FOCanonicalTwoStage):
+    """First order driver class with ainit fixed to a specified value.
+    This is useful for comparing models which have different H behaviour and
+    therefore different ainit values. 
+    
+    It should be remembered that these models with fixed ainit are equivalent
+    to changing the number of efoldings from the end of inflation until today.
+    
+    Extra argument in initialisation
+    --------------------------------
+    ainit - float, value of ainit to fix no matter what the value of H at the
+            end of inflation.
+    
+    """ 
+
+    def __init__(self, *args, **kwargs):
+        """Extra keyword argument ainit is used to set value of ainit no matter
+        what the value of H at the end of inflation."""
+        super(FixedainitTwoStage, self).__init__(*args, **kwargs)
+        if "ainit" in kwargs:
+            self.fixedainit = kwargs["ainit"]
+        else:
+            #Set with ainit from standard msqphisq potential run.
+            self.fixedainit = 7.837219134630212e-65
+            
+    def setfoics(self):
+        """After a bg run has completed, set the initial conditions for the 
+            first order run."""
+        
+        #Find initial conditions for 1st order model
+        #Use fixed ainit in this class instead of calculating from aend
+        self.ainit = self.fixedainit
+                
+        #Find epsilon from bg model
+        try:
+            self.bgepsilon
+        except AttributeError:            
+            self.bgepsilon = self.bgmodel.getepsilon()
+        #Set etainit, initial eta at n=0
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex,2])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(np.int)
+        self.foystart = self.getfoystart()
+        return
+        
