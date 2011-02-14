@@ -1006,28 +1006,103 @@ class MultiStageModel(CosmologicalModel):
         """FInd horizon crossing for all ks"""
         return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
+    @property
+    def deltaphi(self, recompute=False):
+        """Return the value of deltaphi for this model, recomputing if necessary."""
+        pass
+    
+    @property
+    def Pphi(self, recompute=False):
+        """Return the spectrum of scalar perturbations P_phi for each k.
+        
+        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
+        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
+        instance variable self.Pphi. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+        
+        Returns
+        -------
+        Pphi: array_like
+              Array of Pphi values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "_Pphi") or recompute:        
+            deltaphi = self.deltaphi
+            self._Pphi = deltaphi*deltaphi.conj()
+        return self._Pphi
+    
+    @property            
+    def Pr(self, recompute=False):
+        """Return the spectrum of curvature perturbations $P_R$ for each k.
+        
+        This is the unscaled version $P_R$ which is related to the scaled version by
+        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
+        self.Pr. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+                   
+        Returns
+        -------
+        Pr: array_like
+            Array of Pr values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "_Pr") or recompute:        
+            Pphi = self.Pphi
+            phidot = self.yresult[:,1,:] #bg phidot
+            self._Pr = Pphi/(phidot**2) #change if bg evol is different
+        return self._Pr
+    
+    @property
+    def Pgrav(self, recompute=False):
+        """Return the spectrum of tensor perturbations $P_grav$ for each k.
+        
+        Note that result is stored as the instance variable self.Pgrav. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+                   
+        Returns
+        -------
+        Pgrav: array_like
+               Array of Pgrav values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "_Pgrav") or recompute:        
+            self._Pgrav = 2*self.Pphi
+        return self._Pgrav
+    
+    def getzeta(self):
+        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
+        #Get needed variables
+        phidot = self.yresult[:,1,:]
+        a = self.ainit*np.exp(self.tresult)
+        H = self.yresult[:,2,:]
+        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][np.newaxis,:], self.pot_params)[1]
+        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
+        
+        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
+        drhodt = (H**3)*(phidot**2)*(-1/a[:,np.newaxis]**2 - 2) -H*phidot*dUdphi
+        
+        zeta = -H*deltarho/drhodt
+        return zeta, deltarho, drhodt
+            
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
 
-    def getdeltaphi(self):
-        """Return \delta\phi_1 no matter what variable is used for simulation. Implemented model-by-model."""
-        pass
-    
-    def findPr(self):
-        """Return the spectrum of curvature perturbations P_R for each k.Implemented model-by-model."""
-        pass
-    
-    def findPgrav(self):
-        """Return the spectrum of tensor perturbations P_grav for each k. Implemented model-by-model."""
-        pass
-    
-    def findPphi(self):
-        """Return the spectrum of scalar perturbations P_phi for each k."""
-        pass
-     
     def findns(self, k=None, nefolds=3):
-        """Return the value of n_s at the specified k mode."""
+        """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
         
         #If k is not defined, get value at all self.k
         if k is None:
@@ -1088,107 +1163,7 @@ class MultiStageModel(CosmologicalModel):
         }
         return params
     
-    
-class CanonicalMultiStage(MultiStageModel):
-    """Implementation of generic two stage model with standard initial conditions for phi.
-    """
-                    
-    def __init__(self, *args, **kwargs):
-        """Initialize model and ensure initial conditions are sane."""
-        #Call superclass
-        super(CanonicalMultiStage, self).__init__(*args, **kwargs)
-    
-    @property
-    def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each k.
-        
-        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-        instance variable self.Pphi. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-        
-        Returns
-        -------
-        Pphi: array_like
-              Array of Pphi values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:        
-            deltaphi = self.deltaphi
-            self._Pphi = deltaphi*deltaphi.conj()
-        return self._Pphi
-    
-    @property            
-    def Pr(self, recompute=False):
-        """Return the spectrum of curvature perturbations $P_R$ for each k.
-        
-        This is the unscaled version $P_R$ which is related to the scaled version by
-        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
-        self.Pr. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pr: array_like
-            Array of Pr values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pr") or recompute:        
-            Pphi = self.Pphi
-            phidot = self.yresult[:,1,:] #bg phidot
-            self._Pr = Pphi/(phidot**2) #change if bg evol is different
-        return self._Pr
-    
-    def findPgrav(self, recompute=False):
-        """Return the spectrum of tensor perturbations $P_grav$ for each k.
-        
-        Note that result is stored as the instance variable self.Pgrav. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pgrav: array_like
-               Array of Pgrav values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "Pgrav") or recompute:        
-            Pphi = self.findPphi()
-            self.Pgrav = 2*Pphi
-        return self.Pgrav
-    
-    def getzeta(self):
-        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
-        #Get needed variables
-        phidot = self.yresult[:,1,:]
-        a = self.ainit*np.exp(self.tresult)
-        H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][np.newaxis,:], self.pot_params)[1]
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
-        
-        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,np.newaxis]**2 - 2) -H*phidot*dUdphi
-        
-        zeta = -H*deltarho/drhodt
-        return zeta, deltarho, drhodt
-        
-    def findzetasq(self):
-        """Return the spectrum of zeta."""
-        pass
-    
-class FOCanonicalTwoStage(CanonicalMultiStage):
+class FOCanonicalTwoStage(MultiStageModel):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
@@ -1476,9 +1451,9 @@ class FOCanonicalTwoStage(CanonicalMultiStage):
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
         
-        if not hasattr(self, "deltaphi") or recompute:
-            self._dp = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        return self._dp
+        if not hasattr(self, "_deltaphi") or recompute:
+            self._deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        return self._deltaphi
                     
     
 def make_wrapper_model(modelfile, *args, **kwargs):
@@ -1594,7 +1569,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
     return ModelWrapper(modelfile, *args, **kwargs)
 
 
-class SOCanonicalThreeStage(CanonicalMultiStage):
+class SOCanonicalThreeStage(MultiStageModel):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
     
@@ -1724,7 +1699,8 @@ class SOCanonicalThreeStage(CanonicalMultiStage):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    def getdeltaphi(self, recompute=False):
+    @property
+    def deltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times and modes.
         
         The result is stored as the instance variable self.deltaphi but will be recomputed
@@ -1741,14 +1717,14 @@ class SOCanonicalThreeStage(CanonicalMultiStage):
                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
         
-        if not hasattr(self, "deltaphi") or recompute:
+        if not hasattr(self, "_deltaphi") or recompute:
             dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
             dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
-            self.deltaphi = dp1 + 0.5*dp2
-        return self.deltaphi
+            self._deltaphi = dp1 + 0.5*dp2
+        return self._deltaphi
     
         
-class CombinedCanonicalFromFile(CanonicalMultiStage):
+class CombinedCanonicalFromFile(MultiStageModel):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
     
     #Text for graphs
