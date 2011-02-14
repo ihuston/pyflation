@@ -45,7 +45,7 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     
     Parameters
     ----------
-    m: Cosmomodels.TwoStageModel
+    m: Cosmomodels.FOCanonicalTwoStage instance
        First order model to be used.
        
     nix: int

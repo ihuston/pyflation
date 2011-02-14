@@ -108,7 +108,7 @@ kend = getkend(kinit, deltak, numsoks)
 ############## MODEL CLASS SELECTION ###########################################
 # These options are for advanced users only. 
 #
-# The python class used for the first order perturbation calculation can be 
+# The driver class used for the first order perturbation calculation can be 
 # selected here. It should be accessible from this module, so add imports if
 # necessary. The default class is in the pyflation.cosmomodels module.
 foclass = c.FOCanonicalTwoStage

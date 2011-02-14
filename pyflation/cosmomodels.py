@@ -1188,12 +1188,22 @@ class CanonicalMultiStage(MultiStageModel):
         """Return the spectrum of zeta."""
         pass
     
-                                        
-class TwoStageModel(MultiStageModel):
+class FOCanonicalTwoStage(CanonicalMultiStage):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
-    """                
+    """ 
+    #Text for graphs
+    plottitle = "FOCanonicalTwoStage Model in Efold Time"
+    tname = r"$n$" 
+    ynames = [r"$\varphi_0$",
+                    r"$\dot{\varphi_0}$",
+                    r"$H$",
+                    r"Real $\delta\varphi_1$",
+                    r"Real $\dot{\delta\varphi_1}$",
+                    r"Imag $\delta\varphi_1$",
+                    r"Imag $\dot{\delta\varphi_1}$"]
+                                                  
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, **kwargs):
@@ -1227,7 +1237,7 @@ class TwoStageModel(MultiStageModel):
                          pot_params=pot_params, 
                          **kwargs)
         
-        super(TwoStageModel, self).__init__(**newkwargs)
+        super(FOCanonicalTwoStage, self).__init__(**newkwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1390,26 +1400,6 @@ class TwoStageModel(MultiStageModel):
             except IOError, er:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
-    
-
-class FOCanonicalTwoStage(CanonicalMultiStage, TwoStageModel):
-    """Implementation of First Order Canonical two stage model with standard initial conditions for phi.
-    """
-    #Text for graphs
-    plottitle = "FOCanonicalTwoStage Model in Efold Time"
-    tname = r"$n$" 
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-                                                  
-    def __init__(self, *args, **kwargs):
-        """Initialize model and ensure initial conditions are sane."""
-        #Call superclass
-        super(FOCanonicalTwoStage, self).__init__(*args, **kwargs)
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
@@ -1611,8 +1601,8 @@ class ThirdStageModel(MultiStageModel):
         """Initialize variables and check that tsmodel exists and is correct form."""
         
         #Test whether tsmodel is of correct type
-        if not isinstance(second_stage, TwoStageModel):
-            raise ModelError("Need to provide a TwoStageModel instance to get first order results from!")
+        if not isinstance(second_stage, FOCanonicalTwoStage):
+            raise ModelError("Need to provide a FOCanonicalTwoStage instance to get first order results from!")
         else:
             self.second_stage = second_stage
             #Set properties to be those of second stage model
