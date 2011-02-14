@@ -978,7 +978,6 @@ class MultiStageModel(CosmologicalModel):
             Hreh = Hend #Instantaneous reheating
         a_0 = 1 # Normalize today
         a_end = a_0*np.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
-        #a_end = a_0*np.exp(-71.49)*((Hreh/(Hend**4.0))**(1.0/6.0))
         return a_end
         
     def findkcrossing(self, k, t, H, factor=None):
