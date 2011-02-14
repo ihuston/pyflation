@@ -1593,9 +1593,18 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 raise
     return ModelWrapper(modelfile, *args, **kwargs)
 
-class ThirdStageModel(MultiStageModel):
+
+class SOCanonicalThreeStage(CanonicalMultiStage):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
+    
+    #Text for graphs
+    plottitle = "Complex Second Order Model with source term in Efold time"
+    tname = r"$n$"
+    ynames = [r"Real $\delta\varphi_2$",
+                    r"Real $\dot{\delta\varphi_2}$",
+                    r"Imag $\delta\varphi_2$",
+                    r"Imag $\dot{\delta\varphi_2}$"]
 
     def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
         """Initialize variables and check that tsmodel exists and is correct form."""
@@ -1638,13 +1647,23 @@ class ThirdStageModel(MultiStageModel):
             kwargs.update(soclassargs)
             
         #Call superclass
-        super(ThirdStageModel, self).__init__(**kwargs)
+        super(SOCanonicalThreeStage, self).__init__(**kwargs)
         
         if soclass is None:
             self.soclass = CanonicalSecondOrder
         else:
             self.soclass = soclass
         self.somodel = None
+        
+        #Set up source term
+        if _debug:
+            self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source[:]
+        if self.source is None:
+            raise ModelError("First order model does not have a source term!")
+        #Try to put yresult array in memory
+        self.second_stage.yresultarr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresultarr[:]
     
     def setup_soclass(self):
         """Initialize the second order class that will be used to run simulation."""
@@ -1705,33 +1724,6 @@ class ThirdStageModel(MultiStageModel):
                 self._log.exception("Error trying to save results! Results NOT saved.")        
         return
     
-    
-            
-class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
-    """Concrete implementation of ThirdStageCanonical to include second order calculation including
-    source term from a first order model."""
-    
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
-    def __init__(self, *args, **kwargs):
-        """Initialize variables and call super class __init__ method."""
-        super(SOCanonicalThreeStage, self).__init__(*args, **kwargs)
-        #try to set source term
-        if _debug:
-            self._log.debug("Trying to set source term for second order model...")
-        self.source = self.second_stage.source[:]
-        if self.source is None:
-            raise ModelError("First order model does not have a source term!")
-        #Try to put yresult array in memory
-        self.second_stage.yresultarr = self.second_stage.yresult
-        self.second_stage.yresult = self.second_stage.yresultarr[:]
-        
     def getdeltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times and modes.
         
@@ -1754,6 +1746,7 @@ class SOCanonicalThreeStage(CanonicalMultiStage, ThirdStageModel):
             dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
             self.deltaphi = dp1 + 0.5*dp2
         return self.deltaphi
+    
         
 class CombinedCanonicalFromFile(CanonicalMultiStage):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
