@@ -957,13 +957,13 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         return dydx
         
-class MultiStageModel(CosmologicalModel):
+class MultiStageDriver(CosmologicalModel):
     """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
     methods to find Pr that are implemented in children."""
     
     def __init__(self, *args, **kwargs):
         """Initialize super class instance."""
-        super(MultiStageModel, self).__init__(*args, **kwargs)
+        super(MultiStageDriver, self).__init__(*args, **kwargs)
         #Set constant factor for 1st order initial conditions
         if "cq" in kwargs:
             self.cq = kwargs["cq"]
@@ -1163,7 +1163,7 @@ class MultiStageModel(CosmologicalModel):
         }
         return params
     
-class FOCanonicalTwoStage(MultiStageModel):
+class FOCanonicalTwoStage(MultiStageDriver):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
@@ -1569,7 +1569,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
     return ModelWrapper(modelfile, *args, **kwargs)
 
 
-class SOCanonicalThreeStage(MultiStageModel):
+class SOCanonicalThreeStage(MultiStageDriver):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
     
@@ -1724,7 +1724,7 @@ class SOCanonicalThreeStage(MultiStageModel):
         return self._deltaphi
     
         
-class CombinedCanonicalFromFile(MultiStageModel):
+class CombinedCanonicalFromFile(MultiStageDriver):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
     
     #Text for graphs
