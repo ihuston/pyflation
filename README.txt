@@ -25,7 +25,7 @@ can be compared with the numerical output to check the accuracy.
 
 Alongside the Python package, the bin directory contains Python scripts which 
 can run first and second order simulations.
-A helper script called "start.py" sets up a full second order run (including 
+A helper script called "pyflation-qsubstart.py" sets up a full second order run (including 
 background, first order and source calculations)
 to be used on queueing system which contains the "qsub" executable (e.g. a Rocks 
 cluster).
