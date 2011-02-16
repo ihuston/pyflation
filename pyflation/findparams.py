@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """ findparams.py - Find values of parameters in potentials using WMAP normalization
 
-
 Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 
@@ -31,8 +30,6 @@ Please note that depending on the number of parameter values specified it may
 take a long time to run the first order calculation the specified number of times. 
  
 """
-
-#Run multiple cm2 models
 from __future__ import division
 
 import numpy as np
@@ -41,6 +38,7 @@ import sys
 import logging
 from scipy import interpolate
 
+#Set up logging with basic configuration
 logging.basicConfig()
 
 try:
@@ -187,7 +185,9 @@ def run_and_interpolate(fixture, nefolds=5, k=None):
     
     
 def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
-    """Run tests for a particular parameter, return mass used and spectrum after horizon exit"""
+    """Run tests for a particular parameter, return mass used and spectrum after horizon exit.
+    This function forces the end of inflation at a particular time for use with 
+    models where inflation doesn't end naturally."""
     #Variable to store results
     results = None
     fx = deepcopy(fixture)
@@ -226,4 +226,4 @@ def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
 
 
 if __name__ == "__main__":
-    print param_vs_spectrum(fixtures["mass"].copy())
+    print run_and_interpolate(fixtures["mass"].copy())
