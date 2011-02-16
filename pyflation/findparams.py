@@ -43,17 +43,6 @@ from scipy import interpolate
 
 logging.basicConfig()
 
-#Try to import run configuration file
-try:
-    import run_config
-except ImportError, e:
-    if __name__ == "__main__":
-        msg = """Configuration file run_config.py needs to be available."""
-        print msg, e
-        sys.exit(1)
-    else:
-        raise
-
 try:
     #Local modules from pyflation package
     from pyflation import helpers, configuration
