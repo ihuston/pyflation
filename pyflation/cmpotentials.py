@@ -312,11 +312,11 @@ def step_potential(y, params=None):
     s = 1/np.cosh(phiterm)
     t = np.tanh(phiterm)
     
-    U = 0.5*(mass2)*(y[0]**2) * (1 + c * t)
+    U = 0.5*(mass2)*(y[0]**2) * (1 + c * (t - 1))
     #deriv of potential wrt \phi
-    dUdphi =  (mass2)*y[0] * (1 + c*t) + c * mass2 * phisq * s**2 / (2*d)
+    dUdphi =  (mass2)*y[0] * (1 + c*(t-1)) + c * mass2 * phisq * s**2 / (2*d)
     #2nd deriv
-    d2Udphi2 = 0.5*mass2*(4*c*y[0]*s**2/d - 2*c*phisq*s**2*t/(d**2) + 2*(1+c*t))
+    d2Udphi2 = 0.5*mass2*(4*c*y[0]*s**2/d - 2*c*phisq*s**2*t/(d**2) + 2*(1+c*(t-1)))
     #3rd deriv
     d3Udphi3 = 0.5*mass2*(6*c*s**2/d - 12*c*y[0]*s**2*t/(d**2) 
                           + c*phisq*(-2*s**4/(d**3) + 4*s**2*t**2/(d**3)))
