@@ -549,6 +549,59 @@ class SelectedkOnlyFullSource(FullSingleFieldSource):
         return theta_terms
 
 
+class SelectedkOnlySlowRollSource(SlowRollSource):
+    """Convenience class to do slow roll calculation of source term for 
+    only selected k modes."""
+    
+    def __init__(self, *args, **kwargs):
+        """Class for slow roll source term equations"""
+        super(SelectedkOnlySlowRollSource, self).__init__(*args, **kwargs)
+        if "kix_wanted" in kwargs:
+            self.kix_wanted = kwargs["kix_wanted"]
+        else:
+            self.kix_wanted = [52] #Hard coded for quick hack.
+            
+    def getthetaterms(self, dp1, dp1dot):
+        """Return array of integrated values for specified theta function and dphi function.
+        
+        Parameters
+        ----------
+        dp1: array_like
+             Array of values for dphi1
+        
+        dp1dot: array_like
+                Array of values for dphi1dot
+                                      
+        Returns
+        -------
+        theta_terms: tuple
+                     Tuple of len(k)xlen(q) shaped arrays of integration results in form
+                     (\int(sin(theta) dp1(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
+                      \int(sin(theta) dp1dot(k-q) dtheta,
+                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+                     
+        """
+        
+        sinth = np.sin(self.theta)
+        cossinth = np.cos(self.theta)*np.sin(self.theta)
+        theta_terms = np.empty([4, self.k.shape[0], self.k.shape[0]], dtype=dp1.dtype)
+        lenq = len(self.k)
+        
+        for n in np.atleast_1d(self.kix_wanted):
+            #Calculate interpolated values of dphi and dphidot
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
+            
+            #Integrate theta dependence of interpolated values
+            # dphi terms
+            theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
+            theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
+            # dphidot terms
+            theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
+            theta_terms[3,n] = romb(cossinth*dphi_res[1], dx=self.dtheta)
+        return theta_terms
+
+
 class ConvolutionOnlyFullSource(SelectedkOnlyFullSource):
     """Convenience class to calculate the convolution for selected k values."""
     
