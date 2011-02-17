@@ -81,6 +81,8 @@ def combine_results(fofile, sofile, newfile=None):
         params = nf.copyNode(sf.root.results.parameters, comgrp, newname="parameters")
         params.cols.classname[0] = "CombinedCanonicalFromFile"
         params.flush()
+        #Copy pot_params table
+        pot_params = nf.copyNode(sf.root.results.pot_params, comgrp, newname="pot_params")
         tresarr = nf.copyNode(sf.root.results.tresult, comgrp)
         log.debug("K array, first and second order parameters copied.")
         #Only copy foystart if it exists
