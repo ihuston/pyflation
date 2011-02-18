@@ -17,6 +17,10 @@ Scipy (tested with 0.7.1) - http://www.scipy.org
 Cython (tested with 0.12.1) - http://www.cython.org
 PyTables 2.2 or higher (tested with 2.2) - http://www.pytables.org
 
+The pyflation.cosmographs module contains helper functions to use 
+with the Matplotlib package (http://matplotlib.sf.net) but this is not a
+requirement of the core modules. 
+
 Basic Installation
 ------------------
  
