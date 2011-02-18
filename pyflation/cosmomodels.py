@@ -1180,7 +1180,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
                     r"Imag $\dot{\delta\varphi_1}$"]
                                                   
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
-                 k=None, ainit=None, solver="rkdriver_withks", bgclass=None, foclass=None, 
+                 k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
