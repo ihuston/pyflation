@@ -1,0 +1,6 @@
+include *.txt
+recursive-include pyflation *.template
+include *.in
+include bin/pyflation-*
+prune paperscripts
+prune pyflation/solutions

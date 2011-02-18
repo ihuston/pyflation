@@ -108,7 +108,7 @@ kend = getkend(kinit, deltak, numsoks)
 ############## MODEL CLASS SELECTION ###########################################
 # These options are for advanced users only. 
 #
-# The driver class used for the first order perturbation calculation can be 
+# The python class used for the first order perturbation calculation can be 
 # selected here. It should be accessible from this module, so add imports if
 # necessary. The default class is in the pyflation.cosmomodels module.
 foclass = c.FOCanonicalTwoStage
@@ -134,7 +134,7 @@ cq = 50
 
 ################ QSUB SUBMISSION OPTIONS ######################################
 # These parameters are inserted into the qsub submission scripts
-# which are generated and submitted by pyflation-qsubstart.py.
+# which are generated and submitted by start.py.
 # Please contact your local cluster administrator and consult the qsub man page
 # for good values for your local configuration.
 
