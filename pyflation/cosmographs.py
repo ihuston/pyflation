@@ -1,14 +1,23 @@
-"""cosmographs.py
+"""cosmographs.py - Graphing functions for pyflation package
 
 Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 
-Graphing functions for cosmomodels
+This module provides helper functions for graphing the results of 
+pyflation simulations using the Matplotlib package (http://matplotlib.sf.net). 
+
+Especially useful is the multi_format_save function which saves the specified
+figure to different formats as requested.
 """
-import pylab as P
 import os
 
+try:
+    import pylab as P
+except ImportError:
+    raise ImportError("Matplotlib is needed to use the plotting helper functions in cosmographs.py.")
+
+# Local import from package
 import helpers
-import configuration
 
 class CosmoGraphError(StandardError):
     """Generic error for graphing facilities."""
@@ -110,46 +119,4 @@ def set_size(fig, size="large"):
         set_size_half(fig)
     else:
         raise ValueError("Variable size should be either \"large\", \"half\" or \"small\"!")
-    
-def plotresults(m, fig=None, show=True, varindex=None, klist=None, saveplot=False, numks=5):
-    """Plot results of simulation run on a graph.
-        Return figure instance used."""
-    if varindex is None:
-        varindex = 0 #Set default list of variables to plot
-    
-    if fig is None:
-        fig = P.figure() #Create figure
-    else:
-        P.figure(fig.number)
-    #One plot command for with ks, one for without
-    
-    if m.k is None:
-        P.plot(m.tresult, m.yresult[:,varindex])
-    else:
-        if klist is None:
-            klist = slice(0, len(m.k), len(m.k)/numks)
-        P.plot(m.tresult, m.yresult[:,varindex,klist])
-    #Create legends and axis names
-    P.xlabel(m.tname)
-    P.ylabel(m.ynames[varindex])
-    if klist is not None:
-        leg = makeklegend(fig, m.k[klist])
-    #P.title(m.plottitle, figure=fig)
-    
-    #Should we show it now or just return it without showing?
-    if show:
-        P.show()
-    #Should we save the plot somewhere?
-    if saveplot:
-        m.saveplot(fig)   
-    #Return the figure instance
-    return fig
-
-def plot_errors(results, labels=None, fig=None):
-    if labels is None:
-        labels = ["" for r in results]
-    if fig is None:
-        fig = P.figure()
-    for e, l  in zip(results, labels):
-        P.plot(e.k, e.postconv["rel_err"], label=l)
     
