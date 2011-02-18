@@ -1,8 +1,26 @@
 """Configuration file for harness.py
+
 Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+The main configuration options are for logging. By changing _debug to 1 (default
+is 0) much more debugging information will be added to the log files. 
+The overall logging level can also be set using the LOGLEVEL variable. This
+level can be overridden using command line options to the scripts.
 
 """
 import logging
+
+##################################################
+# debug logging control
+# 0 for off, 1 for on
+##################################################
+_debug = 1
+
+#This is the default log level which can be overridden in run_config.
+# The logging level changes how much is saved to logging files. 
+# Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
+LOGLEVEL = logging.INFO
 
 # Directory structure
 # Change the names of various directories
@@ -15,10 +33,8 @@ QSUBSCRIPTSDIRNAME = "qsubscripts"
 QSUBLOGSDIRNAME = "qsublogs"
 RUNCONFIGTEMPLATE = "run_config.template"
 
-
 #Name of provenance file which records the code revisions and results files added
 provenancefilename = "provenance.log"
-
 
 # Compression type to be used with PyTables:
 # PyTables stores results in HDF5 files. The compression it uses can be 
@@ -27,19 +43,8 @@ provenancefilename = "provenance.log"
 hdf5complib = "blosc"
 hdf5complevel = 2
 
-#This is the default log level which can be overridden in run_config.
-# The logging level changes how much is saved to logging files. 
-# Choose from logging.DEBUG, .INFO, .WARN, .ERROR, .CRITICAL in decreasing order of verbosity
-LOGLEVEL = logging.INFO
 
 
 
-##################################################
-# debug logging control
-# 0 for off, 1 for on
-##################################################
-_debug = 1
 
-#Program name
-PROGRAM_NAME = "Pyflation"
-VERSION = "0.1.0"
+

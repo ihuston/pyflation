@@ -11,7 +11,6 @@ from __future__ import division # Get rid of integer division problems, i.e. 1/2
 import numpy as np
 import re
 from scipy import integrate
-import os 
 import os.path
 import logging
 

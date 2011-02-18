@@ -1,8 +1,13 @@
 '''
-run_config.py Configuration settings for a simulation run
-Created on 30 Jun 2010
+run_config.py - Configuration settings for a simulation run
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+The user changeable values in this file are explained below. For each run 
+the main options include choice of potential and initial conditions, choice of 
+k mode range and selection of first, source and second order python classes.
+
 '''
 ###############################################################################
 # DO NOT CHANGE ANYTHING IN THIS SECTION
@@ -61,12 +66,6 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
             "bump_potential":  {"potential_func": "bump_potential",
                                 "pot_params": None,
                                 "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
-            "resonance":       {"potential_func": "resonance",
-                                "pot_params": None,
-                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
-            "bump_nothirdderiv":  {"potential_func": "bump_nothirdderiv",
-                                "pot_params": None,
-                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
             }
 
 ##############################
@@ -111,14 +110,19 @@ kend = getkend(kinit, deltak, numsoks)
 # The driver class used for the first order perturbation calculation can be 
 # selected here. It should be accessible from this module, so add imports if
 # necessary. The default class is in the pyflation.cosmomodels module.
+# The default is c.FOCanonicalTwoStage. 
+# To set a fixed a_init value use c.FixedainitTwoStage
 foclass = c.FOCanonicalTwoStage
 
-# Here the source term class can be selected. The default classes are in the 
-# pyflation.sourceterm.srcequations module.
-srcclass = srcequations.FullSingleFieldSource
+# Here the source term class can be selected. The classes are in the 
+# pyflation.sourceterm.srcequations module and the default is 
+# srcequations.SelectedkOnlyFullSource. Other options include SlowRollSource, 
+# FullSingleFieldSource and SelectedkOnlySlowRollSource.
+srcclass = srcequations.SelectedkOnlyFullSource
 
 # The second order perturbation class can also be selected, again from the 
-# pyflation.cosmomodels module.
+# pyflation.cosmomodels module. The default is c.CanonicalRampedSecondOrder 
+# but the unramped version is availabe using c.CanonicalSecondOrder.
 soclass = c.CanonicalRampedSecondOrder
 
 # The ntheta parameter controls how finely the [0,pi] range is divided in the 
@@ -152,7 +156,7 @@ hold_jid_list= "" # List of jobs this task depends on
 
 ###############################################################################
 ###############################################################################
-# DO NOT CHANGE ANYTHING BELOW THIS LINE
+# DO NOT CHANGE ANYTHING BELOW THIS LINE UNLESS SURE
 ###############################################################################
 ###############################################################################
 
@@ -188,7 +192,7 @@ logfile = os.path.join(LOGDIR, "run.log")
  
 # qsub script values
 
-runname = configuration.PROGRAM_NAME[0:4]
+runname = "pyfl"
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
 templatefilename = "qsub-sh.template"
 templatefile = os.path.join(CODEDIR, templatefilename)
