@@ -42,7 +42,7 @@ information about the version of the code and system libraries at the time of
 the creation of the run.
 
 More information about Pyflation is available at the website 
-http://www.maths.qmul.ac.uk/~ith/pyflation. 
+http://pyflation.ianhuston.net. 
 
 Basic usage of the pyflation package
 ====================================
