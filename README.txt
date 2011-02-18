@@ -174,3 +174,9 @@ the same options as before use
     $ qsub src_individual.qsub N
 
 where N is the number of the task to restart.
+
+Acknowledgements
+================
+
+This author of this software is supported by the Science & Technology Facilities 
+Council under grant ST/G002150/1.
