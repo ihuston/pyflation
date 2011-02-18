@@ -188,7 +188,7 @@ logfile = os.path.join(LOGDIR, "run.log")
  
 # qsub script values
 
-runname = configuration.PROGRAM_NAME[0:4]
+runname = "pyfl"
 qsublogname = os.path.join(QSUBLOGSDIR, "log" )
 templatefilename = "qsub-sh.template"
 templatefile = os.path.join(CODEDIR, templatefilename)
