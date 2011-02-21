@@ -15,7 +15,7 @@ import logging
 # debug logging control
 # 0 for off, 1 for on
 ##################################################
-_debug = 1
+_debug = 0
 
 #This is the default log level which can be overridden in run_config.
 # The logging level changes how much is saved to logging files. 
