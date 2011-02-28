@@ -120,7 +120,7 @@ def set_size(fig, size="large"):
     else:
         raise ValueError("Variable size should be either \"large\", \"half\" or \"small\"!")
     
-class LogFormatterTeXExponent(P.LogFormatter):
+class LogFormatterTeXExponent(P.LogFormatter, object):
     """Extends pyplot.LogFormatter to use tex notation for tick labels."""
     
     def __init__(self, *args, **kwargs):
