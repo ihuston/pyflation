@@ -33,7 +33,7 @@ def getkend(kinit, deltak, numsoks):
 
 def eto10(number):
     """Convert scientific notation e.g. 1e-5 to 1x10^{-5} for use in LaTeX, converting to string."""
-    s = re.sub(r'e(\S\d+)', r'\\times 10^{\1}', str(number))
+    s = re.sub(r'e(\S)0?(\d+)', r'\\times 10^{\1\2}', str(number))
     return s
 
 def klegend(ks,mpc=False):
