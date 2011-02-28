@@ -129,5 +129,6 @@ class LogFormatterTeXExponent(P.LogFormatter, object):
     def __call__(self, *args, **kwargs):
         """Wrap call to parent class with change to tex notation."""
         label = super(LogFormatterTeXExponent, self).__call__(*args, **kwargs)
+        label = "$" + label + "$"
         label = helpers.eto10(label)
         return label
