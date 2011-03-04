@@ -1,7 +1,4 @@
-'''romberg.pyx
-Created on 14 Jul 2010
-
-Romb integration for samples from two dimensional complex arrays.
+'''romberg.pyx - Romb integration for samples from two dimensional complex arrays.
 
 Adapted by Ian Huston. 
 Includes code modified from scipy.integrate.romb released under BSD license:

@@ -42,7 +42,7 @@ information about the version of the code and system libraries at the time of
 the creation of the run.
 
 More information about Pyflation is available at the website 
-http://www.maths.qmul.ac.uk/~ith/pyflation. 
+http://pyflation.ianhuston.net. 
 
 Basic usage of the pyflation package
 ====================================
@@ -174,3 +174,9 @@ the same options as before use
     $ qsub src_individual.qsub N
 
 where N is the number of the task to restart.
+
+Acknowledgements
+================
+
+This author of this software is supported by the Science & Technology Facilities 
+Council under grant ST/G002150/1.

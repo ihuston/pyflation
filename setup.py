@@ -1,3 +1,9 @@
+""" setup.py - Script to install package using distutils
+
+For help options run:
+$ python setup.py help
+"""
+
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -8,14 +14,10 @@ from pyflation import __version__ as pyflation_version
 VERSION = pyflation_version
 
 
-ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"], 
-               extra_compile_args=["-g"], 
-               extra_link_args=["-g"],
+ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"],
                include_dirs=[numpy.get_include()]),
                #
                Extension("pyflation.romberg", ["pyflation/romberg.pyx"], 
-               extra_compile_args=["-g"], 
-               extra_link_args=["-g"],
                include_dirs=[numpy.get_include()]),
                #
                ]
@@ -25,7 +27,7 @@ setup_args = dict(name='pyflation',
                   version=VERSION,
                   author='Ian Huston',
                   author_email='ian.huston@gmail.com',
-                  url='http://www.maths.qmul.ac.uk/~ith/pyflation',
+                  url='http://pyflation.ianhuston.net',
                   packages=['pyflation', 'pyflation.sourceterm'],
                   scripts=['bin/pyflation-firstorder.py', 
                            'bin/pyflation-source.py', 
