@@ -71,10 +71,10 @@ class MultiFieldModels(c.CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
-            epsilon = - Hdot/self.yresult[:,2,0]
+            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,self.H_ix,0]
+            epsilon = - Hdot/self.yresult[:,self.H_ix,0]
         else:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2]
-            epsilon = - Hdot/self.yresult[:,2]
+            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,self.H_ix]
+            epsilon = - Hdot/self.yresult[:,self.H_ix]
         return epsilon
         
