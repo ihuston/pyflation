@@ -117,6 +117,6 @@ class MultiFieldBackground(MultiFieldModels):
         dydx[firstderiv_indices] = -(U*y[firstderiv_indices] + dUdphi)/(y[self.H_ix]**2)
         
         #dH/dn
-        dydx[self.H_ix] = -0.5*(y[firstderiv_indices]**2)*y[self.H_ix]
+        dydx[self.H_ix] = -0.5*(np.sum(y[firstderiv_indices]**2))*y[self.H_ix]
 
         return dydx
