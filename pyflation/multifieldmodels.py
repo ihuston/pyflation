@@ -78,3 +78,45 @@ class MultiFieldModels(c.CosmologicalModel):
             epsilon = - Hdot/self.yresult[:,self.H_ix]
         return epsilon
         
+class MultiFieldBackground(MultiFieldModels):
+    """Basic model with background equations for multiple fields
+        Array of dependent variables y is given by:
+        
+       y[0] - \phi_a : Background inflaton
+       y[1] - d\phi_a/d\n : First deriv of \phi_a
+       ...
+       y[self.nfields*2] - H: Hubble parameter
+    """
+        
+    def __init__(self,  *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalBackground, self).__init__(*args, **kwargs)
+        
+        #Set initial H value if None
+        if np.all(self.ystart[self.H_ix] == 0.0):
+            U = self.potentials(self.ystart, self.pot_params)[0]
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
+    
+    def derivs(self, y, t, **kwargs):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
+        
+        #Set derivatives
+        dydx = np.zeros_like(y)
+        
+        bg_indices = arange(0,self.H_ix,2)
+        firstderiv_indices = arange(1,self.H_ix,2)
+        
+        #d\phi_0/dn = y_1
+        dydx[bg_indices] = y[firstderiv_indices] 
+        
+        #dphi^prime/dn
+        dydx[firstderiv_indices] = -(U*y[firstderiv_indices] + dUdphi)/(y[self.H_ix]**2)
+        
+        #dH/dn
+        dydx[self.H_ix] = -0.5*(y[firstderiv_indices]**2)*y[self.H_ix]
+
+        return dydx
