@@ -91,7 +91,7 @@ class MultiFieldBackground(MultiFieldModels):
     def __init__(self,  *args, **kwargs):
         """Initialize variables and call superclass"""
         
-        super(CanonicalBackground, self).__init__(*args, **kwargs)
+        super(MultiFieldBackground, self).__init__(*args, **kwargs)
         
         #Set initial H value if None
         if np.all(self.ystart[self.H_ix] == 0.0):
