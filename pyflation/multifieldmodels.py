@@ -107,8 +107,8 @@ class MultiFieldBackground(MultiFieldModels):
         #Set derivatives
         dydx = np.zeros_like(y)
         
-        bg_indices = arange(0,self.H_ix,2)
-        firstderiv_indices = arange(1,self.H_ix,2)
+        bg_indices = np.arange(0,self.H_ix,2)
+        firstderiv_indices = np.arange(1,self.H_ix,2)
         
         #d\phi_0/dn = y_1
         dydx[bg_indices] = y[firstderiv_indices] 
