@@ -184,10 +184,11 @@ class MultiFieldFirstOrder(MultiFieldModels):
         
         #Get a
         a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
         
         dydx[self.dps_ix] = y[self.dpdots_ix]
         
         #d\deltaphi_1^prime/dn  #
-        dydx[self.dpdots_ix] = 0
+        dydx[self.dpdots_ix] = - U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix] 
                 
         return dydx
