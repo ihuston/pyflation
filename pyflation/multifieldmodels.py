@@ -177,7 +177,7 @@ class MultiFieldFirstOrder(MultiFieldModels):
         dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi)/(y[self.H_ix]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
         
         #dH/dn
         dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2))*y[self.H_ix]
@@ -188,7 +188,14 @@ class MultiFieldFirstOrder(MultiFieldModels):
         
         dydx[self.dps_ix] = y[self.dpdots_ix]
         
+        #Sum term for perturbation
+        term = (d2Udphi2[:,np.newaxis,:] 
+                + y[self.phidots_ix,:,np.newaxis]*dUdphi 
+                + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
+                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
+        
         #d\deltaphi_1^prime/dn  #
-        dydx[self.dpdots_ix] = - U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix] 
+        dydx[self.dpdots_ix] = (-U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+                                + np.sum(term, axis=-1)) 
                 
         return dydx
