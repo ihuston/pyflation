@@ -104,7 +104,7 @@ class MultiFieldBackground(MultiFieldModels):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
+        U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
         
         #Set derivatives
         dydx = np.zeros_like(y)
