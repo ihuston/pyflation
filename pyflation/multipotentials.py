@@ -26,22 +26,22 @@ def hybridquadratic(y, params=None):
     Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
     
     #Check if mass is specified in params
-    if params is not None and "mass" in params:
-        m = params["mass"]
+    if params:
+        m1 = params.get("m1", 1e-5)
+        m2 = params.get("m2", 12e-5)
     else:
-        #Use WMAP value of mass (in Mpl)
-        m = 6.3267e-6
+        m1 = 1e-5
+        m2 = 12e-5
         
-    yshape = np.ones_like(y[0])
     #Use inflaton mass
-    mass2 = m**2
+    mass2 = np.array([m1, m2])**2
     #potential U = 1/2 m^2 \phi^2
-    U = 0.5*(mass2)*(y[0]**2 + y[2]**2)
+    U = 0.5*(m1**2*y[0]**2 + m2**2*y[2]**2)
     #deriv of potential wrt \phi
     dUdphi = mass2*np.array([y[0],y[2]])
     #2nd deriv
-    d2Udphi2 = mass2*np.ones((2,2))
+    d2Udphi2 = mass2*np.eye(2)
     #3rd deriv
-    d3Udphi3 = 0*np.ones((2,2,2))
+    d3Udphi3 = np.zeros((2,2,2))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
