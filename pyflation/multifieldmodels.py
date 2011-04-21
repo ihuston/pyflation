@@ -30,6 +30,8 @@ class MultiFieldModels(c.CosmologicalModel):
         self.phis_ix = slice(0,self.nfields*2,2)
         self.phidots_ix = slice(1,self.nfields*2,2)
         self.pert_ix = slice(self.nfields*2+1, None)
+        self.dps_ix = slice(self.nfields*2+1, None, 2)
+        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
         
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential.
@@ -109,46 +111,32 @@ class MultiFieldBackground(MultiFieldModels):
         #Set derivatives
         dydx = np.zeros_like(y)
         
-        bg_indices = np.arange(0,self.H_ix,2)
-        firstderiv_indices = np.arange(1,self.H_ix,2)
-        
         #d\phi_0/dn = y_1
-        dydx[bg_indices] = y[firstderiv_indices] 
+        dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[firstderiv_indices] = -(U*y[firstderiv_indices] + dUdphi)/(y[self.H_ix]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi)/(y[self.H_ix]**2)
         
         #dH/dn
-        dydx[self.H_ix] = -0.5*(np.sum(y[firstderiv_indices]**2))*y[self.H_ix]
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2))*y[self.H_ix]
 
         return dydx
     
 class MultiFieldFirstOrder(MultiFieldModels):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
-       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
-       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
+    """First order model using efold as time variable with multiple fields.
+    
+    nfields holds the number of fields and the yresult variable is then laid
+    out as follows:
+    
+    yresult[0:nfields*2] : background fields and derivatives
+    yresult[nfields*2] : Hubble variable H
+    yresult[nfields*2 + 1:] : perturbation fields and derivatives
        """
-       
-    #Text for graphs
-    plottitle = "Complex First Order Malik Model in Efold time"
-    tname = r"$n$"
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-        
+
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
-        super(CanonicalFirstOrder, self).__init__(*args, **kwargs)
+        super(MultiFieldFirstOrder, self).__init__(*args, **kwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -162,14 +150,10 @@ class MultiFieldFirstOrder(MultiFieldModels):
         else:
             self.k = k
         
-        #Initial conditions for each of the variables.
-        if self.ystart is None:
-            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
-        
         #Set initial H value if None
-        if np.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
                         
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
@@ -181,7 +165,7 @@ class MultiFieldFirstOrder(MultiFieldModels):
             k = kwargs["k"]
             
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
+        U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
@@ -189,31 +173,21 @@ class MultiFieldFirstOrder(MultiFieldModels):
         else:
             dydx = np.zeros(7)
             
-        
         #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
+        dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi)/(y[self.H_ix]**2)
         
         #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2))*y[self.H_ix]
         
         #Get a
         a = self.ainit*np.exp(t)
         
+        dydx[self.dps_ix] = y[self.dpdots_ix]
+        
         #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
+        dydx[self.dpdots_ix] = 0
                 
-        #Complex parts
-        dydx[5] = y[6]
-        
-        #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
-        
         return dydx
