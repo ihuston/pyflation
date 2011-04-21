@@ -27,6 +27,8 @@ class MultiFieldModels(c.CosmologicalModel):
         #the y variable, e.g. y[self.bg_ix] is the array of background values.
         self.H_ix = self.nfields*2
         self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
         self.pert_ix = slice(self.nfields*2+1, None)
         
     def findH(self, U, y):
@@ -36,7 +38,7 @@ class MultiFieldModels(c.CosmologicalModel):
                         for the first field and y[n+1] for each subsequent field. 
         """
         #Get phidots from y, should be second variable for each field.
-        phidots = y[self.bg_ix][1::2]
+        phidots = y[self.phidots_ix]
         
         
         #Expression for H
@@ -71,10 +73,11 @@ class MultiFieldModels(c.CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            phidots = self.yresult[:,self.bg_ix,0][1::2]
+            phidots = self.yresult[:,self.phidots_ix,0]
         else:
-            phidots = self.yresult[:,self.bg_ix][1::2]
-        epsilon = - 0.5*np.sum(phidots**2)
+            phidots = self.yresult[:,self.phidots_ix]
+        #Make sure to do sum across only phidot axis (1 in this case)
+        epsilon = - 0.5*np.sum(phidots**2, axis=1)
         return epsilon
         
 class MultiFieldBackground(MultiFieldModels):
