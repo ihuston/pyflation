@@ -77,7 +77,7 @@ class MultiFieldModels(c.CosmologicalModel):
         else:
             phidots = self.yresult[:,self.phidots_ix]
         #Make sure to do sum across only phidot axis (1 in this case)
-        epsilon = - 0.5*np.sum(phidots**2, axis=1)
+        epsilon = 0.5*np.sum(phidots**2, axis=1)
         return epsilon
         
 class MultiFieldBackground(MultiFieldModels):
