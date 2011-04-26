@@ -73,12 +73,12 @@ def msqphisq(y, params=None):
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
-    U = 0.5*(mass2)*(y[0]**2)
+    U = np.asscalar(0.5*(mass2)*(y[0]**2))
     #deriv of potential wrt \phi
-    dUdphi =  (mass2)*y[0]
+    dUdphi =  np.atleast_1d((mass2)*y[0])
     #2nd deriv
-    d2Udphi2 = np.array([mass2])
+    d2Udphi2 = np.atleast_2d(mass2)
     #3rd deriv
-    d3Udphi3 = np.array([0])
+    d3Udphi3 = np.atleast_3d(0)
     
     return U, dUdphi, d2Udphi2, d3Udphi3
