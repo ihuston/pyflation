@@ -141,7 +141,7 @@ def param_vs_spectrum(fixture, nefolds=5):
     fxystart = fx["ystart"]
     values_matrix = helpers.cartesian(fx["values"])
     for ps in values_matrix:
-        sim = c.FOCanonicalTwoStage(solver="rkdriver_withks", ystart=fxystart.copy(),
+        sim = c.FOCanonicalTwoStage(solver="rkdriver_tsix", ystart=fxystart.copy(),
                                     k=fx["pivotk"], potential_func=fx["pot"],
                                     pot_params= dict(zip(fx["vars"], ps)),
                                     tend=83, quiet=True)
@@ -194,7 +194,7 @@ def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
     fxystart = fx["ystart"]
     values_matrix = helpers.cartesian(fx["values"])
     for ps in values_matrix:
-        sim = c.FOCanonicalTwoStage(solver="rkdriver_withks", ystart=fxystart.copy(),
+        sim = c.FOCanonicalTwoStage(solver="rkdriver_tsix", ystart=fxystart.copy(),
                                     k=fx["pivotk"], potential_func=fx["pot"],
                                     pot_params= dict(zip(fx["vars"], ps)),
                                     tend=tend, quiet=True)
