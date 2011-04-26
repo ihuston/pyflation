@@ -979,13 +979,13 @@ class MultiStageDriver(CosmologicalModel):
         kcrefold = t[kcrindex]
         return kcrindex, kcrefold
     
-    def findallkcrossings(self, t, H):
+    def findallkcrossings(self, t, H, factor=None):
         """Iterate over findkcrossing to get full list"""
-        return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
+        return np.array([self.findkcrossing(onek, t, H, factor) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
         """FInd horizon crossing for all ks"""
-        return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
+        return self.findallkcrossings(self.tresult, self.yresult[:,2], factor)
     
     @property
     def deltaphi(self, recompute=False):
@@ -1092,7 +1092,7 @@ class MultiStageDriver(CosmologicalModel):
             if k<self.k.min() and k>self.k.max():
                 self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
         
-        ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
+        ts = self.findallkcrossings(self.tresult, self.yresult[:,2], factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
         xp = np.log(self.Pr[ts.astype(int)].diagonal())
         lnk = np.log(k)
         

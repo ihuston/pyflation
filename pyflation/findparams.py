@@ -149,7 +149,7 @@ def param_vs_spectrum(fixture, nefolds=5):
         try:
             sim.run(saveresults=False)
             scaledPr = sim.k**3/(2*np.pi**2)*sim.Pr
-            tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
+            tres = sim.findallkcrossings(sim.tresult, sim.yresult[:,2], factor=1)[:,0] + nefolds/sim.tstep_wanted
             Pres = scaledPr[tres.astype(int)].diagonal()[0]
             logging.debug("Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres)))
             if results is not None:
@@ -209,7 +209,7 @@ def param_vs_spectrum_force_tend(fixture, nefolds=5, tend=200):
             sim.setfoics()
             sim.runfo()
             scaledPr = sim.k**3/(2*np.pi**2)*sim.Pr
-            tres = sim.findHorizoncrossings()[:,0] + nefolds/sim.tstep_wanted
+            tres = sim.findallkcrossings(sim.tresult, sim.yresult[:,2], factor=1)[:,0] + nefolds/sim.tstep_wanted
             Pres = scaledPr[tres.astype(int)].diagonal()[0]
             print "Running model with %s gives scaledPr=%s"%(str(dict(zip(fx["vars"], ps))), str(Pres))
             if results is not None:
