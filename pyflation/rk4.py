@@ -96,7 +96,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     #New y results array
     yshape = [number_steps]
     yshape.extend(v.shape)
-    yarr = np.ones(yshape)*np.nan
+    yarr = np.ones(yshape, dtype=ystart.dtype)*np.nan
     
     #Change yresults at each timestep in tsix to value in ystart
     #The transpose of ystart is used so that the start_value variable is an array
