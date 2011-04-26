@@ -68,13 +68,13 @@ class CosmologicalModel(object):
     pot_params - dict, any modifications to the default parameters in the potential
     
     """
-    solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
+    solverlist = ["rkdriver_tsix"]
     ynames = ["First dependent variable"]
     tname = "Time"
     plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
-                 tend=83.0, tstep_wanted=0.01, solver="rkdriver_withks", 
+                 tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
                  potential_func=None, pot_params=None, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
@@ -146,25 +146,6 @@ class CosmologicalModel(object):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
-        #Test whether k exists and if so change init conditions
-               
-        if self.solver in ["rkdriver_withks", "rkdriver_new"]:
-            #set_trace()
-            #Loosely estimate number of steps based on requested step size
-            if _debug:
-                self._log.debug("Starting simulation with %s.", self.solver)
-            solver = rk4.__getattribute__(self.solver)
-            try:
-                self.tresult, self.yresult = solver(vstart=self.ystart, 
-                                                    simtstart=self.simtstart, 
-                                                    ts=self.tstart, 
-                                                    te=self.tend, 
-                                                    allks=self.k, 
-                                                    h=self.tstep_wanted, 
-                                                    derivs=self.derivs)
-            except StandardError:
-                self._log.exception("Error running %s!", self.solver)
-                raise
             
         if self.solver in ["rkdriver_tsix"]:
             #set_trace()
@@ -398,7 +379,7 @@ class BasicBgModel(CosmologicalModel):
     ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
-                    tstep_wanted=0.02, solver="rkdriver_withks"):
+                    tstep_wanted=0.02, solver="rkdriver_tsix"):
         
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, solver=solver)
         #Mass of inflaton in Planck masses
@@ -1613,7 +1594,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
                       simtstart=self.simtstart,
                       tend=self.second_stage.tresult[-1],
                       tstep_wanted=sotstep,
-                      solver="rkdriver_new",
+                      solver="rkdriver_tsix",
                       potential_func=self.second_stage.potential_func,
                       pot_params=self.second_stage.pot_params
                       )
