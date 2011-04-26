@@ -169,9 +169,9 @@ class MultiFieldFirstOrder(MultiFieldModels):
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((4*self.nfields + 1,len(k)))
+            dydx = np.zeros((4*self.nfields + 1,len(k)), dtype=y.dtype)
         else:
-            dydx = np.zeros(4*self.nfields + 1)
+            dydx = np.zeros(4*self.nfields + 1, dtype=y.dtype)
             
         #d\phi_0/dn = y_1
         dydx[self.phis_ix] = y[self.phidots_ix] 
