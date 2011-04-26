@@ -192,7 +192,7 @@ class MultiFieldFirstOrder(MultiFieldModels):
         term = (d2Udphi2[:,np.newaxis,:] 
                 + y[self.phidots_ix,:,np.newaxis]*dUdphi 
                 + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
-                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
+                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )*y[self.dps_ix].T
         
         #d\deltaphi_1^prime/dn  
         # Do sum over second field index so axis=-1
