@@ -436,12 +436,22 @@ class PhiModels(CosmologicalModel):
         """Call superclass init method."""
         super(PhiModels, self).__init__(*args, **kwargs)
         
+        #Set the number of fields using keyword argument, defaults to 1.
+        self.nfields = kwargs.get("nfields", 1)
+        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
+        
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
-        phidot = y[1]
+        phidot = y[self.phidots_ix]
         
         #Expression for H
-        H = np.sqrt(U/(3.0-0.5*(phidot**2)))
+        H = np.sqrt(U/(3.0-0.5*(np.sum(phidot**2))))
         return H
     
     def potentials(self, y, pot_params=None):
@@ -472,11 +482,11 @@ class PhiModels(CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
-            epsilon = - Hdot/self.yresult[:,2,0]
+            phidots = self.yresult[:,self.phidots_ix,0]
         else:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2]
-            epsilon = - Hdot/self.yresult[:,2]
+            phidots = self.yresult[:,self.phidots_ix]
+        #Make sure to do sum across only phidot axis (1 in this case)
+        epsilon = 0.5*np.sum(phidots**2, axis=1)
         return epsilon
 
     
@@ -984,7 +994,7 @@ class MultiStageDriver(CosmologicalModel):
         return np.array([self.findkcrossing(onek, t, H, factor) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        """FInd horizon crossing for all ks"""
+        """Find horizon crossing for all ks"""
         return self.findallkcrossings(self.tresult, self.yresult[:,2], factor)
     
     @property
