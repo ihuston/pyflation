@@ -179,8 +179,8 @@ class MultiFieldFirstOrder(MultiFieldModels):
         #dphi^prime/dn
         dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
         
-        #dH/dn
-        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2))*y[self.H_ix]
+        #dH/dn Do sum over fields not ks so use axis=0
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
         
         #Get a
         a = self.ainit*np.exp(t)
@@ -194,7 +194,8 @@ class MultiFieldFirstOrder(MultiFieldModels):
                 + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
                 + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
         
-        #d\deltaphi_1^prime/dn  #
+        #d\deltaphi_1^prime/dn  
+        # Do sum over second field index so axis=-1
         dydx[self.dpdots_ix] = (-U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
                                 + np.sum(term, axis=-1)) 
                 
