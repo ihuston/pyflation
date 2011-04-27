@@ -534,27 +534,16 @@ class CanonicalBackground(PhiModels):
         return dydx
 
 class CanonicalFirstOrder(PhiModels):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
-       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
-       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
+    """First order model using efold as time variable with multiple fields.
+    
+    nfields holds the number of fields and the yresult variable is then laid
+    out as follows:
+    
+    yresult[0:nfields*2] : background fields and derivatives
+    yresult[nfields*2] : Hubble variable H
+    yresult[nfields*2 + 1:] : perturbation fields and derivatives
        """
-       
-    #Text for graphs
-    plottitle = "Complex First Order Malik Model in Efold time"
-    tname = r"$n$"
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-        
+            
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -574,12 +563,12 @@ class CanonicalFirstOrder(PhiModels):
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+            self.ystart= np.array([18.0,-0.1]*self.nfields + [0.0] + [1.0,0.0]*self.nfields)
         
         #Set initial H value if None
-        if np.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
                         
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
@@ -591,41 +580,40 @@ class CanonicalFirstOrder(PhiModels):
             k = kwargs["k"]
             
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
+        U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((7,len(k)))
+            dydx = np.zeros((4*self.nfields + 1,len(k)), dtype=y.dtype)
         else:
-            dydx = np.zeros(7)
+            dydx = np.zeros(4*self.nfields + 1, dtype=y.dtype)
             
-        
         #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
+        dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
         
-        #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
+        #dH/dn Do sum over fields not ks so use axis=0
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
         
         #Get a
         a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
         
-        #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
+        dydx[self.dps_ix] = y[self.dpdots_ix]
+        
+        #Sum term for perturbation
+        term = (d2Udphi2[:,np.newaxis,:] 
+                + y[self.phidots_ix,:,np.newaxis]*dUdphi 
+                + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
+                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )*y[self.dps_ix].T
+        
+        #d\deltaphi_1^prime/dn  
+        # Do sum over second field index so axis=-1
+        dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+                                + np.sum(term, axis=-1)/H**2) 
                 
-        #Complex parts
-        dydx[5] = y[6]
-        
-        #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
-        
         return dydx
         
 
