@@ -1265,7 +1265,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = np.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros((self.nfields*4+1, len(self.k)), dtype=np.complex128)
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
