@@ -75,7 +75,7 @@ class CosmologicalModel(object):
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
-                 potential_func=None, pot_params=None, **kwargs):
+                 potential_func=None, pot_params=None, nfields=1, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -125,10 +125,18 @@ class CosmologicalModel(object):
             raise ModelError("Need to provide pot_params as a dictionary of parameters.")
         else:
             self.pot_params = pot_params
+            
+        #Set the number of fields using keyword argument, defaults to 1.
+        self.nfields = nfields        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
         
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
-        self.resultlist = [] #List of all completed results.
         
     def derivs(self, yarray, t):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
@@ -169,8 +177,7 @@ class CosmologicalModel(object):
             
         
         #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.lastparams = self.callingparams()       
         if saveresults:
             try:
                 fname = self.saveallresults()
@@ -235,17 +242,75 @@ class CosmologicalModel(object):
         else:
             raise IOError("Directory 'results' does not exist")
         
+        #Check whether we should store ks and set group name accordingly
+        if self.k is None:
+            grpname = "bgresults"
+            yresultshape = (0, self.nfields*2+1)
+        else:
+            grpname = "results"
+            yresultshape = (0, self.nfields*2+1, len(self.k))
+                
         if filetype is "hf5":
             try:
-                self.saveresultsinhdf5(filename, filemode, **kwargs)
+                if filemode == "w":
+                    rf = self.createhdf5structure(filename, yresultshape, **kwargs)
+                elif filemode == "a":
+                    rf = tables.openFile(filename, filemode)
+                self.saveresultsinhdf5(rf, grpname)
             except IOError:
                 raise
         else:
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
-        self.lastsavedfile = filename
         return filename
+    
+    def createhdf5structure(self, filename, yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
+        """Create a new hdf5 file with the structure capable of holding results."""
         
-    def saveresultsinhdf5(self, filename, filemode, hdf5complevel=2, hdf5complib="blosc"):
+            
+        try:
+            rf = tables.openFile(filename, "w")
+            # Select which compression library to use in configuration
+            filters = tables.Filters(complevel=hdf5complevel, complib=hdf5complib)
+            
+            #Create groups required
+            resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
+            tresarr = rf.createEArray(resgroup, "tresult", 
+                                      tables.Float64Atom(), 
+                                      (0,), #Shape of a single atom 
+                                      filters=filters, 
+                                      expectedrows=8194)
+            paramstab = rf.createTable(resgroup, "parameters", 
+                                       self.gethf5paramsdict(), 
+                                       filters=filters)
+            #Add in potential parameters pot_params as a table
+            potparamsshape = {"name": tables.StringCol(255),
+                              "value": tables.Float64Col()}
+            potparamstab = rf.createTable(resgroup, "pot_params", 
+                                          potparamsshape, filters=filters)
+            
+            #Need to check if results are k dependent
+            if grpname is "results":
+                if hasattr(self, "bgmodel"):
+                    #Store bg results:
+                    bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
+                    bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
+                    bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
+                #Save results
+                yresarr = rf.createEArray(resgroup, "yresult", tables.Complex128Atom(), yresultshape, filters=filters, expectedrows=8194)
+                karr = rf.createArray(resgroup, "k", self.k)
+                if hasattr(self, "foystart"):
+                    foystarr = rf.createArray(resgroup, "foystart", self.foystart)
+                    fotstarr = rf.createArray(resgroup, "fotstart", self.fotstart)
+                    fotsxarr = rf.createArray(resgroup, "fotstartindex", self.fotstartindex)
+            else:
+                #Only make bg results array
+                yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), yresultshape, filters=filters, expectedrows=8300)
+        except IOError:
+            raise
+        
+        return rf
+        
+    def saveresultsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
             filename - full path and name of file (should end in hf5 for consistency.
             filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
@@ -253,95 +318,40 @@ class CosmologicalModel(object):
             hdf5complevel - Compression level to use with PyTables, default 2.
             hdf5complib - Compression library to use with PyTables, default "blosc".
         """
-        #Check whether we should store ks and set group name accordingly
-        if self.k is None:
-            grpname = "bgresults"
-        else:
-            grpname = "results" 
         try:
-            rf = tables.openFile(filename, filemode)
-            try:
-                if filemode is "w":
-                    #Add compression
-                    # Select which compression library to use in configuration
-                    filters = tables.Filters(complevel=hdf5complevel, complib=hdf5complib)
-                    
-                    #Create groups required
-                    resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
-                    tresarr = rf.createArray(resgroup, "tresult", self.tresult)
-                    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
-                    #Add in potential parameters pot_params as a table
-                    potparamsshape = {"name": tables.StringCol(255),
-                                      "value": tables.Float64Col()}
-                    potparamstab = rf.createTable(resgroup, "pot_params", potparamsshape , filters=filters)
-                    
-                    #Need to check if results are k dependent
-                    if grpname is "results":
-                        if hasattr(self, "bgmodel"):
-                            #Store bg results:
-                            bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
-                            bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
-                            bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
-                        #Save results
-                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, expectedrows=8194)# chunkshape=(10,7,10))
-                        karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
-                        if hasattr(self, "foystart"):
-                            foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
-                            fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
-                            fotsxarr = rf.createEArray(resgroup, "fotstartindex", tables.Float64Atom(), (0,), filters=filters)
-                    else:
-                        #Only save bg results
-                        yresarr = rf.createArray(resgroup, "yresult", self.yresult)
-                elif filemode is "a":
-                    try:
-                        resgroup = rf.getNode(rf.root, grpname)
-                        #paramstab = resgroup.parameters
-                        yresarr = resgroup.yresult
-                        tres = resgroup.tresult[:]
-                        if grpname is "results":
-                            #Don't need to append bg results, only fo results
-                            if hasattr(self, "foystart"):
-                                foystarr = resgroup.foystart
-                                fotstarr = resgroup.fotstart
-                                fotsxarr = resgroup.fotstartindex
-                            karr = resgroup.k
-                    except tables.NoSuchNodeError:
-                        raise IOError("File is not in correct format! Correct results tables do not exist!")
-                    if np.shape(tres) != np.shape(self.tresult):
-                        raise IOError("Results file has different size of tresult!")
-                else:
-                    raise IOError("Can only write or append to files!")
-                #Now save data
-                #Save parameters
-                paramstabrow = paramstab.row
-                params = self.callingparams()
-                for key in params:
-                    paramstabrow[key] = params[key]
-                paramstabrow.append() #Add to table
-                paramstab.flush()
-                
-                #Save potential parameters
-                potparamsrow = potparamstab.row
-                for key in self.pot_params:
-                    potparamsrow["name"] = key
-                    potparamsrow["value"] = self.pot_params[key]
-                    potparamsrow.append()
-                potparamstab.flush()
-                 
-                #Save first order results
-                if grpname is "results":
-                    yresarr.append(self.yresult)
-                    karr.append(self.k)
-                    if hasattr(self, "foystart"):
-                        foystarr.append(self.foystart)
-                        fotstarr.append(self.fotstart)
-                        fotsxarr.append(self.fotstartindex)
-                rf.flush()
-                #Log success
-                if _debug:
-                    self._log.debug("Successfully wrote results to file " + filename)
-            finally:
-                rf.close()
+            #Get tables and array handles
+            resgrp = rf.getNode(rf.root, grpname)
+            
+            #Now save data
+            #Save parameters
+            paramstab = resgrp.parameters
+            paramstabrow = paramstab.row
+            params = self.callingparams()
+            for key in params:
+                paramstabrow[key] = params[key]
+            paramstabrow.append() #Add to table
+            paramstab.flush()
+            
+            #Save potential parameters
+            potparamstab = resgrp.pot_params
+            potparamsrow = potparamstab.row
+            for key in self.pot_params:
+                potparamsrow["name"] = key
+                potparamsrow["value"] = self.pot_params[key]
+                potparamsrow.append()
+            potparamstab.flush()
+             
+            #Get yresult array handle
+            yresarr = resgrp.yresult
+            yresarr.append(self.yresult)
+            
+            #Flush saved results to file
+            rf.flush()
+            #Close file
+            rf.close()
+            #Log success
+            if _debug:
+                self._log.debug("Successfully wrote results to file " + rf.filename)
         except IOError:
             raise
             
@@ -435,16 +445,6 @@ class PhiModels(CosmologicalModel):
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
         super(PhiModels, self).__init__(*args, **kwargs)
-        
-        #Set the number of fields using keyword argument, defaults to 1.
-        self.nfields = kwargs.get("nfields", 1)
-        
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
         
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
@@ -936,7 +936,7 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         return dydx
         
-class MultiStageDriver(object):
+class MultiStageDriver(CosmologicalModel):
     """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
     methods to find Pr that are implemented in children."""
     
@@ -1342,11 +1342,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Run first order model
         self.runfo()
         
-        #Save results in resultlist and file
+        #Save results in file
         #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.lastparams = self.callingparams()   
         
         if saveresults:
             try:
@@ -1665,12 +1663,9 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Run second order model
         self.runso()
         
-        #Save results in resultlist and file
+        #Save results in file
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
-        
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
-        
         if saveresults:
             try:
                 self._log.info("Results saved in " + self.saveallresults())

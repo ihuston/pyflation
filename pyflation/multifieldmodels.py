@@ -388,11 +388,9 @@ class MultiFieldTwoStage(c.MultiStageDriver):
         #Run first order model
         self.runfo()
         
-        #Save results in resultlist and file
+        #Save results in file
         #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.lastparams = self.callingparams()      
         
         if saveresults:
             try:
