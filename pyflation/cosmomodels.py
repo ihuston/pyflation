@@ -235,7 +235,7 @@ class CosmologicalModel(object):
         #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
-            yresultshape = (0, self.nfields*2+1)
+            yresultshape = (0, self.nfields*2+1, 1)
         else:
             grpname = "results"
             yresultshape = (0, self.nfields*2+1, len(self.k))
