@@ -210,17 +210,7 @@ class CosmologicalModel(object):
         "tstep_wanted" : tables.Float64Col(),
         "datetime" : tables.Float64Col()
         }
-        return params
-    
-    def gethf5yresultdict(self):
-        """Return dict describing fields for yresult table of hf5 file."""
-        yresdict = {
-        "yresult": tables.Float64Col(self.yresult[:,:,0].shape)}
-        if self.k is not None:
-            yresdict["k"] = tables.Float64Col()
-            yresdict["foystart"] = tables.Float64Col(self.foystart[:,0].shape)
-            yresdict["fotstart"] = tables.Float64Col()
-        return yresdict        
+        return params   
            
     def saveallresults(self, filename=None, filetype="hf5", **kwargs):
         """Tries to save file as a pickled object in directory 'results'."""
@@ -253,7 +243,7 @@ class CosmologicalModel(object):
         if filetype is "hf5":
             try:
                 if filemode == "w":
-                    rf = self.createhdf5structure(filename, yresultshape, **kwargs)
+                    rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
                 elif filemode == "a":
                     rf = tables.openFile(filename, filemode)
                 self.saveresultsinhdf5(rf, grpname)
@@ -263,7 +253,7 @@ class CosmologicalModel(object):
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
         return filename
     
-    def createhdf5structure(self, filename, yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
+    def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
         """Create a new hdf5 file with the structure capable of holding results."""
         
             
