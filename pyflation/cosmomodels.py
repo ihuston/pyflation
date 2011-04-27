@@ -1081,7 +1081,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
                          tstep_wanted=tstep_wanted,
                          solver=solver, 
                          potential_func=potential_func, 
-                         pot_params=pot_params, 
+                         pot_params=pot_params,
+                         nfields=nfields, 
                          **kwargs)
         
         super(FOCanonicalTwoStage, self).__init__(**newkwargs)
@@ -1175,7 +1176,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       tstep_wanted=self.tstep_wanted, 
                       solver=self.solver,
                       potential_func=self.potential_func, 
-                      pot_params=self.pot_params)
+                      pot_params=self.pot_params,
+                      nfields=self.nfields)
          
         self.bgmodel = self.bgclass(**kwargs)
         #Start background run
@@ -1203,7 +1205,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       k=self.k, 
                       ainit=self.ainit, 
                       potential_func=self.potential_func, 
-                      pot_params=self.pot_params)
+                      pot_params=self.pot_params,
+                      nfields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
         #Set names as in ComplexModel
