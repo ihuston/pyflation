@@ -492,7 +492,7 @@ class CanonicalBackground(PhiModels):
         #Set field indices. These can be used to select only certain parts of
         #the y variable, e.g. y[self.bg_ix] is the array of background values.
         self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2)
+        self.bg_ix = slice(0,self.nfields*2+1)
         self.phis_ix = slice(0,self.nfields*2,2)
         self.phidots_ix = slice(1,self.nfields*2,2)
         
@@ -552,7 +552,7 @@ class CanonicalFirstOrder(PhiModels):
         #Set field indices. These can be used to select only certain parts of
         #the y variable, e.g. y[self.bg_ix] is the array of background values.
         self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2)
+        self.bg_ix = slice(0,self.nfields*2+1)
         self.phis_ix = slice(0,self.nfields*2,2)
         self.phidots_ix = slice(1,self.nfields*2,2)
         self.pert_ix = slice(self.nfields*2+1, None)
@@ -1089,7 +1089,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Set field indices. These can be used to select only certain parts of
         #the y variable, e.g. y[self.bg_ix] is the array of background values.
         self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2)
+        self.bg_ix = slice(0,self.nfields*2+1)
         self.phis_ix = slice(0,self.nfields*2,2)
         self.phidots_ix = slice(1,self.nfields*2,2)
         self.pert_ix = slice(self.nfields*2+1, None)
