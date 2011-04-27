@@ -234,7 +234,7 @@ class CosmologicalModel(object):
         else:
             grpname = "results"
             if yresultshape is None:
-                yresultshape = (0, self.nfields*2+1, len(self.k))
+                yresultshape = (0, self.nfields*4+1, len(self.k))
                 
         if filetype is "hf5":
             try:
