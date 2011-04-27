@@ -618,10 +618,13 @@ def hybridquadratic(y, params=None):
         m1 = 1e-5
         m2 = 12e-5
         
+    if len(y.shape)>1:
+        y = y[:,0]
+        
     #Use inflaton mass
     mass2 = np.array([m1, m2])**2
     #potential U = 1/2 m^2 \phi^2
-    U = 0.5*(m1**2*y[0]**2 + m2**2*y[2]**2)
+    U = np.asscalar(0.5*(m1**2*y[0]**2 + m2**2*y[2]**2))
     #deriv of potential wrt \phi
     dUdphi = mass2*np.array([y[0],y[2]])
     #2nd deriv
