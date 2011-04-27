@@ -197,6 +197,6 @@ class MultiFieldFirstOrder(MultiFieldModels):
         #d\deltaphi_1^prime/dn  
         # Do sum over second field index so axis=-1
         dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
-                                + np.sum(term, axis=-1)) 
+                                + np.sum(term, axis=-1)/H**2) 
                 
         return dydx
