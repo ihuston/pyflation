@@ -68,6 +68,7 @@ class CosmologicalModel(object):
     pot_params - dict, any modifications to the default parameters in the potential
     
     """
+    solverlist = ["rkdriver_tsix"]
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
