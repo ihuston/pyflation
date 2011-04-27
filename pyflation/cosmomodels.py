@@ -1130,7 +1130,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Find initial conditions for 1st order model
         #Find a_end using instantaneous reheating
         #Need to change to find using splines
-        Hend = self.bgmodel.yresult[self.fotendindex,2]
+        Hend = self.bgmodel.yresult[self.fotendindex, self.H_ix]
         self.a_end = self.finda_end(Hend)
         self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
         
@@ -1141,11 +1141,11 @@ class FOCanonicalTwoStage(MultiStageDriver):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         #Set etainit, initial eta at n=0
-        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
         kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
+                            self.bgmodel.yresult[:self.fotendindex, self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
@@ -1162,9 +1162,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
 
         #Check ystart is in right form (1-d array of three values)
         if len(self.ystart.shape) == 1:
-            ys = self.ystart[0:3]
+            ys = self.ystart[self.bg_ix]
         elif len(self.ystart.shape) == 2:
-            ys = self.ystart[0:3,0]
+            ys = self.ystart[self.bg_ix,0]
         #Choose tstartindex to be simply the first timestep.
         tstartindex = np.array([0])
         
@@ -1182,7 +1182,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self._log.info("Running background model...")
         try:
             self.bgmodel.run(saveresults=False)
-        except ModelError, er:
+        except ModelError:
             self._log.exception("Error in background run, aborting!")
         #Find end of inflation
         self.fotend, self.fotendindex = self.bgmodel.findinflend()
@@ -1276,8 +1276,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         else:
             bgyresult = self.bgmodel.yresult
             
-        Hstar = bgyresult[tsix,2]
-        Hzero = bgyresult[0,2]
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
         
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
@@ -1289,24 +1289,17 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = bgyresult[tsix,:].transpose()
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(np.sqrt(2*self.k)))
-        #Find cos and sin(-keta)
-        csketa = np.cos(-keta)
-        snketa = np.sin(-keta)
-        
-        #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = csketa*arootk
-        #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
-        #Set Im\delta\phi_1
-        foystart[5,:] = snketa*arootk
-        #Set Im\dot\delta\phi_1
-        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
+                
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+        foystart[self.dpdots_ix,:] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
         
         return foystart
     
@@ -1332,7 +1325,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         """
         
         if not hasattr(self, "_deltaphi") or recompute:
-            self._deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+            self._deltaphi = self.yresult[:,self.dps_ix,:]
         return self._deltaphi
     
     def findns(self, k=None, nefolds=3):
@@ -1388,7 +1381,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Basic caching of result
         if not hasattr(self, "_Pr") or recompute:        
             Pphi = self.Pphi
-            phidot = self.yresult[:,1,:] #bg phidot
+            phidot = self.yresult[:,self.phidots_ix,:] #bg phidot
             self._Pr = Pphi/(phidot**2) #change if bg evol is different
         return self._Pr           
     
