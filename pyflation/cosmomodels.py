@@ -281,7 +281,7 @@ class CosmologicalModel(object):
                     bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
                     bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
                 #Save results
-                yresarr = rf.createEArray(resgroup, "yresult", tables.Complex128Atom(), yresultshape, filters=filters, expectedrows=8194)
+                yresarr = rf.createEArray(resgroup, "yresult", tables.ComplexAtom(itemsize=16), yresultshape, filters=filters, expectedrows=8194)
                 karr = rf.createArray(resgroup, "k", self.k)
                 if hasattr(self, "foystart"):
                     foystarr = rf.createArray(resgroup, "foystart", self.foystart)
