@@ -948,7 +948,7 @@ class CanonicalRampedSecondOrder(PhiModels):
         
         return dydx
         
-class MultiStageDriver(CosmologicalModel):
+class MultiStageDriver(object):
     """Parent of all multi (2 or 3) stage models. Contains methods to determine ns, k crossing and outlines
     methods to find Pr that are implemented in children."""
     
