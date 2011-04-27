@@ -202,7 +202,7 @@ class CosmologicalModel(object):
         }
         return params   
            
-    def saveallresults(self, filename=None, filetype="hf5", **kwargs):
+    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
         """Saves results already calculated into a file."""
         
         now = self.lastparams["datetime"]
@@ -225,10 +225,12 @@ class CosmologicalModel(object):
         #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
-            yresultshape = (0, self.nfields*2+1, 1)
+            if yresultshape is None:
+                yresultshape = (0, self.nfields*2+1, 1)
         else:
             grpname = "results"
-            yresultshape = (0, self.nfields*2+1, len(self.k))
+            if yresultshape is None:
+                yresultshape = (0, self.nfields*2+1, len(self.k))
                 
         if filetype is "hf5":
             try:
