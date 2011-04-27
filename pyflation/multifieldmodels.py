@@ -209,22 +209,19 @@ class MultiFieldTwoStage(c.MultiStageDriver):
                                                   
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
-                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
+                 potential_func=None, pot_params=None, simtstart=0, nfields=1, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
-      
+        #Set number of fields
+        self.nfields = nfields
+        
+        #Initial conditions for each of the variables.
+        
         #Initial conditions for each of the variables.
         if ystart is None:
-            #Initial conditions for all variables
-            self.ystart = np.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
-                                    ])
+            self.ystart= np.array([18.0,-0.1]*self.nfields + [0.0] + [1.0,0.0]*self.nfields)
         else:
             self.ystart = ystart
+            
         if not tstartindex:
             self.tstartindex = np.array([0])
         else:
@@ -240,7 +237,7 @@ class MultiFieldTwoStage(c.MultiStageDriver):
                          pot_params=pot_params, 
                          **kwargs)
         
-        super(FOCanonicalTwoStage, self).__init__(**newkwargs)
+        super(MultiFieldTwoStage, self).__init__(**newkwargs)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
