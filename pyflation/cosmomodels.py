@@ -124,7 +124,10 @@ class CosmologicalModel(object):
             self.pot_params = pot_params
             
         #Set the number of fields using keyword argument, defaults to 1.
-        self.nfields = nfields        
+        if nfields < 1:
+            raise ValueError("Cannot have zero or negative number of fields.")
+        else:
+            self.nfields = nfields        
              
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
@@ -923,7 +926,6 @@ class MultiStageDriver(CosmologicalModel):
         else:
             self.cq = 50 #Default value as in Salopek et al.
         
-        
     def finda_end(self, Hend, Hreh=None):
         """Given the Hubble parameter at the end of inflation and at the end of reheating
             calculate the scale factor at the end of inflation."""
@@ -956,8 +958,7 @@ class MultiStageDriver(CosmologicalModel):
         return np.array([self.findkcrossing(onek, t, H, factor) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        """Find horizon crossing for all ks"""
-        return self.findallkcrossings(self.tresult, self.yresult[:,2], factor)
+        pass
     
     @property
     def deltaphi(self, recompute=False):
@@ -988,30 +989,9 @@ class MultiStageDriver(CosmologicalModel):
             self._Pphi = deltaphi*deltaphi.conj()
         return self._Pphi
     
-    @property            
+    @property
     def Pr(self, recompute=False):
-        """Return the spectrum of curvature perturbations $P_R$ for each k.
-        
-        This is the unscaled version $P_R$ which is related to the scaled version by
-        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
-        self.Pr. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pr: array_like
-            Array of Pr values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pr") or recompute:        
-            Pphi = self.Pphi
-            phidot = self.yresult[:,1,:] #bg phidot
-            self._Pr = Pphi/(phidot**2) #change if bg evol is different
-        return self._Pr
+        pass
     
     @property
     def Pgrav(self, recompute=False):
@@ -1033,55 +1013,11 @@ class MultiStageDriver(CosmologicalModel):
         if not hasattr(self, "_Pgrav") or recompute:        
             self._Pgrav = 2*self.Pphi
         return self._Pgrav
-    
-    def getzeta(self):
-        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
-        #Get needed variables
-        phidot = self.yresult[:,1,:]
-        a = self.ainit*np.exp(self.tresult)
-        H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][np.newaxis,:], self.pot_params)[1]
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
-        
-        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,np.newaxis]**2 - 2) -H*phidot*dUdphi
-        
-        zeta = -H*deltarho/drhodt
-        return zeta, deltarho, drhodt
             
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
 
-    def findns(self, k=None, nefolds=3):
-        """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
-        
-        #If k is not defined, get value at all self.k
-        if k is None:
-            k = self.k
-        else:
-            if k<self.k.min() and k>self.k.max():
-                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-        
-        ts = self.findallkcrossings(self.tresult, self.yresult[:,2], factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = np.log(self.Pr[ts.astype(int)].diagonal())
-        lnk = np.log(k)
-        
-        #Need to sort into ascending k
-        sortix = lnk.argsort()
-                
-        #Use cubic splines to find deriv
-        tck = interpolate.splrep(lnk[sortix], xp[sortix])
-        ders = interpolate.splev(lnk[sortix], tck, der=1)
-        
-        ns = 1 + ders
-        #Unorder the ks again
-        nsunsort = np.zeros(len(ns))
-        nsunsort[sortix] = ns
-        
-        return nsunsort
-    
     def callingparams(self):
         """Returns list of parameters to save with results."""
         #Test whether k has been set
@@ -1124,22 +1060,15 @@ class FOCanonicalTwoStage(MultiStageDriver):
                                                       
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
-                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
+                 potential_func=None, pot_params=None, simtstart=0, nfields=1, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
         if ystart is None:
-            #Initial conditions for all variables
-            self.ystart = np.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
-                                    ])
+            self.ystart= np.array([18.0,-0.1]*nfields + [0.0] + [1.0,0.0]*nfields)
         else:
             self.ystart = ystart
+            
         if not tstartindex:
             self.tstartindex = np.array([0])
         else:
@@ -1156,6 +1085,16 @@ class FOCanonicalTwoStage(MultiStageDriver):
                          **kwargs)
         
         super(FOCanonicalTwoStage, self).__init__(**newkwargs)
+        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
+        self.pert_ix = slice(self.nfields*2+1, None)
+        self.dps_ix = slice(self.nfields*2+1, None, 2)
+        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1395,7 +1334,63 @@ class FOCanonicalTwoStage(MultiStageDriver):
         if not hasattr(self, "_deltaphi") or recompute:
             self._deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
         return self._deltaphi
-                    
+    
+    def findns(self, k=None, nefolds=3):
+        """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
+        
+        #If k is not defined, get value at all self.k
+        if k is None:
+            k = self.k
+        else:
+            if k<self.k.min() and k>self.k.max():
+                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
+        
+        ts = self.findallkcrossings(self.tresult, self.yresult[:,2], factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
+        xp = np.log(self.Pr[ts.astype(int)].diagonal())
+        lnk = np.log(k)
+        
+        #Need to sort into ascending k
+        sortix = lnk.argsort()
+                
+        #Use cubic splines to find deriv
+        tck = interpolate.splrep(lnk[sortix], xp[sortix])
+        ders = interpolate.splev(lnk[sortix], tck, der=1)
+        
+        ns = 1 + ders
+        #Unorder the ks again
+        nsunsort = np.zeros(len(ns))
+        nsunsort[sortix] = ns
+        
+        return nsunsort
+    
+    def findHorizoncrossings(self, factor=1):
+        """Find horizon crossing for all ks"""
+        return self.findallkcrossings(self.tresult, self.yresult[:,2], factor)
+         
+    @property            
+    def Pr(self, recompute=False):
+        """Return the spectrum of curvature perturbations $P_R$ for each k.
+        
+        This is the unscaled version $P_R$ which is related to the scaled version by
+        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
+        self.Pr. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+                   
+        Returns
+        -------
+        Pr: array_like
+            Array of Pr values for all timesteps and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "_Pr") or recompute:        
+            Pphi = self.Pphi
+            phidot = self.yresult[:,1,:] #bg phidot
+            self._Pr = Pphi/(phidot**2) #change if bg evol is different
+        return self._Pr           
     
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
