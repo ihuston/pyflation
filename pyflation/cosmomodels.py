@@ -68,10 +68,6 @@ class CosmologicalModel(object):
     pot_params - dict, any modifications to the default parameters in the potential
     
     """
-    solverlist = ["rkdriver_tsix"]
-    ynames = ["First dependent variable"]
-    tname = "Time"
-    plottitle = "A generic Cosmological Model"
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
@@ -128,13 +124,7 @@ class CosmologicalModel(object):
             
         #Set the number of fields using keyword argument, defaults to 1.
         self.nfields = nfields        
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
-        
+             
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
         
@@ -213,7 +203,7 @@ class CosmologicalModel(object):
         return params   
            
     def saveallresults(self, filename=None, filetype="hf5", **kwargs):
-        """Tries to save file as a pickled object in directory 'results'."""
+        """Saves results already calculated into a file."""
         
         now = self.lastparams["datetime"]
         if not filename:
@@ -255,8 +245,7 @@ class CosmologicalModel(object):
     
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
         """Create a new hdf5 file with the structure capable of holding results."""
-        
-            
+                    
         try:
             rf = tables.openFile(filename, "w")
             # Select which compression library to use in configuration
@@ -488,15 +477,18 @@ class CanonicalBackground(PhiModels):
        y[1] - d\phi_0/d\n : First deriv of \phi
        y[2] - H: Hubble parameter
     """
-    #Titles
-    plottitle = r"Background Malik model in $n$"
-    tname = r"E-folds $n$"
-    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
         
     def __init__(self,  *args, **kwargs):
         """Initialize variables and call superclass"""
         
         super(CanonicalBackground, self).__init__(*args, **kwargs)
+        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
         
         #Set initial H value if None
         if np.all(self.ystart[self.H_ix] == 0.0):
@@ -550,6 +542,16 @@ class CanonicalFirstOrder(PhiModels):
             self.k = 10**(np.arange(10.0)-8)
         else:
             self.k = k
+        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
+        self.pert_ix = slice(self.nfields*2+1, None)
+        self.dps_ix = slice(self.nfields*2+1, None, 2)
+        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
@@ -614,14 +616,7 @@ class CanonicalSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -711,14 +706,7 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Homogeneous Second Order Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -804,14 +792,7 @@ class CanonicalRampedSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -1137,17 +1118,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """ 
-    #Text for graphs
-    plottitle = "FOCanonicalTwoStage Model in Efold Time"
-    tname = r"$n$" 
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-                                                  
+                                                      
     def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, **kwargs):
@@ -1539,14 +1510,6 @@ def make_wrapper_model(modelfile, *args, **kwargs):
 class SOCanonicalThreeStage(MultiStageDriver):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
-    
-    #Text for graphs
-    plottitle = "Complex Second Order Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
 
     def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
         """Initialize variables and check that tsmodel exists and is correct form."""
@@ -1690,21 +1653,6 @@ class SOCanonicalThreeStage(MultiStageDriver):
         
 class CombinedCanonicalFromFile(MultiStageDriver):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
-    
-    #Text for graphs
-    plottitle = "Combined First and Second Order Canonical Model in Efold time"
-    tname = r"$n$"
-    ynames = [r"$\varphi_0$",
-                r"$\dot{\varphi_0}$",
-                r"$H$",
-                r"Real $\delta\varphi_1$",
-                r"Real $\dot{\delta\varphi_1}$",
-                r"Imag $\delta\varphi_1$",
-                r"Imag $\dot{\delta\varphi_1}$",
-                r"Real $\delta\varphi_2$",
-                r"Real $\dot{\delta\varphi_2}$",
-                r"Imag $\delta\varphi_2$",
-                r"Imag $\dot{\delta\varphi_2}$"]
     
     def __init__(self, *args, **kwargs):
         """Initialize vars and call super class."""
