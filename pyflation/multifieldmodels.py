@@ -200,3 +200,285 @@ class MultiFieldFirstOrder(MultiFieldModels):
                                 + np.sum(term, axis=-1)/H**2) 
                 
         return dydx
+    
+class MultiFieldTwoStage(c.MultiStageDriver):
+    """Uses a background and firstorder class to run a full (first-order) simulation.
+        Main additional functionality is in determining initial conditions.
+        Variables finally stored are as in first order class.
+    """
+                                                  
+    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
+                 k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
+                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+      
+        #Initial conditions for each of the variables.
+        if ystart is None:
+            #Initial conditions for all variables
+            self.ystart = np.array([18.0, # \phi_0
+                                   -0.1, # \dot{\phi_0}
+                                    0.0, # H - leave as 0.0 to let program determine
+                                    1.0, # Re\delta\phi_1
+                                    0.0, # Re\dot{\delta\phi_1}
+                                    1.0, # Im\delta\phi_1
+                                    0.0  # Im\dot{\delta\phi_1}
+                                    ])
+        else:
+            self.ystart = ystart
+        if not tstartindex:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
+        #Call superclass
+        newkwargs = dict(ystart=self.ystart, 
+                         tstart=tstart,
+                         tstartindex=self.tstartindex, 
+                         tend=tend, 
+                         tstep_wanted=tstep_wanted,
+                         solver=solver, 
+                         potential_func=potential_func, 
+                         pot_params=pot_params, 
+                         **kwargs)
+        
+        super(FOCanonicalTwoStage, self).__init__(**newkwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+                
+        #Let k roam if we don't know correct ks
+        if k is None:
+            self.k = 10**(np.arange(7.0)-62)
+        else:
+            self.k = k
+        self.simtstart = simtstart
+            
+        if bgclass is None:
+            self.bgclass = CanonicalBackground
+        else:
+            self.bgclass = bgclass
+        if foclass is None:
+            self.foclass = CanonicalFirstOrder
+        else:
+            self.foclass = foclass
+        
+        #Setup model variables    
+        self.bgmodel = self.firstordermodel = None
+                    
+    def setfoics(self):
+        """After a bg run has completed, set the initial conditions for the 
+            first order run."""
+        #debug
+        #set_trace()
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        #Need to change to find using splines
+        Hend = self.bgmodel.yresult[self.fotendindex,2]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
+        
+        
+        #Find epsilon from bg model
+        try:
+            self.bgepsilon
+        except AttributeError:            
+            self.bgepsilon = self.bgmodel.getepsilon()
+        #Set etainit, initial eta at n=0
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex,2])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(np.int)
+        self.foystart = self.getfoystart()
+        return  
+        
+    def runbg(self):
+        """Run bg model after setting initial conditions."""
+
+        #Check ystart is in right form (1-d array of three values)
+        if len(self.ystart.shape) == 1:
+            ys = self.ystart[0:3]
+        elif len(self.ystart.shape) == 2:
+            ys = self.ystart[0:3,0]
+        #Choose tstartindex to be simply the first timestep.
+        tstartindex = np.array([0])
+        
+        kwargs = dict(ystart=ys, 
+                      tstart=self.tstart,
+                      tstartindex=tstartindex, 
+                      tend=self.tend,
+                      tstep_wanted=self.tstep_wanted, 
+                      solver=self.solver,
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+         
+        self.bgmodel = self.bgclass(**kwargs)
+        #Start background run
+        self._log.info("Running background model...")
+        try:
+            self.bgmodel.run(saveresults=False)
+        except ModelError, er:
+            self._log.exception("Error in background run, aborting!")
+        #Find end of inflation
+        self.fotend, self.fotendindex = self.bgmodel.findinflend()
+        self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        return
+        
+    def runfo(self):
+        """Run first order model after setting initial conditions."""
+
+        #Initialize first order model
+        kwargs = dict(ystart=self.foystart, 
+                      tstart=self.fotstart,
+                      simtstart=self.simtstart, 
+                      tstartindex = self.fotstartindex, 
+                      tend=self.fotend, 
+                      tstep_wanted=self.tstep_wanted,
+                      solver=self.solver,
+                      k=self.k, 
+                      ainit=self.ainit, 
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params)
+        
+        self.firstordermodel = self.foclass(**kwargs)
+        #Set names as in ComplexModel
+        self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
+        #Start first order run
+        self._log.info("Beginning first order run...")
+        try:
+            self.firstordermodel.run(saveresults=False)
+        except ModelError, er:
+            raise ModelError("Error in first order run, aborting! Message: " + er.message)
+        
+        #Set results to current object
+        self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        return
+    
+    def run(self, saveresults=True):
+        """Run the full model.
+        
+        The background model is first run to establish the end time of inflation and the start
+        times for the k modes. Then the initial conditions are set for the first order variables.
+        Finally the first order model is run and the results are saved if required.
+        
+        Parameters
+        ----------
+        saveresults: boolean, optional
+                     Should results be saved at the end of the run. Default is False.
+                     
+        Returns
+        -------
+        filename: string
+                  name of the results file if any
+        """
+        #Run bg model
+        self.runbg()
+        
+        #Set initial conditions for first order model
+        self.setfoics()
+        
+        #Run first order model
+        self.runfo()
+        
+        #Save results in resultlist and file
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()
+        
+        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        
+        if saveresults:
+            try:
+                self._log.info("Results saved in " + self.saveallresults())
+            except IOError, er:
+                self._log.exception("Error trying to save results! Results NOT saved.")        
+        return
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros((len(self.ystart), len(self.k)))
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,2]
+        Hzero = bgyresult[0,2]
+        
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[0:3] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+        #Find cos and sin(-keta)
+        csketa = np.cos(-keta)
+        snketa = np.sin(-keta)
+        
+        #Set Re\delta\phi_1 initial condition
+        foystart[3,:] = csketa*arootk
+        #set Re\dot\delta\phi_1 ic
+        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
+        #Set Im\delta\phi_1
+        foystart[5,:] = snketa*arootk
+        #Set Im\dot\delta\phi_1
+        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
+        
+        return foystart
+    
+    def getdeltaphi(self):
+        return self.deltaphi
+    
+    @property
+    def deltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
+        
+        if not hasattr(self, "_deltaphi") or recompute:
+            self._deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+        return self._deltaphi
