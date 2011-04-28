@@ -1749,11 +1749,11 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         #Set etainit, initial eta at n=0
-        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
         kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
+                            self.bgmodel.yresult[:self.fotendindex,self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
