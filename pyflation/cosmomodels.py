@@ -518,7 +518,7 @@ class CanonicalBackground(PhiModels):
         dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi)/(y[self.H_ix]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
         
         #dH/dn
         dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
