@@ -1528,6 +1528,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
             self.potentials = self.second_stage.potentials
             self.potential_func = self.second_stage.potential_func
             self.pot_params = self.second_stage.pot_params
+            self.nfields = self.second_stage.nfields
         
         if ystart is None:
             ystart = np.zeros((4, len(self.k)))
@@ -1545,7 +1546,8 @@ class SOCanonicalThreeStage(MultiStageDriver):
                       tstep_wanted=sotstep,
                       solver="rkdriver_tsix",
                       potential_func=self.second_stage.potential_func,
-                      pot_params=self.second_stage.pot_params
+                      pot_params=self.second_stage.pot_params,
+                      nfields=self.nfields
                       )
         #Update sokwargs with any arguments from soclassargs
         if soclassargs is not None:
@@ -1584,11 +1586,12 @@ class SOCanonicalThreeStage(MultiStageDriver):
         "ainit": self.ainit,
         "potential_func": self.potential_func,
         "pot_params": self.pot_params,
-        "cq": self.cq}
+        "cq": self.cq,
+        "nfields": self.nfields,
+        }
         
         
         self.somodel = self.soclass(**sokwargs)
-        self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
         #Set second stage and source terms for somodel
         self.somodel.source = self.source
         self.somodel.second_stage = self.second_stage
