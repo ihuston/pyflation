@@ -504,9 +504,7 @@ class CanonicalBackground(PhiModels):
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
-        #Only use first y background value.
-        if len(y.shape)>1:
-            y = y[:,0]
+        
                 
         #get potential from function
         U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
@@ -521,7 +519,7 @@ class CanonicalBackground(PhiModels):
         dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi)/(y[self.H_ix]**2)
         
         #dH/dn
-        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2))*y[self.H_ix]
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
 
         return dydx
 
