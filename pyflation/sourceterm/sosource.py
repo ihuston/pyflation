@@ -80,6 +80,9 @@ def calculatesource(m, nix, integrand_elements, srceqns):
             source_logger.debug("NaNs filled. Setting dynamical variables...")
             
     #Get first order results
+    #Check that first order model is single field
+    if m.nfields != 1:
+        raise NotImplementedError("Source term can only be calculated for single field models.")
     #The background variables can just be taken as the first k value
     bgvars = myr[0:3,0]
     #The first order variables need the full k values
