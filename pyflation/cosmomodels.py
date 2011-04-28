@@ -188,7 +188,8 @@ class CosmologicalModel(object):
                   "tstep_wanted":self.tstep_wanted,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                  "nfields":self.nfields
                   }
         return params
     
@@ -202,7 +203,8 @@ class CosmologicalModel(object):
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "datetime" : tables.Float64Col()
+        "datetime" : tables.Float64Col(),
+        "nfields" : tables.IntCol()
         }
         return params   
            
@@ -1035,7 +1037,8 @@ class MultiStageDriver(CosmologicalModel):
                   "tstep_wanted":self.tstep_wanted,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                  "nfields":self.nfields
                   }
         return params
     
@@ -1050,7 +1053,8 @@ class MultiStageDriver(CosmologicalModel):
         "potential_func" : tables.StringCol(255),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "datetime" : tables.Float64Col()
+        "datetime" : tables.Float64Col(),
+        "nfields" : tables.IntCol()
         }
         return params
     
