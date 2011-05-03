@@ -971,7 +971,7 @@ class MultiStageDriver(CosmologicalModel):
     
     @property
     def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each k.
+        """Return the spectrum of scalar perturbations P_phi for each field and k.
         
         This is the unscaled version $P_{\phi}$ which is related to the scaled version by
         $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
@@ -984,14 +984,31 @@ class MultiStageDriver(CosmologicalModel):
         
         Returns
         -------
-        Pphi: array_like
-              Array of Pphi values for all timesteps and k modes
+        Pphi: array_like, dtype: float64
+              3-d array of Pphi values for all timesteps, fields and k modes
         """
         #Basic caching of result
         if not hasattr(self, "_Pphi") or recompute:        
             deltaphi = self.deltaphi
-            self._Pphi = deltaphi*deltaphi.conj()
+            self._Pphi = np.float64(deltaphi*deltaphi.conj())
         return self._Pphi
+    
+    @property
+    def calPphi(self):
+        """Return the spectrum of scalar perturbations for each field and k mode.
+        
+        This is the scaled power spectrum $\mathcal{P}_{\phi_I}$ for each field
+        and is given by
+        
+        $\mathcal{P}_{\delta\varphi_I}(k) = k^3/(2\pi^2) |\delta\varphi_I(k)|^2.$
+        
+        Returns
+        -------
+        calPphi: array_like, dtype: float64
+                 3-d array of calPphi values for all timesteps, fields and k modes
+              
+        """
+        return 1/(2*np.pi**2) * self.k**3 * self.Pphi
     
     @property
     def Pr(self, recompute=False):
@@ -1317,7 +1334,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
     
     @property
     def deltaphi(self, recompute=False):
-        """Return the calculated values of $\delta\phi$ for all times and modes.
+        """Return the calculated values of $\delta\phi$ for all times, fields and modes.
         
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
@@ -1329,8 +1346,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
                    
         Returns
         -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
+        deltaphi: array_like, dtype: complex128
+                  Array of $\delta\phi$ values for all timesteps, fields and k modes.
         """
         
         if not hasattr(self, "_deltaphi") or recompute:
@@ -1389,10 +1406,25 @@ class FOCanonicalTwoStage(MultiStageDriver):
         """
         #Basic caching of result
         if not hasattr(self, "_Pr") or recompute:        
-            Pphi = self.Pphi
             phidot = self.yresult[:,self.phidots_ix,:] #bg phidot
-            self._Pr = Pphi/(phidot**2) #change if bg evol is different
-        return self._Pr           
+            self._Pr = np.sum(self.Pphi/(phidot**2), axis=1) #change if bg evol is different
+        return self._Pr
+    
+    @property            
+    def calPr(self):
+        """Return the spectrum of curvature perturbations $\mathcal{P}_\mathcal{R}$ 
+        for each timestep and k mode.
+        
+        This is the scaled power spectrum which is related to the unscaled version by
+        $\mathcal{P}_\mathcal{R} = k^3/(2pi^2) P_\mathcal{R}$. 
+         
+        Returns
+        -------
+        calPr: array_like
+            Array of Pr values for all timesteps and k modes
+        """
+        #Basic caching of result
+        return 1/(2*np.pi**2) * self.k**3 * self.Pr           
     
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
