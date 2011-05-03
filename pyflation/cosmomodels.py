@@ -1401,12 +1401,12 @@ class FOCanonicalTwoStage(MultiStageDriver):
                    
         Returns
         -------
-        Pr: array_like
+        Pr: array_like, dtype: float64
             Array of Pr values for all timesteps and k modes
         """
         #Basic caching of result
         if not hasattr(self, "_Pr") or recompute:        
-            phidot = self.yresult[:,self.phidots_ix,:] #bg phidot
+            phidot = np.float64(self.yresult[:,self.phidots_ix,:]) #bg phidot
             self._Pr = np.sum(self.Pphi/(phidot**2), axis=1) #change if bg evol is different
         return self._Pr
     
@@ -1501,18 +1501,28 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             except IOError:
                 raise
             
+            #Set indices correctly
+            self.H_ix = self.nfields*2
+            self.bg_ix = slice(0,self.nfields*2+1)
+            self.phis_ix = slice(0,self.nfields*2,2)
+            self.phidots_ix = slice(1,self.nfields*2,2)
+            self.pert_ix = slice(self.nfields*2+1, None)
+            self.dps_ix = slice(self.nfields*2+1, None, 2)
+            self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+            
             #Fix bgmodel to actual instance
             if self.ystart is not None:
                 #Check ystart is in right form (1-d array of three values)
                 if len(self.ystart.shape) == 1:
-                    ys = self.ystart[0:3]
+                    ys = self.ystart[self.bg_ix]
                 elif len(self.ystart.shape) == 2:
-                    ys = self.ystart[0:3,0]
+                    ys = self.ystart[self.bg_ix,0]
             else:
-                ys = self.foystart[0:3,0]
+                ys = self.foystart[self.bg_ix,0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, solver=self.solver,
-                            potential_func=self.potential_func, pot_params=self.pot_params)
+                            potential_func=self.potential_func, 
+                            nfields=self.nfields, pot_params=self.pot_params)
             #Put in data
             try:
                 if _debug:
