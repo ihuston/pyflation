@@ -633,3 +633,41 @@ def hybridquadratic(y, params=None):
     d3Udphi3 = np.zeros((2,2,2))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def ridge_twofield(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=V0 - g phi - 1/2 m^2 chi^2
+    where g is a parameter and m is the mass of the chi field. Needs nfields=2.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameters "V0", "g", "m".
+             """
+    
+    #Check if mass is specified in params
+    if params:
+        g = params.get("g", 1e-5)
+        m = params.get("m", 12e-5)
+        V0 = params.get("V0", 1)
+    else:
+        g = 1e-5
+        m = 12e-5
+        V0 = 1
+        
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+    #potential U = 1/2 m^2 \phi^2
+    U = np.asscalar(V0 - g*y[0] - 0.5*m**2*y[2]**2)
+    #deriv of potential wrt \phi
+    dUdphi = np.array([-g, -m**2 * y[2]])
+    #2nd deriv
+    d2Udphi2 = np.array([[0,0], [0,-m**2]])
+    #3rd deriv
+    d3Udphi3 = np.zeros((2,2,2))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
