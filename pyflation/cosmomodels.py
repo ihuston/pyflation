@@ -571,7 +571,8 @@ class CanonicalFirstOrder(PhiModels):
         if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[self.H_ix] = self.findH(U, self.ystart)
-                        
+                       
+    @profile                        
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
