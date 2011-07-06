@@ -39,10 +39,10 @@ Either run this script from the base directory as bin/secondorder.py or add dire
 
 
 
-def runsomodel(mrgfile, filename=None, soargs=None):
-    """Execute a SOCanonicalThreeStage model and save results.
+def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
+    """Execute a three stage driver model and save results.
     
-    A new instance of SOCanonicalThreeStage is created, from the specified first order file.
+    A new instance of sodriver class (default is SOCanonicalThreeStage) is created, from the specified first order file.
     The model is run and the results are then saved into a file with the specified filename.
     
     Parameters
@@ -75,7 +75,9 @@ def runsomodel(mrgfile, filename=None, soargs=None):
     if soargs is None:
         soargs = run_config.soargs
     #Create second order model instance
-    somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
+    if sodriver is None:
+        sodriver = c.SOCanonicalThreeStage
+    somodel = sodriver(fomodel, **soargs)
     try:
         if _debug:
             log.debug("Starting model run...")
