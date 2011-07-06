@@ -1765,8 +1765,8 @@ class SOHorizonStart(SOCanonicalThreeStage):
         sotstep = fotstep*2
         
         fohorizons = np.array([second_stage.findkcrossing(second_stage.k[kix],
-                                                         second_stage.tresult,
-                                                         second_stage.yresult[:,2],
+                                                         second_stage.bgmodel.tresult,
+                                                         second_stage.bgmodel.yresult[:,2],
                                                          factor=1) for kix in np.arange(len(second_stage.k)) ])
         fohorizonindex = fohorizons[:,0]
         fohorizontimes = fohorizons[:,1]
