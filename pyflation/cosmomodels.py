@@ -1015,7 +1015,7 @@ class MultiStageDriver(CosmologicalModel):
         a_end : scalar, scale factor at the end of inflation
         
         """
-        N_after = find_efolds_after_inflation(Hend, Hreh)
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
         a_end = a_0*np.exp(-N_after)
         return a_end
     
@@ -1041,7 +1041,7 @@ class MultiStageDriver(CosmologicalModel):
             except TypeError:
                 raise ModelError("Simulation has not been run yet.")
             
-        N_after = find_efolds_after_inflation(Hend, Hreh)
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
         a_0 = a_end*np.exp(N_after)
         return a_0 
         
