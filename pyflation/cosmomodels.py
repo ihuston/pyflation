@@ -996,11 +996,11 @@ class MultiStageDriver(CosmologicalModel):
         N_after = 72.3 + 2.0/3.0*np.log(Hend) - 1.0/6.0*np.log(Hreh)
         return N_after
         
-    def finda_end(self, Hend, Hreh=None):
+    def finda_end(self, Hend, Hreh=None, a_0=1):
         """Given the Hubble parameter at the end of inflation and at the end of reheating
             calculate the scale factor at the end of inflation.
             
-        This function assumes that the scale factor = 1 today and should be used with 
+        This function assumes by default that the scale factor = 1 today and should be used with 
         caution. A more correct approach is to call find_efolds_after_inflation directly
         and to use the result as required. 
         
@@ -1008,16 +1008,42 @@ class MultiStageDriver(CosmologicalModel):
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_0 : scalar (default=1), value of scale factor today
         
         Returns
         -------
-        a_end : scalar, scale factor at the end of inflation assuming that a=1 today
+        a_end : scalar, scale factor at the end of inflation
         
         """
-        a_0 = 1 # Normalize today
         N_after = find_efolds_after_inflation(Hend, Hreh)
         a_end = a_0*np.exp(-N_after)
-        return a_end    
+        return a_end
+    
+    def finda_0(self, Hend, Hreh=None, a_end=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating,
+        and the scale factor at the end of inflation, calculate the scale factor today.
+        
+        Parameters
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_end : scalar (default calculated from tresult), value of scale factor 
+                at the end of inflation
+        
+        Returns
+        -------
+        a_0 : scalar, scale factor today
+        
+        """
+        if a_end is None:
+            try:
+                a_end = self.ainit*np.exp(self.tresult[-1])
+            except TypeError:
+                raise ModelError("Simulation has not been run yet.")
+            
+        N_after = find_efolds_after_inflation(Hend, Hreh)
+        a_0 = a_end*np.exp(N_after)
+        return a_0 
         
     def findkcrossing(self, k, t, H, factor=None):
         """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
