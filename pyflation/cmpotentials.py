@@ -706,7 +706,7 @@ def nflation(y, params=None):
     #Use inflaton mass
     mass2 = m**2
     #potential U = 1/2 m^2 \phi^2
-    U = np.sum(0.5*(mass2)*(phis_ix**2))
+    U = np.sum(0.5*(mass2)*(y[phis_ix]**2))
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[phis_ix]
     #2nd deriv
