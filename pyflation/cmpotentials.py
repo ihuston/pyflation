@@ -710,7 +710,7 @@ def nflation(y, params=None):
     #deriv of potential wrt \phi
     dUdphi =  (mass2)*y[phis_ix]
     #2nd deriv
-    d2Udphi2 = None
+    d2Udphi2 = mass2*np.ones((nfields,nfields), np.complex128)
     #3rd deriv
     d3Udphi3 = None
     
