@@ -1089,7 +1089,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
       
         #Initial conditions for each of the variables.
         if ystart is None:
-            self.ystart= np.array([18.0,-0.1]*nfields + [0.0] + [1.0,0.0]*nfields**2)
+            self.ystart= np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
+                                  + [0.0] + [1.0,0.0]*nfields**2)
         else:
             self.ystart = ystart
             
