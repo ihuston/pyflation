@@ -1293,7 +1293,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = np.zeros(((self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
@@ -1324,10 +1324,14 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(np.sqrt(2*self.k)))
                 
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
         #Set \delta\phi_1 initial condition
-        foystart[self.dps_ix,:] = arootk*np.exp(-keta*1j)
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
         #set \dot\delta\phi_1 ic
-        foystart[self.dpdots_ix,:] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
         
         return foystart
     
