@@ -607,15 +607,20 @@ class CanonicalFirstOrder(PhiModels):
         dydx[self.dps_ix] = y[self.dpdots_ix]
         
         #Sum term for perturbation
-        term = (d2Udphi2[:,np.newaxis,:] 
+        term1 = (d2Udphi2[:,np.newaxis,:] 
                 + y[self.phidots_ix,:,np.newaxis]*dUdphi 
                 + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
-                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )*y[self.dps_ix].T
+                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
+        term2 = y[self.dps_ix].T.reshape((len(k), self.nfields, self.nfields))
+        
+        termsum = np.sum(term1[...,np.newaxis]*term2[np.newaxis,...], axis=-2)
+        termsum = np.rollaxis(termsum, -1, 1)
+        termsum = termsum.reshape((self.nfields*2,len(k)))
         
         #d\deltaphi_1^prime/dn  
         # Do sum over second field index so axis=-1
         dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
-                                + np.sum(term, axis=-1)/H**2) 
+                                + termsum/H**2) 
                 
         return dydx
         
