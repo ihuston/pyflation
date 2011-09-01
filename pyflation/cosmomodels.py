@@ -615,7 +615,7 @@ class CanonicalFirstOrder(PhiModels):
         
         termsum = np.sum(term1[...,np.newaxis]*term2[np.newaxis,...], axis=-2)
         termsum = np.rollaxis(termsum, -1, 1)
-        termsum = termsum.reshape((self.nfields*2,len(k)))
+        termsum = termsum.reshape((self.nfields**2,len(k)))
         
         #d\deltaphi_1^prime/dn  
         # Do sum over second field index so axis=-1
@@ -1364,6 +1364,36 @@ class FOCanonicalTwoStage(MultiStageDriver):
         if not hasattr(self, "_deltaphi") or recompute:
             self._deltaphi = self.yresult[:,self.dps_ix,:]
         return self._deltaphi
+    
+    @property
+    def Pphi(self, recompute=False):
+        """Return the spectrum of scalar perturbations P_phi for each field and k.
+        
+        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
+        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
+        instance variable self.Pphi.
+        For multifield systems the full crossterm matrix is returned which 
+        has shape nfields*nfields flattened down to a vector of length nfields^2. 
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should value be recomputed even if already stored? Default is False.
+        
+        Returns
+        -------
+        Pphi: array_like, dtype: float64
+              3-d array of Pphi values for all timesteps, fields and k modes
+        """
+        #Basic caching of result
+        if not hasattr(self, "_Pphi") or recompute:        
+            modes = self.yresult[:,self.dps_ix,:]
+            s=modes.shape
+            mdp = modes.reshape((s[0],self.nfields,self.nfields,s[-1]))
+            mPphi = (mdp[:,:,:,np.newaxis,:]*mdp[:,:,np.newaxis,:,:].conj()).sum(axis=2)
+            self._Pphi = mPphi.reshape((s[0],s[1],s[-1])) 
+        return self._Pphi
+    
     
     def findns(self, k=None, nefolds=3):
         """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
