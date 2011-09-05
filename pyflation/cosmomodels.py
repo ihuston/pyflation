@@ -1345,7 +1345,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
     
     def getmodematrix(self, y, ix=None, ixslice=None):
         """Helper function to reshape flat nfield^2 long yresult variable into nfield*nfield mode
-        matrix.
+        matrix. Returns a view of the y array (changes will be reflected in underlying array).
         
         Parameters
         ----------
@@ -1356,7 +1356,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Returns
         -------
         
-        result: view of yresult array with shape (len(tresult), nfield, nfield, len(k))
+        result: view of y array with shape nfield*nfield structure
         """
         if ix is None:
             #Use second dimension for index slice by default
