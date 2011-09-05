@@ -1343,6 +1343,55 @@ class FOCanonicalTwoStage(MultiStageDriver):
     def getdeltaphi(self):
         return self.deltaphi
     
+    def getmodematrix(self, y, ix=None, ixslice=None):
+        """Helper function to reshape flat nfield^2 long yresult variable into nfield*nfield mode
+        matrix.
+        
+        Parameters
+        ----------
+        ixslice: index slice, optional
+            The index slice of yresult to use, defaults to self.dps_ix to select
+            the delta phis (and not their derivatives).
+            
+        Returns
+        -------
+        
+        result: view of yresult array with shape (len(tresult), nfield, nfield, len(k))
+        """
+        if ix is None:
+            #Find first dimension of length nfields**2
+            ix = y.shape.index(self.nfields**2)
+        if ixslice is None:
+            ixslice = self.dps_ix
+        indices = [Ellipsis]*len(y.shape)
+        indices[ix] = ixslice
+        modes = y[indices]
+        s = list(modes.shape)
+        s[ix] = self.nfields
+        s.insert(ix+1, self.nfields)
+        result = modes.reshape(s)
+        return result
+    
+    def flattenmodematrix(self, modematrix, ix1=None, ix2=None):
+        """Flatten the mode matrix given into nfield^2 long vector."""
+        s = modematrix.shape
+        if s.count(self.nfields) >= 2:
+            raise ModelError("Mode matrix does not have two nfield long dimensions.")
+        try:
+            #If indices are not specified, use first two in order
+            if ix1 is None:
+                ix1 = s.index(self.nfields)
+            if ix2 is None:
+                #The second index is assumed to be after ix1
+                ix2 = s.index(self.nfields, ix1+1)
+        except ValueError:
+            raise ModelError("Cannot determine correct indices for nfield long dimensions!")
+        slist = list(s)
+        ix2out = slist.pop(ix2)
+        slist[ix1] = self.nfields**2
+        return modematrix.reshape(slist) 
+        
+        
     @property
     def deltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times, fields and modes.
