@@ -1448,7 +1448,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Basic caching of result
         if not hasattr(self, "_Pr") or recompute:        
             phidot = np.float64(self.yresult[:,self.phidots_ix,:]) #bg phidot
-            self._Pr = np.sum(self.Pphi/(phidot**2), axis=1) #change if bg evol is different
+            phidotsum = np.sum(phidot**2, axis=1)
+            self._Pr = np.sum(phidot*self.Pphi, axis=1)/phidotsum
         return self._Pr
     
     @property            
