@@ -1359,14 +1359,18 @@ class FOCanonicalTwoStage(MultiStageDriver):
         result: view of yresult array with shape (len(tresult), nfield, nfield, len(k))
         """
         if ix is None:
-            #Find first dimension of length nfields**2
-            ix = y.shape.index(self.nfields**2)
+            #Use second dimension for index slice by default
+            ix = 1
         if ixslice is None:
             ixslice = self.dps_ix
         indices = [Ellipsis]*len(y.shape)
         indices[ix] = ixslice
         modes = y[indices]
+            
         s = list(modes.shape)
+        #Check resulting array is correct shape
+        if s[ix] != self.nfields**2:
+            raise ModelError("Array does not have correct dimensions of nfields**2.")
         s[ix] = self.nfields
         s.insert(ix+1, self.nfields)
         result = modes.reshape(s)
