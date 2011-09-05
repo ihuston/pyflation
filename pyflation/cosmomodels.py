@@ -1379,7 +1379,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
     def flattenmodematrix(self, modematrix, ix1=None, ix2=None):
         """Flatten the mode matrix given into nfield^2 long vector."""
         s = modematrix.shape
-        if s.count(self.nfields) >= 2:
+        if s.count(self.nfields) < 2:
             raise ModelError("Mode matrix does not have two nfield long dimensions.")
         try:
             #If indices are not specified, use first two in order
