@@ -1440,11 +1440,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
         """
         #Basic caching of result
         if not hasattr(self, "_Pphi") or recompute:        
-            modes = self.yresult[:,self.dps_ix,:]
-            s=modes.shape
-            mdp = modes.reshape((s[0],self.nfields,self.nfields,s[-1]))
+            mdp = self.getmodematrix(self.yresult, 1, self.dps_ix)
             mPphi = (mdp[:,:,:,np.newaxis,:]*mdp[:,:,np.newaxis,:,:].conj()).sum(axis=2)
-            self._Pphi = mPphi.reshape((s[0],s[1],s[-1])) 
+            self._Pphi = self.flattenmodematrix(mPphi, 1, 2) 
         return self._Pphi
     
     
