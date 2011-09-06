@@ -1487,8 +1487,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Pr = (\Sum_K \dot{\phi_K}^2 )^{-2} 
                 \Sum_{I,J} \dot{\phi_I} \dot{\phi_J} P_{IJ}
                 
-        where P_{IJ} = \Sum_K \xi_{IK} \xi_JK}
-        and \xi are the mode matrix elements.  
+        where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
+        and \chi are the mode matrix elements.  
         
         This is the unscaled version $P_R$ which is related to the scaled version by
         $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
