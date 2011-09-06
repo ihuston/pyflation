@@ -1344,14 +1344,13 @@ class FOCanonicalTwoStage(MultiStageDriver):
         return self.deltaphi
     
     def getmodematrix(self, y, ix=None, ixslice=None):
-        """Helper function to reshape flat nfield^2 long yresult variable into nfield*nfield mode
+        """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
         matrix. Returns a view of the y array (changes will be reflected in underlying array).
         
         Parameters
         ----------
         ixslice: index slice, optional
-            The index slice of yresult to use, defaults to self.dps_ix to select
-            the delta phis (and not their derivatives).
+            The index slice of y to use, defaults to full extent of y.
             
         Returns
         -------
@@ -1362,7 +1361,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
             #Use second dimension for index slice by default
             ix = 1
         if ixslice is None:
-            ixslice = self.dps_ix
+            #Assume slice is full extent if none given.
+            ixslice = slice(None)
         indices = [Ellipsis]*len(y.shape)
         indices[ix] = ixslice
         modes = y[indices]
