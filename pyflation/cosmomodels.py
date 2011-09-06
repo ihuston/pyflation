@@ -1500,7 +1500,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         if not hasattr(self, "_Pr") or recompute:        
             phidot = np.float64(self.yresult[:,self.phidots_ix,:]) #bg phidot
             phidotsum = np.sum(phidot**2, axis=1)
-            self._Pr = np.sum(phidot*self.Pphi, axis=1)/phidotsum
+            Pphimatrix = self.getmodematrix(self.Pphi, 1, slice(None))
+            self._Pr = np.sum(phidot[:,:,np.newaxis,:]*Pphimatrix, axis=1)/phidotsum
         return self._Pr
     
     @property            
