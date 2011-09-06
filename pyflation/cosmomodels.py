@@ -1482,6 +1482,14 @@ class FOCanonicalTwoStage(MultiStageDriver):
     def Pr(self, recompute=False):
         """Return the spectrum of curvature perturbations $P_R$ for each k.
         
+        For a multifield model this is given by:
+        
+        Pr = (\Sum_K \dot{\phi_K}^2 )^{-2} 
+                \Sum_{I,J} \dot{\phi_I} \dot{\phi_J} P_{IJ}
+                
+        where P_{IJ} = \Sum_K \xi_{IK} \xi_JK}
+        and \xi are the mode matrix elements.  
+        
         This is the unscaled version $P_R$ which is related to the scaled version by
         $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
         self.Pr. 
@@ -1499,9 +1507,15 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Basic caching of result
         if not hasattr(self, "_Pr") or recompute:        
             phidot = np.float64(self.yresult[:,self.phidots_ix,:]) #bg phidot
-            phidotsum = np.sum(phidot**2, axis=1)
+            phidotsumsq = (np.sum(phidot**2, axis=1))**2
+            #Get mode matrix for Pphi as nfield*nfield
             Pphimatrix = self.getmodematrix(self.Pphi, 1, slice(None))
-            self._Pr = np.sum(phidot[:,:,np.newaxis,:]*Pphimatrix, axis=1)/phidotsum
+            #Multiply mode matrix by corresponding phidot value
+            summatrix = phidot[:,np.newaxis,:,:]*phidot[:,:,np.newaxis,:]*Pphimatrix
+            #Flatten mode matrix and sum over all nfield**2 values
+            sumflat = np.sum(self.flattenmodematrix(summatrix, 1, 2), axis=1)
+            #Divide by total sum of derivative terms
+            self._Pr = sumflat/phidotsumsq
         return self._Pr
     
     @property            
