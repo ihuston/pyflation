@@ -607,14 +607,21 @@ class CanonicalFirstOrder(PhiModels):
         dydx[self.dps_ix] = y[self.dpdots_ix]
         
         #Sum term for perturbation
-        term1 = (d2Udphi2[:,np.newaxis,:] 
-                + y[self.phidots_ix,:,np.newaxis]*dUdphi 
-                + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
-                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
-        term2 = y[self.dps_ix].T.reshape((len(k), self.nfields, self.nfields))
+#        term1 = (d2Udphi2[:,np.newaxis,:] 
+#                + y[self.phidots_ix,:,np.newaxis]*dUdphi 
+#                + dUdphi * (y[self.phidots_ix].T[np.newaxis,...])
+#                + y[self.phidots_ix,:,np.newaxis]*y[self.phidots_ix].T[np.newaxis,...]*U )
+#        term2 = y[self.dps_ix].T.reshape((len(k), self.nfields, self.nfields))
+        phidot = y[self.phidots_ix]
+        term1 = (d2Udphi2[...,np.newaxis] 
+                + phidot[:,np.newaxis,:]*dUdphi[np.newaxis,:,np.newaxis] 
+                + dUdphi[:,np.newaxis,np.newaxis] * phidot[np.newaxis,...]
+                + phidot[:,np.newaxis,:]*phidot[np.newaxis,...]*U )
+        term2 = y[self.dps_ix].reshape((self.nfields, self.nfields, len(k)))
         
-        termsum = np.sum(term1[...,np.newaxis]*term2[np.newaxis,...], axis=-2)
-        termsum = np.rollaxis(termsum, -1, 1)
+        
+        termsum = np.sum(term1[:,:,np.newaxis,:]*term2[np.newaxis,...], axis=-2)
+#        termsum = np.rollaxis(termsum, -1, 1)
         termsum = termsum.reshape((self.nfields**2,len(k)))
         
         #d\deltaphi_1^prime/dn  
