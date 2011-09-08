@@ -80,22 +80,28 @@ def calculatesource(m, nix, integrand_elements, srceqns):
             source_logger.debug("NaNs filled. Setting dynamical variables...")
             
     #Get first order results
+    #Check that first order model is single field
+    if m.nfields != 1:
+        raise NotImplementedError("Source term can only be calculated for single field models.")
     #The background variables can just be taken as the first k value
-    bgvars = myr[0:3,0]
+    bgvars = myr[m.bg_ix,0]
     #The first order variables need the full k values
-    dphi1 = myr[3,:] + myr[5,:]*1j
-    dphi1dot = myr[4,:] + myr[6,:]*1j
+    dphi1 = myr[m.dps_ix]
+    dphi1dot = myr[m.dpdots_ix]
     #Setup interpolation
     if _debug:
         source_logger.debug("Variables set. Getting potentials for this timestep...")
     #To get the potentials we send the recorded values to the potentials function
     potentials = list(m.potentials(myr, m.pot_params))
     #Get potentials in right shape
-    for pix, p in enumerate(potentials):
+    #Shape of potentials is now determined by number of fields and not ks.
+    #So no need to do this for each potential, but need to be careful about use
+    #of potentials later on.
+    #for pix, p in enumerate(potentials):
         #Check if the shape of the potentials is a scalar
-        if np.shape(p) != ():
+        #if np.shape(p) != ():
             #Change to be a scalar
-            potentials[pix] = p[0]
+            #potentials[pix] = p[0]
             #If the potential is k dependent this needs to be changed to include full
             #k behaviour. The bgvars variable should also include the full k range in
             #this case.

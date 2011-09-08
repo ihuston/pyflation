@@ -1,0 +1,10 @@
+CHANGELOG for Pyflation
+
+08/09/2011 - Updated multifield functionality now includes calculating quantum mode 
+matrix for first order modes. This allows full calculation of all cross terms in 
+the power spectrum of the perturbations. A new nflation potential has also been
+added which allows any number of scalar fields to be used with the same mass.
+
+27/04/2011 - Added multifield syntax for PhiModels and the subclasses BackgroundModel
+and FirstOrderModel. Note that the result of the first order model is now complex,
+the previous split real and imaginary perturbations have been joined together.
