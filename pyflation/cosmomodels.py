@@ -936,14 +936,81 @@ class MultiStageDriver(CosmologicalModel):
         else:
             self.cq = 50 #Default value as in Salopek et al.
         
-    def finda_end(self, Hend, Hreh=None):
-        """Given the Hubble parameter at the end of inflation and at the end of reheating
-            calculate the scale factor at the end of inflation."""
+    
+    def find_efolds_after_inflation(self, Hend, Hreh=None):
+        """Calculate the number of efolds after inflation given the reheating
+        temperature and assuming standard calculation of radiation and matter phases.
+        
+        Parameters
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        
+        Returns
+        -------
+        N : scalar, number of efolds after the end of inflation until today.
+            N = ln (a_today/a_end) where a_end is scale factor at end of inflation.
+            
+        Further Information
+        -------------------
+        See Huston, arXiv: 1006.5321, 
+        Liddle and Lyth, Cambridge University Press 2000, or 
+        Peiris and Easther, JCAP 0807 (2008) 024, arXiv:0805.2154, 
+        for more details on calculation of post-inflation expansion. 
+        """
         if Hreh is None:
             Hreh = Hend #Instantaneous reheating
-        a_0 = 1 # Normalize today
-        a_end = a_0*np.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        N_after = 72.3 + 2.0/3.0*np.log(Hend) - 1.0/6.0*np.log(Hreh)
+        return N_after
+        
+    def finda_end(self, Hend, Hreh=None, a_0=1):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating
+            calculate the scale factor at the end of inflation.
+            
+        This function assumes by default that the scale factor = 1 today and should be used with 
+        caution. A more correct approach is to call find_efolds_after_inflation directly
+        and to use the result as required. 
+        
+        Parameters
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_0 : scalar (default=1), value of scale factor today
+        
+        Returns
+        -------
+        a_end : scalar, scale factor at the end of inflation
+        
+        """
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
+        a_end = a_0*np.exp(-N_after)
         return a_end
+    
+    def finda_0(self, Hend, Hreh=None, a_end=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating,
+        and the scale factor at the end of inflation, calculate the scale factor today.
+        
+        Parameters
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_end : scalar (default calculated from tresult), value of scale factor 
+                at the end of inflation
+        
+        Returns
+        -------
+        a_0 : scalar, scale factor today
+        
+        """
+        if a_end is None:
+            try:
+                a_end = self.ainit*np.exp(self.tresult[-1])
+            except TypeError:
+                raise ModelError("Simulation has not been run yet.")
+            
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
+        a_0 = a_end*np.exp(N_after)
+        return a_0 
         
     def findkcrossing(self, k, t, H, factor=None):
         """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
@@ -963,12 +1030,13 @@ class MultiStageDriver(CosmologicalModel):
         kcrefold = t[kcrindex]
         return kcrindex, kcrefold
     
-    def findallkcrossings(self, t, H, factor=None):
+    def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list"""
-        return np.array([self.findkcrossing(onek, t, H, factor) for onek in self.k])
+        return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        pass
+        """FInd horizon crossing for all ks"""
+        return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
     @property
     def deltaphi(self, recompute=False):
@@ -1803,6 +1871,81 @@ class SOCanonicalThreeStage(MultiStageDriver):
             self._deltaphi = dp1 + 0.5*dp2
         return self._deltaphi
     
+class SOHorizonStart(SOCanonicalThreeStage):
+    """Runs third stage calculation (typically second order perturbations) using
+    a two stage model instance which could be wrapped from a file.
+    
+    Second order calculation starts at horizon crossing.
+    """
+    
+
+    def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
+        """Initialize variables and check that tsmodel exists and is correct form."""
+        
+        
+        #Test whether tsmodel is of correct type
+        if not isinstance(second_stage, FOCanonicalTwoStage):
+            raise ModelError("Need to provide a FOCanonicalTwoStage instance to get first order results from!")
+        else:
+            self.second_stage = second_stage
+            #Set properties to be those of second stage model
+            self.k = np.copy(self.second_stage.k)
+            self.simtstart = self.second_stage.tresult[0]
+            self.fotstart = np.copy(self.second_stage.fotstart)
+            self.fotstartindex = np.copy(self.second_stage.fotstartindex)
+            self.ainit = self.second_stage.ainit
+            self.potentials = self.second_stage.potentials
+            self.potential_func = self.second_stage.potential_func
+            self.pot_params = self.second_stage.pot_params
+        
+        if ystart is None:
+            ystart = np.zeros((4, len(self.k)))
+            
+        #Need to make sure that the tstartindex terms are changed over to new timestep.
+        fotstep = self.second_stage.tstep_wanted
+        sotstep = fotstep*2
+        
+        fohorizons = np.array([second_stage.findkcrossing(second_stage.k[kix],
+                                                         second_stage.bgmodel.tresult,
+                                                         second_stage.bgmodel.yresult[:,2],
+                                                         factor=1) for kix in np.arange(len(second_stage.k)) ])
+        fohorizonindex = fohorizons[:,0]
+        fohorizontimes = fohorizons[:,1]
+        
+        sotstartindex = np.around(fohorizonindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
+        
+        kwargs = dict(ystart=ystart,
+                      tstart=self.second_stage.tresult[0],
+                      tstartindex=sotstartindex,
+                      simtstart=self.simtstart,
+                      tend=self.second_stage.tresult[-1],
+                      tstep_wanted=sotstep,
+                      solver="rkdriver_new",
+                      potential_func=self.second_stage.potential_func,
+                      pot_params=self.second_stage.pot_params
+                      )
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            kwargs.update(soclassargs)
+            
+        #Call superclass
+        super(SOCanonicalThreeStage, self).__init__(**kwargs)
+        
+        if soclass is None:
+            self.soclass = CanonicalSecondOrder
+        else:
+            self.soclass = soclass
+        self.somodel = None
+        
+        #Set up source term
+        if _debug:
+            self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source[:]
+        if self.source is None:
+            raise ModelError("First order model does not have a source term!")
+        #Try to put yresult array in memory
+        self.second_stage.yresultarr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresultarr[:]
         
 class CombinedCanonicalFromFile(MultiStageDriver):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
