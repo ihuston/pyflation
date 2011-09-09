@@ -73,3 +73,37 @@ class TestRhoDots():
         """Test that wrong shapes raise exception."""
         self.H = np.arange(8).reshape((4,2))
         assert_raises(ValueError, deltaprel.rhodots, self.phidot, self.H)
+        
+class TestFullRhoDot():
+    
+    def setup(self):
+        self.phidot = np.arange(24).reshape((4,3,2))
+        self.H = np.arange(8).reshape((4,1,2))
+        self.axis=1
+    
+    def test_shape(self):
+        """Test whether the rhodots are shaped correctly."""    
+        arr = deltaprel.fullrhodot(self.phidot, self.H, self.axis)
+        result = arr.shape
+        newshape = list(self.phidot.shape)
+        del newshape[self.axis]
+        actual = tuple(newshape)
+        assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
+        
+    def test_scalar(self):
+        """Test results of 1x1x1 calculation."""
+        arr = deltaprel.fullrhodot(1.7, 0.5)
+        assert_almost_equal(arr, -3*0.5**3*1.7**2)
+        
+    def test_two_by_one_by_one(self):
+        """Test results of 2x1x1 calculation."""
+        phidot = np.array([3,6]).reshape((2,1,1))
+        H = np.array([1,2]).reshape((2,1,1))
+        arr = deltaprel.fullrhodot(phidot, H)
+        actual = np.sum(np.array([-27, -864]).reshape((2,1,1)),axis=-1)
+        assert_array_almost_equal(arr, actual)
+        
+    def test_wrongshape(self):
+        """Test that wrong shapes raise exception."""
+        self.H = np.arange(8).reshape((4,2))
+        assert_raises(ValueError, deltaprel.fullrhodot, self.phidot, self.H)
