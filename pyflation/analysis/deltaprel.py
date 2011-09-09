@@ -98,7 +98,15 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
         raise ValueError("The mode matrix dimensions are not together.")
     mshapelist = list(mshape)
     del mshapelist[axis]
-    if tuple(mshapelist) != Vphi.shape != phidot.shape:
+    
+    #Make Vphi, phidot and H into at least 1-d arrays
+    Vphi, phidot, H = np.atleast_1d(Vphi, phidot, H)
+    
+    #If Vphi doesn't have k axis then add it
+    if len(Vphi.shape) < len(phidot.shape):
+        Vphi = np.expand_dims(Vphi, axis=-1) 
+    
+    if len(mshapelist) != len(Vphi.shape) != len(phidot.shape):
         raise ValueError("Vphi, phidot and modes arrays must have correct shape.")
     
     #Change shape of phidot, Vphi, H to add extra dimension of modes
@@ -106,8 +114,10 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     phidot = np.expand_dims(phidot, axis+1)
     H = np.expand_dims(H, axis+1)
     
+    #Do first sum over beta index
     internalsum = np.sum(phidot*modes, axis=axis)
-    
+    #Add another dimension to internalsum result
+    internalsum = np.expand_dims(internalsum, axis+1)
     
     result = H*phidot*modes - 0.5 * H**3 * phidot**2 * internalsum + Vphi*modes
     
