@@ -149,7 +149,7 @@ class TestDeltaRhosMatrix():
     def test_extend_Vphi(self):
         """Test that if Vphi has no k axis it is created."""
         Vphi = np.arange(12).reshape((4,3))
-        arr = deltaprel.deltarhosmatrix(Vphi, self.phidot, self.H, 
+        arr = deltaprel.deltarhosmatrix(Vphi, self.phidot, self.H, #@UnusedVariable
                                         self.modes, self.axis)
         #Test that no exception thrown about shape.
         
