@@ -31,14 +31,26 @@ def soundspeeds(Vphi, phidot, H):
         raise ValueError("""Arrays need to have the correct shape.
                             Vphi and phidot should have exactly the same shape,
                             and H should have a dimension of size 1 corresponding
-                            to the "field" dimension of the others.""")
+                            to the field dimension of the others.""")
     return calphasq
 
-def rhodots():
-    """Derivative in e-fold time of the energy densities of the individual fields."""
-    pass
+def rhodots(phidot, H):
+    """Derivative in e-fold time of the energy densities of the individual fields.
+    
+    Arguments
+    ---------
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    Both arrays should have the same number of dimensions, but H should have a 
+    dimension of size 1 corresponding to the field dimension of phidot.
+    """
+    return -3*H**3*(phidot**2)
 
-def fullrhodot():
+def fullrhodot(phidot, H):
     """Combined derivative in e-fold time of the energy density of the field"""
     pass
 
