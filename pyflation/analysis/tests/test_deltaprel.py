@@ -28,7 +28,7 @@ class TestSoundSpeeds():
     def test_scalar(self):
         """Test results of 1x1x1 calculation."""
         arr = deltaprel.soundspeeds(3, 2, 0.5)
-        assert_(arr == 3)
+        assert_(arr == 2)
         
         
     def test_wrongshape(self):
