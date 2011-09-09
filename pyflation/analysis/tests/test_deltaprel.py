@@ -32,6 +32,6 @@ class TestSoundSpeeds():
         
     def test_wrongshape(self):
         """Test that wrong shapes raise exception."""
-        self.H = np.arange(8).reshape((4,2))
+        self.H = np.arange(8).reshape((4,1,2))
         assert_raises(ValueError, deltaprel.soundspeeds, self.Vphi, self.phidot, self.H)
         
