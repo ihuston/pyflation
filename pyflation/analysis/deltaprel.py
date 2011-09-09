@@ -5,6 +5,7 @@ Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 
 '''
+from __future__ import division
 
 def soundspeeds(Vphi, phidot, H):
     """Sound speeds of the background fields
