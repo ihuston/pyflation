@@ -25,9 +25,10 @@ class TestSoundSpeeds():
         arr = deltaprel.soundspeeds(self.Vphi, self.phidot, self.H)
         assert_(arr.shape == self.Vphi.shape)
         
-    def test_calc(self):
-        """Test results of calculation."""
-        arr = deltaprel.soundspeeds(self.Vphi, self.phidot, self.H)
+    def test_scalar(self):
+        """Test results of 1x1x1 calculation."""
+        arr = deltaprel.soundspeeds(3, 2, 0.5)
+        assert_(arr == 3)
         
         
     def test_wrongshape(self):
