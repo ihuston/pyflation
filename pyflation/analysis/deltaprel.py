@@ -117,7 +117,7 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     #Do first sum over beta index
     internalsum = np.sum(phidot*modes, axis=axis)
     #Add another dimension to internalsum result
-    internalsum = np.expand_dims(internalsum, axis+1)
+    internalsum = np.expand_dims(internalsum, axis)
     
     result = H*phidot*modes - 0.5 * H**3 * phidot**2 * internalsum + Vphi*modes
     
