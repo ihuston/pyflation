@@ -1512,7 +1512,13 @@ class FOCanonicalTwoStage(MultiStageDriver):
             mdp = self.getmodematrix(self.yresult, 1, self.dps_ix)
             #Take tensor product of modes and conjugate, summing over second mode
             #index.
-            mPphi = np.tensordot(mdp, mdp.conj(), (2,2))
+            mPphi = np.zeros_like(mdp)
+            #Do for loop as tensordot to memory expensive
+            nfields=self.nfields
+            for i in range(nfields):
+                for j in range(nfields):
+                    for k in range(nfields):
+                        mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
             #Flatten back into vector form
             self._Pphi = self.flattenmodematrix(mPphi, 1, 2) 
         return self._Pphi
