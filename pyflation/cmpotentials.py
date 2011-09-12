@@ -749,7 +749,7 @@ def quartictwofield(y, params=None):
     #deriv of potential wrt \phi
     dUdphi = np.array([m1**2*y[0] + l1*y[0]**3, m2**2*y[2] + l2*y[2]**3])
     #2nd deriv
-    d2Udphi2 = np.eye(2)*np.array([m1**2 + 3*l1*y[0]**2, m2**2 + 3*l2*y[3]**2])
+    d2Udphi2 = np.eye(2)*np.array([m1**2 + 3*l1*y[0]**2, m2**2 + 3*l2*y[2]**2])
     #3rd deriv
     d3Udphi3 = None
     
