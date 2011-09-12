@@ -715,3 +715,42 @@ def nflation(y, params=None):
     d3Udphi3 = None
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def quartictwofield(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2 + 1/2 m^2 chi^2
+    where m is the mass of the fields. Needs nfields=2.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             
+    """
+    
+    #Check if mass is specified in params
+    if params:
+        m1 = params.get("m1", 5e-6)
+        m2 = params.get("m2", 5e-8)
+        l1 = params.get("l1", 5e-10)
+        l2 = params.get("l2", 5e-14)
+    else:
+        m1 = 5e-6
+        m2 = 5e-8
+        
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+    #potential U = 1/2 m^2 \phi^2
+    U = np.asscalar(0.5*(m1**2*y[0]**2 + 0.5*l1*y[0]**4 + m2**2*y[2]**2 + 0.5*l2*y[2]**4))
+    #deriv of potential wrt \phi
+    dUdphi = np.array([m1**2*y[0] + l1*y[0]**3, m2**2*y[2] + l2*y[2]**3])
+    #2nd deriv
+    d2Udphi2 = np.eye(2)*np.array([m1**2 + 3*l1*y[0]**2, m2**2 + 3*l2*y[2]**2])
+    #3rd deriv
+    d3Udphi3 = None
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3

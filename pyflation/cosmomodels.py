@@ -1507,9 +1507,19 @@ class FOCanonicalTwoStage(MultiStageDriver):
               3-d array of Pphi values for all timesteps, fields and k modes
         """
         #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:        
+        if not hasattr(self, "_Pphi") or recompute:     
+            #Get into mode matrix form, over first axis   
             mdp = self.getmodematrix(self.yresult, 1, self.dps_ix)
-            mPphi = (mdp[:,:,:,np.newaxis,:]*mdp[:,:,np.newaxis,:,:].conj()).sum(axis=2)
+            #Take tensor product of modes and conjugate, summing over second mode
+            #index.
+            mPphi = np.zeros_like(mdp)
+            #Do for loop as tensordot to memory expensive
+            nfields=self.nfields
+            for i in range(nfields):
+                for j in range(nfields):
+                    for k in range(nfields):
+                        mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
+            #Flatten back into vector form
             self._Pphi = self.flattenmodematrix(mPphi, 1, 2) 
         return self._Pphi
     
