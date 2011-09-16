@@ -159,6 +159,32 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     """
+    
+    mshape = modes.shape
+    if mshape[axis+1] != mshape[axis]:
+        raise ValueError("The mode matrix dimensions are not together.")
+    mshapelist = list(mshape)
+    del mshapelist[axis]
+    
+    #Make Vphi, phidot and H into at least 1-d arrays
+    Vphi, phidot, H = np.atleast_1d(Vphi, phidot, H)
+    
+    #If Vphi doesn't have k axis then add it
+    if len(Vphi.shape) < len(phidot.shape):
+        Vphi = np.expand_dims(Vphi, axis=-1) 
+    
+    if len(mshapelist) != len(Vphi.shape) != len(phidot.shape):
+        raise ValueError("Vphi, phidot and modes arrays must have correct shape.")
+    
+    #If H doesn't have a field axis then add one
+    if len(H.shape) < len(phidot.shape):
+        H = np.expand_dims(H, axis)
+    
+    #Change shape of phidot, Vphi, H to add extra dimension of modes
+    Vphi = np.expand_dims(Vphi, axis+1)
+    phidot = np.expand_dims(phidot, axis+1)
+    H = np.expand_dims(H, axis+1)
+    
     cs = soundspeeds(Vphi, phidot, H)
     rhodots = rhodots(phidot, H)
     fullrhodot = fullrhodot(phidot, H, axis)
