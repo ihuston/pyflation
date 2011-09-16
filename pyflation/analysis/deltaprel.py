@@ -135,9 +135,52 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     
     
 
-def deltaprel():
-    """Perturbed relative pressure of the fields given as quantum mode functions."""
-    pass
+def deltaprelmodes(Vphi, phidot, H, modes, axis):
+    """Perturbed relative pressure of the fields given as quantum mode functions.
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+    
+    """
+    cs = soundspeeds(Vphi, phidot, H)
+    rhodots = rhodots(phidot, H)
+    fullrhodot = fullrhodot(phidot, H, axis)
+    drhos = deltarhosmatrix(Vphi, phidot, H, modes, axis)
+    
+    res_shape = list(drhos.shape)
+    del res_shape[axis]
+    
+    result = np.zeros(res_shape)
+    for i in range(res_shape[axis]):
+        ix_I = [slice(None)]*axis + [slice(i,i+1)]
+        for a in range(rhodots.shape[axis]):
+            for b in range(rhodots.shape[axis]):
+                if a != b:
+                    ix_a = [slice(None)]*axis + [slice(a,a+1)]
+                    ix_b = [slice(None)]*axis + [slice(b,b+1)]
+                    ix_aI = ix_a + [slice(i,i+1)]
+                    ix_bI = ix_b + [slice(i,i+1)]
+                    result[ix_I] += 1/(2*fullrhodot) * ((cs[ix_a]**2 - cs[ix_b]**2) 
+                                    * (rhodots[ix_b]*drhos[ix_aI] - rhodots[ix_a*drhos[ix_bI]])) 
+    return result
+    
 
 def deltaprelspectrum():
     """Power spectrum of the full perturbed relative pressure."""
