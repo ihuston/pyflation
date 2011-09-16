@@ -107,12 +107,12 @@ class TestFullRhoDot():
 class TestDeltaRhosMatrix():
     
     def setup(self):
-        self.Vphi = np.arange(24).reshape((4,3,2))
-        self.phidot = np.arange(24).reshape((4,3,2))
-        self.H = np.arange(8).reshape((4,1,2))
+        self.Vphi = np.arange(24.0).reshape((4,3,2))
+        self.phidot = np.arange(24.0).reshape((4,3,2))
+        self.H = np.arange(8.0).reshape((4,1,2))
         self.axis=1
         
-        self.modes = np.arange(72).reshape((4,3,3,2))
+        self.modes = np.arange(72.0).reshape((4.0,3,3,2))
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
