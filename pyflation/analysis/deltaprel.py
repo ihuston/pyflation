@@ -109,6 +109,10 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     if len(mshapelist) != len(Vphi.shape) != len(phidot.shape):
         raise ValueError("Vphi, phidot and modes arrays must have correct shape.")
     
+    #If H doesn't have a field axis then add one
+    if len(H.shape) < len(phidot.shape):
+        H = np.expand_dims(H, axis)
+    
     #Change shape of phidot, Vphi, H to add extra dimension of modes
     Vphi = np.expand_dims(Vphi, axis+1)
     phidot = np.expand_dims(phidot, axis+1)

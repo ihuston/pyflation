@@ -140,11 +140,12 @@ class TestDeltaRhosMatrix():
         actual = np.array([-85, -4245]).reshape((2,1,1,1))
         assert_array_almost_equal(arr, actual)
         
-    def test_wrongshape(self):
-        """Test that wrong shapes raise exception."""
-        self.H = np.arange(8).reshape((4,2))
-        assert_raises(ValueError, deltaprel.deltarhosmatrix, self.Vphi, self.phidot, 
-                      self.H, self.modes, self.axis)
+    def test_extend_H(self):
+        """Test that if H has no field axis it is created."""
+        H = np.arange(8).reshape((4,2))
+        arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, H, #@UnusedVariable
+                                        self.modes, self.axis)
+        #Test that no exception thrown about shape.
         
     def test_extend_Vphi(self):
         """Test that if Vphi has no k axis it is created."""
@@ -153,12 +154,22 @@ class TestDeltaRhosMatrix():
                                         self.modes, self.axis)
         #Test that no exception thrown about shape.
         
-        
+    def test_two_by_two_by_one(self):
+        """Test that 2x2x1 calculation works."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([7,9]).reshape((2,1))
+        modes = np.array([[1,3],[2,5]]).reshape((2,2,1))
+        axis = 0
+        H = np.array([2]).reshape((1,1))
+        arr = deltaprel.deltarhosmatrix(Vphi, phidot, H, modes, axis)
+        desired = np.array([[-4885,-12891],[-8060,-21284]]).reshape((2,2,1))
+        assert_almost_equal(arr, desired)
+                
     def test_std_result(self):
         """Test simple calculation with modes of shape (4,3,3,2)."""
         arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, self.H, 
                                         self.modes, self.axis)
-        assert_almost_equal(self.stdresult, arr, decimal=12)
+        assert_almost_equal(arr, self.stdresult, decimal=12)
            
     stdresult = np.array([[[[  0.0000000000000000e+00,  -4.1500000000000000e+01],
          [  0.0000000000000000e+00,  -4.6500000000000000e+01],
