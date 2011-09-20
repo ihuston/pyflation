@@ -178,31 +178,27 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
     if len(H.shape) < len(phidot.shape):
         H = np.expand_dims(H, axis)
     
-    #Change shape of phidot, Vphi, H to add extra dimension of modes
-    Vphi = np.expand_dims(Vphi, axis+1)
-    phidot = np.expand_dims(phidot, axis+1)
-    H = np.expand_dims(H, axis+1)
-    
     cs = soundspeeds(Vphi, phidot, H)
     rdots = rhodots(phidot, H)
     rhodot = fullrhodot(phidot, H, axis)
+    #Add dimension to rhodot result
+    rhodot = np.expand_dims(rhodot, axis)
     drhos = deltarhosmatrix(Vphi, phidot, H, modes, axis)
     
     res_shape = list(drhos.shape)
     del res_shape[axis]
     
     result = np.zeros(res_shape)
-    for i in range(res_shape[axis]):
-        ix_I = [slice(None)]*axis + [slice(i,i+1)]
-        for a in range(rdots.shape[axis]):
-            for b in range(rdots.shape[axis]):
-                if a != b:
-                    ix_a = [slice(None)]*axis + [slice(a,a+1)]
-                    ix_b = [slice(None)]*axis + [slice(b,b+1)]
-                    ix_aI = ix_a + [slice(i,i+1)]
-                    ix_bI = ix_b + [slice(i,i+1)]
-                    result[ix_I] += 1/(2*rhodot) * ((cs[ix_a]**2 - cs[ix_b]**2) 
-                                    * (rdots[ix_b]*drhos[ix_aI] - rdots[ix_a*drhos[ix_bI]])) 
+                    
+    for ix in np.ndindex(tuple(res_shape[:axis])):
+        for i in range(res_shape[axis]):
+            for a in range(rdots.shape[axis]):
+                for b in range(rdots.shape[axis]):
+                    if a != b:
+                        result[ix, i] += (1/(2*rhodot[ix]) * (cs[ix,a]**2 - cs[ix,b]**2) 
+                                          * (rdots[ix, b]*drhos[ix, a, i] - rdots[ix, a]*drhos[ix,b,i]))  
+        
+    1/0
     return result
     
 
