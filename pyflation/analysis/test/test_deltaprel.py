@@ -223,5 +223,30 @@ class TestDeltaRhosMatrix():
          [ -2.0196822800000000e+08,  -3.7367703250000000e+08]]]])
         
         
+class TestDeltaPrelMatrix():
     
+    def setup(self):
+        self.Vphi = np.arange(24.0).reshape((4,3,2))
+        self.phidot = np.arange(1.0, 25.0).reshape((4,3,2))
+        self.H = np.arange(1.0, 9.0).reshape((4,1,2))
+        self.axis=1
+        
+        self.modes = np.arange(72.0).reshape((4.0,3,3,2))
+    
+    def test_shape(self):
+        """Test whether the rhodots are shaped correctly."""    
+        arr = deltaprel.deltaprelmodes(self.Vphi, self.phidot, self.H, self.modes, self.axis)
+        result = arr.shape
+        actual = self.Vphi.shape
+        assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
+    
+    def test_singlefield(self):
+        """Test single field calculation."""
+        modes = np.array([[7]])
+        Vphi = 3
+        phidot = 1.7
+        H = 0.5
+        axis=0
+        arr = deltaprel.deltaprelmodes(Vphi, phidot, H, modes, axis)
+        assert_almost_equal(arr, np.zeros_like(arr))
         

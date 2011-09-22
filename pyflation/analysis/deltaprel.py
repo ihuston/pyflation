@@ -198,7 +198,7 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
                         result[ix, i] += (1/(2*rhodot[ix]) * (cs[ix,a]**2 - cs[ix,b]**2) 
                                           * (rdots[ix, b]*drhos[ix, a, i] - rdots[ix, a]*drhos[ix,b,i]))  
         
-    1/0
+    
     return result
     
 
