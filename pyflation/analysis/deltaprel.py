@@ -69,7 +69,7 @@ def fullrhodot(phidot, H, axis=-1):
     """
     return np.sum(rhodots(phidot, H), axis=axis)
 
-def deltarhosmatrix(Vphi, phidot, H, modes, axis):
+def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
     """Matrix of the first order perturbed energy densities of the field components.
     
     Arguments
@@ -86,6 +86,10 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     modes: array_like
            Mode matrix of first order perturbations. Component array should
            have two dimensions of length nfields.
+           
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
     
     axis: integer
           Specifies which axis is first in mode matrix, e.g. if modes has shape
@@ -96,6 +100,8 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     mshape = modes.shape
     if mshape[axis+1] != mshape[axis]:
         raise ValueError("The mode matrix dimensions are not together.")
+    if mshape != modesdot.shape:
+        raise ValueError("Mode matrix and its derivative should be the same shape.")
     mshapelist = list(mshape)
     del mshapelist[axis]
     
@@ -123,7 +129,7 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     #Add another dimension to internalsum result
     internalsum = np.expand_dims(internalsum, axis)
     
-    result = H*phidot*modes
+    result = H*phidot*modesdot
     result -= 0.5*H**3*phidot**2*internalsum
     result += Vphi*modes
     
@@ -133,7 +139,7 @@ def deltarhosmatrix(Vphi, phidot, H, modes, axis):
     
     
 
-def deltaprelmodes(Vphi, phidot, H, modes, axis):
+def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
     Arguments
@@ -151,6 +157,10 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
            Mode matrix of first order perturbations. Component array should
            have two dimensions of length nfields.
     
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
     axis: integer
           Specifies which axis is first in mode matrix, e.g. if modes has shape
           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
@@ -161,6 +171,8 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
     mshape = modes.shape
     if mshape[axis+1] != mshape[axis]:
         raise ValueError("The mode matrix dimensions are not together.")
+    if mshape != modesdot.shape:
+        raise ValueError("Mode matrix and its derivative should be the same shape.")
     mshapelist = list(mshape)
     del mshapelist[axis]
     
@@ -181,9 +193,7 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
     cs = soundspeeds(Vphi, phidot, H)
     rdots = rhodots(phidot, H)
     rhodot = fullrhodot(phidot, H, axis)
-    #Add dimension to rhodot result
-    rhodot = np.expand_dims(rhodot, axis)
-    drhos = deltarhosmatrix(Vphi, phidot, H, modes, axis)
+    drhos = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
     
     res_shape = list(drhos.shape)
     del res_shape[axis]
@@ -195,8 +205,8 @@ def deltaprelmodes(Vphi, phidot, H, modes, axis):
             for a in range(rdots.shape[axis]):
                 for b in range(rdots.shape[axis]):
                     if a != b:
-                        result[ix, i] += (1/(2*rhodot[ix]) * (cs[ix,a]**2 - cs[ix,b]**2) 
-                                          * (rdots[ix, b]*drhos[ix, a, i] - rdots[ix, a]*drhos[ix,b,i]))  
+                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (cs[ix+(a,)]**2 - cs[ix+(b,)]**2) 
+                                          * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)]))  
         
     
     return result
