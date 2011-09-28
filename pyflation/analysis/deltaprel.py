@@ -205,7 +205,7 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
             for a in range(rdots.shape[axis]):
                 for b in range(rdots.shape[axis]):
                     if a != b:
-                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (cs[ix+(a,)]**2 - cs[ix+(b,)]**2) 
+                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (cs[ix+(a,)] - cs[ix+(b,)]) 
                                           * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)]))  
         
     
