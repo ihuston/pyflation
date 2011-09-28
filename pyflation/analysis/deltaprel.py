@@ -129,7 +129,7 @@ def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
     #Add another dimension to internalsum result
     internalsum = np.expand_dims(internalsum, axis)
     
-    result = H*phidot*modesdot
+    result = H**2*phidot*modesdot
     result -= 0.5*H**3*phidot**2*internalsum
     result += Vphi*modes
     
