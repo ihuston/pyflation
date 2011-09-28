@@ -113,10 +113,12 @@ class TestDeltaRhosMatrix():
         self.axis=1
         
         self.modes = np.arange(72.0).reshape((4.0,3,3,2))
+        self.modesdot = np.arange(10.0, 82.0).reshape((4.0,3,3,2))
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, self.H, self.modes, self.axis)
+        arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, self.H, 
+                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.modes.shape
         assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
@@ -124,8 +126,9 @@ class TestDeltaRhosMatrix():
     def test_scalar(self):
         """Test results of scalar calculation with 1x1 mode matrix."""
         modes = np.array([[7]])
-        arr = deltaprel.deltarhosmatrix(3, 1.7, 0.5, modes, axis=0)
-        assert_almost_equal(arr, np.array([[0.5*1.7*7-0.5**4*1.7**2*1.7*7+21]]))
+        modesdot = np.array([[3]])
+        arr = deltaprel.deltarhosmatrix(3, 1.7, 0.5, modes, modesdot, axis=0)
+        assert_almost_equal(arr, np.array([[0.5**2*1.7*3-0.5**4*1.7**2*1.7*7+21]]))
         
     def test_two_by_one_by_one(self):
         """Test results of 2x1x1 calculation."""
@@ -134,24 +137,25 @@ class TestDeltaRhosMatrix():
         H = np.array([1,2]).reshape((2,1,1))
         
         modes = np.array([10,5]).reshape((2,1,1,1))
+        modesdot = np.array([10,5]).reshape((2,1,1,1))
         axis = 2
         
-        arr = deltaprel.deltarhosmatrix(Vphi, phidot, H, modes, axis)
-        actual = np.array([-85, -4245]).reshape((2,1,1,1))
+        arr = deltaprel.deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        actual = np.array([-85, -4185]).reshape((2,1,1,1))
         assert_array_almost_equal(arr, actual)
         
     def test_extend_H(self):
         """Test that if H has no field axis it is created."""
         H = np.arange(8).reshape((4,2))
         arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, H, #@UnusedVariable
-                                        self.modes, self.axis)
+                                        self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
     def test_extend_Vphi(self):
         """Test that if Vphi has no k axis it is created."""
         Vphi = np.arange(12).reshape((4,3))
         arr = deltaprel.deltarhosmatrix(Vphi, self.phidot, self.H, #@UnusedVariable
-                                        self.modes, self.axis)
+                                        self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
     def test_two_by_two_by_one(self):
@@ -159,68 +163,69 @@ class TestDeltaRhosMatrix():
         Vphi = np.array([1,2]).reshape((2,1))
         phidot = np.array([7,9]).reshape((2,1))
         modes = np.array([[1,3],[2,5]]).reshape((2,2,1))
+        modesdot = np.array([[1,3],[2,5]]).reshape((2,2,1))
         axis = 0
         H = np.array([2]).reshape((1,1))
-        arr = deltaprel.deltarhosmatrix(Vphi, phidot, H, modes, axis)
-        desired = np.array([[-4885,-12891],[-8060,-21284]]).reshape((2,2,1))
+        arr = deltaprel.deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([[-4871,-12849],[-8024,-21194]]).reshape((2,2,1))
         assert_almost_equal(arr, desired)
                 
     def test_std_result(self):
         """Test simple calculation with modes of shape (4,3,3,2)."""
         arr = deltaprel.deltarhosmatrix(self.Vphi, self.phidot, self.H, 
-                                        self.modes, self.axis)
+                                        self.modes, self.modesdot, self.axis)
         assert_almost_equal(arr, self.stdresult, decimal=12)
            
-    stdresult = np.array([[[[  0.0000000000000000e+00,  -4.1500000000000000e+01],
-         [  0.0000000000000000e+00,  -4.6500000000000000e+01],
-         [  0.0000000000000000e+00,  -5.1500000000000000e+01]],
+    stdresult = np.array([[[[  0.000000000000e+00,  -3.150000000000e+01],
+         [  0.000000000000e+00,  -3.650000000000e+01],
+         [  0.000000000000e+00,  -4.150000000000e+01]],
 
-        [[  1.2000000000000000e+01,  -3.4950000000000000e+02],
-         [  1.6000000000000000e+01,  -4.1850000000000000e+02],
-         [  2.0000000000000000e+01,  -4.8750000000000000e+02]],
+        [[  1.200000000000e+01,  -3.195000000000e+02],
+         [  1.600000000000e+01,  -3.885000000000e+02],
+         [  2.000000000000e+01,  -4.575000000000e+02]],
 
-        [[  4.8000000000000000e+01,  -9.5750000000000000e+02],
-         [  5.6000000000000000e+01,  -1.1625000000000000e+03],
-         [  6.4000000000000000e+01,  -1.3675000000000000e+03]]],
-
-
-       [[[ -8.6076000000000000e+04,  -4.6185650000000000e+05],
-         [ -9.2952000000000000e+04,  -4.9752150000000000e+05],
-         [ -9.9828000000000000e+04,  -5.3318650000000000e+05]],
-
-        [[ -1.5302400000000000e+05,  -7.6345650000000000e+05],
-         [ -1.6526400000000000e+05,  -8.2243350000000000e+05],
-         [ -1.7750400000000000e+05,  -8.8141050000000000e+05]],
-
-        [[ -2.3910000000000000e+05,  -1.1404525000000000e+06],
-         [ -2.5824000000000000e+05,  -1.2285735000000000e+06],
-         [ -2.7738000000000000e+05,  -1.3166945000000000e+06]]],
+        [[  4.800000000000e+01,  -9.075000000000e+02],
+         [  5.600000000000e+01,  -1.112500000000e+03],
+         [  6.400000000000e+01,  -1.317500000000e+03]]],
 
 
-       [[[ -8.2369440000000000e+06,  -2.0689051500000000e+07],
-         [ -8.6238960000000000e+06,  -2.1639520500000000e+07],
-         [ -9.0108480000000000e+06,  -2.2589989500000000e+07]],
+       [[[ -8.562000000000e+04,  -4.604285000000e+05],
+         [ -9.247200000000e+04,  -4.960095000000e+05],
+         [ -9.932400000000e+04,  -5.315905000000e+05]],
 
-        [[ -1.1211396000000000e+07,  -2.7544567500000000e+07],
-         [ -1.1738104000000000e+07,  -2.8810012500000000e+07],
-         [ -1.2264812000000000e+07,  -3.0075457500000000e+07]],
+        [[ -1.523200000000e+05,  -7.612965000000e+05],
+         [ -1.645280000000e+05,  -8.201655000000e+05],
+         [ -1.767360000000e+05,  -8.790345000000e+05]],
 
-        [[ -1.4643456000000000e+07,  -3.5379439500000000e+07],
-         [ -1.5331424000000000e+07,  -3.7004860500000000e+07],
-         [ -1.6019392000000000e+07,  -3.8630281500000000e+07]]],
+        [[ -2.381000000000e+05,  -1.137416500000e+06],
+         [ -2.572000000000e+05,  -1.225405500000e+06],
+         [ -2.763000000000e+05,  -1.313394500000e+06]]],
 
 
-       [[[ -1.2680420400000000e+08,  -2.3940341050000000e+08],
-         [ -1.3100299200000000e+08,  -2.4720395550000000e+08],
-         [ -1.3520178000000000e+08,  -2.5500450050000000e+08]],
+       [[[ -8.229840000000e+06,  -2.067618150000e+07],
+         [ -8.616504000000e+06,  -2.162613050000e+07],
+         [ -9.003168000000e+06,  -2.257607950000e+07]],
 
-        [[ -1.5654840000000000e+08,  -2.9245676250000000e+08],
-         [ -1.6173212000000000e+08,  -3.0198599550000000e+08],
-         [ -1.6691584000000000e+08,  -3.1151522850000000e+08]],
+        [[ -1.120210000000e+07,  -2.752791750000e+07],
+         [ -1.172847200000e+07,  -2.879276250000e+07],
+         [ -1.225484400000e+07,  -3.005760750000e+07]],
 
-        [[ -1.8942356400000000e+08,  -3.5081544650000000e+08],
-         [ -1.9569589600000000e+08,  -3.6224623950000000e+08],
-         [ -2.0196822800000000e+08,  -3.7367703250000000e+08]]]])
+        [[ -1.463168000000e+07,  -3.535852950000e+07],
+         [ -1.531926400000e+07,  -3.698327050000e+07],
+         [ -1.600684800000e+07,  -3.860801150000e+07]]],
+
+
+       [[[ -1.267685640000e+08,  -2.393502105000e+08],
+         [ -1.309662720000e+08,  -2.471491595000e+08],
+         [ -1.351639800000e+08,  -2.549481085000e+08]],
+
+        [[ -1.565052000000e+08,  -2.923926705000e+08],
+         [ -1.616877200000e+08,  -3.019201395000e+08],
+         [ -1.668702400000e+08,  -3.114476085000e+08]],
+
+        [[ -1.893720840000e+08,  -3.507394545000e+08],
+         [ -1.956430960000e+08,  -3.621683155000e+08],
+         [ -2.019141080000e+08,  -3.735971765000e+08]]]])
         
         
 class TestDeltaPrelMatrix():
@@ -232,10 +237,12 @@ class TestDeltaPrelMatrix():
         self.axis=1
         
         self.modes = np.arange(72.0).reshape((4.0,3,3,2))
+        self.modesdot = np.arange(10.0, 82.0).reshape((4.0,3,3,2))
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = deltaprel.deltaprelmodes(self.Vphi, self.phidot, self.H, self.modes, self.axis)
+        arr = deltaprel.deltaprelmodes(self.Vphi, self.phidot, self.H, 
+                                       self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.Vphi.shape
         assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
@@ -243,10 +250,23 @@ class TestDeltaPrelMatrix():
     def test_singlefield(self):
         """Test single field calculation."""
         modes = np.array([[7]])
+        modesdot = np.array([[3]])
         Vphi = 3
         phidot = 1.7
         H = 0.5
         axis=0
-        arr = deltaprel.deltaprelmodes(Vphi, phidot, H, modes, axis)
+        arr = deltaprel.deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.zeros_like(arr))
         
+    def test_two_by_two_by_one(self):
+        """Test that 2x2x1 calculation works."""
+        Vphi = np.array([5.5,2.3]).reshape((2,1))
+        phidot = np.array([2,5]).reshape((2,1))
+        modes = np.array([[1/3.0,0.1],[0.1,0.5]]).reshape((2,2,1))
+        modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
+        axis = 0
+        H = np.array([3]).reshape((1,1))
+        arr = deltaprel.deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([0.31535513, 0.42954734370370623]).reshape((2,1))
+        assert_almost_equal(arr, desired)
+                
