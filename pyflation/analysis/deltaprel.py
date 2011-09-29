@@ -198,7 +198,7 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     res_shape = list(drhos.shape)
     del res_shape[axis]
     
-    result = np.zeros(res_shape)
+    result = np.zeros(res_shape, dtype=modes.dtype)
                     
     for ix in np.ndindex(tuple(res_shape[:axis])):
         for i in range(res_shape[axis]):
