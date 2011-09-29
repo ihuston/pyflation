@@ -212,6 +212,10 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     return result
     
 
-def deltaprelspectrum():
+def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure."""
-    pass
+    dPrelI = deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+    
+    spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
+    
+    return spectrum
