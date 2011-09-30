@@ -219,3 +219,45 @@ def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
     
     return spectrum
+
+def dprel_from_model(m, tix=None, kix=None):
+    """Get the spectrum of delta Prel from a model instance.
+    
+    Arguments
+    ---------
+    m: Cosmomodels model instance
+       The model instance with which to perform the calculation
+       
+    tix: integer
+         Index for timestep at which to perform calculation. Default is to 
+         calculate over all timesteps.
+        
+    kix: integer
+         Index for k mode for which to perform the calculation. Default is to
+         calculate over all k modes.
+         
+    Returns
+    -------
+    spectrum: array
+              Array of values of the power spectrum of the relativistic pressure
+              perturbation
+    """
+    if tix is None:
+        tslice = slice(None)
+    else:
+        tslice = slice(tix, tix+1)
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+    
+    phidot = m.yresult[tslice, m.phidots_ix, kslice]
+    H = m.yresult[tslice, m.H_ix, kslice]
+    Vphi = np.array([m.potentials(myr, m.pot_params)[1] 
+                     for myr in m.yresult[tslice,m.bg_ix,kslice]])
+    modes = m.getmodematrix(m.yresult[tslice, m.dps_ix, kslice])
+    modesdot = m.getmodematrix(m.yresult[tslice, m.dpdots_ix, kslice])
+    axis = 1
+    result = deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    
+    return result
