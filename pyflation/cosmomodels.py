@@ -228,15 +228,9 @@ class CosmologicalModel(object):
         else:
             raise IOError("Directory 'results' does not exist")
         
-        #Check whether we should store ks and set group name accordingly
-        if self.k is None:
-            grpname = "bgresults"
-            if yresultshape is None:
-                yresultshape = (0, self.nfields*2+1, 1)
-        else:
-            grpname = "results"
-            if yresultshape is None:
-                yresultshape = (0, self.nfields*2+1+self.nfields**2, len(self.k))
+        if yresultshape is None:
+            yresultshape = list(self.yresult.shape)
+            yresultshape[0] = 0
                 
         if filetype is "hf5":
             try:
