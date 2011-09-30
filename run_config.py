@@ -81,7 +81,7 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
             "nflation":  {"potential_func": "nflation",
                                 "pot_params": None,
                                 "nfields": 2,
-                                "bgystart": None, #Defaults to (18,-0.1)/sqrt(nfields)
+                                "bgystart": None,} #Defaults to (18,-0.1)/sqrt(nfields)
             }
 
 ##############################
