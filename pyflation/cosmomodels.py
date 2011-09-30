@@ -231,6 +231,12 @@ class CosmologicalModel(object):
         if yresultshape is None:
             yresultshape = list(self.yresult.shape)
             yresultshape[0] = 0
+        
+        #Check whether we should store ks and set group name accordingly
+        if self.k is None:
+            grpname = "bgresults"
+        else:
+            grpname = "results"
                 
         if filetype is "hf5":
             try:
