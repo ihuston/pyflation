@@ -228,15 +228,15 @@ class CosmologicalModel(object):
         else:
             raise IOError("Directory 'results' does not exist")
         
+        if yresultshape is None:
+            yresultshape = list(self.yresult.shape)
+            yresultshape[0] = 0
+        
         #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
-            if yresultshape is None:
-                yresultshape = (0, self.nfields*2+1, 1)
         else:
             grpname = "results"
-            if yresultshape is None:
-                yresultshape = (0, self.nfields*4+1, len(self.k))
                 
         if filetype is "hf5":
             try:
@@ -1155,17 +1155,19 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Variables finally stored are as in first order class.
     """ 
                                                       
-    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
+    def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, nfields=1, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
-        if ystart is None:
-            self.ystart= np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
-                                  + [0.0] + [1.0,0.0]*nfields**2)
+        if bgystart is None:
+            self.bgystart = np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
+                                  + [0.0])
         else:
-            self.ystart = ystart
+            self.bgystart = bgystart
+        #Lengthen bgystart to add perturbed fields.
+        self.ystart= np.append(self.bgystart, [0.0,0.0]*nfields**2)
             
         if not tstartindex:
             self.tstartindex = np.array([0])
