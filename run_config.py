@@ -43,41 +43,45 @@ LOGLEVEL = configuration.LOGLEVEL
 # the next item of the dictionary.
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+                                "bgystart": np.array([18.0, -0.1,0])},
             "lambdaphi4":      {"potential_func": "lambdaphi4",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
+                                "bgystart": np.array([25.0, 0,0])},
             "hybrid2and4":     {"potential_func": "hybrid2and4",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
+                                "bgystart": np.array([25.0, 0,0])},
             "linde":           {"potential_func": "linde",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([25.0, 0,0,0,0,0,0])},
+                                "bgystart": np.array([25.0, 0,0])},
             "phi2over3":       {"potential_func": "phi2over3",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([10.0, 0,0,0,0,0,0])},
+                                "bgystart": np.array([10.0, 0,0])},
             "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([18.0, 0,0,0,0,0,0])},
+                                "bgystart": np.array([18.0, 0,0])},
             "step_potential":  {"potential_func": "step_potential",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+                                "bgystart": np.array([18.0, -0.1,0])},
             "bump_potential":  {"potential_func": "bump_potential",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 1,
-                                "ystart": np.array([18.0, -0.1,0,0,0,0,0])},
+                                "bgystart": np.array([18.0, -0.1,0])},
             "hybridquadratic":  {"potential_func": "hybridquadratic",
-                                "pot_params": None,
+                                "pot_params": {},
                                 "nfields": 2,
-                                "ystart": np.array([15.0, -0.1, 5.0,0.0,0,0,0,0,0])},
+                                "bgystart": np.array([15.0, -0.1, 5.0,0.0,0])},
+            "nflation":  {"potential_func": "nflation",
+                                "pot_params": {},
+                                "nfields": 2,
+                                "bgystart": None,} #Defaults to (18,-0.1)/sqrt(nfields)
             }
 
 ##############################
@@ -172,12 +176,15 @@ hold_jid_list= "" # List of jobs this task depends on
 ###############################################################################
 ###############################################################################
 
+#Add nfields into pot_params dictionary if not already there
+if not "nfields" in fx["pot_params"]:
+    fx["pot_params"]["nfields"] = fx["nfields"]
 
 #Arguments for first and second order models
 foargs = {"potential_func": fx["potential_func"],
           "pot_params": fx["pot_params"],
           "nfields": fx["nfields"],
-          "ystart": fx["ystart"],
+          "bgystart": fx["bgystart"],
           "cq": cq,
           "solver": "rkdriver_tsix"}
 soargs = {"solver": "rkdriver_tsix",
