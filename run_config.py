@@ -78,6 +78,10 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "pot_params": None,
                                 "nfields": 2,
                                 "bgystart": np.array([15.0, -0.1, 5.0,0.0,0])},
+            "nflation":  {"potential_func": "nflation",
+                                "pot_params": None,
+                                "nfields": 2,
+                                "bgystart": None, #Defaults to (18,-0.1)/sqrt(nfields)
             }
 
 ##############################
