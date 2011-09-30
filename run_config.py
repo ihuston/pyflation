@@ -176,6 +176,9 @@ hold_jid_list= "" # List of jobs this task depends on
 ###############################################################################
 ###############################################################################
 
+#Add nfields into pot_params dictionary if not already there
+if not "nfields" in fx["pot_params"]:
+    fx["pot_params"]["nfields"] = fx["nfields"]
 
 #Arguments for first and second order models
 foargs = {"potential_func": fx["potential_func"],
