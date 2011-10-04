@@ -332,6 +332,10 @@ class CosmologicalModel(object):
             yresarr = resgrp.yresult
             yresarr.append(self.yresult)
             
+            #Save tresults
+            tresarr = resgrp.tresult
+            tresarr.append(self.tresult)
+            
             #Flush saved results to file
             rf.flush()
             #Close file
