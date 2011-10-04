@@ -285,6 +285,8 @@ class CosmologicalModel(object):
                 #Save results
                 yresarr = rf.createEArray(resgroup, "yresult", tables.ComplexAtom(itemsize=16), yresultshape, filters=filters, expectedrows=8194)
                 karr = rf.createArray(resgroup, "k", self.k)
+                ystartarr = rf.createArray(resgroup, "ystart", self.ystart)
+                bgystartarr = rf.createArray(resgroup, "bgystart", self.bgystart)
                 if hasattr(self, "foystart"):
                     foystarr = rf.createArray(resgroup, "foystart", self.foystart)
                     fotstarr = rf.createArray(resgroup, "fotstart", self.fotstart)
@@ -1659,6 +1661,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self._rf = tables.openFile(filename, "r")
                     self.yresult = self._rf.root.results.yresult
                     self.tresult = self._rf.root.results.tresult
+                    self.bgystart = self._rf.root.results.bgystart
+                    self.ystart = self._rf.root.results.ystart
                     self.fotstart = self._rf.root.results.fotstart
                     if "fotstartindex" in self._rf.root.results:
                         #for backwards compatability only set if it exists
@@ -1710,7 +1714,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 elif len(self.ystart.shape) == 2:
                     ys = self.ystart[self.bg_ix,0]
             else:
-                ys = self.foystart[self.bg_ix,0]
+                ys = self._rf.root.results.bgresults.yresult[0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, solver=self.solver,
                             potential_func=self.potential_func, 
