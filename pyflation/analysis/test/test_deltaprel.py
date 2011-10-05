@@ -8,6 +8,7 @@ from numpy.testing import assert_, assert_raises, \
                           assert_array_almost_equal, \
                           assert_almost_equal
 from pyflation.analysis import deltaprel
+from pyflation import cosmomodels as c
 
 class TestSoundSpeeds():
     
@@ -337,3 +338,38 @@ class TestDeltaPrelSpectrum():
         arr = deltaprel.deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([9+2/3.0])
         assert_almost_equal(arr, desired)
+        
+class TestComponentsFromModel():
+    
+    def setup(self):
+        self.nfields = 2
+        self.m = c.FOCanonicalTwoStage(nfields=2, potential_func="hybridquadratic",
+                                       pot_params={"nfields":2},
+                                       k=np.array([1e-62]))
+        self.m.yresult = np.array([[[  1.32165292e+01 +0.00000000e+00j],
+        [ -1.50754596e-01 +0.00000000e+00j],
+        [  4.73189047e-13 +0.00000000e+00j],
+        [ -3.63952781e-13 +0.00000000e+00j],
+        [  5.40587341e-05 +0.00000000e+00j],
+        [ -1.54862102e+89 -7.41671642e+88j],
+        [ -2.13658450e+87 -1.10282252e+87j],
+        [ -3.38643667e+88 -2.32461601e+88j],
+        [  8.41541336e+68 +5.77708700e+68j],
+        [ -2.56090533e+88 -1.39910039e+88j],
+        [ -1.04340896e+76 -5.38567463e+75j],
+        [  2.56090533e+88 +1.39910039e+88j],
+        [ -9.29807779e+77 -5.05054386e+77j]]])
+        
+    def test_returned(self):
+        """Test that the correct number of components are returned."""
+        components = deltaprel.components_from_model(self.m)
+        assert(len(components) == 6)
+        
+    def test_shapes(self):
+        """Test that components returned are of correct shape."""
+        components = deltaprel.components_from_model(self.m)
+        shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
+                  (1,self.nfields, self.nfields,1),
+                  (1 ,self.nfields, self.nfields, 1), ()]
+        for ix, var in enumerate(components):
+            assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
