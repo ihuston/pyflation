@@ -461,6 +461,63 @@ class TestDeltaPrelSpectrum():
         desired = np.array([9+2/3.0])
         assert_almost_equal(arr, desired)
         
+class TestDeltaPrelSpectrumAlternate():
+    
+    def setup(self):
+        self.Vphi = np.arange(24.0).reshape((4,3,2))
+        self.phidot = np.arange(1.0, 25.0).reshape((4,3,2))
+        self.H = np.arange(1.0, 9.0).reshape((4,1,2))
+        self.axis=1
+        
+        self.modes = np.arange(72.0).reshape((4.0,3,3,2))
+        self.modesdot = np.arange(10.0, 82.0).reshape((4.0,3,3,2))
+        
+    def test_shape(self):
+        """Test whether the rhodots are shaped correctly."""    
+        arr = deltaprel.deltaprelspectrum_alternate(self.Vphi, self.phidot, self.H, 
+                                       self.modes, self.modesdot, self.axis)
+        result = arr.shape
+        newshape = list(self.phidot.shape)
+        del newshape[self.axis]
+        actual = tuple(newshape)
+        assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
+    
+    def test_singlefield(self):
+        """Test single field calculation."""
+        modes = np.array([[7]])
+        modesdot = np.array([[3]])
+        Vphi = 3
+        phidot = 1.7
+        H = 0.5
+        axis=0
+        arr = deltaprel.deltaprelspectrum_alternate(Vphi, phidot, H, modes, modesdot, axis)
+        assert_almost_equal(arr, np.zeros_like(arr))
+        
+    def test_two_by_two_by_one(self):
+        """Test that 2x2x1 calculation works."""
+        Vphi = np.array([5.5,2.3]).reshape((2,1))
+        phidot = np.array([2,5]).reshape((2,1))
+        modes = np.array([[1/3.0,0.1],[0.1,0.5]]).reshape((2,2,1))
+        modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
+        axis = 0
+        H = np.array([3]).reshape((1,1))
+        arr = deltaprel.deltaprelspectrum_alternate(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([0.31535513**2 + 0.42954734370370623**2])
+        assert_almost_equal(arr, desired)
+        
+    def test_imaginary(self):
+        """Test calculation with complex values."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = deltaprel.deltaprelspectrum_alternate(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([9+2/3.0])
+        assert_almost_equal(arr, desired)
+
+
 class TestComponentsFromModel():
     
     def setup(self):

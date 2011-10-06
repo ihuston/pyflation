@@ -320,6 +320,14 @@ def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     return spectrum
 
+def deltaprelspectrum_alternate(Vphi, phidot, H, modes, modesdot, axis):
+    """Power spectrum of the full perturbed relative pressure."""
+    dPrelI = deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis)
+    
+    spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
+    
+    return spectrum
+
 def components_from_model(m, tix=None, kix=None):
     """Get the component variables of delta Prel from a model instance.
     
