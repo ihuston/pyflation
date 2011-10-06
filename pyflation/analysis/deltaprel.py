@@ -306,8 +306,9 @@ def deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis):
             for a in range(rdots.shape[axis]):
                 for b in range(rdots.shape[axis]):
                     if a != b:
-                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (prdots[ix+(a,)]/rdots[ix+(a,)] - prdots[ix+(b,)]/rdots[ix+(b,)]) 
-                                          * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)]))  
+                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (prdots[ix+(a,)]*rdots[ix+(b,)] - prdots[ix+(b,)]*rdots[ix+(a,)]) 
+                                          * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)])
+                                          /(rdots[ix+(a,)]*rdots[ix+(b,)]))  
         
     
     return result    
