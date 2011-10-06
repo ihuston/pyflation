@@ -35,6 +35,33 @@ def soundspeeds(Vphi, phidot, H):
                             to the field dimension of the others.""")
     return calphasq
 
+def Pdots(Vphi, phidot, H):
+    """Derivative of pressure of the background fields
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    All the arguments should have the same number of dimensions. Vphi and phidot
+    should be arrays of the same size, but H should have a dimension of size 1 
+    corresponding to the "field" dimension of the other variables.
+    """
+    try:
+        Pdotalpha = -(2*phidot*Vphi + 3*H**2*phidot**2)
+    except ValueError:
+        raise ValueError("""Arrays need to have the correct shape.
+                            Vphi and phidot should have exactly the same shape,
+                            and H should have a dimension of size 1 corresponding
+                            to the field dimension of the others.""")
+    return Pdotalpha
+
 def rhodots(phidot, H):
     """Derivative in e-fold time of the energy densities of the individual fields.
     
@@ -49,7 +76,7 @@ def rhodots(phidot, H):
     Both arrays should have the same number of dimensions, but H should have a 
     dimension of size 1 corresponding to the field dimension of phidot.
     """
-    return -3*H**3*(phidot**2)
+    return -3*H**2*(phidot**2)
 
 def fullrhodot(phidot, H, axis=-1):
     """Combined derivative in e-fold time of the energy density of the field.
@@ -230,7 +257,60 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
         
     
     return result
+
+def deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis):
+    """Perturbed relative pressure of the fields given as quantum mode functions.
+    This alternate function uses the expression in terms of Pdots instead of c^2.
     
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+    
+    """
+    
+    Vphi, phidot, H, modes, modesdot, axis = correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
+    
+    cs = soundspeeds(Vphi, phidot, H)
+    prdots = Pdots(Vphi, phidot, H)
+    rdots = rhodots(phidot, H)
+    rhodot = fullrhodot(phidot, H, axis)
+    drhos = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+    
+    res_shape = list(drhos.shape)
+    del res_shape[axis]
+    
+    result = np.zeros(res_shape, dtype=modes.dtype)
+                    
+    for ix in np.ndindex(tuple(res_shape[:axis])):
+        for i in range(res_shape[axis]):
+            for a in range(rdots.shape[axis]):
+                for b in range(rdots.shape[axis]):
+                    if a != b:
+                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (prdots[ix+(a,)]/rdots[ix+(a,)] - prdots[ix+(b,)]/rdots[ix+(b,)]) 
+                                          * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)]))  
+        
+    
+    return result    
 
 def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure."""
