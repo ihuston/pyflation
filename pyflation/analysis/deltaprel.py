@@ -8,6 +8,8 @@ For license and copyright information see LICENSE.txt which was distributed with
 from __future__ import division
 import numpy as np
 
+import spectrum
+
 def soundspeeds(Vphi, phidot, H):
     """Sound speeds of the background fields
     
@@ -445,8 +447,8 @@ def components_from_model(m, tix=None, kix=None):
     H = m.yresult[tslice, m.H_ix, kslice]
     Vphi = np.array([m.potentials(myr, m.pot_params)[1] 
                      for myr in m.yresult[tslice,m.bg_ix,kslice]])
-    modes = m.getmodematrix(m.yresult[tslice, m.dps_ix, kslice])
-    modesdot = m.getmodematrix(m.yresult[tslice, m.dpdots_ix, kslice])
+    modes = spectrum.getmodematrix(m.yresult[tslice, m.dps_ix, kslice], m.nfields)
+    modesdot = spectrum.getmodematrix(m.yresult[tslice, m.dpdots_ix, kslice], m.nfields)
     axis = 1
     Vphi, phidot, H, modes, modesdot, axis = correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
     
