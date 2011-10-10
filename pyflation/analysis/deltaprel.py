@@ -206,6 +206,57 @@ def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
+def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
+    """Matrix of the first order perturbed pressure of the field components.
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+           
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+    
+    Returns
+    -------
+    result: array_like
+            The matrix of the first order perturbed pressure.
+    
+    """
+    Vphi, phidot, H, modes, modesdot, axis = correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
+    
+    #Change shape of phidot, Vphi, H to add extra dimension of modes
+    Vphi = np.expand_dims(Vphi, axis+1)
+    phidot = np.expand_dims(phidot, axis+1)
+    H = np.expand_dims(H, axis+1)
+    
+    #Do first sum over beta index
+    internalsum = np.sum(phidot*modes, axis=axis)
+    #Add another dimension to internalsum result
+    internalsum = np.expand_dims(internalsum, axis)
+    
+    result = H**2*phidot*modesdot
+    result -= 0.5*H**3*phidot**2*internalsum
+    result -= Vphi*modes
+    
+    return result
+
 def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
