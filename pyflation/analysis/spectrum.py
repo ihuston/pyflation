@@ -126,7 +126,7 @@ def findns(m, k=None, nix=-1):
         if np.any(k<m.k.min() or k>m.k.max()):
             m._log.warn("Warning: Extrapolating to k value outside those used in spline!")
     
-    xp = np.log(m.Pr[nix])
+    xp = np.log(Pr(m)[nix])
     lnk = np.log(k)
     
     #Need to sort into ascending k
