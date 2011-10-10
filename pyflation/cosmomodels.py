@@ -1419,6 +1419,30 @@ class FOCanonicalTwoStage(MultiStageDriver):
     def getdeltaphi(self):
         return self.deltaphi
     
+    def deltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times, fields and modes.
+        For multifield systems this is the quantum matrix of solutions:
+        
+        \hat{\delta\phi} = \Sum_{\alpha, I} xi_{\alpha I} \hat{a}_I
+        
+        The result is stored as the instance variable m.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like, dtype: complex128
+                  Array of $\delta\phi$ values for all timesteps, fields and k modes.
+        """
+        
+        if not hasattr(self, "_deltaphi") or recompute:
+            self._deltaphi = self.yresult[:,self.dps_ix,:]
+        return self._deltaphi
+    
 
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
