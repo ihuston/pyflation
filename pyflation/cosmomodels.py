@@ -1485,7 +1485,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self._rf = tables.openFile(filename, "r")
                     self.yresult = self._rf.root.results.yresult
                     self.tresult = self._rf.root.results.tresult
-                    self.bgystart = self._rf.root.results.bgystart
+                    if "bgystart" in self._rf.root.results:
+                        self.bgystart = self._rf.root.results.bgystart
                     self.ystart = self._rf.root.results.ystart
                     self.fotstart = self._rf.root.results.fotstart
                     if "fotstartindex" in self._rf.root.results:
