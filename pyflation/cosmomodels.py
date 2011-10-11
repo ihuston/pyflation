@@ -1483,29 +1483,31 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self._log.debug("Opening file " + filename + " to read results.")
                 try:
                     self._rf = tables.openFile(filename, "r")
-                    self.yresult = self._rf.root.results.yresult
-                    self.tresult = self._rf.root.results.tresult
-                    if "bgystart" in self._rf.root.results:
-                        self.bgystart = self._rf.root.results.bgystart
-                    self.ystart = self._rf.root.results.ystart
-                    self.fotstart = self._rf.root.results.fotstart
-                    if "fotstartindex" in self._rf.root.results:
+                    results = self._rf.root.results
+                    self.yresult = results.yresult
+                    self.tresult = results.tresult
+                    if "bgystart" in results:
+                        self.bgystart = results.bgystart
+                    if "ystart" in results:
+                        self.ystart = results.ystart
+                    self.fotstart = results.fotstart
+                    if "fotstartindex" in results:
                         #for backwards compatability only set if it exists
-                        self.fotstartindex = self._rf.root.results.fotstartindex
-                    self.foystart = self._rf.root.results.foystart
-                    self.k = self._rf.root.results.k[:]
-                    params = self._rf.root.results.parameters
+                        self.fotstartindex = results.fotstartindex
+                    self.foystart = results.foystart
+                    self.k = results.k[:]
+                    params = results.parameters
                 except tables.NoSuchNodeError:
                     raise ModelError("File does not contain correct model data structure!")
                 try:
-                    self.source = self._rf.root.results.sourceterm
+                    self.source = results.sourceterm
                 except tables.NoSuchNodeError:
                     if _debug:
                         self._log.debug("First order file does not have a source term.")
                     self.source = None
                 # Put potential parameters into right variable
                 try:
-                    potparamstab = self._rf.root.results.pot_params
+                    potparamstab = results.pot_params
                     for row in potparamstab:
                         key = row["name"]
                         val = row["value"]
@@ -1539,7 +1541,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 elif len(self.ystart.shape) == 2:
                     ys = self.ystart[self.bg_ix,0]
             else:
-                ys = self._rf.root.results.bgresults.yresult[0]
+                ys = results.bgresults.yresult[0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, solver=self.solver,
                             potential_func=self.potential_func, 
