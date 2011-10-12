@@ -1911,7 +1911,7 @@ class FONoPhase(FOCanonicalTwoStage):
     conditions for the first order field."""
     
     def __init__(self, *args, **kwargs):
-        super(FONoPhase).__init__(*args, **kwargs)
+        super(FONoPhase, self).__init__(*args, **kwargs)
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
