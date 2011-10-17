@@ -37,6 +37,36 @@ def soundspeeds(Vphi, phidot, H):
                             to the field dimension of the others.""")
     return calphasq
 
+def totalsoundspeed(Vphi, phidot, H, axis):
+    """Sound speeds of the background fields
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    axis: integer
+          Index of dimension to sum over (field dimension).
+       
+    All the arguments should have the same number of dimensions. Vphi and phidot
+    should be arrays of the same size, but H should have a dimension of size 1 
+    corresponding to the "field" dimension of the other variables.
+    """
+    try:
+        csq = 1 + 2*np.sum(Vphi*phidot, axis=axis)/(3*H**2*np.sum(phidot, axis=axis))
+    except ValueError:
+        raise ValueError("""Arrays need to have the correct shape.
+                            Vphi and phidot should have exactly the same shape,
+                            and H should have a dimension of size 1 corresponding
+                            to the field dimension of the others.""")
+    return csq
+
 def Pdots(Vphi, phidot, H):
     """Derivative of pressure of the background fields
     
