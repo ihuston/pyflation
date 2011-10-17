@@ -1934,15 +1934,15 @@ class FONoPhase(FOCanonicalTwoStage):
             bgyresult = self.bgmodel.yresult
             
         Hstar = bgyresult[tsix,self.H_ix]
-        Hzero = bgyresult[0,self.H_ix]
-        
-        epsstar = self.bgepsilon[tsix]
-        etastar = -1/(astar*Hstar*(1-epsstar))
-        try:
-            etadiff = etastar - self.etainit
-        except AttributeError:
-            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
-        keta = self.k*etadiff
+#        Hzero = bgyresult[0,self.H_ix]
+#        
+#        epsstar = self.bgepsilon[tsix]
+#        etastar = -1/(astar*Hstar*(1-epsstar))
+#        try:
+#            etadiff = etastar - self.etainit
+#        except AttributeError:
+#            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+#        keta = self.k*etadiff
         
         #Set bg init conditions based on previous bg evolution
         try:
