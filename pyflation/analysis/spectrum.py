@@ -98,35 +98,35 @@ def Pphi(m, recompute=False):
     return Pphi
 
 
-def findns(m, k=None, nix=-1):
+def findns(sPr, k, kix=None):
     """Return the value of n_s
     
     Arguments
     ---------
-    m: Cosmomodels instance
-       Model for which to calculate n_s
+    sPr: array_like
+           Power spectrum of scalar curvature perturbations at a specific time
+           This should be the *scaled* power spectrum i.e.
+               sPr = k^3/(2*pi)^2 * Pr, 
+               <R(k)R(k')> = (2pi^3) \delta(k+k') Pr
+               
+           The array should be one-dimensional indexed by the k value.
+           
+    k: array_like
+       Array of k values for which sPr has been calculated.
        
-    k: array_like, optional
-       k values at which to calculate n_s (should be inside range of ks used in model)
-       Defaults to all k values in m.
+    kix: integer
+         Index value of k for which to return n_s. 
        
-    nix: integer, optional
-         Timestep at which to calculate n_s, defaults to last timestep
          
     Returns
     -------
     n_s: float
          The value of the spectral index at the requested k value and timestep
+             
+             n_s = 1 - d ln(sPr) / d ln(k) evaluated at k[kix]
     """
     
-    #If k is not defined, get value at all m.k
-    if k is None:
-        k = m.k
-    else:
-        if np.any(k<m.k.min() or k>m.k.max()):
-            m._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-    
-    xp = np.log(Pr(m)[nix])
+    xp = np.log(sPr)
     lnk = np.log(k)
     
     #Need to sort into ascending k
@@ -186,7 +186,7 @@ def Pr(m):
     return Pr
 
 
-def calPr(m):
+def scaledPr(m):
     """Return the spectrum of curvature perturbations $\mathcal{P}_\mathcal{R}$ 
     for each timestep and k mode.
     
