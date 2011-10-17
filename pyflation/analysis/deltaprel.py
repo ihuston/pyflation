@@ -38,7 +38,7 @@ def soundspeeds(Vphi, phidot, H):
     return calphasq
 
 def totalsoundspeed(Vphi, phidot, H, axis):
-    """Sound speeds of the background fields
+    """Total sound speed of the fluids
     
     Arguments
     ---------
@@ -57,6 +57,11 @@ def totalsoundspeed(Vphi, phidot, H, axis):
     All the arguments should have the same number of dimensions. Vphi and phidot
     should be arrays of the same size, but H should have a dimension of size 1 
     corresponding to the "field" dimension of the other variables.
+    
+    Returns
+    -------
+    csq: array_like
+         The total sound speed of the fluid, csq = P'/rho'
     """
     try:
         csq = 1 + 2*np.sum(Vphi*phidot, axis=axis)/(3*H**2*np.sum(phidot, axis=axis))
