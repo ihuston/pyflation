@@ -379,25 +379,14 @@ def deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis):
     
     Vphi, phidot, H, modes, modesdot, axis = correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
     
-    cs = soundspeeds(Vphi, phidot, H)
-    prdots = Pdots(Vphi, phidot, H)
-    rdots = rhodots(phidot, H)
-    rhodot = fullrhodot(phidot, H, axis)
+    csq = totalsoundspeed(Vphi, phidot, H, axis)
+    csshape = csq.shape
+    # Add two dimensions corresponding to mode axes
+    csq.resize(csshape[:axis] + (1,1) + csshape[axis:])
+    dP = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
     drhos = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
     
-    res_shape = list(drhos.shape)
-    del res_shape[axis]
-    
-    result = np.zeros(res_shape, dtype=modes.dtype)
-                    
-    for ix in np.ndindex(tuple(res_shape[:axis])):
-        for i in range(res_shape[axis]):
-            for a in range(rdots.shape[axis]):
-                for b in range(rdots.shape[axis]):
-                    if a != b:
-                        result[ix+(i,)] += (1/(2*rhodot[ix]) * (prdots[ix+(a,)]*rdots[ix+(b,)] - prdots[ix+(b,)]*rdots[ix+(a,)]) 
-                                          * (rdots[ix+(b,)]*drhos[ix+(a,i)] - rdots[ix+(a,)]*drhos[ix+(b,i)])
-                                          /(rdots[ix+(a,)]*rdots[ix+(b,)]))  
+    result = np.sum(dP - csq*drhos, axis=axis)
         
     
     return result    
