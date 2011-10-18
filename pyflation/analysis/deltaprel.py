@@ -63,8 +63,9 @@ def totalsoundspeed(Vphi, phidot, H, axis):
     csq: array_like
          The total sound speed of the fluid, csq = P'/rho'
     """
+    
     try:
-        csq = 1 + 2*np.sum(Vphi*phidot, axis=axis)/(3*H**2*np.sum(phidot, axis=axis))
+        csq = 1 + 2*np.sum(Vphi*phidot, axis=axis)/(3*np.sum((H*phidot)**2, axis=axis))
     except ValueError:
         raise ValueError("""Arrays need to have the correct shape.
                             Vphi and phidot should have exactly the same shape,
