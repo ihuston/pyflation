@@ -81,7 +81,7 @@ class TestTotalSoundSpeed():
         phidot = np.array([3,6]).reshape((2,1,1))
         H = np.array([1,2]).reshape((2,1,1))
         arr = deltaprel.totalsoundspeed(Vphi, phidot, H, axis=1)
-        actual = np.array([19/9.0, 92/72.0]).reshape((2,1,1))
+        actual = np.array([19/9.0, 92/72.0]).reshape((2,1))
         assert_array_almost_equal(arr, actual)
         
     def test_wrongshape(self):
