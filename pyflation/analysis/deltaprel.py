@@ -417,6 +417,26 @@ def deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     return spectrum
 
+def scaled_dpnad(Vphi, phidot, H, modes, modesdot, axis, k):
+    """Power spectrum of delta Pnad scaled with k^3/(2*pi^2)
+    
+    Assumes that k dimension is last.
+    """
+    spectrum = deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    #Add extra dimensions to k if necessary
+    scaled_spectrum = k**3/(2*np.pi**2) * spectrum
+    return scaled_spectrum
+
+def scaled_dP(Vphi, phidot, H, modes, modesdot, axis, k):
+    """Power spectrum of delta P scaled with k^3/(2*pi^2)
+    
+    Assumes that k dimension is last.
+    """
+    spectrum = deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    #Add extra dimensions to k if necessary
+    scaled_spectrum = k**3/(2*np.pi**2) * spectrum
+    return scaled_spectrum
+
 def components_from_model(m, tix=None, kix=None):
     """Get the component variables of delta Prel from a model instance.
     
