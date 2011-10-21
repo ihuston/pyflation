@@ -459,14 +459,21 @@ def components_from_model(m, tix=None, kix=None):
           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
           assumed to be beside each other so (100,3,10,3) would not be valid.
     """
+    
+        
     if tix is None:
         tslice = slice(None)
     else:
+        #Check for negative tix
+        if tix < 0:
+            tix = len(m.tresult) + tix
         tslice = slice(tix, tix+1)
     if kix is None:
         kslice = slice(None)
     else:
         kslice = slice(kix, kix+1)
+        
+    
     
     phidot = m.yresult[tslice, m.phidots_ix, kslice]
     H = m.yresult[tslice, m.H_ix, kslice]

@@ -755,6 +755,7 @@ class TestComponentsFromModel():
         self.m = c.FOCanonicalTwoStage(nfields=2, potential_func="hybridquadratic",
                                        pot_params={"nfields":2},
                                        k=np.array([1e-62]))
+        self.m.tresult = np.array([1.0])
         self.m.yresult = np.array([[[  1.32165292e+01 +0.00000000e+00j],
         [ -1.50754596e-01 +0.00000000e+00j],
         [  4.73189047e-13 +0.00000000e+00j],
@@ -777,6 +778,15 @@ class TestComponentsFromModel():
     def test_shapes(self):
         """Test that components returned are of correct shape."""
         components = deltaprel.components_from_model(self.m)
+        shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
+                  (1,self.nfields, self.nfields,1),
+                  (1 ,self.nfields, self.nfields, 1), ()]
+        for ix, var in enumerate(components):
+            assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
+            
+    def test_negative_tix(self):
+        """Test that negative tix is dealt with properly."""
+        components = deltaprel.components_from_model(self.m, -1)
         shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
                   (1,self.nfields, self.nfields,1),
                   (1 ,self.nfields, self.nfields, 1), ()]
