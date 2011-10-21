@@ -347,9 +347,9 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
-def deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis):
-    """Perturbed relative pressure of the fields given as quantum mode functions.
-    This alternate function uses the expression in terms of Pdots instead of c^2.
+def deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis):
+    """Perturbed non-adiabatic pressure of the fields given as quantum mode functions.
+    
     
     Arguments
     ---------
@@ -409,9 +409,9 @@ def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     return spectrum
 
-def deltaprelspectrum_alternate(Vphi, phidot, H, modes, modesdot, axis):
-    """Power spectrum of the full perturbed relative pressure."""
-    dPrelI = deltaprelmodes_alternate(Vphi, phidot, H, modes, modesdot, axis)
+def deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
+    """Power spectrum of the full perturbed non-adiabatic pressure."""
+    dPrelI = deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
     
     spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
     
