@@ -6,6 +6,8 @@ Author: ith
 import numpy as np
 from scipy import interpolate
 
+import deltaprel
+
 def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
     matrix. Returns a view of the y array (changes will be reflected in underlying array).
@@ -149,7 +151,7 @@ def findHorizoncrossings(m, factor=1):
      
      
 def Pr(m):
-    """Return the spectrum of curvature perturbations $P_R$ for each k.
+    """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
     
     For a multifield model this is given by:
     
@@ -187,7 +189,7 @@ def Pr(m):
 
 
 def scaledPr(m):
-    """Return the spectrum of curvature perturbations $\mathcal{P}_\mathcal{R}$ 
+    """Return the spectrum of (first order) curvature perturbations $\mathcal{P}_\mathcal{R}$ 
     for each timestep and k mode.
     
     This is the scaled power spectrum which is related to the unscaled version by
@@ -200,3 +202,39 @@ def scaledPr(m):
     """
     #Basic caching of result
     return 1/(2*np.pi**2) * m.k**3 * Pr(m)           
+
+def Pzeta(m, tix=None, kix=None):
+    """Return the spectrum of (first order) curvature perturbations $P_\zeta$ for each k.
+    
+    For a multifield model this is given by:
+    
+    Pzeta = 
+            
+    where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
+    and \chi are the mode matrix elements.  
+    
+    This is the unscaled version $P_\zeta$ which is related to the scaled version by
+    $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
+    
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       model containing yresult with which to calculate spectrum
+    
+    tix: integer, optional
+         index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix: integer, optional
+         integer of k value at which to calculate, defaults to full range of ks.
+    
+    Returns
+    -------
+    Pzeta: array_like, dtype: float64
+        Array of Pzeta values for all timesteps and k modes
+    """      
+    Vphi,phidot,H,modes,modesdot,axis = deltaprel.components_from_model(m, tix, kix)
+    rhodot = deltaprel.fullrhodot(phidot, H, axis)
+    drhospectrum = deltaprel.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+    Pzeta = rhodot**(-2) * drhospectrum
+    return Pzeta
+    

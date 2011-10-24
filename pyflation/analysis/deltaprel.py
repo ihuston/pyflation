@@ -391,6 +391,16 @@ def deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     return result    
 
+def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
+    """Power spectrum of the perturbed energy density."""
+    drhomodes = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+    
+    drhoI = np.sum(drhomodes, axis=axis)
+    
+    spectrum = np.sum(drhoI*drhoI.conj(), axis=axis)
+    
+    return spectrum
+
 def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure."""
     dPmodes = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
