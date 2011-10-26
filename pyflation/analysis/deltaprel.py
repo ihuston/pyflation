@@ -290,7 +290,7 @@ def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     internalsum = np.expand_dims(internalsum, axis)
     
     result = H**2*phidot*modesdot
-    result -= 0.5*H**3*phidot**2*internalsum
+    result -= 0.5*H**2*phidot**2*internalsum
     result -= Vphi*modes
     
     return result
