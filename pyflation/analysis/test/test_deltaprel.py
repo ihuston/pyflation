@@ -147,6 +147,52 @@ class TestPdots():
         prdots = deltaprel.Pdots(self.Vphi, self.phidot, self.H)
         assert_almost_equal(cs, prdots/rhodots)
 
+class TestFullPDot():
+    
+    def setup(self):
+        self.Vphi = np.arange(1.0, 25.0).reshape((4,3,2))
+        self.phidot = self.Vphi
+        self.H = np.arange(1.0, 9.0).reshape((4,1,2))
+        self.axis=1
+    
+    def test_shape(self):
+        """Test whether the rhodots are shaped correctly."""    
+        arr = deltaprel.fullPdot(self.Vphi, self.phidot, self.H, self.axis)
+        result = arr.shape
+        newshape = list(self.phidot.shape)
+        del newshape[self.axis]
+        actual = tuple(newshape)
+        assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
+        
+    def test_scalar(self):
+        """Test results of 1x1x1 calculation."""
+        arr = deltaprel.fullPdot(3, 0.5, 2)
+        assert_equal(arr, -6)
+        
+    def test_two_by_one_by_one(self):
+        """Test results of 2x1x1 calculation."""
+        Vphi = np.array([5,10]).reshape((2,1,1))
+        phidot = np.array([3,6]).reshape((2,1,1))
+        H = np.array([1,2]).reshape((2,1,1))
+        arr = deltaprel.fullPdot(Vphi, phidot, H)
+        actual = np.sum(np.array([-57, -552]).reshape((2,1,1)),axis=-1)
+        assert_array_almost_equal(arr, actual)
+        
+    def test_two_by_two_by_one(self):
+        """Test results of 2x2x1 calculation."""
+        Vphi = np.array([[1,2],[3,9]]).reshape((2,2,1))
+        phidot = np.array([[5,1],[7,3]]).reshape((2,2,1))
+        H = np.array([[2],[1]]).reshape((2,1,1))
+        axis = 1
+        arr = deltaprel.fullPdot(Vphi, phidot, H, axis)
+        actual = np.array([[-310+-16], [-189+-81]]).reshape((2,1))
+        assert_array_almost_equal(arr, actual)
+        
+    def test_wrongshape(self):
+        """Test that wrong shapes raise exception."""
+        self.H = np.arange(8).reshape((4,2))
+        assert_raises(ValueError, deltaprel.fullPdot, self.Vphi, self.phidot, self.H)
+
 class TestRhoDots():
     
     def setup(self):
@@ -214,6 +260,14 @@ class TestFullRhoDot():
         actual = np.sum(np.array([-27, -432]).reshape((2,1,1)),axis=-1)
         assert_array_almost_equal(arr, actual)
         
+    def test_two_by_two_by_one(self):
+        """Test results of 2x2x1 calculation."""
+        phidot = np.array([[5,1],[7,3]]).reshape((2,2,1))
+        H = np.array([[2],[1]]).reshape((2,1,1))
+        arr = deltaprel.fullrhodot(phidot, H, axis=1)
+        actual = np.array([[-300+-12], [-147+-27]]).reshape((2,1))
+        assert_array_almost_equal(arr, actual)
+    
     def test_wrongshape(self):
         """Test that wrong shapes raise exception."""
         self.H = np.arange(8).reshape((4,2))
