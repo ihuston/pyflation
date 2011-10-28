@@ -100,6 +100,27 @@ def Pdots(Vphi, phidot, H):
                             to the field dimension of the others.""")
     return Pdotalpha
 
+def fullPdot(Vphi, phidot, H, axis=-1):
+    """Combined derivative in e-fold time of the pressure of the fields.
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+    
+    axis: integer, optional
+          Specifies which axis is the field dimension, default is the last one.
+            
+    
+    """
+    return np.sum(Pdots(Vphi, phidot, H), axis=axis)
+
 def rhodots(phidot, H):
     """Derivative in e-fold time of the energy densities of the individual fields.
     
