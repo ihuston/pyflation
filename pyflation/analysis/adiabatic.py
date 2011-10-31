@@ -100,7 +100,7 @@ def Pphi_modes(m, recompute=False):
     return Pphi_modes
 
 
-def findns(sPr, k, kix=None):
+def findns(sPr, k, kix=None, running=False):
     """Return the value of n_s
     
     Arguments
@@ -117,7 +117,12 @@ def findns(sPr, k, kix=None):
        Array of k values for which sPr has been calculated.
        
     kix: integer
-         Index value of k for which to return n_s. 
+         Index value of k for which to return n_s.
+         
+    running: boolean, optional
+             Whether running should be allowed or not. If true, a quadratic
+             polynomial fit is made instead of linear and the value of the 
+             running alpha_s is returned along with n_s. Defaults to False.
        
          
     Returns
@@ -126,24 +131,38 @@ def findns(sPr, k, kix=None):
          The value of the spectral index at the requested k value and timestep
              
              n_s = 1 - d ln(sPr) / d ln(k) evaluated at k[kix]
+             
+        This is calculated using a polynomial least squares fit with 
+        numpy.polyfit. If running is True then a quadratic polynomial is fit,
+        otherwise only a linear fit is made.
+    
+    alpha_s: float, present only if running = True
+             If running=True the alpha_s value at k[kix] is returned in a 
+             tuple along with n_s.
     """
     
-    xp = np.log(sPr)
-    lnk = np.log(k)
+    if sPr.shape != k.shape:
+        raise ValueError("Power spectrum and k arrays must be same shape.")
     
-    #Need to sort into ascending k
-    sortix = lnk.argsort()
-            
-    #Use cubic splines to find deriv
-    tck = interpolate.splrep(lnk[sortix], xp[sortix])
-    ders = interpolate.splev(lnk[sortix], tck, der=1)
+    logsPr = np.log(sPr)
+    logk = np.log(k)
     
-    ns = 1 + ders
-    #Unorder the ks again
-    nsunsort = np.zeros(len(ns))
-    nsunsort[sortix] = ns
+    if running:
+        deg = 2
+    else:
+        deg = 1        
+    sPrfit = np.polyfit(logk, logsPr, deg=deg)
     
-    return nsunsort
+    n_spoly = np.polyder(np.poly1d(sPrfit), m=1)
+    n_s = 1 + n_spoly(logk[kix])
+    
+    if running:
+        a_spoly = np.polyder(np.poly1d(sPrfit), m=2)
+        a_s = a_spoly(logk[kix])
+        result = (n_s, a_s)
+    else:
+        result = n_s
+    return result
 
 def findHorizoncrossings(m, factor=1):
     """Find horizon crossing for all ks"""
