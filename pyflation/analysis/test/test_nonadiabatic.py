@@ -534,7 +534,7 @@ class TestDeltaPrelMatrix():
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltaprelmodes(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltaPrelmodes(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.Vphi.shape
@@ -548,7 +548,7 @@ class TestDeltaPrelMatrix():
         phidot = 1.7
         H = 0.5
         axis=0
-        arr = nonadiabatic.deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.zeros_like(arr))
         
     def test_two_by_two_by_one(self):
@@ -559,7 +559,7 @@ class TestDeltaPrelMatrix():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([0.31535513, 0.42954734370370623]).reshape((2,1))
         assert_almost_equal(arr, desired)
         
@@ -571,7 +571,7 @@ class TestDeltaPrelMatrix():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([-2/3.0 -1j/3.0, 3 - 1j/3.0]).reshape((2,1))
         assert_almost_equal(arr, desired)
         
@@ -589,7 +589,7 @@ class TestDeltaPnadMatrix():
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltapnadmodes(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltaPnadmodes(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.Vphi.shape
@@ -603,7 +603,7 @@ class TestDeltaPnadMatrix():
         phidot = 0.5
         H = 2
         axis=0
-        arr = nonadiabatic.deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.array([-71.25]))
         
     def test_two_by_one_by_one(self):
@@ -616,7 +616,7 @@ class TestDeltaPnadMatrix():
         modesdot = np.array([10,5]).reshape((2,1,1,1))
         axis = 2
         
-        arr = nonadiabatic.deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
         actual = np.array([-2.22222222222, 138.75]).reshape((2,1,1))
         assert_array_almost_equal(arr, actual)
     
@@ -628,7 +628,7 @@ class TestDeltaPnadMatrix():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([0.31535513, 0.42954734370370623]).reshape((2,1))
         assert_almost_equal(arr, desired)
         
@@ -640,7 +640,7 @@ class TestDeltaPnadMatrix():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([-3.0 +4*1j, -18 + 3*1j]).reshape((2,1))
         assert_almost_equal(arr, desired)
 
@@ -658,7 +658,7 @@ class TestDeltaPrelSpectrum():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltaprelspectrum(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltaPrelspectrum(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         newshape = list(self.phidot.shape)
@@ -674,7 +674,7 @@ class TestDeltaPrelSpectrum():
         phidot = 1.7
         H = 0.5
         axis=0
-        arr = nonadiabatic.deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.zeros_like(arr))
         
     def test_two_by_two_by_one(self):
@@ -685,7 +685,7 @@ class TestDeltaPrelSpectrum():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([0.31535513**2 + 0.42954734370370623**2])
         assert_almost_equal(arr, desired)
         
@@ -697,7 +697,7 @@ class TestDeltaPrelSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([9+2/3.0])
         assert_almost_equal(arr, desired)
         
@@ -714,7 +714,7 @@ class TestDeltaPnadSpectrum():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltapnadspectrum(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltaPnadspectrum(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         newshape = list(self.phidot.shape)
@@ -730,7 +730,7 @@ class TestDeltaPnadSpectrum():
         phidot = 0.5
         H = 2
         axis=0
-        arr = nonadiabatic.deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, (-71.25)**2)
         
     def test_two_by_two_by_one(self):
@@ -741,7 +741,7 @@ class TestDeltaPnadSpectrum():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([0.31535513**2 + 0.42954734370370623**2])
         assert_almost_equal(arr, desired)
         
@@ -753,7 +753,7 @@ class TestDeltaPnadSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([358])
         assert_almost_equal(arr, desired)
 

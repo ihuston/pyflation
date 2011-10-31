@@ -316,7 +316,7 @@ def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
-def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
+def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
     Arguments
@@ -368,7 +368,7 @@ def deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
-def deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis):
+def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed non-adiabatic pressure of the fields given as quantum mode functions.
     
     
@@ -432,33 +432,33 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     return spectrum
 
-def deltaprelspectrum(Vphi, phidot, H, modes, modesdot, axis):
+def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure."""
-    dPrelI = deltaprelmodes(Vphi, phidot, H, modes, modesdot, axis)
+    dPrelI = deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
     
     spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
     
     return spectrum
 
-def deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
+def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed non-adiabatic pressure."""
-    dPrelI = deltapnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+    dPrelI = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
     
     spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
     
     return spectrum
 
-def scaled_dpnad(Vphi, phidot, H, modes, modesdot, axis, k):
+def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     """Power spectrum of delta Pnad scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
     """
-    spectrum = deltapnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    spectrum = deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
     scaled_spectrum = k**3/(2*np.pi**2) * spectrum
     return scaled_spectrum
 
-def scaled_dP(Vphi, phidot, H, modes, modesdot, axis, k):
+def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     """Power spectrum of delta P scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -560,6 +560,6 @@ def dprel_from_model(m, tix=None, kix=None):
               perturbation
     """
     components = components_from_model(m, tix, kix)
-    result = deltaprelspectrum(*components)
+    result = deltaPrelspectrum(*components)
     
     return result
