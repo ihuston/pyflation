@@ -1,6 +1,8 @@
 ''' pyflation.analysis.spectrum - Explanation
 
-Author: ith
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 '''
 
 import numpy as np
