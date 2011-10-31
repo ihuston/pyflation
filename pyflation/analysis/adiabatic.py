@@ -57,7 +57,7 @@ def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
     except ValueError:
         raise ValueError("Cannot determine correct indices for nfield long dimensions!")
     slist = list(s)
-    ix2out = slist.pop(ix2)
+    ix2out = slist.pop(ix2) #@UnusedVariable
     slist[ix1] = nfields**2
     return modematrix.reshape(slist) 
     
