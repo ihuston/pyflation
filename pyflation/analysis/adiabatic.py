@@ -6,7 +6,7 @@ Author: ith
 import numpy as np
 from scipy import interpolate
 
-import deltaprel
+import nonadiabatic
 
 def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
@@ -232,9 +232,9 @@ def Pzeta(m, tix=None, kix=None):
     Pzeta: array_like, dtype: float64
         Array of Pzeta values for all timesteps and k modes
     """      
-    Vphi,phidot,H,modes,modesdot,axis = deltaprel.components_from_model(m, tix, kix)
-    rhodot = deltaprel.fullrhodot(phidot, H, axis)
-    drhospectrum = deltaprel.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+    Vphi,phidot,H,modes,modesdot,axis = nonadiabatic.components_from_model(m, tix, kix)
+    rhodot = nonadiabatic.fullrhodot(phidot, H, axis)
+    drhospectrum = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
     Pzeta = rhodot**(-2) * drhospectrum
     return Pzeta
     

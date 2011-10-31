@@ -1,4 +1,4 @@
-''' pyflation.analysis.deltaprel - Module to calculate relative pressure
+''' pyflation.analysis.nonadiabatic - Module to calculate relative pressure
 perturbations.
 
 Author: Ian Huston
