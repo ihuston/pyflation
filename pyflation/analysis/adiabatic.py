@@ -7,63 +7,10 @@ For license and copyright information see LICENSE.txt which was distributed with
 
 import numpy as np
 
+import utilities
 import nonadiabatic
 
-def getmodematrix(y, nfields, ix=None, ixslice=None):
-    """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
-    matrix. Returns a view of the y array (changes will be reflected in underlying array).
-    
-    Parameters
-    ----------
-    ixslice: index slice, optional
-        The index slice of y to use, defaults to full extent of y.
-        
-    Returns
-    -------
-    
-    result: view of y array with shape nfield*nfield structure
-    """
-    if ix is None:
-        #Use second dimension for index slice by default
-        ix = 1
-    if ixslice is None:
-        #Assume slice is full extent if none given.
-        ixslice = slice(None)
-    indices = [Ellipsis]*len(y.shape)
-    indices[ix] = ixslice
-    modes = y[tuple(indices)]
-        
-    s = list(modes.shape)
-    #Check resulting array is correct shape
-    if s[ix] != nfields**2:
-        raise ValueError("Array does not have correct dimensions of nfields**2.")
-    s[ix] = nfields
-    s.insert(ix+1, nfields)
-    result = modes.reshape(s)
-    return result
-
-def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
-    """Flatten the mode matrix given into nfield^2 long vector."""
-    s = modematrix.shape
-    if s.count(nfields) < 2:
-        raise ValueError("Mode matrix does not have two nfield long dimensions.")
-    try:
-        #If indices are not specified, use first two in order
-        if ix1 is None:
-            ix1 = s.index(nfields)
-        if ix2 is None:
-            #The second index is assumed to be after ix1
-            ix2 = s.index(nfields, ix1+1)
-    except ValueError:
-        raise ValueError("Cannot determine correct indices for nfield long dimensions!")
-    slist = list(s)
-    ix2out = slist.pop(ix2) #@UnusedVariable
-    slist[ix1] = nfields**2
-    return modematrix.reshape(slist) 
-    
-    
-
-
+ 
 
 def Pphi_modes(m, recompute=False):
     """Return the spectrum of scalar perturbations P_phi for each field and k.
@@ -86,7 +33,7 @@ def Pphi_modes(m, recompute=False):
     """
          
     #Get into mode matrix form, over first axis   
-    mdp = getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
+    mdp = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
     #Take tensor product of modes and conjugate, summing over second mode
     #index.
     mPphi = np.zeros_like(mdp)
@@ -97,7 +44,7 @@ def Pphi_modes(m, recompute=False):
             for k in range(nfields):
                 mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
     #Flatten back into vector form
-    Pphi_modes = flattenmodematrix(mPphi, m.nfields, 1, 2) 
+    Pphi_modes = utilities.flattenmodematrix(mPphi, m.nfields, 1, 2) 
     return Pphi_modes
 
 
@@ -198,11 +145,11 @@ def Pr(m):
     phidot = np.float64(m.yresult[:,m.phidots_ix,:]) #bg phidot
     phidotsumsq = (np.sum(phidot**2, axis=1))**2
     #Get mode matrix for Pphi_modes as nfield*nfield
-    Pphimatrix = getmodematrix(Pphi_modes(m), m.nfields, 1, slice(None))
+    Pphimatrix = utilities.getmodematrix(Pphi_modes(m), m.nfields, 1, slice(None))
     #Multiply mode matrix by corresponding phidot value
     summatrix = phidot[:,np.newaxis,:,:]*phidot[:,:,np.newaxis,:]*Pphimatrix
     #Flatten mode matrix and sum over all nfield**2 values
-    sumflat = np.sum(flattenmodematrix(summatrix, m.nfields, 1, 2), axis=1)
+    sumflat = np.sum(utilities.flattenmodematrix(summatrix, m.nfields, 1, 2), axis=1)
     #Divide by total sum of derivative terms
     Pr = sumflat/phidotsumsq
     return Pr
@@ -252,7 +199,7 @@ def Pzeta(m, tix=None, kix=None):
     Pzeta: array_like, dtype: float64
         Array of Pzeta values for all timesteps and k modes
     """      
-    Vphi,phidot,H,modes,modesdot,axis = nonadiabatic.components_from_model(m, tix, kix)
+    Vphi,phidot,H,modes,modesdot,axis = utilities.components_from_model(m, tix, kix)
     rhodot = nonadiabatic.fullrhodot(phidot, H, axis)
     drhospectrum = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
     Pzeta = rhodot**(-2) * drhospectrum
