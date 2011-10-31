@@ -8,8 +8,9 @@ from numpy.testing import assert_, assert_raises, \
                           assert_equal,\
                           assert_array_almost_equal, \
                           assert_almost_equal
-from pyflation.analysis import nonadiabatic
+from pyflation.analysis import nonadiabatic, utilities
 from pyflation import cosmomodels as c
+
 
 class TestSoundSpeeds():
     
@@ -840,12 +841,12 @@ class TestComponentsFromModel():
         
     def test_returned(self):
         """Test that the correct number of components are returned."""
-        components = nonadiabatic.components_from_model(self.m)
+        components = utilities.components_from_model(self.m)
         assert(len(components) == 6)
         
     def test_shapes(self):
         """Test that components returned are of correct shape."""
-        components = nonadiabatic.components_from_model(self.m)
+        components = utilities.components_from_model(self.m)
         shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
                   (1,self.nfields, self.nfields,1),
                   (1 ,self.nfields, self.nfields, 1), ()]
@@ -854,7 +855,7 @@ class TestComponentsFromModel():
             
     def test_negative_tix(self):
         """Test that negative tix is dealt with properly."""
-        components = nonadiabatic.components_from_model(self.m, -1)
+        components = utilities.components_from_model(self.m, -1)
         shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
                   (1,self.nfields, self.nfields,1),
                   (1 ,self.nfields, self.nfields, 1), ()]
