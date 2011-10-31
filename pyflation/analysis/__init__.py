@@ -4,5 +4,5 @@ Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 """
 
-from adiabatic import Pr, Pzeta, scaledPr
+from adiabatic import Pr, Pzeta, scaled_Pr
 from nonadiabatic import deltaPspectrum, deltaPnadspectrum, deltarhospectrum

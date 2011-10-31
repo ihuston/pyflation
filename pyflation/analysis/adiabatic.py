@@ -64,7 +64,7 @@ def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
 
 
 
-def Pphi(m, recompute=False):
+def Pphi_modes(m, recompute=False):
     """Return the spectrum of scalar perturbations P_phi for each field and k.
     
     This is the unscaled version $P_{\phi}$ which is related to the scaled version by
@@ -80,7 +80,7 @@ def Pphi(m, recompute=False):
     
     Returns
     -------
-    Pphi: array_like, dtype: float64
+    Pphi_modes: array_like, dtype: float64
           3-d array of Pphi values for all timesteps, fields and k modes
     """
          
@@ -96,8 +96,8 @@ def Pphi(m, recompute=False):
             for k in range(nfields):
                 mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
     #Flatten back into vector form
-    Pphi = flattenmodematrix(mPphi, m.nfields, 1, 2) 
-    return Pphi
+    Pphi_modes = flattenmodematrix(mPphi, m.nfields, 1, 2) 
+    return Pphi_modes
 
 
 def findns(sPr, k, kix=None):
@@ -177,8 +177,8 @@ def Pr(m):
     """      
     phidot = np.float64(m.yresult[:,m.phidots_ix,:]) #bg phidot
     phidotsumsq = (np.sum(phidot**2, axis=1))**2
-    #Get mode matrix for Pphi as nfield*nfield
-    Pphimatrix = getmodematrix(Pphi(m), m.nfields, 1, slice(None))
+    #Get mode matrix for Pphi_modes as nfield*nfield
+    Pphimatrix = getmodematrix(Pphi_modes(m), m.nfields, 1, slice(None))
     #Multiply mode matrix by corresponding phidot value
     summatrix = phidot[:,np.newaxis,:,:]*phidot[:,:,np.newaxis,:]*Pphimatrix
     #Flatten mode matrix and sum over all nfield**2 values
@@ -188,7 +188,7 @@ def Pr(m):
     return Pr
 
 
-def scaledPr(m):
+def scaled_Pr(m):
     """Return the spectrum of (first order) curvature perturbations $\mathcal{P}_\mathcal{R}$ 
     for each timestep and k mode.
     
@@ -238,3 +238,17 @@ def Pzeta(m, tix=None, kix=None):
     Pzeta = rhodot**(-2) * drhospectrum
     return Pzeta
     
+def scaled_Pzeta(m):
+    """Return the spectrum of scaled (first order) curvature perturbations $\mathcal{P}_\zeta$ 
+    for each timestep and k mode.
+    
+    This is the scaled power spectrum which is related to the unscaled version by
+    $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
+     
+    Returns
+    -------
+    scaled_Pzeta: array_like
+        Array of Pzeta values for all timesteps and k modes
+    """
+    #Basic caching of result
+    return 1/(2*np.pi**2) * m.k**3 * Pzeta(m)      
