@@ -172,7 +172,7 @@ def Pr_spectrum(phidot, modes, axis):
     Pr = (sumflat/phidotsumsq).astype(np.float)
     return Pr
 
-def Pr(m):
+def Pr(m, tix=None, kix=None):
     """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
     
     For a multifield model this is given by:
@@ -190,19 +190,43 @@ def Pr(m):
     This function is a wrapper function which only requires the model as a parameter.
     The full calculation is done in the Pr_spectrum function in the 
     pyflation.analysis.adiabatic module.
+    
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       Model class instance from which the yresult variable will be used to 
+       calculate P_R.
+    
+    tix: integer, optional
+         index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix: integer, optional
+         integer of k value at which to calculate, defaults to full range of ks.
                
     Returns
     -------
     Pr: array_like, dtype: float64
-        Array of Pr values for all timesteps and k modes
+        Array of Pr values for requested timesteps and kmodes
         
     See also
     --------
     pyflation.analysis.adiabatic.Pr_spectrum function
     """
-    phidot = np.float64(m.yresult[:,m.phidots_ix,:]) #bg phidot
+    if tix is None:
+        tslice = slice(None)
+    else:
+        #Check for negative tix
+        if tix < 0:
+            tix = len(m.tresult) + tix
+        tslice = slice(tix, tix+1)
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+        
+    phidot = np.float64(m.yresult[tslice,m.phidots_ix,kslice]) #bg phidot
     #Get into mode matrix form, over first axis   
-    modes = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
+    modes = utilities.getmodematrix(m.yresult[tslice,...,kslice], m.nfields, ix=1, ixslice=m.dps_ix)
     axis = 1
     Pr = Pr_spectrum(phidot, modes, axis)
     return Pr
