@@ -10,9 +10,23 @@ import numpy as np
 import utilities
 import nonadiabatic
 
- 
 
-def Pphi_modes(m, recompute=False):
+def Pphi_modes(m):
+    """Return the modes of the scalar perturbations P_{I,J}.
+    
+    This is a helper function which wraps the full calculation in Pphi_matrix
+    and requires only the model as an argument. Provided for compatibility 
+    with previous versions."""
+    #Get into mode matrix form, over first axis   
+    mdp = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
+    #Take tensor product of modes and conjugate, summing over second mode
+    #index.
+    mPphi = Pphi_matrix(mdp, axis=1)
+    #Flatten back into vector form
+    Pphi_modes = utilities.flattenmodematrix(mPphi, m.nfields, 1, 2) 
+    return Pphi_modes
+
+def Pphi_matrix(modes, axis):
     """Return the spectrum of scalar perturbations P_phi for each field and k.
     
     This is the unscaled version $P_{\phi}$ which is related to the scaled version by
@@ -31,21 +45,16 @@ def Pphi_modes(m, recompute=False):
     Pphi_modes: array_like, dtype: float64
           3-d array of Pphi values for all timesteps, fields and k modes
     """
-         
-    #Get into mode matrix form, over first axis   
-    mdp = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
     #Take tensor product of modes and conjugate, summing over second mode
     #index.
-    mPphi = np.zeros_like(mdp)
+    mPphi = np.zeros_like(modes)
     #Do for loop as tensordot too memory expensive
-    nfields=m.nfields
+    nfields=modes.shape[axis]
     for i in range(nfields):
         for j in range(nfields):
             for k in range(nfields):
-                mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
-    #Flatten back into vector form
-    Pphi_modes = utilities.flattenmodematrix(mPphi, m.nfields, 1, 2) 
-    return Pphi_modes
+                mPphi[:,i,j] += modes[:,i,k]*modes[:,j,k].conj() 
+    return mPphi
 
 
 def findns(sPr, k, kix=None, running=False):
@@ -117,7 +126,7 @@ def findHorizoncrossings(m, factor=1):
     return m.findallkcrossings(m.tresult, m.yresult[:,2], factor)
      
      
-def Pr(m):
+def Pr_spectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
     
     For a multifield model this is given by:
@@ -132,10 +141,6 @@ def Pr(m):
     $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
     m.Pr. 
     
-    Parameters
-    ----------
-    recompute: boolean, optional
-               Should value be recomputed even if already stored? Default is False.
                
     Returns
     -------
@@ -154,6 +159,35 @@ def Pr(m):
     Pr = sumflat/phidotsumsq
     return Pr
 
+def Pr(m):
+    """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
+    
+    For a multifield model this is given by:
+    
+    Pr = (\Sum_K \dot{\phi_K}^2 )^{-2} 
+            \Sum_{I,J} \dot{\phi_I} \dot{\phi_J} P_{IJ}
+            
+    where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
+    and \chi are the mode matrix elements.  
+    
+    This is the unscaled version $P_R$ which is related to the scaled version by
+    $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
+    m.Pr. 
+    
+    This function is a wrapper function which only requires the model as a parameter.
+    The full calculation is done in the Pr_spectrum function in the 
+    pyflation.analysis.adiabatic module.
+               
+    Returns
+    -------
+    Pr: array_like, dtype: float64
+        Array of Pr values for all timesteps and k modes
+        
+    See also
+    --------
+    pyflation.analysis.adiabatic.Pr_spectrum function
+    """      
+    
 
 def scaled_Pr(m):
     """Return the spectrum of (first order) curvature perturbations $\mathcal{P}_\mathcal{R}$ 
