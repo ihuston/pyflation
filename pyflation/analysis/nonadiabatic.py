@@ -8,7 +8,6 @@ For license and copyright information see LICENSE.txt which was distributed with
 from __future__ import division
 import numpy as np
 
-import adiabatic
 import utilities
 
 def soundspeeds(Vphi, phidot, H):
@@ -470,7 +469,7 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     dPI = np.sum(dPmodes, axis=axis)
     
-    spectrum = np.sum(dPI*dPI.conj(), axis=axis)
+    spectrum = utilities.makespectrum(dPI, axis)
     
     return spectrum
 
@@ -508,7 +507,7 @@ def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """
     dPrelI = deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
     
-    spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
+    spectrum = utilities.makespectrum(dPrelI, axis)
     
     return spectrum
 
@@ -546,7 +545,7 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """
     dPrelI = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
     
-    spectrum = np.sum(dPrelI*dPrelI.conj(), axis=axis)
+    spectrum = utilities.makespectrum(dPrelI, axis)
     
     return spectrum
 
@@ -584,7 +583,7 @@ def Sspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """
     dSI = Smodes(Vphi, phidot, H, modes, modesdot, axis)
     
-    spectrum = np.sum(dSI*dSI.conj(), axis=axis)
+    spectrum = utilities.makespectrum(dSI, axis)
     
     return spectrum
 

@@ -128,6 +128,10 @@ def components_from_model(m, tix=None, kix=None):
     
     return Vphi,phidot,H,modes,modesdot,axis
 
+def makespectrum(modes_I, axis):
+    spectrum = np.sum(modes_I * modes_I.conj(), axis=axis).astype(np.float)
+    return spectrum
+
 def correct_shapes(Vphi, phidot, H, modes, modesdot, axis):
     """Return variables with the correct shapes for calculation.
     
