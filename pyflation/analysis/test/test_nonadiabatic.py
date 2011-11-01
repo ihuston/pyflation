@@ -702,6 +702,17 @@ class TestDeltaPrelSpectrum():
         desired = np.array([9+2/3.0])
         assert_almost_equal(arr, desired)
         
+    def test_not_complex(self):
+        """Test that returned object is not complex."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = nonadiabatic.deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        assert_((not np.iscomplexobj(arr)))
+        
 class TestDeltaPnadSpectrum():
     
     def setup(self):
@@ -757,6 +768,17 @@ class TestDeltaPnadSpectrum():
         arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([358])
         assert_almost_equal(arr, desired)
+        
+    def test_not_complex(self):
+        """Test that returned object is not complex."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        assert_((not np.iscomplexobj(arr)))
 
 
 class TestDeltaPSpectrum():
@@ -815,6 +837,17 @@ class TestDeltaPSpectrum():
         arr = nonadiabatic.deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([54])
         assert_almost_equal(arr, desired)
+        
+    def test_not_complex(self):
+        """Test that returned object is not complex."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = nonadiabatic.deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
+        assert_((not np.iscomplexobj(arr)))
         
 
 class TestComponentsFromModel():
