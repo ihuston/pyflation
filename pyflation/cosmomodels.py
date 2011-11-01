@@ -34,7 +34,7 @@ import logging
 from configuration import _debug
 import cmpotentials
 import rk4
-
+import analysis
 
 #Start logging
 root_log_name = logging.getLogger().name
@@ -1050,8 +1050,9 @@ class MultiStageDriver(CosmologicalModel):
         pass
         
     @property
-    def Pr(self, recompute=False):
-        pass
+    def Pr(self):
+        """The power spectrum of comoving curvature perturbation."""
+        return analysis.Pr(self)
     
     @property
     def Pgrav(self, recompute=False):
