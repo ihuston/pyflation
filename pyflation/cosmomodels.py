@@ -1051,30 +1051,37 @@ class MultiStageDriver(CosmologicalModel):
         
     @property
     def Pr(self):
-        """The power spectrum of comoving curvature perturbation."""
+        """The power spectrum of comoving curvature perturbation.
+        
+        Calculated using the pyflation.analysis package.
+        """
         return analysis.Pr(self)
     
     @property
-    def Pgrav(self, recompute=False):
-        """Return the spectrum of tensor perturbations $P_grav$ for each k.
+    def Pzeta(self):
+        """The power spectrum of the curvature perturbation on uniform energy
+        density hypersurfaces.
         
-        Note that result is stored as the instance variable self.Pgrav. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pgrav: array_like
-               Array of Pgrav values for all timesteps and k modes
+        Calculated using the pyflation.analysis package.
         """
-        #Basic caching of result
-        if not hasattr(self, "_Pgrav") or recompute:        
-            self._Pgrav = 2*self.Pphi
-        return self._Pgrav
-            
+        return analysis.Pzeta(self)
+    
+    @property
+    def scaled_Pr(self):
+        """The power spectrum of comoving curvature perturbation.
+        
+        Calculated using the pyflation.analysis package.
+        """
+        return analysis.scaled_Pr(self)
+    
+    @property
+    def scaled_Pzeta(self):
+        """The power spectrum of comoving curvature perturbation.
+        
+        Calculated using the pyflation.analysis package.
+        """
+        return analysis.scaled_Pzeta(self)
+                
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
