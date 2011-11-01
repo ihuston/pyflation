@@ -1048,48 +1048,7 @@ class MultiStageDriver(CosmologicalModel):
     def deltaphi(self, recompute=False):
         """Return the value of deltaphi for this model, recomputing if necessary."""
         pass
-    
-    @property
-    def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each field and k.
         
-        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-        instance variable self.Pphi. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-        
-        Returns
-        -------
-        Pphi: array_like, dtype: float64
-              3-d array of Pphi values for all timesteps, fields and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:        
-            deltaphi = self.deltaphi
-            self._Pphi = np.float64(deltaphi*deltaphi.conj())
-        return self._Pphi
-    
-    @property
-    def calPphi(self):
-        """Return the spectrum of scalar perturbations for each field and k mode.
-        
-        This is the scaled power spectrum $\mathcal{P}_{\phi_I}$ for each field
-        and is given by
-        
-        $\mathcal{P}_{\delta\varphi_I}(k) = k^3/(2\pi^2) |\delta\varphi_I(k)|^2.$
-        
-        Returns
-        -------
-        calPphi: array_like, dtype: float64
-                 3-d array of calPphi values for all timesteps, fields and k modes
-              
-        """
-        return 1/(2*np.pi**2) * self.k**3 * self.Pphi
-    
     @property
     def Pr(self, recompute=False):
         pass
