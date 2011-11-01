@@ -4,7 +4,7 @@ Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 
 '''
-
+from __future__ import division
 import numpy as np
 
 import utilities
@@ -16,7 +16,21 @@ def Pphi_modes(m):
     
     This is a helper function which wraps the full calculation in Pphi_matrix
     and requires only the model as an argument. Provided for compatibility 
-    with previous versions."""
+    with previous versions.
+    
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       Model class instance from which the yresult variable will be used to 
+       calculate P_{I,J}.
+       
+    Returns
+    -------
+    Pphi_modes: array_like, dtype: float64
+                array of Pphi values flattened to have the same shape as
+                m.yresult[:,m.dps_ix].
+    
+    """
     #Get into mode matrix form, over first axis   
     mdp = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
     #Take tensor product of modes and conjugate, summing over second mode
@@ -27,33 +41,30 @@ def Pphi_modes(m):
     return Pphi_modes
 
 def Pphi_matrix(modes, axis):
-    """Return the spectrum of scalar perturbations P_phi for each field and k.
+    """Return the cross correlation of scalar perturbations P_{I,J}
     
-    This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-    $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-    instance variable m.Pphi.
     For multifield systems the full crossterm matrix is returned which 
-    has shape nfields*nfields flattened down to a vector of length nfields^2. 
-    
-    Parameters
-    ----------
-    recompute: boolean, optional
-               Should value be recomputed even if already stored? Default is False.
+    has shape nfields*nfields. 
     
     Returns
     -------
-    Pphi_modes: array_like, dtype: float64
-          3-d array of Pphi values for all timesteps, fields and k modes
+    Pphi_matrix: array_like, dtype: float64
+                 array of Pphi values with the same shape as input variable modes.
     """
     #Take tensor product of modes and conjugate, summing over second mode
     #index.
     mPphi = np.zeros_like(modes)
     #Do for loop as tensordot too memory expensive
     nfields=modes.shape[axis]
+    if axis < 0:
+        dims_to_skip = len(modes.shape) + axis
+    else:
+        dims_to_skip = axis
+    preaxis = (slice(None),)*dims_to_skip
     for i in range(nfields):
         for j in range(nfields):
             for k in range(nfields):
-                mPphi[:,i,j] += modes[:,i,k]*modes[:,j,k].conj() 
+                mPphi[preaxis+(i,j)] += modes[preaxis+(i,k)]*modes[preaxis+(j,k)].conj() 
     return mPphi
 
 
@@ -126,7 +137,7 @@ def findHorizoncrossings(m, factor=1):
     return m.findallkcrossings(m.tresult, m.yresult[:,2], factor)
      
      
-def Pr_spectrum(Vphi, phidot, H, modes, modesdot, axis):
+def Pr_spectrum(phidot, modes, axis):
     """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
     
     For a multifield model this is given by:
@@ -147,16 +158,18 @@ def Pr_spectrum(Vphi, phidot, H, modes, modesdot, axis):
     Pr: array_like, dtype: float64
         Array of Pr values for all timesteps and k modes
     """      
-    phidot = np.float64(m.yresult[:,m.phidots_ix,:]) #bg phidot
-    phidotsumsq = (np.sum(phidot**2, axis=1))**2
+    phidot = np.atleast_1d(phidot)
+    phidotsumsq = (np.sum(phidot**2, axis=axis))**2
     #Get mode matrix for Pphi_modes as nfield*nfield
-    Pphimatrix = utilities.getmodematrix(Pphi_modes(m), m.nfields, 1, slice(None))
+    Pphimatrix = Pphi_matrix(modes, axis)
     #Multiply mode matrix by corresponding phidot value
-    summatrix = phidot[:,np.newaxis,:,:]*phidot[:,:,np.newaxis,:]*Pphimatrix
+    phidotI = np.expand_dims(phidot, axis)
+    phidotJ = np.expand_dims(phidot, axis+1)
+    summatrix = phidotI*phidotJ*Pphimatrix
     #Flatten mode matrix and sum over all nfield**2 values
-    sumflat = np.sum(utilities.flattenmodematrix(summatrix, m.nfields, 1, 2), axis=1)
+    sumflat = np.sum(utilities.flattenmodematrix(summatrix, modes.shape[axis], axis, axis+1), axis=1)
     #Divide by total sum of derivative terms
-    Pr = sumflat/phidotsumsq
+    Pr = (sumflat/phidotsumsq).astype(np.float)
     return Pr
 
 def Pr(m):
@@ -186,7 +199,13 @@ def Pr(m):
     See also
     --------
     pyflation.analysis.adiabatic.Pr_spectrum function
-    """      
+    """
+    phidot = np.float64(m.yresult[:,m.phidots_ix,:]) #bg phidot
+    #Get into mode matrix form, over first axis   
+    modes = utilities.getmodematrix(m.yresult, m.nfields, ix=1, ixslice=m.dps_ix)
+    axis = 1
+    Pr = Pr_spectrum(phidot, modes, axis)
+    return Pr
     
 
 def scaled_Pr(m):
