@@ -7,6 +7,25 @@ For license and copyright information see LICENSE.txt which was distributed with
 from __future__ import division
 import numpy as np
 
+def kscaling(k):
+    """Return the k scaling for power spectrum calculations.
+    
+    Arguments
+    ---------
+    k: array
+       Array of k values to use
+       
+    Returns
+    -------
+    kscaling: array
+              k scaling values, kscaling = k^3/(2*pi^2)
+       
+    Note for a single variable (not a spectrum) you may want the square root
+    of this result.       
+    """
+    return k**3/(2*np.pi**2)
+              
+
 def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
     matrix. Returns a view of the y array (changes will be reflected in underlying array).

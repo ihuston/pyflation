@@ -256,20 +256,31 @@ def Pr(m, tix=None, kix=None):
     return Pr
     
 
-def scaled_Pr(m):
+def scaled_Pr(m, tix=None, kix=None):
     """Return the spectrum of (first order) curvature perturbations $\mathcal{P}_\mathcal{R}$ 
     for each timestep and k mode.
     
     This is the scaled power spectrum which is related to the unscaled version by
     $\mathcal{P}_\mathcal{R} = k^3/(2pi^2) P_\mathcal{R}$. 
      
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       Model class instance from which the yresult variable will be used to 
+       calculate P_R.
+    
+    tix: integer, optional
+         index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix: integer, optional
+         integer of k value at which to calculate, defaults to full range of ks.
+            
     Returns
     -------
     calPr: array_like
         Array of Pr values for all timesteps and k modes
     """
-    #Basic caching of result
-    return 1/(2*np.pi**2) * m.k**3 * Pr(m)           
+    return utilities.kscaling(m.k) * Pr(m, tix, kix)           
 
 def Pzeta(m, tix=None, kix=None):
     """Return the spectrum of (first order) curvature perturbations $P_\zeta$ for each k.
@@ -374,5 +385,4 @@ def scaled_Pzeta(m, tix=None, kix=None):
     scaled_Pzeta: array_like
         Array of Pzeta values for all timesteps and k modes
     """
-    #Basic caching of result
-    return 1/(2*np.pi**2) * m.k**3 * Pzeta(m, tix, kix)      
+    return utilities.kscaling(m.k) * Pzeta(m, tix, kix)      
