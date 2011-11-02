@@ -67,6 +67,9 @@ def spectral_index(y, k, kix=None, running=False):
     if y.shape != k.shape:
         raise ValueError("y and k arrays must be same shape.")
     
+    if np.any(y==0):
+        raise ValueError("The array y cannot contain any zero values.")
+    
     logy = np.log(y)
     logk = np.log(k)
     

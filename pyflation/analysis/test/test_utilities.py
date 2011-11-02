@@ -4,10 +4,11 @@ Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.
 '''
 import numpy as np
-from numpy.testing import assert_, assert_almost_equal
+from numpy.testing import assert_, assert_almost_equal, assert_equal
 
 from pyflation.analysis import utilities
 from pyflation import cosmomodels as c
+from numpy.testing.utils import assert_raises
 
 
 
@@ -69,3 +70,33 @@ class TestMakeSpectrum():
         modes_I = 8
         arr = utilities.makespectrum(modes_I, axis=0)
         assert_almost_equal(arr, 64)
+        
+class TestSpectralIndex():
+    
+    def test_raise_on_zero(self):
+        """Test that zero values cause ValueError"""
+        y = np.array([0,0,0])
+        x = np.array([1,2,3])
+        assert_raises(ValueError, utilities.spectral_index, y, x, 0)
+        
+    def test_flat_line(self):
+        """Test that flat lines give slope=1"""
+        y = np.array([1,1,1])
+        x = np.array([1,2,3])
+        arr = utilities.spectral_index(y, x, 1)
+        assert_equal(arr, 1)
+    
+    def test_45degree_line(self):
+        """Test that upwards 45 degree line gives spectral index=2"""
+        y = np.array([1,2,3])
+        x = np.array([1,2,3])
+        arr = utilities.spectral_index(y, x, 1)
+        assert_almost_equal(arr, 2)   
+        
+    def test_neg45degree_line(self):
+        """Test that downwards 45 degree line gives spectral index=2"""
+        x = np.array([1.0,2.0,3.0])
+        y = 1/x
+        arr = utilities.spectral_index(y, x, 1)
+        assert_almost_equal(arr, 0)   
+         
