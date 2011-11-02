@@ -389,7 +389,7 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis):
     dpnadmodes = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
     Pdot = fullPdot(Vphi, phidot, H, axis)
     Pdot = np.expand_dims(Pdot, axis)
-    result = Pdot*dpnadmodes       
+    result = dpnadmodes/Pdot       
     
     return result  
 
