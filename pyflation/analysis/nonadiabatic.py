@@ -429,7 +429,7 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     drhoI = np.sum(drhomodes, axis=axis)
     
-    spectrum = np.sum(drhoI*drhoI.conj(), axis=axis)
+    spectrum = utilities.makespectrum(drhoI, axis)
     
     return spectrum
 

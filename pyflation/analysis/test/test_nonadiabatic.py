@@ -630,8 +630,8 @@ class TestDeltaPnadMatrix():
         axis = 0
         H = np.array([3]).reshape((1,1))
         arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
-        desired = np.array([0.31535513, 0.42954734370370623]).reshape((2,1))
-        assert_almost_equal(arr, desired)
+        desired = np.array([3.884061, 16.1759427]).reshape((2,1))
+        assert_almost_equal(arr, desired, decimal=5)
         
     def test_imaginary(self):
         """Test calculation with complex values."""
@@ -754,8 +754,8 @@ class TestDeltaPnadSpectrum():
         axis = 0
         H = np.array([3]).reshape((1,1))
         arr = nonadiabatic.deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
-        desired = np.array([0.31535513**2 + 0.42954734370370623**2])
-        assert_almost_equal(arr, desired)
+        desired = np.array([3.884061**2 + 16.1759427**2])
+        assert_almost_equal(arr, desired, decimal=4)
         
     def test_imaginary(self):
         """Test calculation with complex values."""
@@ -848,49 +848,73 @@ class TestDeltaPSpectrum():
         axis=0
         arr = nonadiabatic.deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
         assert_((not np.iscomplexobj(arr)))
-        
 
-class TestComponentsFromModel():
+
+class TestDeltaRhoSpectrum():
     
     def setup(self):
-        self.nfields = 2
-        self.m = c.FOCanonicalTwoStage(nfields=2, potential_func="hybridquadratic",
-                                       pot_params={"nfields":2},
-                                       k=np.array([1e-62]))
-        self.m.tresult = np.array([1.0])
-        self.m.yresult = np.array([[[  1.32165292e+01 +0.00000000e+00j],
-        [ -1.50754596e-01 +0.00000000e+00j],
-        [  4.73189047e-13 +0.00000000e+00j],
-        [ -3.63952781e-13 +0.00000000e+00j],
-        [  5.40587341e-05 +0.00000000e+00j],
-        [ -1.54862102e+89 -7.41671642e+88j],
-        [ -2.13658450e+87 -1.10282252e+87j],
-        [ -3.38643667e+88 -2.32461601e+88j],
-        [  8.41541336e+68 +5.77708700e+68j],
-        [ -2.56090533e+88 -1.39910039e+88j],
-        [ -1.04340896e+76 -5.38567463e+75j],
-        [  2.56090533e+88 +1.39910039e+88j],
-        [ -9.29807779e+77 -5.05054386e+77j]]])
+        self.Vphi = np.arange(24.0).reshape((4,3,2))
+        self.phidot = np.arange(1.0, 25.0).reshape((4,3,2))
+        self.H = np.arange(1.0, 9.0).reshape((4,1,2))
+        self.axis=1
         
-    def test_returned(self):
-        """Test that the correct number of components are returned."""
-        components = utilities.components_from_model(self.m)
-        assert(len(components) == 6)
+        self.modes = np.arange(72.0).reshape((4.0,3,3,2))
+        self.modesdot = np.arange(10.0, 82.0).reshape((4.0,3,3,2))
         
-    def test_shapes(self):
-        """Test that components returned are of correct shape."""
-        components = utilities.components_from_model(self.m)
-        shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
-                  (1,self.nfields, self.nfields,1),
-                  (1 ,self.nfields, self.nfields, 1), ()]
-        for ix, var in enumerate(components):
-            assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
-            
-    def test_negative_tix(self):
-        """Test that negative tix is dealt with properly."""
-        components = utilities.components_from_model(self.m, -1)
-        shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
-                  (1,self.nfields, self.nfields,1),
-                  (1 ,self.nfields, self.nfields, 1), ()]
-        for ix, var in enumerate(components):
-            assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
+    def test_shape(self):
+        """Test whether the rhodots are shaped correctly."""    
+        arr = nonadiabatic.deltarhospectrum(self.Vphi, self.phidot, self.H, 
+                                       self.modes, self.modesdot, self.axis)
+        result = arr.shape
+        newshape = list(self.phidot.shape)
+        del newshape[self.axis]
+        actual = tuple(newshape)
+        assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
+    
+    def test_singlefield(self):
+        """Test single field calculation."""
+        modes = np.array([[7]])
+        modesdot = np.array([[5]])
+        Vphi = 3
+        phidot = 0.5
+        H = 2
+        axis=0
+        arr = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+        assert_almost_equal(arr, (29.25)**2)
+        
+    def test_two_by_two_by_one(self):
+        """Test that 2x2x1 calculation works."""
+        Vphi = np.array([5.5,2.3]).reshape((2,1))
+        phidot = np.array([2,5]).reshape((2,1))
+        modes = np.array([[1/3.0,0.1],[0.1,0.5]]).reshape((2,2,1))
+        modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
+        axis = 0
+        H = np.array([3]).reshape((1,1))
+        arr = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([139.38666666666**2+340.62142857**2])
+        assert_almost_equal(arr, desired, decimal=5)
+        
+    def test_imaginary(self):
+        """Test calculation with complex values."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([38])
+        assert_almost_equal(arr, desired)
+        
+    def test_not_complex(self):
+        """Test that returned object is not complex."""
+        Vphi = np.array([1,2]).reshape((2,1))
+        phidot = np.array([1,1]).reshape((2,1))
+        H = np.array([1]).reshape((1,1))
+        modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
+        modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
+        axis=0
+        arr = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+        assert_((not np.iscomplexobj(arr)))        
+
+

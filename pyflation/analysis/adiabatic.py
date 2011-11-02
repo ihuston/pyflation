@@ -46,6 +46,17 @@ def Pphi_matrix(modes, axis):
     For multifield systems the full crossterm matrix is returned which 
     has shape nfields*nfields. 
     
+    Arguments
+    ---------
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+          
     Returns
     -------
     Pphi_matrix: array_like, dtype: float64
@@ -152,6 +163,19 @@ def Pr_spectrum(phidot, modes, axis):
     $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
     m.Pr. 
     
+    Arguments
+    ---------
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+    
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
                
     Returns
     -------
@@ -252,11 +276,8 @@ def Pzeta(m, tix=None, kix=None):
     
     For a multifield model this is given by:
     
-    Pzeta = 
-            
-    where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
-    and \chi are the mode matrix elements.  
-    
+    Pzeta = \mathcal{P}_{\delta \rho} / (\rho^\dagger)^2
+                
     This is the unscaled version $P_\zeta$ which is related to the scaled version by
     $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
     
@@ -277,22 +298,81 @@ def Pzeta(m, tix=None, kix=None):
         Array of Pzeta values for all timesteps and k modes
     """      
     Vphi,phidot,H,modes,modesdot,axis = utilities.components_from_model(m, tix, kix)
+    Pzeta = Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
+    return Pzeta
+
+def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis):
+    """Return the spectrum of (first order) curvature perturbations $P_\zeta$ for each k.
+    
+    For a multifield model this is given by:
+    
+    Pzeta = 
+            
+    where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
+    and \chi are the mode matrix elements.  
+    
+    This is the unscaled version $P_\zeta$ which is related to the scaled version by
+    $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
+    
+    Arguments
+    ---------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+          
+    Returns
+    -------
+    Pzeta_spectrum: array_like, dtype: float64
+                    Array of Pzeta values
+    """      
+    Vphi,phidot,H,modes,modesdot,axis = utilities.correct_shapes(Vphi, phidot, H, 
+                                                                 modes, modesdot, axis)
     rhodot = nonadiabatic.fullrhodot(phidot, H, axis)
     drhospectrum = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
-    Pzeta = rhodot**(-2) * drhospectrum
+    Pzeta = rhodot**(-2.0) * drhospectrum
     return Pzeta
-    
-def scaled_Pzeta(m):
+
+def scaled_Pzeta(m, tix=None, kix=None):
     """Return the spectrum of scaled (first order) curvature perturbations $\mathcal{P}_\zeta$ 
     for each timestep and k mode.
     
     This is the scaled power spectrum which is related to the unscaled version by
     $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
-     
+    
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       model containing yresult with which to calculate spectrum
+        
+    tix: integer, optional
+         index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix: integer, optional
+         integer of k value at which to calculate, defaults to full range of ks.
+    
+    
     Returns
     -------
     scaled_Pzeta: array_like
         Array of Pzeta values for all timesteps and k modes
     """
     #Basic caching of result
-    return 1/(2*np.pi**2) * m.k**3 * Pzeta(m)      
+    return 1/(2*np.pi**2) * m.k**3 * Pzeta(m, tix, kix)      

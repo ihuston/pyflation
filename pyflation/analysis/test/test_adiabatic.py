@@ -270,7 +270,7 @@ class TestPzetaSpectrum():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = adiabatic.Pzeta(self.Vphi, self.phidot, self.H, 
+        arr = adiabatic.Pzeta_spectrum(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         newshape = list(self.phidot.shape)
@@ -281,25 +281,25 @@ class TestPzetaSpectrum():
     def test_singlefield(self):
         """Test single field calculation."""
         modes = np.array([[7]])
-        modesdot = np.array([[3]])
+        modesdot = np.array([[5]])
         Vphi = 3
-        phidot = 1.7
-        H = 0.5
+        phidot = 0.5
+        H = 2
         axis=0
-        actual = (0.5**2*1.7*3-0.5**3*1.7**2*1.7*7-21)**2
-        arr = adiabatic.Pzeta(Vphi, phidot, H, modes, modesdot, axis)
+        actual = (29.25)**2/9.0
+        arr = adiabatic.Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, actual)
         
     def test_two_by_two_by_one(self):
         """Test that 2x2x1 calculation works."""
-        Vphi = np.array([1,2]).reshape((2,1))
-        phidot = np.array([7,9]).reshape((2,1))
-        modes = np.array([[1,3],[2,5]]).reshape((2,2,1))
-        modesdot = np.array([[1,3],[2,5]]).reshape((2,2,1))
+        Vphi = np.array([5.5,2.3]).reshape((2,1))
+        phidot = np.array([2,5]).reshape((2,1))
+        modes = np.array([[1/3.0,0.1],[0.1,0.5]]).reshape((2,2,1))
+        modesdot = np.array([[0.1, 0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
-        H = np.array([2]).reshape((1,1))
-        arr = adiabatic.Pzeta(Vphi, phidot, H, modes, modesdot, axis)
-        desired = np.array([6405**2 + 16909**2])
+        H = np.array([3]).reshape((1,1))
+        arr = adiabatic.Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([135451.600445493/(783**2)])
         assert_almost_equal(arr, desired)
         
     def test_imaginary(self):
@@ -310,8 +310,8 @@ class TestPzetaSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = adiabatic.Pzeta(Vphi, phidot, H, modes, modesdot, axis)
-        desired = np.array([54])
+        arr = adiabatic.Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
+        desired = np.array([38/36.0])
         assert_almost_equal(arr, desired)
         
     def test_not_complex(self):
@@ -322,6 +322,6 @@ class TestPzetaSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = adiabatic.Pzeta(Vphi, phidot, H, modes, modesdot, axis)
+        arr = adiabatic.Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
         assert_((not np.iscomplexobj(arr)))
         
