@@ -226,7 +226,7 @@ class CosmologicalModel(object):
                     self._log.debug("File does not exist, using write mode.")
                 filemode = "w" #Writing to new file
         else:
-            raise IOError("Directory %s does not exist", os.path.dirname(filename))
+            raise IOError("Directory %s does not exist" % os.path.dirname(filename))
         
         if yresultshape is None:
             yresultshape = list(self.yresult.shape)
