@@ -129,6 +129,25 @@ def components_from_model(m, tix=None, kix=None):
     return Vphi,phidot,H,modes,modesdot,axis
 
 def makespectrum(modes_I, axis):
+    """Calculate spectrum of input.
+    
+    Spectrum = \Sum_I modes_I * modes_I.conjugate, 
+    where sum over I is on the dimension denoted by axis
+    
+    Arguments
+    ---------
+    modes_I: array_like
+             Array of (complex) values to calculate spectrum with.
+    
+    axis: integer
+          Dimension along which to sum the spectrum over.
+          
+    Returns
+    -------
+    spectrum: array_like, float
+              Real valued array of calculated spectrum.
+    """
+    modes_I = np.atleast_1d(modes_I)
     spectrum = np.sum(modes_I * modes_I.conj(), axis=axis).astype(np.float)
     return spectrum
 
