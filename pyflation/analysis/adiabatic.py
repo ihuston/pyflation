@@ -120,27 +120,7 @@ def findns(sPr, k, kix=None, running=False):
              tuple along with n_s.
     """
     
-    if sPr.shape != k.shape:
-        raise ValueError("Power spectrum and k arrays must be same shape.")
-    
-    logsPr = np.log(sPr)
-    logk = np.log(k)
-    
-    if running:
-        deg = 2
-    else:
-        deg = 1        
-    sPrfit = np.polyfit(logk, logsPr, deg=deg)
-    
-    n_spoly = np.polyder(np.poly1d(sPrfit), m=1)
-    n_s = 1 + n_spoly(logk[kix])
-    
-    if running:
-        a_spoly = np.polyder(np.poly1d(sPrfit), m=2)
-        a_s = a_spoly(logk[kix])
-        result = (n_s, a_s)
-    else:
-        result = n_s
+    result = utilities.spectral_index(sPr, k, kix, running)
     return result
 
 def findHorizoncrossings(m, factor=1):

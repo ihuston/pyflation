@@ -624,7 +624,7 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     """
     spectrum = deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
-    scaled_spectrum = k**3/(2*np.pi**2) * spectrum
+    scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
 def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
@@ -663,7 +663,7 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     """
     spectrum = deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
-    scaled_spectrum = k**3/(2*np.pi**2) * spectrum
+    scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
 def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
@@ -702,10 +702,53 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     """
     spectrum = Sspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
-    scaled_spectrum = k**3/(2*np.pi**2) * spectrum
+    scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
-
+def slope_of_S_spectrum(scaled_S, k, kix=None, running=False):
+    """Return the value of the slope of the k-scaled spectrum of S
+    
+    Arguments
+    ---------
+    scaled_S: array_like
+              Power spectrum of isocurvature perturbations at a specific time
+              This should be the *scaled* power spectrum i.e.
+               scaled_S = k^3/(2*pi)^2 * P_S, 
+               <S(k)S(k')> = (2pi^3) \delta(k+k') P_S
+               
+           The array should be one-dimensional indexed by the k value.
+           
+    k: array_like
+       Array of k values for which sPr has been calculated.
+       
+    kix: integer
+         Index value of k for which to return spec_S.
+         
+    running: boolean, optional
+             Whether running should be allowed or not. If true, a quadratic
+             polynomial fit is made instead of linear and the value of the 
+             running is returned along with the slope. Defaults to False.
+       
+         
+    Returns
+    -------
+    spec_S: float
+             The value of the spectral index of S at the requested k value and timestep.
+             Normalised in the same way as n_s
+             
+             spec_S = 1 - d ln(scaled_S) / d ln(k) evaluated at k[kix]
+             
+        This is calculated using a polynomial least squares fit with 
+        numpy.polyfit. If running is True then a quadratic polynomial is fit,
+        otherwise only a linear fit is made.
+    
+    running_S: float, present only if running = True
+               If running=True the value of the derivative of the slope 
+               at k[kix] is returned in a tuple along with spec_S.
+    """
+    
+    result = utilities.spectral_index(scaled_S, k, kix, running)
+    return result
 
 def dprel_from_model(m, tix=None, kix=None):
     """Get the spectrum of delta Prel from a model instance.

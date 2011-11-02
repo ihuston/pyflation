@@ -25,6 +25,67 @@ def kscaling(k):
     """
     return k**3/(2*np.pi**2)
               
+def spectral_index(y, k, kix=None, running=False):
+    """Return the value of spectral index (and running) of y at k[kix]
+    
+    Arguments
+    ---------
+    y: array_like
+       Array of values 
+       The array should be one-dimensional indexed by the x values.
+           
+    k: array_like
+       Array of k values for which y has been calculated.
+       
+    kix: integer
+         Index value of k for which to return the spectral index.
+         
+    running: boolean, optional
+             Whether running should be allowed or not. If true, a quadratic
+             polynomial fit is made instead of linear and the value of the 
+             running is returned along with the spectral index. Defaults to False.
+       
+         
+    Returns
+    -------
+    spec_index: float
+           The value of the spectral index at the requested x value.
+           This is calculated as with the spectral index, so the value is 1 
+           for a flat line.           
+             
+             spec_index = 1 - d ln(y) / d ln(k) evaluated at k[kix]
+             
+        This is calculated using a polynomial least squares fit with 
+        numpy.polyfit. If running is True then a quadratic polynomial is fit,
+        otherwise only a linear fit is made.
+    
+    alpha: float, present only if running = True
+           If running=True the alpha_s value at k[kix] is returned in a 
+           tuple along with spec_index.
+    """
+    
+    if y.shape != k.shape:
+        raise ValueError("y and k arrays must be same shape.")
+    
+    logy = np.log(y)
+    logk = np.log(k)
+    
+    if running:
+        deg = 2
+    else:
+        deg = 1        
+    sPrfit = np.polyfit(logk, logy, deg=deg)
+    
+    n_spoly = np.polyder(np.poly1d(sPrfit), m=1)
+    n_s = 1 + n_spoly(logk[kix])
+    
+    if running:
+        a_spoly = np.polyder(np.poly1d(sPrfit), m=2)
+        a_s = a_spoly(logk[kix])
+        result = (n_s, a_s)
+    else:
+        result = n_s
+    return result
 
 def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
