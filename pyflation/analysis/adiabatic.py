@@ -260,7 +260,7 @@ def scaled_Pr(m, tix=None, kix=None):
     calPr: array_like
         Array of Pr values for all timesteps and k modes
     """
-    return utilities.kscaling(m.k) * Pr(m, tix, kix)           
+    return utilities.kscaling(m.k, kix) * Pr(m, tix, kix)           
 
 def Pzeta(m, tix=None, kix=None):
     """Return the spectrum of (first order) curvature perturbations $P_\zeta$ for each k.
@@ -365,4 +365,4 @@ def scaled_Pzeta(m, tix=None, kix=None):
     scaled_Pzeta: array_like
         Array of Pzeta values for all timesteps and k modes
     """
-    return utilities.kscaling(m.k) * Pzeta(m, tix, kix)      
+    return utilities.kscaling(m.k, kix) * Pzeta(m, tix, kix)      
