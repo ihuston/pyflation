@@ -7,7 +7,7 @@ For license and copyright information see LICENSE.txt which was distributed with
 from __future__ import division
 import numpy as np
 
-def kscaling(k):
+def kscaling(k, kix=None):
     """Return the k scaling for power spectrum calculations.
     
     Arguments
@@ -23,7 +23,11 @@ def kscaling(k):
     Note for a single variable (not a spectrum) you may want the square root
     of this result.       
     """
-    return k**3/(2*np.pi**2)
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+    return k[kslice]**3/(2*np.pi**2)
               
 def spectral_index(y, k, kix=None, running=False):
     """Return the value of spectral index (and running) of y at k[kix]
