@@ -15,6 +15,10 @@ def kscaling(k, kix=None):
     k: array
        Array of k values to use
        
+    kix: integer, optional
+         Index of k value in array to use, defaults to None, which uses full
+         array.
+       
     Returns
     -------
     kscaling: array
