@@ -754,3 +754,55 @@ def quartictwofield(y, params=None):
     d3Udphi3 = None
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def hybridquartic(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V = \Lambda^4 [ (1-\chi^2/v^2)^2 + \phi^2/\mu^2 
+                    + 2\phi^2\chi^2/(\phi_c^2 v^2) ]
+    where the parameter are \Lambda, v, \mu and \phi_c. Needs nfields=2.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values labelled "lambda" , "v", "mu", "phi_c".
+             
+    """
+    
+    #Check if mass is specified in params
+    if params:
+        l = params.get("lambda", 1)
+        v = params.get("v", 0.1)
+        mu = params.get("mu", 1e3)
+        phi_c = params.get("phi_c", 0.01)
+    else:
+        l = 1
+        v = 0.1
+        mu = 1e3
+        phi_c = 0.01
+        
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+    phi = y[0]
+    chi = y[2]
+    
+    l4 = l**4
+    phicv2 = (phi_c*v)**2
+    
+    #potential U = 1/2 m^2 \phi^2
+    U = np.asscalar(l4 *((1-chi**2/v**2)**2 + phi**2/mu**2 + 2*(phi*chi)**2/phicv2))
+    #deriv of potential wrt \phi
+    dUdphi = l4*np.array([2*phi/mu**2 + 4*phi*chi**2/phicv2, 
+                            -2*chi/v**2 * (1-chi**2/v**2) + 4*phi**2*chi/phicv2])
+    #2nd deriv
+    d2Udphi2 = l4*np.array([[2/mu**2 + 2*chi**2/phicv2, # V phi phi 
+                             8*phi*chi/phicv2],         # V phi chi
+                            [8*phi*chi/phicv2,          # V chi phi
+                             -4/v**2 * (1-3*chi**2/v**2) + 4*phi**2/phicv2]]) # V chi chi
+    #3rd deriv Not set as not used in first order calculation
+    d3Udphi3 = np.zeros((2,2,2))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
