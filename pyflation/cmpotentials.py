@@ -773,12 +773,12 @@ def hybridquartic(y, params=None):
     
     #Check if mass is specified in params
     if params:
-        l = params.get("lambda", 1)
+        l = params.get("lambda", 1.3e-6)
         v = params.get("v", 0.1)
         mu = params.get("mu", 1e3)
         phi_c = params.get("phi_c", 0.01)
     else:
-        l = 1
+        l = 1.3e-6
         v = 0.1
         mu = 1e3
         phi_c = 0.01
@@ -796,9 +796,9 @@ def hybridquartic(y, params=None):
     U = np.asscalar(l4 *((1-chi**2/v**2)**2 + phi**2/mu**2 + 2*(phi*chi)**2/phicv2))
     #deriv of potential wrt \phi
     dUdphi = l4*np.array([2*phi/mu**2 + 4*phi*chi**2/phicv2, 
-                            -2*chi/v**2 * (1-chi**2/v**2) + 4*phi**2*chi/phicv2])
+                            -4*chi/v**2 * (1-chi**2/v**2) + 4*phi**2*chi/phicv2])
     #2nd deriv
-    d2Udphi2 = l4*np.array([[2/mu**2 + 2*chi**2/phicv2, # V phi phi 
+    d2Udphi2 = l4*np.array([[2/mu**2 + 4*chi**2/phicv2, # V phi phi 
                              8*phi*chi/phicv2],         # V phi chi
                             [8*phi*chi/phicv2,          # V chi phi
                              -4/v**2 * (1-3*chi**2/v**2) + 4*phi**2/phicv2]]) # V chi chi
