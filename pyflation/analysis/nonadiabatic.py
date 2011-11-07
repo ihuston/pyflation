@@ -776,3 +776,58 @@ def dprel_from_model(m, tix=None, kix=None):
     result = deltaPrelspectrum(*components)
     
     return result
+
+def S_alternate(phidot, Pphi_modes, axis):
+    """Return the alternate spectrum of (first order) isocurvature perturbations $P_S$ for each k.
+    This is only available for a two field model and is given by:
+    
+    P_S = (H/\dot{\sigma})**2 <\delta s \delta s*>
+            
+    where \dot{\sigma} = \sqrt{\dot{\phi}**2 + \dot{\chi}**2} and
+          \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
+                     + \dot{\phi}/\dot{\sigma} \delta \chi
+    
+    This is the unscaled version $P_S$ which is related to the scaled version by
+    $\mathcal{P}_S = k^3/(2pi^2) P_S$. 
+    
+    Arguments
+    ---------
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+    
+    Pphi_modes: array_like
+           Mode matrix of first order perturbation power spectrum given by
+           adiabatic.Pphi_matrix. Component array should have two dimensions of 
+           length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+               
+    Returns
+    -------
+    Pr: array_like, dtype: float64
+        Array of Pr values for all timesteps and k modes
+    """      
+    nfields = Pphi_modes.shape[axis]
+    if nfields != 2:
+        raise ValueError("Only two field models can be used in this calculation.")
+    
+    phidot = np.atleast_1d(phidot)
+    phidotsumsq = (np.sum(phidot**2, axis=axis))**2
+    
+    tslice = (slice(None),)*axis
+    transform = np.ones_like(Pphi_modes)
+    transform[tslice + (0,1)] = -1
+    transform[tslice + (1,0)] = -1
+    
+    #Multiply mode matrix by corresponding phidot value
+    phidotI = np.expand_dims(phidot[tslice + slice(None,None,-1)], axis)
+    phidotJ = np.expand_dims(phidot[tslice + slice(None,None,-1)], axis+1)
+    summatrix = phidotI*phidotJ*Pphi_modes*transform
+    #Flatten mode matrix and sum over all nfield**2 values
+    sumflat = np.sum(utilities.flattenmodematrix(summatrix, nfields, axis, axis+1), axis=1)
+    #Divide by total sum of derivative terms
+    Pr = (sumflat/phidotsumsq).astype(np.float)
+    return Pr
