@@ -823,8 +823,8 @@ def S_alternate(phidot, Pphi_modes, axis):
     transform[tslice + (1,0)] = -1
     
     #Multiply mode matrix by corresponding phidot value
-    phidotI = np.expand_dims(phidot[tslice + slice(None,None,-1)], axis)
-    phidotJ = np.expand_dims(phidot[tslice + slice(None,None,-1)], axis+1)
+    phidotI = np.expand_dims(phidot[tslice + (slice(None,None,-1),)], axis)
+    phidotJ = np.expand_dims(phidot[tslice + (slice(None,None,-1),)], axis+1)
     summatrix = phidotI*phidotJ*Pphi_modes*transform
     #Flatten mode matrix and sum over all nfield**2 values
     sumflat = np.sum(utilities.flattenmodematrix(summatrix, nfields, axis, axis+1), axis=1)
