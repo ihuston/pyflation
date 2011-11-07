@@ -366,3 +366,49 @@ def scaled_Pzeta(m, tix=None, kix=None):
         Array of Pzeta values for all timesteps and k modes
     """
     return utilities.kscaling(m.k, kix) * Pzeta(m, tix, kix)      
+
+def Pr_spectrum_from_Pphimodes(phidot, Pphi_modes, axis):
+    """Return the spectrum of (first order) curvature perturbations $P_R1$ for each k.
+    
+    For a multifield model this is given by:
+    
+    Pr = (\Sum_K \dot{\phi_K}^2 )^{-2} 
+            \Sum_{I,J} \dot{\phi_I} \dot{\phi_J} P_{IJ}
+            
+    where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
+    and \chi are the mode matrix elements.  
+    
+    This is the unscaled version $P_R$ which is related to the scaled version by
+    $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
+    m.Pr. 
+    
+    Arguments
+    ---------
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+    
+    Pphi_modes: array_like
+           Mode matrix of first order perturbations spectra. Component array should
+           have two dimensions of length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+               
+    Returns
+    -------
+    Pr: array_like, dtype: float64
+        Array of Pr values for all timesteps and k modes
+    """      
+    phidot = np.atleast_1d(phidot)
+    phidotsumsq = (np.sum(phidot**2, axis=axis))**2
+    #Multiply mode matrix by corresponding phidot value
+    phidotI = np.expand_dims(phidot, axis)
+    phidotJ = np.expand_dims(phidot, axis+1)
+    summatrix = phidotI*phidotJ*Pphi_modes
+    #Flatten mode matrix and sum over all nfield**2 values
+    sumflat = np.sum(utilities.flattenmodematrix(summatrix, Pphi_modes.shape[axis], axis, axis+1), axis=1)
+    #Divide by total sum of derivative terms
+    Pr = (sumflat/phidotsumsq).astype(np.float)
+    return Pr
