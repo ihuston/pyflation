@@ -643,7 +643,7 @@ class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
     yresult[nfields*2 + 1:] : perturbation fields and derivatives
        """
     
-    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize variables and call superclass"""
         
         super(CanonicalFirstOrderSlowLoop, self).__init__(*args, **kwargs)       
