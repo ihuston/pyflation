@@ -2019,7 +2019,7 @@ class FOSuppressOneField(FOCanonicalTwoStage):
     
     def __init__(self, suppress_ix=0, *args, **kwargs):
         
-        self.suppress_ix = 0
+        self.suppress_ix = suppress_ix
         super(FOSuppressOneField, self).__init__(*args, **kwargs)
         
     def getfoystart(self, ts=None, tsix=None):
