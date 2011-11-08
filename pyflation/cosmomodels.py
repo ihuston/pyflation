@@ -2011,3 +2011,68 @@ class FONoPhase(FOCanonicalTwoStage):
         foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*(1 + (self.k/(astar*Hstar))*1j)
         
         return foystart   
+    
+
+class FOSuppressOneField(FOCanonicalTwoStage):
+    """First order two stage class which does not include a phase in the initial
+    conditions for the first order field."""
+    
+    def __init__(self, suppress_ix=0, *args, **kwargs):
+        
+        self.suppress_ix = 0
+        super(FOSuppressOneField, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
+        
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
+        
+        #Suppress one field using self.suppress_ix
+        foystart[self.dps_ix,:][::self.nfields+1][self.suppress_ix] = 0
+        foystart[self.dpdots_ix,:][::self.nfields+1][self.suppress_ix] = 0
+                
+        return foystart
