@@ -630,6 +630,83 @@ class CanonicalFirstOrder(PhiModels):
                                 + termsum/H**2)
         return dydx
         
+        
+class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
+    """First order model using efold as time variable with multiple fields.
+    Derivs contains a slow for loop for clarity.
+    
+    nfields holds the number of fields and the yresult variable is then laid
+    out as follows:
+    
+    yresult[0:nfields*2] : background fields and derivatives
+    yresult[nfields*2] : Hubble variable H
+    yresult[nfields*2 + 1:] : perturbation fields and derivatives
+       """
+            
+                       
+    def derivs(self, y, t, **kwargs):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        #If k not given select all
+        if "k" not in kwargs or kwargs["k"] is None:
+            k = self.k
+        else:
+            k = kwargs["k"]
+        
+        nfields = self.nfields    
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((2*self.nfields**2 + 2*self.nfields + 1,len(k)), dtype=y.dtype)
+            term1 = np.zeros((nfields,nfields,len(k)), dtype=y.dtype)
+        else:
+            dydx = np.zeros(2*self.nfields**2 + 2*self.nfields + 1, dtype=y.dtype)
+            term1 = np.zeros((nfields,nfields), y.dtype)
+            
+        #d\phi_0/dn = y_1
+        dydx[self.phis_ix] = y[self.phidots_ix] 
+        
+        #dphi^prime/dn
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
+        
+        #dH/dn Do sum over fields not ks so use axis=0
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
+        
+        #Get a
+        a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
+        
+        dydx[self.dps_ix] = y[self.dpdots_ix]
+        
+        #Sum term for perturbation
+        phidot = y[self.phidots_ix]
+        
+        dpmodes = y[self.dps_ix].reshape((self.nfields, self.nfields, len(k)))
+        
+        for i in range(nfields):
+            for k in range(nfields):
+                term1[i,k] = (d2Udphi2[i,k] + (phidot[i]*dUdphi[k] + dUdphi[i]*phidot[k]
+                                        +phidot[i]*phidot[k]*U))
+                
+                
+        
+#        term1 = (d2Udphi2[...,np.newaxis] 
+#                + phidot[:,np.newaxis,:]*dUdphi[np.newaxis,:,np.newaxis] 
+#                + dUdphi[:,np.newaxis,np.newaxis] * phidot[np.newaxis,...]
+#                + phidot[:,np.newaxis,:]*phidot[np.newaxis,...]*U )
+#        
+#        
+        termsum = np.sum(term1[:,:,np.newaxis,:]*dpmodes[np.newaxis,...], axis=-2)
+        termsum = termsum.reshape((self.nfields**2,len(k)))
+        
+        #d\deltaphi_1^prime/dn  
+        # Do sum over second field index so axis=-1
+        dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+                                + termsum/H**2)
+        return dydx
+
 
 class CanonicalSecondOrder(PhiModels):
     """Second order model using efold as time variable.
