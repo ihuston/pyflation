@@ -690,9 +690,11 @@ class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
         dpmodes = y[self.dps_ix].reshape((self.nfields, self.nfields, len(k)))
         
         for i in range(nfields):
-            for l in range(nfields):
-                term1[i,l] = (d2Udphi2[i,l] + (phidot[i]*dUdphi[l] + dUdphi[i]*phidot[l]
-                                        +phidot[i]*phidot[l]*U))
+            for j in range(nfields):
+                #Inner loop over fields
+                for l in range(nfields):
+                    term1[i,j] += (d2Udphi2[i,l] + (phidot[i]*dUdphi[l] + dUdphi[i]*phidot[l]
+                                            +phidot[i]*phidot[l]*U))*dpmodes[l,j]
                 
                 
         
@@ -701,9 +703,8 @@ class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
 #                + dUdphi[:,np.newaxis,np.newaxis] * phidot[np.newaxis,...]
 #                + phidot[:,np.newaxis,:]*phidot[np.newaxis,...]*U )
 #        
-#        
-        termsum = np.sum(term1[:,:,np.newaxis,:]*dpmodes[np.newaxis,...], axis=-2)
-        termsum = termsum.reshape((self.nfields**2,len(k)))
+#       
+        termsum = term1.reshape((self.nfields**2,len(k)))
         
         #d\deltaphi_1^prime/dn  
         # Do sum over second field index so axis=-1
