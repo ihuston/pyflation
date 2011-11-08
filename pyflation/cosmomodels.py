@@ -642,7 +642,11 @@ class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
     yresult[nfields*2] : Hubble variable H
     yresult[nfields*2 + 1:] : perturbation fields and derivatives
        """
-            
+    
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(CanonicalFirstOrderSlowLoop, self).__init__(*args, **kwargs)       
                        
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
