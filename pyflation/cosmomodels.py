@@ -686,9 +686,9 @@ class CanonicalFirstOrderSlowLoop(CanonicalFirstOrder):
         dpmodes = y[self.dps_ix].reshape((self.nfields, self.nfields, len(k)))
         
         for i in range(nfields):
-            for k in range(nfields):
-                term1[i,k] = (d2Udphi2[i,k] + (phidot[i]*dUdphi[k] + dUdphi[i]*phidot[k]
-                                        +phidot[i]*phidot[k]*U))
+            for l in range(nfields):
+                term1[i,l] = (d2Udphi2[i,l] + (phidot[i]*dUdphi[l] + dUdphi[i]*phidot[l]
+                                        +phidot[i]*phidot[l]*U))
                 
                 
         
