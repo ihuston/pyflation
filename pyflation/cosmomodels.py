@@ -559,15 +559,8 @@ class CanonicalFirstOrder(PhiModels):
         else:
             self.k = k
         
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2+1)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
-        self.pert_ix = slice(self.nfields*2+1, None)
-        self.dps_ix = slice(self.nfields*2+1, None, 2)
-        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+        #Set the field indices to use
+        self.setfieldindices()
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
@@ -577,6 +570,18 @@ class CanonicalFirstOrder(PhiModels):
         if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[self.H_ix] = self.findH(U, self.ystart)
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
                        
     def derivs(self, y, t, **kwargs):
         """Return derivatives of fields in y at time t."""
@@ -1160,15 +1165,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         super(FOCanonicalTwoStage, self).__init__(**newkwargs)
         
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2+1)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
-        self.pert_ix = slice(self.nfields*2+1, None)
-        self.dps_ix = slice(self.nfields*2+1, None, 2)
-        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+        #Set the field indices
+        self.setfieldindices()
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1194,6 +1192,18 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         #Setup model variables    
         self.bgmodel = self.firstordermodel = None
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
                     
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -1410,6 +1420,36 @@ class FOCanonicalTwoStage(MultiStageDriver):
             self._deltaphi = self.yresult[:,self.dps_ix,:]
         return self._deltaphi
     
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.yresult[:,self.dpdots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
 
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
@@ -1603,6 +1643,24 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Try to put yresult array in memory
         self.second_stage.yresultarr = self.second_stage.yresult
         self.second_stage.yresult = self.second_stage.yresultarr[:]
+        
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        # Indices for use with self.second_stage.yresult
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        
+        #Indices of second order quantities, to use with self.yresult
+        self.dp2s_ix = slice(0, None, 2)
+        self.dp2dots_ix = slice(1, None, 2)
+        return
+                    
     
     def setup_soclass(self):
         """Initialize the second order class that will be used to run simulation."""
@@ -1684,6 +1742,47 @@ class SOCanonicalThreeStage(MultiStageDriver):
             dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
             self._deltaphi = dp1 + 0.5*dp2
         return self._deltaphi
+    
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.second_stage.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.second_stage.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.second_stage.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.second_stage.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.second_stage.yresult[:,self.dpdots_ix]
+    
+    @property
+    def dp2modes(self):
+        """Quantum modes of second order perturbations"""
+        return self.yresult[:,self.dp2s_ix]
+    
+    @property
+    def dp2dotmodes(self):
+        """Quantum modes of derivatives of second order perturbations"""
+        return self.yresult[:,self.dp2dots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
     
 class SOHorizonStart(SOCanonicalThreeStage):
     """Runs third stage calculation (typically second order perturbations) using
