@@ -615,6 +615,9 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
           Specifies which axis is first in mode matrix, e.g. if modes has shape
           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
           assumed to be beside each other so (100,3,10,3) would not be valid.
+          
+    k: array
+       The values of k to scale the result with.
     
     Returns
     -------
@@ -656,6 +659,9 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
           assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    k: array
+       The values of k to scale the result with.
+    
     Returns
     -------
     scaled_dP_spectrum: array
@@ -695,6 +701,9 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
           assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    k: array
+       The values of k to scale the result with.
+       
     Returns
     -------
     scaled_S_spectrum: array
