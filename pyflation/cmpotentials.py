@@ -806,3 +806,50 @@ def hybridquartic(y, params=None):
     d3Udphi3 = np.zeros((2,2,2))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def inflection(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V = V_0 + g\phi + h \chi + 1/6 \lambda \chi^3
+       where the parameters are \lambda, h and g . Needs nfields=2.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values labelled "V_0", "lambda" , "g", "h".
+             
+    """
+    
+    #Check if mass is specified in params
+    if params:
+        V_0 = params.get("V_0", 1e-6)
+        l = params.get("lambda", 1.3e-6)
+        h = params.get("h", 0.1)
+        g = params.get("g", 1e3)
+    else:
+        V_0 = 1e-6
+        l = 1.3e-6
+        h = 0.1
+        g = 1e3
+                
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+    phi = y[0]
+    chi = y[2]
+    
+    #potential U = 1/2 m^2 \phi^2
+    U = np.asscalar(V_0 + g*phi + h*chi + 1/6.0 * l * chi**3)
+    #deriv of potential wrt \phi
+    dUdphi = np.array([g, h + 0.5 * l * chi**2])
+    #2nd deriv
+    d2Udphi2 = np.array([[0.0, # V phi phi 
+                          0.0],         # V phi chi
+                         [0.0,          # V chi phi
+                          l*chi]]) # V chi chi
+    #3rd deriv Not set as not used in first order calculation
+    d3Udphi3 = np.zeros((2,2,2))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
