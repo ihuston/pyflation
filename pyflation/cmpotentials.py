@@ -856,3 +856,51 @@ def inflection(y, params=None):
     d3Udphi3 = np.zeros((2,2,2))
     
     return U, dUdphi, d2Udphi2, d3Udphi3
+
+def hilltopaxion(y, params=None):
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V = 0.5 m^2 \phi^2 + \Lambda^4 (1 - cos(2\pi\chi/f))
+        where the parameters are \Lambda, m, and f . Needs nfields=2.
+    
+    Arguments:
+    y - Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
+    
+    params - Dictionary of parameter values labelled "Lambda" , "m", "f".
+             
+    """
+    
+    #Check if mass is specified in params
+    if params:
+        l = params.get("Lambda", np.sqrt(6e-6/(4*np.pi)))
+        f = params.get("f", 1.0)
+        m = params.get("m", 6e-6)
+    else:
+        l = np.sqrt(6e-6/(4*np.pi))
+        f = 1.0
+        m = 6e-6
+                
+    if len(y.shape)>1:
+        y = y[:,0]
+        
+     
+    phi = y[0]
+    chi = y[2]
+    
+    twopif = 2*np.pi/f
+    
+    #potential U = 1/2 m^2 \phi^2
+    U = np.asscalar(0.5*m**2*phi**2 + l**4*(1 - np.cos(twopif*chi)))
+    #deriv of potential wrt \phi
+    dUdphi = np.array([m**2*phi, l**4*(twopif)*np.sin(twopif*chi)])
+    #2nd deriv
+    d2Udphi2 = np.array([[m**2, # V phi phi 
+                          0.0],         # V phi chi
+                         [0.0,          # V chi phi
+                          l**4*(twopif)**2*np.cos(twopif*chi)]]) # V chi chi
+    #3rd deriv Not set as not used in first order calculation
+    d3Udphi3 = np.zeros((2,2,2))
+    
+    return U, dUdphi, d2Udphi2, d3Udphi3
