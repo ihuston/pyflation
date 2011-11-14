@@ -838,20 +838,20 @@ def inflection(y, params=None):
     if len(y.shape)>1:
         y = y[:,0]
         
-    V_0 = 0.75*g*r + l/24.0 * r**3 + g/(4*r**3)
+    V_0 = 0.75*g*r + l/24.0 * r**3 
     phi = y[0]
     chi = y[2]
     
     #potential U = 1/2 m^2 \phi^2
     U = np.asscalar(V_0 + 0.5*m**2*phi**2 + g*chi + 1/6.0 * l * chi**3
-                    + l/(8*r) * chi**4)
+                    + (g/(4*r**3) + l/(8*r)) * chi**4)
     #deriv of potential wrt \phi
-    dUdphi = np.array([m**2*phi, g + 0.5 * l * chi**2 + l/(2*r) * chi**3])
+    dUdphi = np.array([m**2*phi, g + 0.5 * l * chi**2 + (g/(2*r**3) + l/(2*r)) * chi**3])
     #2nd deriv
     d2Udphi2 = np.array([[m**2, # V phi phi 
                           0.0],         # V phi chi
                          [0.0,          # V chi phi
-                          l*chi + 3*l/(2*r) * chi**2]]) # V chi chi
+                          l*chi + 3/2*(g/r**3 + l/r) * chi**2]]) # V chi chi
     #3rd deriv Not set as not used in first order calculation
     d3Udphi3 = np.zeros((2,2,2))
     
