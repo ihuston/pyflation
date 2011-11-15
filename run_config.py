@@ -87,6 +87,10 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "pot_params": {},
                                 "nfields": 2,
                                 "bgystart": np.array([1e-2, 2e-8, 1.63e-9,3.26e-7,0])},
+            "productexponential":  {"potential_func": "productexponential",
+                                "pot_params": {},
+                                "nfields": 2,
+                                "bgystart": np.array([18.0, 0.0, 0.001,0,0])},
             }
 
 ##############################
