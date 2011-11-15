@@ -923,10 +923,10 @@ def productexponential(y, params=None):
     #Check if mass is specified in params
     if params:
         l = params.get("lambda", 0.05)
-        V_0 = params.get("V_0", 1e-6)
+        V_0 = params.get("V_0", 5.3705e-13)
     else:
         l = 0.05
-        V_0 = 1e-6
+        V_0 = 5.3705e-13
                 
     if len(y.shape)>1:
         y = y[:,0]
