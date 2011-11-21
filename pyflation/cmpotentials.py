@@ -610,11 +610,11 @@ def hybridquadratic(y, params=None):
     
     #Check if mass is specified in params
     if params:
-        m1 = params.get("m1", 4.60271e-6)
-        m2 = params.get("m2", 1.104651e-5)
+        m1 = params.get("m1", 1.395464769e-6)
+        m2 = params.get("m2", 9.768253382e-5)
     else:
-        m1 = 4.60271e-6
-        m2 = 1.104651e-5
+        m1 = 1.395464769e-6
+        m2 = 9.768253382e-5
         
     if len(y.shape)>1:
         y = y[:,0]
