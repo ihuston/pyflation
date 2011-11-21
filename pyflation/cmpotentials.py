@@ -774,12 +774,12 @@ def hybridquartic(y, params=None):
     
     #Check if mass is specified in params
     if params:
-        l = params.get("lambda", 1.3e-6)
+        l = params.get("lambda", 2.3644e-6)
         v = params.get("v", 0.1)
         mu = params.get("mu", 1e3)
         phi_c = params.get("phi_c", 0.01)
     else:
-        l = 1.3e-6
+        l = 2.3644e-6
         v = 0.1
         mu = 1e3
         phi_c = 0.01
