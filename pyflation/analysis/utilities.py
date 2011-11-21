@@ -31,6 +31,7 @@ def kscaling(k, kix=None):
         kslice = slice(None)
     else:
         kslice = slice(kix, kix+1)
+    k = np.asarray(k)
     return k[kslice]**3/(2*np.pi**2)
               
 def spectral_index(y, k, kix=None, running=False):
