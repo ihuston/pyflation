@@ -840,3 +840,41 @@ def S_alternate(phidot, Pphi_modes, axis):
     #Divide by total sum of derivative terms
     Pr = (sumflat/phidotsumsq).astype(np.float)
     return Pr
+
+def scaled_S_alternate_spectrum(phidot, Pphi_modes, axis, k):
+    """Return the scaled alternate spectrum of (first order) isocurvature perturbations for each k.
+    This is only available for a two field model and is given by:
+    
+    P_\bar{S} = (H/\dot{\sigma})**2 <\delta s \delta s*>
+            
+    where \dot{\sigma} = \sqrt{\dot{\phi}**2 + \dot{\chi}**2} and
+          \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
+                     + \dot{\phi}/\dot{\sigma} \delta \chi
+    
+    This is the scaled version $\mathcal{P}_\bar{S} which is related to the unscaled version by
+    $\mathcal{P}_\bar{S} = k^3/(2pi^2) P_\bar{S}$. 
+    
+    Arguments
+    ---------
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+    
+    Pphi_modes: array_like
+           Mode matrix of first order perturbation power spectrum given by
+           adiabatic.Pphi_matrix. Component array should have two dimensions of 
+           length nfields.
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+               
+    Returns
+    -------
+    Pr: array_like, dtype: float64
+        Array of Pr values for all timesteps and k modes
+    """      
+    spectrum = S_alternate(phidot, Pphi_modes, axis)
+        #Add extra dimensions to k if necessary
+    scaled_spectrum = utilities.kscaling(k) * spectrum
+    return scaled_spectrum
