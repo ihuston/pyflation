@@ -594,8 +594,9 @@ def bump_nothirdderiv(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def hybridquadratic(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2 + 1/2 m^2 chi^2
-    where m is the mass of the fields. Needs nfields=2.
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V = 1/2 m1^2 phi^2 + 1/2 m2^2 chi^2
+    where m1 and m2 are the masses of the fields. Needs nfields=2.
     
     Arguments:
     y - Array of variables with background phi as y[0]
@@ -604,11 +605,8 @@ def hybridquadratic(y, params=None):
         variables, using newaxis if necessary.
     
     params - Dictionary of parameter values in this case should
-             hold the parameter "mass" which specifies m above.
-             
-    m can be specified in the dictionary params or otherwise
-    it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
+             hold the parameters "m1" and "m2" specified above.
+    """
     
     #Check if mass is specified in params
     if params:
@@ -673,8 +671,9 @@ def ridge_twofield(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def nflation(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2
-    where m is the mass of the inflaton field.
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V = \sum_\alpha 1/2 m^2 \phi_\alpha^2
+    where m is the mass of each of the fields.
     
     Arguments:
     y - Array of variables with background phi as y[0]
@@ -684,6 +683,7 @@ def nflation(y, params=None):
     
     params - Dictionary of parameter values in this case should
              hold the parameter "mass" which specifies m above.
+             The number of fields is specified through "nfields".
              
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
@@ -717,8 +717,9 @@ def nflation(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def quartictwofield(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for V=1/2 m^2 phi^2 + 1/2 m^2 chi^2
-    where m is the mass of the fields. Needs nfields=2.
+    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
+    V= 1/2(m1^2 \phi^2 + 1/2 l1 \phi^4 + m2^2 \chi^2 + 1/2 l2 \chi^4)
+    where m1, m2, l1, l2 are parameters. Needs nfields=2.
     
     Arguments:
     y - Array of variables with background phi as y[0]
@@ -727,7 +728,7 @@ def quartictwofield(y, params=None):
         variables, using newaxis if necessary.
     
     params - Dictionary of parameter values in this case should
-             hold the parameter "mass" which specifies m above.
+             hold the parameters "m1", "m2", "l1", "l2", as specified above.
              
     """
     
