@@ -116,7 +116,7 @@ def save_with_prompt(fname):
 
 def set_size_small(fig):
     fig.set_size_inches((4,3))
-    fig.subplots_adjust(left=0.17, bottom=0.15, right=0.95, top=0.93)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.95, top=0.93)
     
 def set_size_large(fig):
     fig.set_size_inches((6,4.5))
