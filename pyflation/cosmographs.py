@@ -151,7 +151,7 @@ class LogFormatterTeXExponent(P.LogFormatter, object):
     
 
 def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None, 
-                       size="large", ls=line_prop_default):
+                       size="large", ls=line_prop_default, halfticks=False):
     """Create a figure using \mathcal{N} on the x-axis.
     
     Arguments 
@@ -183,7 +183,9 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
     ls: list, optional
         List of linestyle strings to use with each successive line.
         Defaults to ["r-", "g--", "b:"]
-        
+    
+    halfticks: boolean, optional
+               If True only show half the ticks on the y-axis
     Returns
     -------
     fig: the figure instance
@@ -203,8 +205,15 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
     #Reverse x axis to count in correct direction
     reversexaxis()
     
+    #Get current axis
+    ax = fig.gca()
+    
     #Add small offset so end of inflation is shown
-    fig.gca().set_xlim(right=(t[0]-t[-1])/30.0)
+    ax.set_xlim(right=(t[0]-t[-1])/30.0)
+    
+    if halfticks:
+        #Only show half the ticks on the y axis.
+        ax.set_yticks(ax.get_yticks()[::2])
     #Add labels
     P.xlabel(calN)
     if ylabel:
@@ -212,11 +221,11 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
         
     #Check if legends are given
     if models_legends:
-        fig.gca().legend(models_legends, loc=0, prop=legend_props[size])
+        ax.legend(models_legends, loc=0, prop=legend_props[size])
     return fig
 
 def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=None, ylabel=None, 
-                       size="large", ls=line_prop_default):
+                       size="large", ls=line_prop_default, halfticks=False):
     """Create a generic figure with standard x-axis.
     
     Arguments 
@@ -251,6 +260,9 @@ def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=N
     ls: list, optional
         List of linestyle strings to use with each successive line.
         Defaults to ["r-", "g--", "b:"]
+    
+    halfticks: boolean, optional
+               If True only show half the ticks on the y-axis
         
     Returns
     -------
@@ -266,7 +278,12 @@ def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=N
     
     #Plot using specified function
     lines = [plot_fn(x, s, lprops.next()) for x, s in zip(xs, ys)]
-        
+    
+    ax = fig.gca()
+    
+    if halfticks:
+        #Only show half the ticks on the y axis.
+        ax.set_yticks(ax.get_yticks()[::2])
     #Add labels
     if xlabel:
         P.xlabel(xlabel)
@@ -275,5 +292,5 @@ def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=N
         
     #Check if legends are given
     if models_legends:
-        fig.gca().legend(models_legends, loc=0, prop=legend_props[size])
+        ax.legend(models_legends, loc=0, prop=legend_props[size])
     return fig
