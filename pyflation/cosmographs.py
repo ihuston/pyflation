@@ -10,14 +10,30 @@ Especially useful is the multi_format_save function which saves the specified
 figure to different formats as requested.
 """
 import os
+import itertools
 
 try:
     import pylab as P
+    import matplotlib
 except ImportError:
     raise ImportError("Matplotlib is needed to use the plotting helper functions in cosmographs.py.")
 
 # Local import from package
 import helpers
+
+#texts
+calN = r"$\mathcal{N}_\mathrm{end} - \mathcal{N}$"
+
+#Legend properties
+legend_props = {"large": matplotlib.font_manager.FontProperties(size=12),
+                "half": matplotlib.font_manager.FontProperties(size=10),
+                "small": matplotlib.font_manager.FontProperties(size=9)}
+
+line_props = {"colours": ["red", "green", "blue"],
+              "dots": ["-", "--", ":"],
+              "coloursanddots": ["r-", "g--", "b:"]}
+
+line_prop_default = line_props["coloursanddots"]
 
 class CosmoGraphError(StandardError):
     """Generic error for graphing facilities."""
@@ -132,3 +148,132 @@ class LogFormatterTeXExponent(P.LogFormatter, object):
         label = "$" + label + "$"
         label = helpers.eto10(label)
         return label
+    
+
+def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None, 
+                       size="large", ls=line_prop_default):
+    """Create a figure using \mathcal{N} on the x-axis.
+    
+    Arguments 
+    ---------
+    ts: list of arrays
+        x-axis values 
+    
+    ys: list of arrays
+        y-axis values, each element should be the same length as corresponding ts
+        element. 
+    
+    fig: Pylab figure instance, optional
+         Figure to draw on, default is to create a new figure.
+         
+    plot_fn: function, optional
+             The Pylab plotting function to use, defaults to P.plot.
+             
+    models_legends: list, optional
+                    List of raw strings (including LaTeX) to use in legend
+                    of plot. Defaults to not plotting legend.
+
+    ylabel: string, optional
+            Raw string (including LaTeX) for y-axis, defaults to empty.
+            
+    size: string, optional
+          One of "small", "large", "half", which specifies the size of the
+          figure by using pyflation.cosmographs.set_size. Defaults to "large".
+    
+    ls: list, optional
+        List of linestyle strings to use with each successive line.
+        Defaults to ["r-", "g--", "b:"]
+        
+    Returns
+    -------
+    fig: the figure instance
+    """
+    if plot_fn is None:
+        plot_fn = P.plot
+        
+    #Setup figure
+    if fig is None:
+        fig = P.figure()
+    set_size(fig, size)
+    lprops = itertools.cycle(ls)
+    
+    #Plot using specified function
+    lines = [plot_fn(t[-1] - t, s, lprops.next()) for t, s in zip(ts, ys)]
+    
+    #Reverse x axis to count in correct direction
+    reversexaxis()
+    
+    #Add small offset so end of inflation is shown
+    fig.gca().set_xlim(right=(t[0]-t[-1])/30.0)
+    #Add labels
+    P.xlabel(calN)
+    if ylabel:
+        P.ylabel(ylabel)
+        
+    #Check if legends are given
+    if models_legends:
+        fig.gca().legend(models_legends, loc=0, prop=legend_props[size])
+    return fig
+
+def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=None, ylabel=None, 
+                       size="large", ls=line_prop_default):
+    """Create a generic figure with standard x-axis.
+    
+    Arguments 
+    ---------
+    xs: list of arrays
+        x-axis values 
+    
+    ys: list of arrays
+        y-axis values, each element should be the same length as corresponding xs
+        element. 
+    
+    fig: Pylab figure instance, optional
+         Figure to draw on, default creates a new figure.
+         
+    plot_fn: function, optional
+             The Pylab plotting function to use, defaults to P.plot.
+             
+    models_legends: list, optional
+                    List of raw strings (including LaTeX) to use in legend
+                    of plot. Defaults to not plotting legend.
+
+    xlabel: string, optional
+            Raw string (including LaTeX) for x-axis, defaults to empty.
+
+    ylabel: string, optional
+            Raw string (including LaTeX) for y-axis, defaults to empty.
+            
+    size: string, optional
+          One of "small", "large", "half", which specifies the size of the
+          figure by using pyflation.cosmographs.set_size. Defaults to "large".
+    
+    ls: list, optional
+        List of linestyle strings to use with each successive line.
+        Defaults to ["r-", "g--", "b:"]
+        
+    Returns
+    -------
+    fig: the figure instance
+    """
+    if plot_fn is None:
+        plot_fn = P.plot
+        
+    #Setup figure
+    fig = P.figure()
+    set_size(fig, size)
+    lprops = itertools.cycle(ls)
+    
+    #Plot using specified function
+    lines = [plot_fn(x, s, lprops.next()) for x, s in zip(xs, ys)]
+        
+    #Add labels
+    if xlabel:
+        P.xlabel(xlabel)
+    if ylabel:
+        P.ylabel(ylabel)
+        
+    #Check if legends are given
+    if models_legends:
+        fig.gca().legend(models_legends, loc=0, prop=legend_props[size])
+    return fig
