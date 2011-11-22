@@ -179,6 +179,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     #Copy run_config template file into new run directory if not already
     #copied by bzr.
     if not os.path.isfile(os.path.join(newrundir, "run_config.py")):
+        logging.debug("Need to create run_config.py from template.")
         pkgdir = os.path.dirname(os.path.abspath(configuration.__file__))
         runconfigtemplate = os.path.join(pkgdir, configuration.RUNCONFIGTEMPLATE)
         logging.debug("run_config template file is %s" % runconfigtemplate)
@@ -191,6 +192,8 @@ def create_run_directory(newrundir, codedir, copy_code=False,
             except:
                 logging.error("Error copying run_config template file.")
                 raise
+    else:
+        logging.debug("The run_config.py file already exists in correct directory.")
     
     #Create provenance file detailing revision and branch used
     prov_dict = dict(version=pyflation_version,
