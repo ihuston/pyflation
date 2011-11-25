@@ -714,6 +714,38 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
+def scaled_S_from_model(m, tix=None, kix=None):
+    """Return the spectrum of isocurvature perturbations $\mathcal{P}_\mathcal{S}$ 
+    for each timestep and k mode.
+    
+    This is the scaled power spectrum which is related to the unscaled version by
+    $\mathcal{P}_\mathcal{S} = k^3/(2pi^2) P_\mathcal{S}$. 
+     
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       Model class instance from which the yresult variable will be used to 
+       calculate P_R.
+    
+    tix: integer, optional
+         index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix: integer, optional
+         integer of k value at which to calculate, defaults to full range of ks.
+            
+    Returns
+    -------
+    scaled_S: array_like
+        Array of spectrum values for all timesteps and k modes
+    """
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+    components = utilities.components_from_model(m, tix, kix)
+    spectrum = scaled_S_spectrum(*components, k=m.k[kslice]) 
+    return spectrum
+
 def slope_of_S_spectrum(scaled_S, k, kix=None, running=False):
     """Return the value of the slope of the k-scaled spectrum of S
     
