@@ -93,7 +93,7 @@ def spectral_index(y, k, kix=None, running=False):
     
     if running:
         a_spoly = np.polyder(np.poly1d(sPrfit), m=2)
-        a_s = a_spoly(logk[kix])
+        a_s = 2*a_spoly(logk[kix])
         result = (n_s, a_s)
     else:
         result = n_s
