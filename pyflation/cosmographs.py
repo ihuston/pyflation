@@ -213,7 +213,9 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
     
     if halfticks:
         #Only show half the ticks on the y axis.
-        ax.set_yticks(ax.get_yticks()[::2])
+        oldticks = ax.get_yticks()
+        ax.set_yticks(oldticks[::2])
+        ax.set_yticks(oldticks[1::2], minor=True)
     #Add labels
     P.xlabel(calN)
     if ylabel:
@@ -283,7 +285,9 @@ def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=N
     
     if halfticks:
         #Only show half the ticks on the y axis.
-        ax.set_yticks(ax.get_yticks()[::2])
+        oldticks = ax.get_yticks()
+        ax.set_yticks(oldticks[::2])
+        ax.set_yticks(oldticks[1::2], minor=True)
     #Add labels
     if xlabel:
         P.xlabel(xlabel)
