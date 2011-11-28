@@ -252,7 +252,30 @@ class CosmologicalModel(object):
         return filename
     
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
-        """Create a new hdf5 file with the structure capable of holding results."""
+        """Create a new hdf5 file with the structure capable of holding results.
+           
+           Arguments
+           ---------
+           filename: string
+                     Path including filename of file to create
+
+           grpname: string, optional
+                    Name of the HDF5 group to create, default is "results"
+
+           yresultshape: tuple, optional
+                         Shape of yresult variable to store
+           
+           hdf5complevel:  integer, optional
+                           Compression level to use with PyTables, default 2.
+
+           hdf5complib: string, optional
+                        Compression library to use with PyTables, default "blosc".
+ 
+           Returns
+           -------
+           rf: file handle
+               Handle of file created 
+        """
                     
         try:
             rf = tables.openFile(filename, "w")
@@ -301,11 +324,15 @@ class CosmologicalModel(object):
         
     def saveresultsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
-            filename - full path and name of file (should end in hf5 for consistency.
-            filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
-                        "a" specifies append to current file or create if does not exist.
-            hdf5complevel - Compression level to use with PyTables, default 2.
-            hdf5complib - Compression library to use with PyTables, default "blosc".
+        
+        Arguments
+        ---------
+        rf: filelike
+            File to save results in
+
+        grpname: string, optional
+                 Name of the HDF5 group to create in the file
+
         """
         try:
             #Get tables and array handles
@@ -350,15 +377,9 @@ class CosmologicalModel(object):
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
-    #Names of variables
-    ynames = [r"Simple $y$", r"$\dot{y}$"]
-    plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
-    tname = "Time"
             
     def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted)
-        
-
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
@@ -376,10 +397,6 @@ class BasicBgModel(CosmologicalModel):
        y[1] - d\phi_0/d\eta : First deriv of \phi
        y[2] - a : Scale Factor
     """
-    #Graph variables
-    plottitle = "Basic Cosmological Model"
-    tname = "Conformal time"
-    ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
                     tstep_wanted=0.02, solver="rkdriver_tsix"):
@@ -430,10 +447,6 @@ class BasicBgModel(CosmologicalModel):
     
 class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
-    #Graph titles
-    plottitle = r"Malik Models in $n$"
-    tname = r"E-folds $n$"
-    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
@@ -488,7 +501,7 @@ class CanonicalBackground(PhiModels):
         Array of dependent variables y is given by:
         
        y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\n : First deriv of \phi
+       y[1] - d\phi_0/dn : First deriv of \phi
        y[2] - H: Hubble parameter
     """
         
@@ -781,9 +794,6 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[tix]
-        #Get source terms
-#        src = self.source[tix][kix]
-#        srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
@@ -952,7 +962,7 @@ class MultiStageDriver(CosmologicalModel):
         """Calculate the number of efolds after inflation given the reheating
         temperature and assuming standard calculation of radiation and matter phases.
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -982,7 +992,7 @@ class MultiStageDriver(CosmologicalModel):
         caution. A more correct approach is to call find_efolds_after_inflation directly
         and to use the result as required. 
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -1001,7 +1011,7 @@ class MultiStageDriver(CosmologicalModel):
         """Given the Hubble parameter at the end of inflation and at the end of reheating,
         and the scale factor at the end of inflation, calculate the scale factor today.
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -1024,7 +1034,29 @@ class MultiStageDriver(CosmologicalModel):
         return a_0 
         
     def findkcrossing(self, k, t, H, factor=None):
-        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon.
+        
+        Arguments
+        ---------
+        k: float
+           Single k value to compute crossing time with
+
+        t: array
+           Array of time values
+
+        H: array
+           Array of values of the Hubble parameter
+
+        factor: float, optional
+                coefficient of crossing k = a*H*factor
+
+        Returns
+        -------
+        kcrindex, kcrefold: tuple
+                            Tuple containing k cross index (in t variable) and the efold number
+                            e.g. t[kcrindex]
+
+        """
         #threshold
         err = 1.0e-26
         if factor is None:
@@ -1042,11 +1074,39 @@ class MultiStageDriver(CosmologicalModel):
         return kcrindex, kcrefold
     
     def findallkcrossings(self, t, H):
-        """Iterate over findkcrossing to get full list"""
+        """Iterate over findkcrossing to get full list
+        
+        Arguments
+        ---------
+        t: array
+           Array of t values to calculate over
+
+        H: array
+           Array of Hubble parameter values, should be the same shape as t
+
+        Returns
+        -------
+        kcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of index (in to t) and efold number
+                    at which each k in self.k crosses the horizon (k=a*H).
+        """
         return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        """FInd horizon crossing for all ks"""
+        """Find horizon crossing time indices and efolds for all ks
+        
+        Arguments
+        ---------
+        factor: float
+                Value of coefficient to calculate crossing time, k=a*H*factor
+
+        Returns
+        -------
+        hcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of time index and efold number pairs
+                
+        
+        """
         return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
     @property
@@ -1057,7 +1117,7 @@ class MultiStageDriver(CosmologicalModel):
     @property
     def Pr(self):
         """The power spectrum of comoving curvature perturbation.
-        
+        This is the unscaled spectrum P_\mathcal{R} calculated for all timesteps and ks. 
         Calculated using the pyflation.analysis package.
         """
         return analysis.Pr(self)
@@ -1289,7 +1349,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       ainit=self.ainit, 
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
-                      nfields=self.nfields)
+                      fields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
         #Set names as in ComplexModel
@@ -1312,7 +1372,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         times for the k modes. Then the initial conditions are set for the first order variables.
         Finally the first order model is run and the results are saved if required.
         
-        Parameters
+        Arguments
         ----------
         saveresults: boolean, optional
                      Should results be saved at the end of the run. Default is False.
@@ -1405,7 +1465,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         The result is stored as the instance variable m.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1726,7 +1786,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1882,7 +1942,7 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.

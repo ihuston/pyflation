@@ -79,7 +79,7 @@ def Pphi_matrix(modes, axis):
     return mPphi
 
 
-def findns(sPr, k, kix=None, running=False):
+def findns(sPr, k, kix, running=False):
     """Return the value of n_s
     
     Arguments
@@ -124,7 +124,17 @@ def findns(sPr, k, kix=None, running=False):
     return result
 
 def findHorizoncrossings(m, factor=1):
-    """Find horizon crossing for all ks"""
+    """Find horizon crossing for all ks
+    
+    Arguments
+    ---------
+    m: Cosmomodels instance
+       Model for which to calculate horizon crossings
+
+    factor: float
+            Coefficient for which to calculate horizon crossings
+            e.g. k=a*H*factor
+    """
     return m.findallkcrossings(m.tresult, m.yresult[:,2], factor)
      
      
@@ -412,3 +422,4 @@ def Pr_spectrum_from_Pphimodes(phidot, Pphi_modes, axis):
     #Divide by total sum of derivative terms
     Pr = (sumflat/phidotsumsq).astype(np.float)
     return Pr
+

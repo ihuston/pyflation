@@ -910,3 +910,4 @@ def scaled_S_alternate_spectrum(phidot, Pphi_modes, axis, k):
         #Add extra dimensions to k if necessary
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
+

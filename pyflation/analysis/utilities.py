@@ -34,7 +34,7 @@ def kscaling(k, kix=None):
     k = np.atleast_1d(k)
     return k[kslice]**3/(2*np.pi**2)
               
-def spectral_index(y, k, kix=None, running=False):
+def spectral_index(y, k, kix, running=False):
     """Return the value of spectral index (and running) of y at k[kix]
     
     Arguments
@@ -103,8 +103,17 @@ def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
     matrix. Returns a view of the y array (changes will be reflected in underlying array).
     
-    Parameters
+    Arguments
     ----------
+    y: array
+       Array of y values in which is nfields^2 long in dimension specified by ix
+
+    nfields: integer
+             Number of fields
+
+    ix: integer
+        Index of dimension which is nfields^2 long
+
     ixslice: index slice, optional
         The index slice of y to use, defaults to full extent of y.
         
@@ -133,7 +142,28 @@ def getmodematrix(y, nfields, ix=None, ixslice=None):
     return result
 
 def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
-    """Flatten the mode matrix given into nfield^2 long vector."""
+    """Flatten the mode matrix given into nfield^2 long vector.
+    
+    Arguments
+    ---------
+    modematrix: array
+                Array of values with two nfields long dimension
+
+    nfields: integer
+             Number of fields
+
+    ix1: integer, optional
+         Index of first nfields long dimension
+
+    ix2: integer, optional
+         Index of second nfields long dimension
+
+    Returns
+    -------
+    mreshaped: array
+               Reshaped mode matrix array
+        
+    """
     s = modematrix.shape
     if s.count(nfields) < 2:
         raise ValueError("Mode matrix does not have two nfield long dimensions.")
