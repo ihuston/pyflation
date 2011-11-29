@@ -67,6 +67,10 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
     Exception
        Any exception raised during saving of code.
     """
+    if soargs.get("nfields", 1) > 1:
+        log.exception("""Only single field models can have second order 
+        perturbation calculated.""")
+        raise c.ModelError
     try:
         fomodel = c.make_wrapper_model(mrgfile)
     except:

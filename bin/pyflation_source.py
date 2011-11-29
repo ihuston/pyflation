@@ -53,6 +53,11 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     except:
         log.exception("Error wrapping first order file.")
         
+    if m.nfields > 1:
+        log.exception("""Only single field models can have second order 
+        perturbation calculated.""")
+        raise c.ModelError
+    
     if sourcefile is None:
         sourcefile = run_config.srcstub + str(id) + ".hf5"
     
