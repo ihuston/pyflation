@@ -48,7 +48,17 @@ setup_args = dict(name='pyflation',
                   license="Modified BSD license",
                   description="""Pyflation is a Python package for calculating 
 cosmological perturbations during an inflationary expansion of the universe.""",
-                  long_description=open('README.txt').read())
+                  long_description=open('README.txt').read(),
+                  classifiers=["Intended Audience :: Science/Research",
+                               "License :: OSI Approved :: BSD License",
+                               "Operating System :: OS Independent",
+                               "Programming Language :: Python",
+                               "Programming Language :: Python :: 2.6",
+                               "Programming Language :: Cython",
+                               "Topic :: Scientific/Engineering :: Astronomy",
+                               "Topic :: Scientific/Engineering :: Physics"
+                               ]
+                  )
 
 if __name__ == "__main__":
     setup(**setup_args)
