@@ -1352,8 +1352,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       fields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
-        #Set names as in ComplexModel
-        self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
+
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
