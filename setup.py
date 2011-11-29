@@ -58,10 +58,10 @@ cosmological perturbations during an inflationary expansion of the universe.""",
                                "Topic :: Scientific/Engineering :: Astronomy",
                                "Topic :: Scientific/Engineering :: Physics"
                                ],
-                  requires=["numpy >= 1.3",
-                                    "scipy >= 0.7.1",
-                                    "Cython >= 0.12.1",
-                                    "tables >= 2.2"],
+                  requires=["numpy (>= 1.3)",
+                                    "scipy (>= 0.7.1)",
+                                    "Cython (>= 0.12.1)",
+                                    "tables (>= 2.2)"],
                   #Include dependency on matplotlib for cosmographs
                   #extras_require=["matplotlib >= 1.0.1"]
                   )
