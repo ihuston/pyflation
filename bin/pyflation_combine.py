@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """combine.py - Combine second order, first order and source results in one file.
+
 Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 """
 from __future__ import division
 
@@ -69,7 +72,7 @@ def combine_results(fofile, sofile, newfile=None):
         bggrp = nf.copyNode(ff.root.bgresults, nf.root, recursive=True)
         log.debug("Bg results copied.")
         #Save results
-        oldyshape = list(sf.root.results.yresult[:,:,0:0].shape) #2nd order shape
+        oldyshape = list(sf.root.results.yresult[0:0].shape) #2nd order shape
         oldyshape[1] += ff.root.results.yresult.shape[1] #add number of 1st order vars
         yresarr = nf.createEArray(comgrp, "yresult", tables.Float64Atom(), oldyshape, filters=filters, chunkshape=(10,7,10))
         log.debug("New yresult array with shape %s created.", str(oldyshape))
@@ -100,8 +103,8 @@ def combine_results(fofile, sofile, newfile=None):
         syr = sf.root.results.yresult
         #Begin main loop
         log.debug("Beginning main combination loop...")
-        for frow, srow in zip(fyr.iterrows(), syr.iterrows()):
-            nrow = np.concatenate((frow[:,::2], srow)).transpose()[..., np.newaxis]
+        for frow, srow in zip(fyr.iterrows(step=2), syr.iterrows()):
+            nrow = np.concatenate((frow, srow))[np.newaxis,...]
             yresarr.append(nrow)
         log.debug("Main combination loop finished.")
         nf.flush()

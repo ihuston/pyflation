@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 firstorder.py - Run a first order simulation
+
 Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 
 This program will run a first order Pyflation simulation as a straight
 through run.  

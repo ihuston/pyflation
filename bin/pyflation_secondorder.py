@@ -2,7 +2,8 @@
 """secondorder.py - Run a second order simulation
 Created on 6 Jul 2010
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 """
 
 from __future__ import division
@@ -39,10 +40,10 @@ Either run this script from the base directory as bin/secondorder.py or add dire
 
 
 
-def runsomodel(mrgfile, filename=None, soargs=None):
-    """Execute a SOCanonicalThreeStage model and save results.
+def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
+    """Execute a three stage driver model and save results.
     
-    A new instance of SOCanonicalThreeStage is created, from the specified first order file.
+    A new instance of sodriver class (default is SOCanonicalThreeStage) is created, from the specified first order file.
     The model is run and the results are then saved into a file with the specified filename.
     
     Parameters
@@ -67,6 +68,10 @@ def runsomodel(mrgfile, filename=None, soargs=None):
     Exception
        Any exception raised during saving of code.
     """
+    if soargs.get("nfields", 1) > 1:
+        log.exception("""Only single field models can have second order 
+        perturbation calculated.""")
+        raise c.ModelError
     try:
         fomodel = c.make_wrapper_model(mrgfile)
     except:
@@ -75,7 +80,9 @@ def runsomodel(mrgfile, filename=None, soargs=None):
     if soargs is None:
         soargs = run_config.soargs
     #Create second order model instance
-    somodel = c.SOCanonicalThreeStage(fomodel, **soargs)
+    if sodriver is None:
+        sodriver = c.SOCanonicalThreeStage
+    somodel = sodriver(fomodel, **soargs)
     try:
         if _debug:
             log.debug("Starting model run...")
@@ -94,14 +101,15 @@ def runsomodel(mrgfile, filename=None, soargs=None):
         somodel.saveallresults(filename=filename, 
                              hdf5complevel=configuration.hdf5complevel,
                              hdf5complib=configuration.hdf5complib)
+        #Success!
+        log.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:
         log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
     if _debug:
         log.debug("Destroying model instance...")
     del somodel
-    #Success!
-    log.info("Successfully ran and saved simulation in file %s.", filename)
+    
     return filename
 
 

@@ -34,7 +34,7 @@ import logging
 from configuration import _debug
 import cmpotentials
 import rk4
-
+import analysis
 
 #Start logging
 root_log_name = logging.getLogger().name
@@ -68,14 +68,11 @@ class CosmologicalModel(object):
     pot_params - dict, any modifications to the default parameters in the potential
     
     """
-    solverlist = ["rkdriver_withks", "rkdriver_new", "rkdriver_tsix"]
-    ynames = ["First dependent variable"]
-    tname = "Time"
-    plottitle = "A generic Cosmological Model"
+    solverlist = ["rkdriver_tsix"]
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
-                 tend=83.0, tstep_wanted=0.01, solver="rkdriver_withks", 
-                 potential_func=None, pot_params=None, **kwargs):
+                 tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
+                 potential_func=None, pot_params=None, nfields=1, **kwargs):
         """Initialize model variables, some with default values. Default solver is odeint."""
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
@@ -125,10 +122,15 @@ class CosmologicalModel(object):
             raise ModelError("Need to provide pot_params as a dictionary of parameters.")
         else:
             self.pot_params = pot_params
-        
+            
+        #Set the number of fields using keyword argument, defaults to 1.
+        if nfields < 1:
+            raise ValueError("Cannot have zero or negative number of fields.")
+        else:
+            self.nfields = nfields        
+             
         self.tresult = None #Will hold last time result
         self.yresult = None #Will hold array of last y results
-        self.resultlist = [] #List of all completed results.
         
     def derivs(self, yarray, t):
         """Return an array of derivatives of the dependent variables yarray at timestep t"""
@@ -146,25 +148,6 @@ class CosmologicalModel(object):
         """Execute a simulation run using the parameters already provided."""
         if self.solver not in self.solverlist:
             raise ModelError("Unknown solver!")
-        #Test whether k exists and if so change init conditions
-               
-        if self.solver in ["rkdriver_withks", "rkdriver_new"]:
-            #set_trace()
-            #Loosely estimate number of steps based on requested step size
-            if _debug:
-                self._log.debug("Starting simulation with %s.", self.solver)
-            solver = rk4.__getattribute__(self.solver)
-            try:
-                self.tresult, self.yresult = solver(vstart=self.ystart, 
-                                                    simtstart=self.simtstart, 
-                                                    ts=self.tstart, 
-                                                    te=self.tend, 
-                                                    allks=self.k, 
-                                                    h=self.tstep_wanted, 
-                                                    derivs=self.derivs)
-            except StandardError:
-                self._log.exception("Error running %s!", self.solver)
-                raise
             
         if self.solver in ["rkdriver_tsix"]:
             #set_trace()
@@ -188,8 +171,7 @@ class CosmologicalModel(object):
             
         
         #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.lastparams = self.callingparams()       
         if saveresults:
             try:
                 fname = self.saveallresults()
@@ -206,7 +188,8 @@ class CosmologicalModel(object):
                   "tstep_wanted":self.tstep_wanted,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                  "nfields":self.nfields
                   }
         return params
     
@@ -220,22 +203,13 @@ class CosmologicalModel(object):
         "simtstart" : tables.Float64Col(),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "datetime" : tables.Float64Col()
+        "datetime" : tables.Float64Col(),
+        "nfields" : tables.IntCol()
         }
-        return params
-    
-    def gethf5yresultdict(self):
-        """Return dict describing fields for yresult table of hf5 file."""
-        yresdict = {
-        "yresult": tables.Float64Col(self.yresult[:,:,0].shape)}
-        if self.k is not None:
-            yresdict["k"] = tables.Float64Col()
-            yresdict["foystart"] = tables.Float64Col(self.foystart[:,0].shape)
-            yresdict["fotstart"] = tables.Float64Col()
-        return yresdict        
+        return params   
            
-    def saveallresults(self, filename=None, filetype="hf5", **kwargs):
-        """Tries to save file as a pickled object in directory 'results'."""
+    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
+        """Saves results already calculated into a file."""
         
         now = self.lastparams["datetime"]
         if not filename:
@@ -252,129 +226,161 @@ class CosmologicalModel(object):
                     self._log.debug("File does not exist, using write mode.")
                 filemode = "w" #Writing to new file
         else:
-            raise IOError("Directory 'results' does not exist")
+            raise IOError("Directory %s does not exist" % os.path.dirname(filename))
         
-        if filetype is "hf5":
-            try:
-                self.saveresultsinhdf5(filename, filemode, **kwargs)
-            except IOError:
-                raise
-        else:
-            raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
-        self.lastsavedfile = filename
-        return filename
+        if yresultshape is None:
+            yresultshape = list(self.yresult.shape)
+            yresultshape[0] = 0
         
-    def saveresultsinhdf5(self, filename, filemode, hdf5complevel=2, hdf5complib="blosc"):
-        """Save simulation results in a HDF5 format file with filename.
-            filename - full path and name of file (should end in hf5 for consistency.
-            filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
-                        "a" specifies append to current file or create if does not exist.
-            hdf5complevel - Compression level to use with PyTables, default 2.
-            hdf5complib - Compression library to use with PyTables, default "blosc".
-        """
         #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
         else:
-            grpname = "results" 
-        try:
-            rf = tables.openFile(filename, filemode)
-            try:
-                if filemode is "w":
-                    #Add compression
-                    # Select which compression library to use in configuration
-                    filters = tables.Filters(complevel=hdf5complevel, complib=hdf5complib)
-                    
-                    #Create groups required
-                    resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
-                    tresarr = rf.createArray(resgroup, "tresult", self.tresult)
-                    paramstab = rf.createTable(resgroup, "parameters", self.gethf5paramsdict(), filters=filters)
-                    #Add in potential parameters pot_params as a table
-                    potparamsshape = {"name": tables.StringCol(255),
-                                      "value": tables.Float64Col()}
-                    potparamstab = rf.createTable(resgroup, "pot_params", potparamsshape , filters=filters)
-                    
-                    #Need to check if results are k dependent
-                    if grpname is "results":
-                        if hasattr(self, "bgmodel"):
-                            #Store bg results:
-                            bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
-                            bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
-                            bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
-                        #Save results
-                        yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), self.yresult[:,:,0:0].shape, filters=filters, expectedrows=8194)# chunkshape=(10,7,10))
-                        karr = rf.createEArray(resgroup, "k", tables.Float64Atom(), (0,), filters=filters)
-                        if hasattr(self, "foystart"):
-                            foystarr = rf.createEArray(resgroup, "foystart", tables.Float64Atom(), self.foystart[:,0:0].shape, filters=filters)
-                            fotstarr = rf.createEArray(resgroup, "fotstart", tables.Float64Atom(), (0,), filters=filters)
-                            fotsxarr = rf.createEArray(resgroup, "fotstartindex", tables.Float64Atom(), (0,), filters=filters)
-                    else:
-                        #Only save bg results
-                        yresarr = rf.createArray(resgroup, "yresult", self.yresult)
-                elif filemode is "a":
-                    try:
-                        resgroup = rf.getNode(rf.root, grpname)
-                        #paramstab = resgroup.parameters
-                        yresarr = resgroup.yresult
-                        tres = resgroup.tresult[:]
-                        if grpname is "results":
-                            #Don't need to append bg results, only fo results
-                            if hasattr(self, "foystart"):
-                                foystarr = resgroup.foystart
-                                fotstarr = resgroup.fotstart
-                                fotsxarr = resgroup.fotstartindex
-                            karr = resgroup.k
-                    except tables.NoSuchNodeError:
-                        raise IOError("File is not in correct format! Correct results tables do not exist!")
-                    if np.shape(tres) != np.shape(self.tresult):
-                        raise IOError("Results file has different size of tresult!")
-                else:
-                    raise IOError("Can only write or append to files!")
-                #Now save data
-                #Save parameters
-                paramstabrow = paramstab.row
-                params = self.callingparams()
-                for key in params:
-                    paramstabrow[key] = params[key]
-                paramstabrow.append() #Add to table
-                paramstab.flush()
+            grpname = "results"
                 
-                #Save potential parameters
-                potparamsrow = potparamstab.row
-                for key in self.pot_params:
-                    potparamsrow["name"] = key
-                    potparamsrow["value"] = self.pot_params[key]
-                    potparamsrow.append()
-                potparamstab.flush()
-                 
-                #Save first order results
-                if grpname is "results":
-                    yresarr.append(self.yresult)
-                    karr.append(self.k)
-                    if hasattr(self, "foystart"):
-                        foystarr.append(self.foystart)
-                        fotstarr.append(self.fotstart)
-                        fotsxarr.append(self.fotstartindex)
-                rf.flush()
-                #Log success
-                if _debug:
-                    self._log.debug("Successfully wrote results to file " + filename)
-            finally:
-                rf.close()
+        if filetype is "hf5":
+            try:
+                if filemode == "w":
+                    rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
+                elif filemode == "a":
+                    rf = tables.openFile(filename, filemode)
+                self.saveresultsinhdf5(rf, grpname)
+            except IOError:
+                raise
+        else:
+            raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
+        return filename
+    
+    def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
+        """Create a new hdf5 file with the structure capable of holding results.
+           
+           Arguments
+           ---------
+           filename: string
+                     Path including filename of file to create
+
+           grpname: string, optional
+                    Name of the HDF5 group to create, default is "results"
+
+           yresultshape: tuple, optional
+                         Shape of yresult variable to store
+           
+           hdf5complevel:  integer, optional
+                           Compression level to use with PyTables, default 2.
+
+           hdf5complib: string, optional
+                        Compression library to use with PyTables, default "blosc".
+ 
+           Returns
+           -------
+           rf: file handle
+               Handle of file created 
+        """
+                    
+        try:
+            rf = tables.openFile(filename, "w")
+            # Select which compression library to use in configuration
+            filters = tables.Filters(complevel=hdf5complevel, complib=hdf5complib)
+            
+            #Create groups required
+            resgroup = rf.createGroup(rf.root, grpname, "Results of simulation")
+            tresarr = rf.createEArray(resgroup, "tresult", 
+                                      tables.Float64Atom(), 
+                                      (0,), #Shape of a single atom 
+                                      filters=filters, 
+                                      expectedrows=8194)
+            paramstab = rf.createTable(resgroup, "parameters", 
+                                       self.gethf5paramsdict(), 
+                                       filters=filters)
+            #Add in potential parameters pot_params as a table
+            potparamsshape = {"name": tables.StringCol(255),
+                              "value": tables.Float64Col()}
+            potparamstab = rf.createTable(resgroup, "pot_params", 
+                                          potparamsshape, filters=filters)
+            
+            #Need to check if results are k dependent
+            if grpname is "results":
+                if hasattr(self, "bgmodel"):
+                    #Store bg results:
+                    bggrp = rf.createGroup(rf.root, "bgresults", "Background results")
+                    bgtrarr = rf.createArray(bggrp, "tresult", self.bgmodel.tresult)
+                    bgyarr = rf.createArray(bggrp, "yresult", self.bgmodel.yresult)
+                #Save results
+                yresarr = rf.createEArray(resgroup, "yresult", tables.ComplexAtom(itemsize=16), yresultshape, filters=filters, expectedrows=8194)
+                karr = rf.createArray(resgroup, "k", self.k)
+                ystartarr = rf.createArray(resgroup, "ystart", self.ystart)
+                if hasattr(self, "bgystart"):
+                    bgystartarr = rf.createArray(resgroup, "bgystart", self.bgystart)
+                if hasattr(self, "foystart"):
+                    foystarr = rf.createArray(resgroup, "foystart", self.foystart)
+                    fotstarr = rf.createArray(resgroup, "fotstart", self.fotstart)
+                    fotsxarr = rf.createArray(resgroup, "fotstartindex", self.fotstartindex)
+            else:
+                #Only make bg results array
+                yresarr = rf.createEArray(resgroup, "yresult", tables.Float64Atom(), yresultshape, filters=filters, expectedrows=8300)
+        except IOError:
+            raise
+        
+        return rf
+        
+    def saveresultsinhdf5(self, rf, grpname="results"):
+        """Save simulation results in a HDF5 format file with filename.
+        
+        Arguments
+        ---------
+        rf: filelike
+            File to save results in
+
+        grpname: string, optional
+                 Name of the HDF5 group to create in the file
+
+        """
+        try:
+            #Get tables and array handles
+            resgrp = rf.getNode(rf.root, grpname)
+            
+            #Now save data
+            #Save parameters
+            paramstab = resgrp.parameters
+            paramstabrow = paramstab.row
+            params = self.callingparams()
+            for key in params:
+                paramstabrow[key] = params[key]
+            paramstabrow.append() #Add to table
+            paramstab.flush()
+            
+            #Save potential parameters
+            potparamstab = resgrp.pot_params
+            potparamsrow = potparamstab.row
+            for key in self.pot_params:
+                potparamsrow["name"] = key
+                potparamsrow["value"] = self.pot_params[key]
+                potparamsrow.append()
+            potparamstab.flush()
+             
+            #Get yresult array handle
+            yresarr = resgrp.yresult
+            yresarr.append(self.yresult)
+            
+            #Save tresults
+            tresarr = resgrp.tresult
+            tresarr.append(self.tresult)
+            
+            #Flush saved results to file
+            rf.flush()
+            #Close file
+            rf.close()
+            #Log success
+            if _debug:
+                self._log.debug("Successfully wrote results to file " + rf.filename)
         except IOError:
             raise
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
-    #Names of variables
-    ynames = [r"Simple $y$", r"$\dot{y}$"]
-    plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
-    tname = "Time"
             
     def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted)
-        
-
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
@@ -392,13 +398,9 @@ class BasicBgModel(CosmologicalModel):
        y[1] - d\phi_0/d\eta : First deriv of \phi
        y[2] - a : Scale Factor
     """
-    #Graph variables
-    plottitle = "Basic Cosmological Model"
-    tname = "Conformal time"
-    ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
-                    tstep_wanted=0.02, solver="rkdriver_withks"):
+                    tstep_wanted=0.02, solver="rkdriver_tsix"):
         
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted, solver=solver)
         #Mass of inflaton in Planck masses
@@ -446,10 +448,6 @@ class BasicBgModel(CosmologicalModel):
     
 class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
-    #Graph titles
-    plottitle = r"Malik Models in $n$"
-    tname = r"E-folds $n$"
-    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
@@ -457,10 +455,10 @@ class PhiModels(CosmologicalModel):
         
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
-        phidot = y[1]
+        phidot = y[self.phidots_ix]
         
         #Expression for H
-        H = np.sqrt(U/(3.0-0.5*(phidot**2)))
+        H = np.sqrt(U/(3.0-0.5*(np.sum(phidot**2))))
         return H
     
     def potentials(self, y, pot_params=None):
@@ -491,11 +489,11 @@ class PhiModels(CosmologicalModel):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2,0]
-            epsilon = - Hdot/self.yresult[:,2,0]
+            phidots = self.yresult[:,self.phidots_ix,0]
         else:
-            Hdot = np.array(map(self.derivs, self.yresult, self.tresult))[:,2]
-            epsilon = - Hdot/self.yresult[:,2]
+            phidots = self.yresult[:,self.phidots_ix]
+        #Make sure to do sum across only phidot axis (1 in this case)
+        epsilon = 0.5*np.sum(phidots**2, axis=1)
         return epsilon
 
     
@@ -504,66 +502,60 @@ class CanonicalBackground(PhiModels):
         Array of dependent variables y is given by:
         
        y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\n : First deriv of \phi
+       y[1] - d\phi_0/dn : First deriv of \phi
        y[2] - H: Hubble parameter
     """
-    #Titles
-    plottitle = r"Background Malik model in $n$"
-    tname = r"E-folds $n$"
-    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
         
     def __init__(self,  *args, **kwargs):
         """Initialize variables and call superclass"""
         
         super(CanonicalBackground, self).__init__(*args, **kwargs)
         
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2+1)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
+        
         #Set initial H value if None
-        if np.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
     
     def derivs(self, y, t, **kwargs):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
+        
+                
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]       
+        U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
         
         #Set derivatives
         dydx = np.zeros_like(y)
         
         #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
+        dydx[self.phis_ix] = y[self.phidots_ix] 
         
         #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
         
         #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
 
         return dydx
 
 class CanonicalFirstOrder(PhiModels):
-    """First order model using efold as time variable.
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
-       y[2] - H : Hubble parameter
-       y[3] - \delta\varphi_1 : First order perturbation [Real Part]
-       y[4] - \delta\varphi_1^\prime : Derivative of first order perturbation [Real Part]
-       y[5] - \delta\varphi_1 : First order perturbation [Imag Part]
-       y[6] - \delta\varphi_1^\prime : Derivative of first order perturbation [Imag Part]
+    """First order model using efold as time variable with multiple fields.
+    
+    nfields holds the number of fields and the yresult variable is then laid
+    out as follows:
+    
+    yresult[0:nfields*2] : background fields and derivatives
+    yresult[nfields*2] : Hubble variable H
+    yresult[nfields*2 + 1:] : perturbation fields and derivatives
        """
-       
-    #Text for graphs
-    plottitle = "Complex First Order Malik Model in Efold time"
-    tname = r"$n$"
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-        
+            
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -581,60 +573,80 @@ class CanonicalFirstOrder(PhiModels):
         else:
             self.k = k
         
+        #Set the field indices to use
+        self.setfieldindices()
+        
         #Initial conditions for each of the variables.
         if self.ystart is None:
-            self.ystart = np.array([15.0,-0.1,0.0,1.0,0.0,1.0,0.0])   
+            self.ystart= np.array([18.0,-0.1]*self.nfields + [0.0] + [1.0,0.0]*self.nfields)
         
         #Set initial H value if None
-        if np.all(self.ystart[2] == 0.0):
+        if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
-            self.ystart[2] = self.findH(U, self.ystart)
-                        
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
+                       
     def derivs(self, y, t, **kwargs):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/dn etc"""
+        """Return derivatives of fields in y at time t."""
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
         else:
             k = kwargs["k"]
-            
+        
+        #Set up variables    
+        phidots = y[self.phidots_ix]
+        lenk = len(k)
+        #Get a
+        a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
+        nfields = self.nfields    
         #get potential from function
-        U, dUdphi, d2Udphi2 = self.potentials(y, self.pot_params)[0:3]        
+        U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((7,len(k)))
+            dydx = np.zeros((2*nfields**2 + 2*nfields + 1,lenk), dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields,lenk), dtype=y.dtype)
         else:
-            dydx = np.zeros(7)
-            
+            dydx = np.zeros(2*nfields**2 + 2*nfields + 1, dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields), y.dtype)
         
         #d\phi_0/dn = y_1
-        dydx[0] = y[1] 
-        
+        dydx[self.phis_ix] = phidots
         #dphi^prime/dn
-        dydx[1] = -(U*y[1] + dUdphi)/(y[2]**2)
+        dydx[self.phidots_ix] = -(U*phidots+ dUdphi[...,np.newaxis])/(H**2)
+        #dH/dn Do sum over fields not ks so use axis=0
+        dydx[self.H_ix] = -0.5*(np.sum(phidots**2, axis=0))*H
+        #d\delta \phi_I / dn
+        dydx[self.dps_ix] = y[self.dpdots_ix]
         
-        #dH/dn
-        dydx[2] = -0.5*(y[1]**2)*y[2]
-        
-        #d\deltaphi_1/dn = y[4]
-        dydx[3] = y[4]
-        
-        #Get a
-        a = self.ainit*np.exp(t)
-        
-        #d\deltaphi_1^prime/dn  #
-        dydx[4] = (-(3 + dydx[2]/y[2])*y[4] - ((k/(a*y[2]))**2)*y[3]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[3]/(y[2]**2)))
-                
-        #Complex parts
-        dydx[5] = y[6]
-        
-        #
-        dydx[6] = (-(3 + dydx[2]/y[2])*y[6]  - ((k/(a*y[2]))**2)*y[5]
-                    -(d2Udphi2 + 2*y[1]*dUdphi + (y[1]**2)*U)*(y[5]/(y[2]**2)))
-        
+        #Set up delta phis in nfields*nfields array        
+        dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
+        #This for loop runs over i,j and does the inner summation over l
+        for i in range(nfields):
+            for j in range(nfields):
+                #Inner loop over fields
+                for l in range(nfields):
+                    innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
+                                        + dUdphi[i]*phidots[l] 
+                                        + phidots[i]*phidots[l]*U))*dpmodes[l,j]
+        #Reshape this term so that it is nfields**2 long        
+        innerterm = innerterm.reshape((nfields**2,lenk))
+        #d\deltaphi_1^prime/dn
+        dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+                                + innerterm/H**2)
         return dydx
         
 
@@ -645,14 +657,7 @@ class CanonicalSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -742,14 +747,7 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Homogeneous Second Order Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -797,9 +795,6 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[tix]
-        #Get source terms
-#        src = self.source[tix][kix]
-#        srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
@@ -835,14 +830,7 @@ class CanonicalRampedSecondOrder(PhiModels):
        y[2] - \delta\varphi_2 : Second order perturbation [Imag Part]
        y[3] - \delta\varphi_2^\prime : Derivative of second order perturbation [Imag Part]
        """
-    #Text for graphs
-    plottitle = "Complex Second Order Malik Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
-                    
+                        
     def __init__(self,  k=None, ainit=None, *args, **kwargs):
         """Initialize variables and call superclass"""
         
@@ -970,18 +958,106 @@ class MultiStageDriver(CosmologicalModel):
         else:
             self.cq = 50 #Default value as in Salopek et al.
         
+    
+    def find_efolds_after_inflation(self, Hend, Hreh=None):
+        """Calculate the number of efolds after inflation given the reheating
+        temperature and assuming standard calculation of radiation and matter phases.
         
-    def finda_end(self, Hend, Hreh=None):
-        """Given the Hubble parameter at the end of inflation and at the end of reheating
-            calculate the scale factor at the end of inflation."""
+        Arguments
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        
+        Returns
+        -------
+        N : scalar, number of efolds after the end of inflation until today.
+            N = ln (a_today/a_end) where a_end is scale factor at end of inflation.
+            
+        Further Information
+        -------------------
+        See Huston, arXiv: 1006.5321, 
+        Liddle and Lyth, Cambridge University Press 2000, or 
+        Peiris and Easther, JCAP 0807 (2008) 024, arXiv:0805.2154, 
+        for more details on calculation of post-inflation expansion. 
+        """
         if Hreh is None:
             Hreh = Hend #Instantaneous reheating
-        a_0 = 1 # Normalize today
-        a_end = a_0*np.exp(-72.3)*((Hreh/(Hend**4.0))**(1.0/6.0))
+        N_after = 72.3 + 2.0/3.0*np.log(Hend) - 1.0/6.0*np.log(Hreh)
+        return N_after
+        
+    def finda_end(self, Hend, Hreh=None, a_0=1):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating
+            calculate the scale factor at the end of inflation.
+            
+        This function assumes by default that the scale factor = 1 today and should be used with 
+        caution. A more correct approach is to call find_efolds_after_inflation directly
+        and to use the result as required. 
+        
+        Arguments
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_0 : scalar (default=1), value of scale factor today
+        
+        Returns
+        -------
+        a_end : scalar, scale factor at the end of inflation
+        
+        """
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
+        a_end = a_0*np.exp(-N_after)
         return a_end
+    
+    def finda_0(self, Hend, Hreh=None, a_end=None):
+        """Given the Hubble parameter at the end of inflation and at the end of reheating,
+        and the scale factor at the end of inflation, calculate the scale factor today.
+        
+        Arguments
+        ----------
+        Hend : scalar, value of Hubble parameter at end of inflation
+        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
+        a_end : scalar (default calculated from tresult), value of scale factor 
+                at the end of inflation
+        
+        Returns
+        -------
+        a_0 : scalar, scale factor today
+        
+        """
+        if a_end is None:
+            try:
+                a_end = self.ainit*np.exp(self.tresult[-1])
+            except TypeError:
+                raise ModelError("Simulation has not been run yet.")
+            
+        N_after = self.find_efolds_after_inflation(Hend, Hreh)
+        a_0 = a_end*np.exp(N_after)
+        return a_0 
         
     def findkcrossing(self, k, t, H, factor=None):
-        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon.
+        
+        Arguments
+        ---------
+        k: float
+           Single k value to compute crossing time with
+
+        t: array
+           Array of time values
+
+        H: array
+           Array of values of the Hubble parameter
+
+        factor: float, optional
+                coefficient of crossing k = a*H*factor
+
+        Returns
+        -------
+        kcrindex, kcrefold: tuple
+                            Tuple containing k cross index (in t variable) and the efold number
+                            e.g. t[kcrindex]
+
+        """
         #threshold
         err = 1.0e-26
         if factor is None:
@@ -999,136 +1075,83 @@ class MultiStageDriver(CosmologicalModel):
         return kcrindex, kcrefold
     
     def findallkcrossings(self, t, H):
-        """Iterate over findkcrossing to get full list"""
+        """Iterate over findkcrossing to get full list
+        
+        Arguments
+        ---------
+        t: array
+           Array of t values to calculate over
+
+        H: array
+           Array of Hubble parameter values, should be the same shape as t
+
+        Returns
+        -------
+        kcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of index (in to t) and efold number
+                    at which each k in self.k crosses the horizon (k=a*H).
+        """
         return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        """FInd horizon crossing for all ks"""
+        """Find horizon crossing time indices and efolds for all ks
+        
+        Arguments
+        ---------
+        factor: float
+                Value of coefficient to calculate crossing time, k=a*H*factor
+
+        Returns
+        -------
+        hcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of time index and efold number pairs
+                
+        
+        """
         return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
     @property
     def deltaphi(self, recompute=False):
         """Return the value of deltaphi for this model, recomputing if necessary."""
         pass
+        
+    @property
+    def Pr(self):
+        """The power spectrum of comoving curvature perturbation.
+        This is the unscaled spectrum P_\mathcal{R} calculated for all timesteps and ks. 
+        Calculated using the pyflation.analysis package.
+        """
+        return analysis.Pr(self)
     
     @property
-    def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each k.
+    def Pzeta(self):
+        """The power spectrum of the curvature perturbation on uniform energy
+        density hypersurfaces.
         
-        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-        instance variable self.Pphi. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-        
-        Returns
-        -------
-        Pphi: array_like
-              Array of Pphi values for all timesteps and k modes
+        Calculated using the pyflation.analysis package.
         """
-        #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:        
-            deltaphi = self.deltaphi
-            self._Pphi = deltaphi*deltaphi.conj()
-        return self._Pphi
-    
-    @property            
-    def Pr(self, recompute=False):
-        """Return the spectrum of curvature perturbations $P_R$ for each k.
-        
-        This is the unscaled version $P_R$ which is related to the scaled version by
-        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
-        self.Pr. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pr: array_like
-            Array of Pr values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pr") or recompute:        
-            Pphi = self.Pphi
-            phidot = self.yresult[:,1,:] #bg phidot
-            self._Pr = Pphi/(phidot**2) #change if bg evol is different
-        return self._Pr
+        return analysis.Pzeta(self)
     
     @property
-    def Pgrav(self, recompute=False):
-        """Return the spectrum of tensor perturbations $P_grav$ for each k.
+    def scaled_Pr(self):
+        """The power spectrum of comoving curvature perturbation.
         
-        Note that result is stored as the instance variable self.Pgrav. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pgrav: array_like
-               Array of Pgrav values for all timesteps and k modes
+        Calculated using the pyflation.analysis package.
         """
-        #Basic caching of result
-        if not hasattr(self, "_Pgrav") or recompute:        
-            self._Pgrav = 2*self.Pphi
-        return self._Pgrav
+        return analysis.scaled_Pr(self)
     
-    def getzeta(self):
-        """Return the curvature perturbation on uniform-density hypersurfaces zeta."""
-        #Get needed variables
-        phidot = self.yresult[:,1,:]
-        a = self.ainit*np.exp(self.tresult)
-        H = self.yresult[:,2,:]
-        dUdphi = self.firstordermodel.potentials(self.yresult[:,0,:][np.newaxis,:], self.pot_params)[1]
-        deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
-        deltaphidot = self.yresult[:,4,:] + self.yresult[:,6,:]*1j
+    @property
+    def scaled_Pzeta(self):
+        """The power spectrum of comoving curvature perturbation.
         
-        deltarho = H**2*(phidot*deltaphidot - phidot**3*deltaphidot) + dUdphi*deltaphi
-        drhodt = (H**3)*(phidot**2)*(-1/a[:,np.newaxis]**2 - 2) -H*phidot*dUdphi
-        
-        zeta = -H*deltarho/drhodt
-        return zeta, deltarho, drhodt
-            
+        Calculated using the pyflation.analysis package.
+        """
+        return analysis.scaled_Pzeta(self)
+                
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
 
-    def findns(self, k=None, nefolds=3):
-        """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
-        
-        #If k is not defined, get value at all self.k
-        if k is None:
-            k = self.k
-        else:
-            if k<self.k.min() and k>self.k.max():
-                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-        
-        ts = self.findHorizoncrossings(factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = np.log(self.Pr[ts.astype(int)].diagonal())
-        lnk = np.log(k)
-        
-        #Need to sort into ascending k
-        sortix = lnk.argsort()
-                
-        #Use cubic splines to find deriv
-        tck = interpolate.splrep(lnk[sortix], xp[sortix])
-        ders = interpolate.splev(lnk[sortix], tck, der=1)
-        
-        ns = 1 + ders
-        #Unorder the ks again
-        nsunsort = np.zeros(len(ns))
-        nsunsort[sortix] = ns
-        
-        return nsunsort
-    
     def callingparams(self):
         """Returns list of parameters to save with results."""
         #Test whether k has been set
@@ -1144,7 +1167,8 @@ class MultiStageDriver(CosmologicalModel):
                   "tstep_wanted":self.tstep_wanted,
                   "solver":self.solver,
                   "classname":self.__class__.__name__,
-                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                  "nfields":self.nfields
                   }
         return params
     
@@ -1159,7 +1183,8 @@ class MultiStageDriver(CosmologicalModel):
         "potential_func" : tables.StringCol(255),
         "tend" : tables.Float64Col(),
         "tstep_wanted" : tables.Float64Col(),
-        "datetime" : tables.Float64Col()
+        "datetime" : tables.Float64Col(),
+        "nfields" : tables.IntCol()
         }
         return params
     
@@ -1168,35 +1193,21 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
     """ 
-    #Text for graphs
-    plottitle = "FOCanonicalTwoStage Model in Efold Time"
-    tname = r"$n$" 
-    ynames = [r"$\varphi_0$",
-                    r"$\dot{\varphi_0}$",
-                    r"$H$",
-                    r"Real $\delta\varphi_1$",
-                    r"Real $\dot{\delta\varphi_1}$",
-                    r"Imag $\delta\varphi_1$",
-                    r"Imag $\dot{\delta\varphi_1}$"]
-                                                  
-    def __init__(self, ystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
+                                                      
+    def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
-                 potential_func=None, pot_params=None, simtstart=0, **kwargs):
+                 potential_func=None, pot_params=None, simtstart=0, nfields=1, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Initial conditions for each of the variables.
-        if ystart is None:
-            #Initial conditions for all variables
-            self.ystart = np.array([18.0, # \phi_0
-                                   -0.1, # \dot{\phi_0}
-                                    0.0, # H - leave as 0.0 to let program determine
-                                    1.0, # Re\delta\phi_1
-                                    0.0, # Re\dot{\delta\phi_1}
-                                    1.0, # Im\delta\phi_1
-                                    0.0  # Im\dot{\delta\phi_1}
-                                    ])
+        if bgystart is None:
+            self.bgystart = np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
+                                  + [0.0])
         else:
-            self.ystart = ystart
+            self.bgystart = bgystart
+        #Lengthen bgystart to add perturbed fields.
+        self.ystart= np.append(self.bgystart, [0.0,0.0]*nfields**2)
+            
         if not tstartindex:
             self.tstartindex = np.array([0])
         else:
@@ -1209,10 +1220,14 @@ class FOCanonicalTwoStage(MultiStageDriver):
                          tstep_wanted=tstep_wanted,
                          solver=solver, 
                          potential_func=potential_func, 
-                         pot_params=pot_params, 
+                         pot_params=pot_params,
+                         nfields=nfields, 
                          **kwargs)
         
         super(FOCanonicalTwoStage, self).__init__(**newkwargs)
+        
+        #Set the field indices
+        self.setfieldindices()
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1238,6 +1253,18 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         #Setup model variables    
         self.bgmodel = self.firstordermodel = None
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
                     
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -1248,7 +1275,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Find initial conditions for 1st order model
         #Find a_end using instantaneous reheating
         #Need to change to find using splines
-        Hend = self.bgmodel.yresult[self.fotendindex,2]
+        Hend = self.bgmodel.yresult[self.fotendindex, self.H_ix]
         self.a_end = self.finda_end(Hend)
         self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
         
@@ -1259,11 +1286,11 @@ class FOCanonicalTwoStage(MultiStageDriver):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         #Set etainit, initial eta at n=0
-        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
         kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
+                            self.bgmodel.yresult[:self.fotendindex, self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
@@ -1280,9 +1307,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
 
         #Check ystart is in right form (1-d array of three values)
         if len(self.ystart.shape) == 1:
-            ys = self.ystart[0:3]
+            ys = self.ystart[self.bg_ix]
         elif len(self.ystart.shape) == 2:
-            ys = self.ystart[0:3,0]
+            ys = self.ystart[self.bg_ix,0]
         #Choose tstartindex to be simply the first timestep.
         tstartindex = np.array([0])
         
@@ -1293,14 +1320,15 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       tstep_wanted=self.tstep_wanted, 
                       solver=self.solver,
                       potential_func=self.potential_func, 
-                      pot_params=self.pot_params)
+                      pot_params=self.pot_params,
+                      nfields=self.nfields)
          
         self.bgmodel = self.bgclass(**kwargs)
         #Start background run
         self._log.info("Running background model...")
         try:
             self.bgmodel.run(saveresults=False)
-        except ModelError, er:
+        except ModelError:
             self._log.exception("Error in background run, aborting!")
         #Find end of inflation
         self.fotend, self.fotendindex = self.bgmodel.findinflend()
@@ -1321,11 +1349,11 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       k=self.k, 
                       ainit=self.ainit, 
                       potential_func=self.potential_func, 
-                      pot_params=self.pot_params)
+                      pot_params=self.pot_params,
+                      fields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
-        #Set names as in ComplexModel
-        self.tname, self.ynames = self.firstordermodel.tname, self.firstordermodel.ynames
+
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
@@ -1344,7 +1372,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         times for the k modes. Then the initial conditions are set for the first order variables.
         Finally the first order model is run and the results are saved if required.
         
-        Parameters
+        Arguments
         ----------
         saveresults: boolean, optional
                      Should results be saved at the end of the run. Default is False.
@@ -1363,11 +1391,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Run first order model
         self.runfo()
         
-        #Save results in resultlist and file
+        #Save results in file
         #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
+        self.lastparams = self.callingparams()   
         
         if saveresults:
             try:
@@ -1385,7 +1411,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
             ts, tsix = self.fotstart, self.fotstartindex
             
         #Reset starting conditions at new time
-        foystart = np.zeros((len(self.ystart), len(self.k)))
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
         #set_trace()
         #Get values of needed variables at crossing time.
         astar = self.ainit*np.exp(ts)
@@ -1396,8 +1422,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         else:
             bgyresult = self.bgmodel.yresult
             
-        Hstar = bgyresult[tsix,2]
-        Hzero = bgyresult[0,2]
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
         
         epsstar = self.bgepsilon[tsix]
         etastar = -1/(astar*Hstar*(1-epsstar))
@@ -1409,53 +1435,82 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         #Set bg init conditions based on previous bg evolution
         try:
-            foystart[0:3] = bgyresult[tsix,:].transpose()
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
         except ValueError:
-            foystart[0:3] = bgyresult[tsix,:][:, np.newaxis]
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
         
         #Find 1/asqrt(2k)
         arootk = 1/(astar*(np.sqrt(2*self.k)))
-        #Find cos and sin(-keta)
-        csketa = np.cos(-keta)
-        snketa = np.sin(-keta)
-        
-        #Set Re\delta\phi_1 initial condition
-        foystart[3,:] = csketa*arootk
-        #set Re\dot\delta\phi_1 ic
-        foystart[4,:] = -arootk*(csketa - (self.k/(astar*Hstar))*snketa)
-        #Set Im\delta\phi_1
-        foystart[5,:] = snketa*arootk
-        #Set Im\dot\delta\phi_1
-        foystart[6,:] = -arootk*((self.k/(astar*Hstar))*csketa + snketa)
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
         
         return foystart
     
     def getdeltaphi(self):
         return self.deltaphi
     
-    @property
     def deltaphi(self, recompute=False):
-        """Return the calculated values of $\delta\phi$ for all times and modes.
+        """Return the calculated values of $\delta\phi$ for all times, fields and modes.
+        For multifield systems this is the quantum matrix of solutions:
         
-        The result is stored as the instance variable self.deltaphi but will be recomputed
+        \hat{\delta\phi} = \Sum_{\alpha, I} xi_{\alpha I} \hat{a}_I
+        
+        The result is stored as the instance variable m.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
                    
         Returns
         -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
+        deltaphi: array_like, dtype: complex128
+                  Array of $\delta\phi$ values for all timesteps, fields and k modes.
         """
         
         if not hasattr(self, "_deltaphi") or recompute:
-            self._deltaphi = self.yresult[:,3,:] + self.yresult[:,5,:]*1j
+            self._deltaphi = self.yresult[:,self.dps_ix,:]
         return self._deltaphi
-                    
     
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.yresult[:,self.dpdots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
+
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
     #Check file exists
@@ -1495,26 +1550,31 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                     self._log.debug("Opening file " + filename + " to read results.")
                 try:
                     self._rf = tables.openFile(filename, "r")
-                    self.yresult = self._rf.root.results.yresult
-                    self.tresult = self._rf.root.results.tresult
-                    self.fotstart = self._rf.root.results.fotstart
-                    if "fotstartindex" in self._rf.root.results:
+                    results = self._rf.root.results
+                    self.yresult = results.yresult
+                    self.tresult = results.tresult
+                    if "bgystart" in results:
+                        self.bgystart = results.bgystart
+                    if "ystart" in results:
+                        self.ystart = results.ystart
+                    self.fotstart = results.fotstart
+                    if "fotstartindex" in results:
                         #for backwards compatability only set if it exists
-                        self.fotstartindex = self._rf.root.results.fotstartindex
-                    self.foystart = self._rf.root.results.foystart
-                    self.k = self._rf.root.results.k[:]
-                    params = self._rf.root.results.parameters
+                        self.fotstartindex = results.fotstartindex
+                    self.foystart = results.foystart
+                    self.k = results.k[:]
+                    params = results.parameters
                 except tables.NoSuchNodeError:
                     raise ModelError("File does not contain correct model data structure!")
                 try:
-                    self.source = self._rf.root.results.sourceterm
+                    self.source = results.sourceterm
                 except tables.NoSuchNodeError:
                     if _debug:
                         self._log.debug("First order file does not have a source term.")
                     self.source = None
                 # Put potential parameters into right variable
                 try:
-                    potparamstab = self._rf.root.results.pot_params
+                    potparamstab = results.pot_params
                     for row in potparamstab:
                         key = row["name"]
                         val = row["value"]
@@ -1531,18 +1591,28 @@ def make_wrapper_model(modelfile, *args, **kwargs):
             except IOError:
                 raise
             
+            #Set indices correctly
+            self.H_ix = self.nfields*2
+            self.bg_ix = slice(0,self.nfields*2+1)
+            self.phis_ix = slice(0,self.nfields*2,2)
+            self.phidots_ix = slice(1,self.nfields*2,2)
+            self.pert_ix = slice(self.nfields*2+1, None)
+            self.dps_ix = slice(self.nfields*2+1, None, 2)
+            self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+            
             #Fix bgmodel to actual instance
             if self.ystart is not None:
                 #Check ystart is in right form (1-d array of three values)
                 if len(self.ystart.shape) == 1:
-                    ys = self.ystart[0:3]
+                    ys = self.ystart[self.bg_ix]
                 elif len(self.ystart.shape) == 2:
-                    ys = self.ystart[0:3,0]
+                    ys = self.ystart[self.bg_ix,0]
             else:
-                ys = self.foystart[0:3,0]
+                ys = results.bgresults.yresult[0]
             self.bgmodel = self.bgclass(ystart=ys, tstart=self.tstart, tend=self.tend, 
                             tstep_wanted=self.tstep_wanted, solver=self.solver,
-                            potential_func=self.potential_func, pot_params=self.pot_params)
+                            potential_func=self.potential_func, 
+                            nfields=self.nfields, pot_params=self.pot_params)
             #Put in data
             try:
                 if _debug:
@@ -1572,17 +1642,219 @@ def make_wrapper_model(modelfile, *args, **kwargs):
 class SOCanonicalThreeStage(MultiStageDriver):
     """Runs third stage calculation (typically second order perturbations) using
     a two stage model instance which could be wrapped from a file."""
-    
-    #Text for graphs
-    plottitle = "Complex Second Order Model with source term in Efold time"
-    tname = r"$n$"
-    ynames = [r"Real $\delta\varphi_2$",
-                    r"Real $\dot{\delta\varphi_2}$",
-                    r"Imag $\delta\varphi_2$",
-                    r"Imag $\dot{\delta\varphi_2}$"]
 
     def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
         """Initialize variables and check that tsmodel exists and is correct form."""
+        
+        #Test whether tsmodel is of correct type
+        if not isinstance(second_stage, FOCanonicalTwoStage):
+            raise ModelError("Need to provide a FOCanonicalTwoStage instance to get first order results from!")
+        else:
+            self.second_stage = second_stage
+            #Set properties to be those of second stage model
+            self.k = np.copy(self.second_stage.k)
+            self.simtstart = self.second_stage.tresult[0]
+            self.fotstart = np.copy(self.second_stage.fotstart)
+            self.fotstartindex = np.copy(self.second_stage.fotstartindex)
+            self.ainit = self.second_stage.ainit
+            self.potentials = self.second_stage.potentials
+            self.potential_func = self.second_stage.potential_func
+            self.pot_params = self.second_stage.pot_params
+            self.nfields = self.second_stage.nfields
+        
+        if ystart is None:
+            ystart = np.zeros((4, len(self.k)))
+            
+        #Need to make sure that the tstartindex terms are changed over to new timestep.
+        fotstep = self.second_stage.tstep_wanted
+        sotstep = fotstep*2
+        sotstartindex = np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
+        
+        kwargs = dict(ystart=ystart,
+                      tstart=self.second_stage.tresult[0],
+                      tstartindex=sotstartindex,
+                      simtstart=self.simtstart,
+                      tend=self.second_stage.tresult[-1],
+                      tstep_wanted=sotstep,
+                      solver="rkdriver_tsix",
+                      potential_func=self.second_stage.potential_func,
+                      pot_params=self.second_stage.pot_params,
+                      nfields=self.nfields
+                      )
+        #Update sokwargs with any arguments from soclassargs
+        if soclassargs is not None:
+            kwargs.update(soclassargs)
+            
+        #Call superclass
+        super(SOCanonicalThreeStage, self).__init__(**kwargs)
+        
+        if soclass is None:
+            self.soclass = CanonicalSecondOrder
+        else:
+            self.soclass = soclass
+        self.somodel = None
+        
+        #Set up source term
+        if _debug:
+            self._log.debug("Trying to set source term for second order model...")
+        self.source = self.second_stage.source[:]
+        if self.source is None:
+            raise ModelError("First order model does not have a source term!")
+        #Try to put yresult array in memory
+        self.second_stage.yresultarr = self.second_stage.yresult
+        self.second_stage.yresult = self.second_stage.yresultarr[:]
+        
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        # Indices for use with self.second_stage.yresult
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        
+        #Indices of second order quantities, to use with self.yresult
+        self.dp2s_ix = slice(0, None, 2)
+        self.dp2dots_ix = slice(1, None, 2)
+        return
+                    
+    
+    def setup_soclass(self):
+        """Initialize the second order class that will be used to run simulation."""
+        sokwargs = {
+        "ystart": self.ystart,
+        "tstart": self.fotstart,
+        "tstartindex": self.tstartindex,
+        "simtstart": self.simtstart,
+        "tend": self.tend,
+        "tstep_wanted": self.tstep_wanted,
+        "solver": self.solver,
+        "k": self.k,
+        "ainit": self.ainit,
+        "potential_func": self.potential_func,
+        "pot_params": self.pot_params,
+        "cq": self.cq,
+        "nfields": self.nfields,
+        }
+        
+        
+        self.somodel = self.soclass(**sokwargs)
+        #Set second stage and source terms for somodel
+        self.somodel.source = self.source
+        self.somodel.second_stage = self.second_stage
+        return
+    
+    def runso(self):
+        """Run second order model."""
+        
+        #Initialize second order class
+        self.setup_soclass()
+        #Start second order run
+        self._log.info("Beginning second order run...")
+        try:
+            self.somodel.run(saveresults=False)
+            pass
+        except ModelError:
+            self._log.exception("Error in second order run, aborting!")
+            raise
+        
+        self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
+        return
+    
+    def run(self, saveresults=True):
+        """Run simulation and save results."""
+        #Run second order model
+        self.runso()
+        
+        #Save results in file
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()
+        if saveresults:
+            try:
+                self._log.info("Results saved in " + self.saveallresults())
+            except IOError, er:
+                self._log.exception("Error trying to save results! Results NOT saved.")        
+        return
+    
+    @property
+    def deltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times and modes.
+        
+        The result is stored as the instance variable self.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Arguments
+        ----------
+        recompute: boolean, optional
+                   Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi: array_like
+                  Array of $\delta\phi$ values for all timesteps and k modes.
+        """
+        
+        if not hasattr(self, "_deltaphi") or recompute:
+            dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
+            dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
+            self._deltaphi = dp1 + 0.5*dp2
+        return self._deltaphi
+    
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.second_stage.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.second_stage.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.second_stage.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.second_stage.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.second_stage.yresult[:,self.dpdots_ix]
+    
+    @property
+    def dp2modes(self):
+        """Quantum modes of second order perturbations"""
+        return self.yresult[:,self.dp2s_ix]
+    
+    @property
+    def dp2dotmodes(self):
+        """Quantum modes of derivatives of second order perturbations"""
+        return self.yresult[:,self.dp2dots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
+    
+class SOHorizonStart(SOCanonicalThreeStage):
+    """Runs third stage calculation (typically second order perturbations) using
+    a two stage model instance which could be wrapped from a file.
+    
+    Second order calculation starts at horizon crossing.
+    """
+    
+
+    def __init__(self, second_stage, soclass=None, ystart=None, **soclassargs):
+        """Initialize variables and check that tsmodel exists and is correct form."""
+        
         
         #Test whether tsmodel is of correct type
         if not isinstance(second_stage, FOCanonicalTwoStage):
@@ -1605,7 +1877,15 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Need to make sure that the tstartindex terms are changed over to new timestep.
         fotstep = self.second_stage.tstep_wanted
         sotstep = fotstep*2
-        sotstartindex = np.around(self.fotstartindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
+        
+        fohorizons = np.array([second_stage.findkcrossing(second_stage.k[kix],
+                                                         second_stage.bgmodel.tresult,
+                                                         second_stage.bgmodel.yresult[:,2],
+                                                         factor=1) for kix in np.arange(len(second_stage.k)) ])
+        fohorizonindex = fohorizons[:,0]
+        fohorizontimes = fohorizons[:,1]
+        
+        sotstartindex = np.around(fohorizonindex*(fotstep/sotstep) + sotstep/2).astype(np.int)
         
         kwargs = dict(ystart=ystart,
                       tstart=self.second_stage.tresult[0],
@@ -1639,108 +1919,9 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Try to put yresult array in memory
         self.second_stage.yresultarr = self.second_stage.yresult
         self.second_stage.yresult = self.second_stage.yresultarr[:]
-    
-    def setup_soclass(self):
-        """Initialize the second order class that will be used to run simulation."""
-        sokwargs = {
-        "ystart": self.ystart,
-        "tstart": self.fotstart,
-        "tstartindex": self.tstartindex,
-        "simtstart": self.simtstart,
-        "tend": self.tend,
-        "tstep_wanted": self.tstep_wanted,
-        "solver": self.solver,
-        "k": self.k,
-        "ainit": self.ainit,
-        "potential_func": self.potential_func,
-        "pot_params": self.pot_params,
-        "cq": self.cq}
-        
-        
-        self.somodel = self.soclass(**sokwargs)
-        self.tname, self.ynames = self.somodel.tname, self.somodel.ynames
-        #Set second stage and source terms for somodel
-        self.somodel.source = self.source
-        self.somodel.second_stage = self.second_stage
-        return
-    
-    def runso(self):
-        """Run second order model."""
-        
-        #Initialize second order class
-        self.setup_soclass()
-        #Start second order run
-        self._log.info("Beginning second order run...")
-        try:
-            self.somodel.run(saveresults=False)
-            pass
-        except ModelError:
-            self._log.exception("Error in second order run, aborting!")
-            raise
-        
-        self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
-        return
-    
-    def run(self, saveresults=True):
-        """Run simulation and save results."""
-        #Run second order model
-        self.runso()
-        
-        #Save results in resultlist and file
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()
-        
-        self.resultlist.append([self.lastparams, self.tresult, self.yresult])        
-        
-        if saveresults:
-            try:
-                self._log.info("Results saved in " + self.saveallresults())
-            except IOError, er:
-                self._log.exception("Error trying to save results! Results NOT saved.")        
-        return
-    
-    @property
-    def deltaphi(self, recompute=False):
-        """Return the calculated values of $\delta\phi$ for all times and modes.
-        
-        The result is stored as the instance variable self.deltaphi but will be recomputed
-        if `recompute` is True.
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should the values be recomputed? Default is False.
-                   
-        Returns
-        -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
-        """
-        
-        if not hasattr(self, "_deltaphi") or recompute:
-            dp1 = self.second_stage.yresult[:,3,:] + self.second_stage.yresult[:,5,:]*1j
-            dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
-            self._deltaphi = dp1 + 0.5*dp2
-        return self._deltaphi
-    
         
 class CombinedCanonicalFromFile(MultiStageDriver):
     """Model class for combined first and second order data, assumed to be used with a file wrapper."""
-    
-    #Text for graphs
-    plottitle = "Combined First and Second Order Canonical Model in Efold time"
-    tname = r"$n$"
-    ynames = [r"$\varphi_0$",
-                r"$\dot{\varphi_0}$",
-                r"$H$",
-                r"Real $\delta\varphi_1$",
-                r"Real $\dot{\delta\varphi_1}$",
-                r"Imag $\delta\varphi_1$",
-                r"Imag $\dot{\delta\varphi_1}$",
-                r"Real $\delta\varphi_2$",
-                r"Real $\dot{\delta\varphi_2}$",
-                r"Imag $\delta\varphi_2$",
-                r"Imag $\dot{\delta\varphi_2}$"]
     
     def __init__(self, *args, **kwargs):
         """Initialize vars and call super class."""
@@ -1761,7 +1942,7 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1834,11 +2015,11 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         except AttributeError:            
             self.bgepsilon = self.bgmodel.getepsilon()
         #Set etainit, initial eta at n=0
-        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,2]*(1-self.bgepsilon[0]))
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
         kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,2])
+                            self.bgmodel.yresult[:self.fotendindex,self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
@@ -1850,3 +2031,126 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         self.foystart = self.getfoystart()
         return
         
+        
+class FONoPhase(FOCanonicalTwoStage):
+    """First order two stage class which does not include a phase in the initial
+    conditions for the first order field."""
+    
+    def __init__(self, *args, **kwargs):
+        super(FONoPhase, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+#        Hzero = bgyresult[0,self.H_ix]
+#        
+#        epsstar = self.bgepsilon[tsix]
+#        etastar = -1/(astar*Hstar*(1-epsstar))
+#        try:
+#            etadiff = etastar - self.etainit
+#        except AttributeError:
+#            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+#        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*(1 + (self.k/(astar*Hstar))*1j)
+        
+        return foystart   
+    
+
+class FOSuppressOneField(FOCanonicalTwoStage):
+    """First order two stage class which does not include a phase in the initial
+    conditions for the first order field."""
+    
+    def __init__(self, suppress_ix=0, *args, **kwargs):
+        
+        self.suppress_ix = suppress_ix
+        super(FOSuppressOneField, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
+        
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
+        
+        #Suppress one field using self.suppress_ix
+        foystart[self.dps_ix,:][::self.nfields+1][self.suppress_ix] = 0
+        foystart[self.dpdots_ix,:][::self.nfields+1][self.suppress_ix] = 0
+                
+        return foystart

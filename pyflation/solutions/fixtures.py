@@ -1,9 +1,10 @@
 '''fixtures.py
 
 Module with fixture information and generating functions
-Created on 22 Apr 2010
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 '''
 
 from pyflation import helpers
