@@ -1,9 +1,9 @@
 '''generalsolution.py
 Holds the general solution base class
 
-Created on 22 Apr 2010
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 
-@author: Ian Huston
 '''
 
 import numpy as np

@@ -2,7 +2,8 @@
 """secondorder.py - Run a second order simulation
 Created on 6 Jul 2010
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 """
 
 from __future__ import division
@@ -67,6 +68,10 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
     Exception
        Any exception raised during saving of code.
     """
+    if soargs.get("nfields", 1) > 1:
+        log.exception("""Only single field models can have second order 
+        perturbation calculated.""")
+        raise c.ModelError
     try:
         fomodel = c.make_wrapper_model(mrgfile)
     except:

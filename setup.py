@@ -1,5 +1,9 @@
 """ setup.py - Script to install package using distutils
 
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 For help options run:
 $ python setup.py help
 """

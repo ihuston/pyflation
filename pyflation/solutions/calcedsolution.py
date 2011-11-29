@@ -1,8 +1,9 @@
 '''calcedsolution.py
 Calculated solution for convolution integrals
-Created on 22 Apr 2010
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 '''
 from __future__ import division
 import numpy as np

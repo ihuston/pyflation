@@ -34,7 +34,7 @@ import logging
 from configuration import _debug
 import cmpotentials
 import rk4
-
+import analysis
 
 #Start logging
 root_log_name = logging.getLogger().name
@@ -226,7 +226,7 @@ class CosmologicalModel(object):
                     self._log.debug("File does not exist, using write mode.")
                 filemode = "w" #Writing to new file
         else:
-            raise IOError("Directory 'results' does not exist")
+            raise IOError("Directory %s does not exist" % os.path.dirname(filename))
         
         if yresultshape is None:
             yresultshape = list(self.yresult.shape)
@@ -252,7 +252,30 @@ class CosmologicalModel(object):
         return filename
     
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
-        """Create a new hdf5 file with the structure capable of holding results."""
+        """Create a new hdf5 file with the structure capable of holding results.
+           
+           Arguments
+           ---------
+           filename: string
+                     Path including filename of file to create
+
+           grpname: string, optional
+                    Name of the HDF5 group to create, default is "results"
+
+           yresultshape: tuple, optional
+                         Shape of yresult variable to store
+           
+           hdf5complevel:  integer, optional
+                           Compression level to use with PyTables, default 2.
+
+           hdf5complib: string, optional
+                        Compression library to use with PyTables, default "blosc".
+ 
+           Returns
+           -------
+           rf: file handle
+               Handle of file created 
+        """
                     
         try:
             rf = tables.openFile(filename, "w")
@@ -301,11 +324,15 @@ class CosmologicalModel(object):
         
     def saveresultsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
-            filename - full path and name of file (should end in hf5 for consistency.
-            filemode - ["w"|"a"]: "w" specifies write to a new file, overwriting existing one
-                        "a" specifies append to current file or create if does not exist.
-            hdf5complevel - Compression level to use with PyTables, default 2.
-            hdf5complib - Compression library to use with PyTables, default "blosc".
+        
+        Arguments
+        ---------
+        rf: filelike
+            File to save results in
+
+        grpname: string, optional
+                 Name of the HDF5 group to create in the file
+
         """
         try:
             #Get tables and array handles
@@ -350,15 +377,9 @@ class CosmologicalModel(object):
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
-    #Names of variables
-    ynames = [r"Simple $y$", r"$\dot{y}$"]
-    plottitle = r"TestModel: $\frac{d^2y}{dt^2} = y$"
-    tname = "Time"
             
     def __init__(self, ystart=np.array([1.0,1.0]), tstart=0.0, tend=1.0, tstep_wanted=0.01):
         CosmologicalModel.__init__(self, ystart, tstart, tend, tstep_wanted)
-        
-
     
     def derivs(self, y, t, **kwargs):
         """Very simple set of ODEs"""
@@ -376,10 +397,6 @@ class BasicBgModel(CosmologicalModel):
        y[1] - d\phi_0/d\eta : First deriv of \phi
        y[2] - a : Scale Factor
     """
-    #Graph variables
-    plottitle = "Basic Cosmological Model"
-    tname = "Conformal time"
-    ynames = [r"Inflaton $\phi$", "", r"Scale factor $a$"]    
     
     def __init__(self, ystart=np.array([0.1,0.1,0.1]), tstart=0.0, tend=120.0, 
                     tstep_wanted=0.02, solver="rkdriver_tsix"):
@@ -430,10 +447,6 @@ class BasicBgModel(CosmologicalModel):
     
 class PhiModels(CosmologicalModel):
     """Parent class for models implementing the scheme in Malik 06[astro-ph/0610864]"""
-    #Graph titles
-    plottitle = r"Malik Models in $n$"
-    tname = r"E-folds $n$"
-    ynames = [r"$\phi$", r"$\dot{\phi}_0$", r"$H$"]
     
     def __init__(self, *args, **kwargs):
         """Call superclass init method."""
@@ -488,7 +501,7 @@ class CanonicalBackground(PhiModels):
         Array of dependent variables y is given by:
         
        y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\n : First deriv of \phi
+       y[1] - d\phi_0/dn : First deriv of \phi
        y[2] - H: Hubble parameter
     """
         
@@ -559,15 +572,8 @@ class CanonicalFirstOrder(PhiModels):
         else:
             self.k = k
         
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2+1)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
-        self.pert_ix = slice(self.nfields*2+1, None)
-        self.dps_ix = slice(self.nfields*2+1, None, 2)
-        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+        #Set the field indices to use
+        self.setfieldindices()
         
         #Initial conditions for each of the variables.
         if self.ystart is None:
@@ -577,57 +583,69 @@ class CanonicalFirstOrder(PhiModels):
         if np.all(self.ystart[self.H_ix] == 0.0):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[self.H_ix] = self.findH(U, self.ystart)
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
                        
-    @profile                        
     def derivs(self, y, t, **kwargs):
-        """Basic background equations of motion.
-            dydx[0] = dy[0]/dn etc"""
+        """Return derivatives of fields in y at time t."""
         #If k not given select all
         if "k" not in kwargs or kwargs["k"] is None:
             k = self.k
         else:
             k = kwargs["k"]
-            
+        
+        #Set up variables    
+        phidots = y[self.phidots_ix]
+        lenk = len(k)
+        #Get a
+        a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
+        nfields = self.nfields    
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((2*self.nfields**2 + 2*self.nfields + 1,len(k)), dtype=y.dtype)
+            dydx = np.zeros((2*nfields**2 + 2*nfields + 1,lenk), dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields,lenk), dtype=y.dtype)
         else:
-            dydx = np.zeros(2*self.nfields**2 + 2*self.nfields + 1, dtype=y.dtype)
-            
+            dydx = np.zeros(2*nfields**2 + 2*nfields + 1, dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields), y.dtype)
+        
         #d\phi_0/dn = y_1
-        dydx[self.phis_ix] = y[self.phidots_ix] 
-        
+        dydx[self.phis_ix] = phidots
         #dphi^prime/dn
-        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
-        
+        dydx[self.phidots_ix] = -(U*phidots+ dUdphi[...,np.newaxis])/(H**2)
         #dH/dn Do sum over fields not ks so use axis=0
-        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
-        
-        #Get a
-        a = self.ainit*np.exp(t)
-        H = y[self.H_ix]
-        
+        dydx[self.H_ix] = -0.5*(np.sum(phidots**2, axis=0))*H
+        #d\delta \phi_I / dn
         dydx[self.dps_ix] = y[self.dpdots_ix]
         
-        #Sum term for perturbation
-        phidot = y[self.phidots_ix]
-        term1 = (d2Udphi2[...,np.newaxis] 
-                + phidot[:,np.newaxis,:]*dUdphi[np.newaxis,:,np.newaxis] 
-                + dUdphi[:,np.newaxis,np.newaxis] * phidot[np.newaxis,...]
-                + phidot[:,np.newaxis,:]*phidot[np.newaxis,...]*U )
-        term2 = y[self.dps_ix].reshape((self.nfields, self.nfields, len(k)))
-        
-        
-        termsum = np.sum(term1[:,:,np.newaxis,:]*term2[np.newaxis,...], axis=-2)
-        termsum = termsum.reshape((self.nfields**2,len(k)))
-        
-        #d\deltaphi_1^prime/dn  
-        # Do sum over second field index so axis=-1
+        #Set up delta phis in nfields*nfields array        
+        dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
+        #This for loop runs over i,j and does the inner summation over l
+        for i in range(nfields):
+            for j in range(nfields):
+                #Inner loop over fields
+                for l in range(nfields):
+                    innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
+                                        + dUdphi[i]*phidots[l] 
+                                        + phidots[i]*phidots[l]*U))*dpmodes[l,j]
+        #Reshape this term so that it is nfields**2 long        
+        innerterm = innerterm.reshape((nfields**2,lenk))
+        #d\deltaphi_1^prime/dn
         dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
-                                + termsum/H**2)
+                                + innerterm/H**2)
         return dydx
         
 
@@ -776,9 +794,6 @@ class CanonicalHomogeneousSecondOrder(PhiModels):
         fovars = self.second_stage.yresult[tix].copy()[:,kix]
         phi, phidot, H = fovars[0:3]
         epsilon = self.second_stage.bgepsilon[tix]
-        #Get source terms
-#        src = self.source[tix][kix]
-#        srcreal, srcimag = src.real, src.imag
         #get potential from function
         U, dU, d2U, d3U = self.potentials(fovars, self.pot_params)[0:4]        
         
@@ -947,7 +962,7 @@ class MultiStageDriver(CosmologicalModel):
         """Calculate the number of efolds after inflation given the reheating
         temperature and assuming standard calculation of radiation and matter phases.
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -977,7 +992,7 @@ class MultiStageDriver(CosmologicalModel):
         caution. A more correct approach is to call find_efolds_after_inflation directly
         and to use the result as required. 
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -996,7 +1011,7 @@ class MultiStageDriver(CosmologicalModel):
         """Given the Hubble parameter at the end of inflation and at the end of reheating,
         and the scale factor at the end of inflation, calculate the scale factor today.
         
-        Parameters
+        Arguments
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -1019,7 +1034,29 @@ class MultiStageDriver(CosmologicalModel):
         return a_0 
         
     def findkcrossing(self, k, t, H, factor=None):
-        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon."""
+        """Given k, time variable and Hubble parameter, find when mode k crosses the horizon.
+        
+        Arguments
+        ---------
+        k: float
+           Single k value to compute crossing time with
+
+        t: array
+           Array of time values
+
+        H: array
+           Array of values of the Hubble parameter
+
+        factor: float, optional
+                coefficient of crossing k = a*H*factor
+
+        Returns
+        -------
+        kcrindex, kcrefold: tuple
+                            Tuple containing k cross index (in t variable) and the efold number
+                            e.g. t[kcrindex]
+
+        """
         #threshold
         err = 1.0e-26
         if factor is None:
@@ -1037,84 +1074,79 @@ class MultiStageDriver(CosmologicalModel):
         return kcrindex, kcrefold
     
     def findallkcrossings(self, t, H):
-        """Iterate over findkcrossing to get full list"""
+        """Iterate over findkcrossing to get full list
+        
+        Arguments
+        ---------
+        t: array
+           Array of t values to calculate over
+
+        H: array
+           Array of Hubble parameter values, should be the same shape as t
+
+        Returns
+        -------
+        kcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of index (in to t) and efold number
+                    at which each k in self.k crosses the horizon (k=a*H).
+        """
         return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
     def findHorizoncrossings(self, factor=1):
-        """FInd horizon crossing for all ks"""
+        """Find horizon crossing time indices and efolds for all ks
+        
+        Arguments
+        ---------
+        factor: float
+                Value of coefficient to calculate crossing time, k=a*H*factor
+
+        Returns
+        -------
+        hcrossings: array
+                    Array of (kcrindex, kcrefold) pairs of time index and efold number pairs
+                
+        
+        """
         return np.array([self.findkcrossing(onek, self.tresult, oneH, factor) for onek, oneH in zip(self.k, np.rollaxis(self.yresult[:,2,:], -1,0))])
     
     @property
     def deltaphi(self, recompute=False):
         """Return the value of deltaphi for this model, recomputing if necessary."""
         pass
-    
+        
     @property
-    def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each field and k.
-        
-        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-        instance variable self.Pphi. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-        
-        Returns
-        -------
-        Pphi: array_like, dtype: float64
-              3-d array of Pphi values for all timesteps, fields and k modes
+    def Pr(self):
+        """The power spectrum of comoving curvature perturbation.
+        This is the unscaled spectrum P_\mathcal{R} calculated for all timesteps and ks. 
+        Calculated using the pyflation.analysis package.
         """
-        #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:        
-            deltaphi = self.deltaphi
-            self._Pphi = np.float64(deltaphi*deltaphi.conj())
-        return self._Pphi
+        return analysis.Pr(self)
     
     @property
-    def calPphi(self):
-        """Return the spectrum of scalar perturbations for each field and k mode.
+    def Pzeta(self):
+        """The power spectrum of the curvature perturbation on uniform energy
+        density hypersurfaces.
         
-        This is the scaled power spectrum $\mathcal{P}_{\phi_I}$ for each field
-        and is given by
-        
-        $\mathcal{P}_{\delta\varphi_I}(k) = k^3/(2\pi^2) |\delta\varphi_I(k)|^2.$
-        
-        Returns
-        -------
-        calPphi: array_like, dtype: float64
-                 3-d array of calPphi values for all timesteps, fields and k modes
-              
+        Calculated using the pyflation.analysis package.
         """
-        return 1/(2*np.pi**2) * self.k**3 * self.Pphi
+        return analysis.Pzeta(self)
     
     @property
-    def Pr(self, recompute=False):
-        pass
-    
-    @property
-    def Pgrav(self, recompute=False):
-        """Return the spectrum of tensor perturbations $P_grav$ for each k.
+    def scaled_Pr(self):
+        """The power spectrum of comoving curvature perturbation.
         
-        Note that result is stored as the instance variable self.Pgrav. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pgrav: array_like
-               Array of Pgrav values for all timesteps and k modes
+        Calculated using the pyflation.analysis package.
         """
-        #Basic caching of result
-        if not hasattr(self, "_Pgrav") or recompute:        
-            self._Pgrav = 2*self.Pphi
-        return self._Pgrav
-            
+        return analysis.scaled_Pr(self)
+    
+    @property
+    def scaled_Pzeta(self):
+        """The power spectrum of comoving curvature perturbation.
+        
+        Calculated using the pyflation.analysis package.
+        """
+        return analysis.scaled_Pzeta(self)
+                
     def getfoystart(self):
         """Return model dependent setting of ystart""" 
         pass
@@ -1193,15 +1225,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         super(FOCanonicalTwoStage, self).__init__(**newkwargs)
         
-        #Set field indices. These can be used to select only certain parts of
-        #the y variable, e.g. y[self.bg_ix] is the array of background values.
-        self.H_ix = self.nfields*2
-        self.bg_ix = slice(0,self.nfields*2+1)
-        self.phis_ix = slice(0,self.nfields*2,2)
-        self.phidots_ix = slice(1,self.nfields*2,2)
-        self.pert_ix = slice(self.nfields*2+1, None)
-        self.dps_ix = slice(self.nfields*2+1, None, 2)
-        self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+        #Set the field indices
+        self.setfieldindices()
         
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
@@ -1227,6 +1252,18 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         #Setup model variables    
         self.bgmodel = self.firstordermodel = None
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        return
                     
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -1312,7 +1349,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       ainit=self.ainit, 
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
-                      nfields=self.nfields)
+                      fields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
         #Set names as in ComplexModel
@@ -1335,7 +1372,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         times for the k modes. Then the initial conditions are set for the first order variables.
         Finally the first order model is run and the results are saved if required.
         
-        Parameters
+        Arguments
         ----------
         saveresults: boolean, optional
                      Should results be saved at the end of the run. Default is False.
@@ -1419,67 +1456,16 @@ class FOCanonicalTwoStage(MultiStageDriver):
     def getdeltaphi(self):
         return self.deltaphi
     
-    def getmodematrix(self, y, ix=None, ixslice=None):
-        """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
-        matrix. Returns a view of the y array (changes will be reflected in underlying array).
-        
-        Parameters
-        ----------
-        ixslice: index slice, optional
-            The index slice of y to use, defaults to full extent of y.
-            
-        Returns
-        -------
-        
-        result: view of y array with shape nfield*nfield structure
-        """
-        if ix is None:
-            #Use second dimension for index slice by default
-            ix = 1
-        if ixslice is None:
-            #Assume slice is full extent if none given.
-            ixslice = slice(None)
-        indices = [Ellipsis]*len(y.shape)
-        indices[ix] = ixslice
-        modes = y[indices]
-            
-        s = list(modes.shape)
-        #Check resulting array is correct shape
-        if s[ix] != self.nfields**2:
-            raise ModelError("Array does not have correct dimensions of nfields**2.")
-        s[ix] = self.nfields
-        s.insert(ix+1, self.nfields)
-        result = modes.reshape(s)
-        return result
-    
-    def flattenmodematrix(self, modematrix, ix1=None, ix2=None):
-        """Flatten the mode matrix given into nfield^2 long vector."""
-        s = modematrix.shape
-        if s.count(self.nfields) < 2:
-            raise ModelError("Mode matrix does not have two nfield long dimensions.")
-        try:
-            #If indices are not specified, use first two in order
-            if ix1 is None:
-                ix1 = s.index(self.nfields)
-            if ix2 is None:
-                #The second index is assumed to be after ix1
-                ix2 = s.index(self.nfields, ix1+1)
-        except ValueError:
-            raise ModelError("Cannot determine correct indices for nfield long dimensions!")
-        slist = list(s)
-        ix2out = slist.pop(ix2)
-        slist[ix1] = self.nfields**2
-        return modematrix.reshape(slist) 
-        
-        
-    @property
     def deltaphi(self, recompute=False):
         """Return the calculated values of $\delta\phi$ for all times, fields and modes.
+        For multifield systems this is the quantum matrix of solutions:
         
-        The result is stored as the instance variable self.deltaphi but will be recomputed
+        \hat{\delta\phi} = \Sum_{\alpha, I} xi_{\alpha I} \hat{a}_I
+        
+        The result is stored as the instance variable m.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1494,132 +1480,37 @@ class FOCanonicalTwoStage(MultiStageDriver):
             self._deltaphi = self.yresult[:,self.dps_ix,:]
         return self._deltaphi
     
+    #Helper functions to access results variables
     @property
-    def Pphi(self, recompute=False):
-        """Return the spectrum of scalar perturbations P_phi for each field and k.
-        
-        This is the unscaled version $P_{\phi}$ which is related to the scaled version by
-        $\mathcal{P}_{\phi} = k^3/(2pi^2) P_{\phi}$. Note that result is stored as the
-        instance variable self.Pphi.
-        For multifield systems the full crossterm matrix is returned which 
-        has shape nfields*nfields flattened down to a vector of length nfields^2. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-        
-        Returns
-        -------
-        Pphi: array_like, dtype: float64
-              3-d array of Pphi values for all timesteps, fields and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pphi") or recompute:     
-            #Get into mode matrix form, over first axis   
-            mdp = self.getmodematrix(self.yresult, 1, self.dps_ix)
-            #Take tensor product of modes and conjugate, summing over second mode
-            #index.
-            mPphi = np.zeros_like(mdp)
-            #Do for loop as tensordot to memory expensive
-            nfields=self.nfields
-            for i in range(nfields):
-                for j in range(nfields):
-                    for k in range(nfields):
-                        mPphi[:,i,j] += mdp[:,i,k]*mdp[:,j,k].conj() 
-            #Flatten back into vector form
-            self._Pphi = self.flattenmodematrix(mPphi, 1, 2) 
-        return self._Pphi
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.yresult[:,self.phis_ix]
     
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.yresult[:,self.phidots_ix]
     
-    def findns(self, k=None, nefolds=3):
-        """Return the value of n_s at the specified k mode, nefolds after horizon crossing."""
-        
-        #If k is not defined, get value at all self.k
-        if k is None:
-            k = self.k
-        else:
-            if k<self.k.min() and k>self.k.max():
-                self._log.warn("Warning: Extrapolating to k value outside those used in spline!")
-        
-        ts = self.findallkcrossings(self.tresult, self.yresult[:,2], factor=1)[:,0] + nefolds/self.tstep_wanted #About nefolds after horizon exit
-        xp = np.log(self.Pr[ts.astype(int)].diagonal())
-        lnk = np.log(k)
-        
-        #Need to sort into ascending k
-        sortix = lnk.argsort()
-                
-        #Use cubic splines to find deriv
-        tck = interpolate.splrep(lnk[sortix], xp[sortix])
-        ders = interpolate.splev(lnk[sortix], tck, der=1)
-        
-        ns = 1 + ders
-        #Unorder the ks again
-        nsunsort = np.zeros(len(ns))
-        nsunsort[sortix] = ns
-        
-        return nsunsort
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.yresult[:,self.H_ix]
     
-    def findHorizoncrossings(self, factor=1):
-        """Find horizon crossing for all ks"""
-        return self.findallkcrossings(self.tresult, self.yresult[:,2], factor)
-         
-    @property            
-    def Pr(self, recompute=False):
-        """Return the spectrum of curvature perturbations $P_R$ for each k.
-        
-        For a multifield model this is given by:
-        
-        Pr = (\Sum_K \dot{\phi_K}^2 )^{-2} 
-                \Sum_{I,J} \dot{\phi_I} \dot{\phi_J} P_{IJ}
-                
-        where P_{IJ} = \Sum_K \chi_{IK} \chi_JK}
-        and \chi are the mode matrix elements.  
-        
-        This is the unscaled version $P_R$ which is related to the scaled version by
-        $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
-        self.Pr. 
-        
-        Parameters
-        ----------
-        recompute: boolean, optional
-                   Should value be recomputed even if already stored? Default is False.
-                   
-        Returns
-        -------
-        Pr: array_like, dtype: float64
-            Array of Pr values for all timesteps and k modes
-        """
-        #Basic caching of result
-        if not hasattr(self, "_Pr") or recompute:        
-            phidot = np.float64(self.yresult[:,self.phidots_ix,:]) #bg phidot
-            phidotsumsq = (np.sum(phidot**2, axis=1))**2
-            #Get mode matrix for Pphi as nfield*nfield
-            Pphimatrix = self.getmodematrix(self.Pphi, 1, slice(None))
-            #Multiply mode matrix by corresponding phidot value
-            summatrix = phidot[:,np.newaxis,:,:]*phidot[:,:,np.newaxis,:]*Pphimatrix
-            #Flatten mode matrix and sum over all nfield**2 values
-            sumflat = np.sum(self.flattenmodematrix(summatrix, 1, 2), axis=1)
-            #Divide by total sum of derivative terms
-            self._Pr = sumflat/phidotsumsq
-        return self._Pr
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.yresult[:,self.dps_ix]
     
-    @property            
-    def calPr(self):
-        """Return the spectrum of curvature perturbations $\mathcal{P}_\mathcal{R}$ 
-        for each timestep and k mode.
-        
-        This is the scaled power spectrum which is related to the unscaled version by
-        $\mathcal{P}_\mathcal{R} = k^3/(2pi^2) P_\mathcal{R}$. 
-         
-        Returns
-        -------
-        calPr: array_like
-            Array of Pr values for all timesteps and k modes
-        """
-        #Basic caching of result
-        return 1/(2*np.pi**2) * self.k**3 * self.Pr           
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.yresult[:,self.dpdots_ix]
     
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
+
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
     #Check file exists
@@ -1812,6 +1703,24 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Try to put yresult array in memory
         self.second_stage.yresultarr = self.second_stage.yresult
         self.second_stage.yresult = self.second_stage.yresultarr[:]
+        
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+        # Indices for use with self.second_stage.yresult
+        self.H_ix = self.nfields * 2
+        self.bg_ix = slice(0, self.nfields * 2 + 1)
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        self.pert_ix = slice(self.nfields * 2 + 1, None)
+        self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
+        self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
+        
+        #Indices of second order quantities, to use with self.yresult
+        self.dp2s_ix = slice(0, None, 2)
+        self.dp2dots_ix = slice(1, None, 2)
+        return
+                    
     
     def setup_soclass(self):
         """Initialize the second order class that will be used to run simulation."""
@@ -1877,7 +1786,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1893,6 +1802,47 @@ class SOCanonicalThreeStage(MultiStageDriver):
             dp2 = self.yresult[:,0,:] + self.yresult[:,2,:]*1j
             self._deltaphi = dp1 + 0.5*dp2
         return self._deltaphi
+    
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.second_stage.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.second_stage.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.second_stage.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.second_stage.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.second_stage.yresult[:,self.dpdots_ix]
+    
+    @property
+    def dp2modes(self):
+        """Quantum modes of second order perturbations"""
+        return self.yresult[:,self.dp2s_ix]
+    
+    @property
+    def dp2dotmodes(self):
+        """Quantum modes of derivatives of second order perturbations"""
+        return self.yresult[:,self.dp2dots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
     
 class SOHorizonStart(SOCanonicalThreeStage):
     """Runs third stage calculation (typically second order perturbations) using
@@ -1992,7 +1942,7 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Parameters
+        Arguments
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -2081,3 +2031,126 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         self.foystart = self.getfoystart()
         return
         
+        
+class FONoPhase(FOCanonicalTwoStage):
+    """First order two stage class which does not include a phase in the initial
+    conditions for the first order field."""
+    
+    def __init__(self, *args, **kwargs):
+        super(FONoPhase, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+#        Hzero = bgyresult[0,self.H_ix]
+#        
+#        epsstar = self.bgepsilon[tsix]
+#        etastar = -1/(astar*Hstar*(1-epsstar))
+#        try:
+#            etadiff = etastar - self.etainit
+#        except AttributeError:
+#            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+#        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*(1 + (self.k/(astar*Hstar))*1j)
+        
+        return foystart   
+    
+
+class FOSuppressOneField(FOCanonicalTwoStage):
+    """First order two stage class which does not include a phase in the initial
+    conditions for the first order field."""
+    
+    def __init__(self, suppress_ix=0, *args, **kwargs):
+        
+        self.suppress_ix = suppress_ix
+        super(FOSuppressOneField, self).__init__(*args, **kwargs)
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        if _debug:
+            self._log.debug("Executing getfoystart to get initial conditions.")
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros(((2*self.nfields**2 + self.nfields*2 +1), len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
+        
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
+        
+        #Suppress one field using self.suppress_ix
+        foystart[self.dps_ix,:][::self.nfields+1][self.suppress_ix] = 0
+        foystart[self.dpdots_ix,:][::self.nfields+1][self.suppress_ix] = 0
+                
+        return foystart

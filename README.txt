@@ -11,7 +11,7 @@ Introduction
 ============
 
 Pyflation is a Python package for calculating cosmological perturbations during
-inflationary expansion of the universe.
+inflationary expansion of the universe. 
 
 Once installed the modules in the pyflation package can be used to run 
 simulations of different scalar field models of the early universe.
@@ -20,8 +20,9 @@ The main classes are contained in the cosmomodels module and include
 simulations of background fields and first order and second order perturbations.
 The sourceterm package contains modules required for the computation of the 
 term required for the evolution of second order perturbations.
-The solutions package contains analytical solutions of simple functions which 
-can be compared with the numerical output to check the accuracy.
+The analysis package contains routines to calculate the first order 
+First and Second order perturbations can be calculated for single field models 
+but only first order perturbations can be evolved for multi-field models.
 
 Alongside the Python package, the bin directory contains Python scripts which 
 can run first and second order simulations.

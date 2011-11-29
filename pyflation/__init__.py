@@ -14,4 +14,4 @@ Configuration of the simulation runs can be changed in the configuration.py and 
 For more information please visit http://pyflation.ianhuston.net.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
