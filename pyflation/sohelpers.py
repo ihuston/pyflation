@@ -65,8 +65,8 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
         #Copy first order results
         numks = len(srck)
         #List of things to copy
-        numkscopylist = [fres.yresult, fres.fotstart, fres.tstartindex,
-                         fres.ystart]
+        numkscopylist = [fres.yresult, fres.fotstart, fres.fotstartindex,
+                         fres.foystart]
         for arr in numkscopylist:
             nf.createArray(nres, arr.name, arr[...,:numks])
         tres = fres.tresult.copy(nres)
