@@ -108,7 +108,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
     for xix in range(first_real_step + 1, number_steps):
         if _debug:
             rk_log.debug("rkdriver_tsix: xix=%f", xix)
-        if xix % 100 == 0:
+        if xix % 1000 == 0:
             rk_log.info("Step number %i of %i", xix, number_steps)
         
         # xix labels the current timestep to be saved
