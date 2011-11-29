@@ -86,8 +86,10 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     #The background variables can just be taken as the first k value
     bgvars = myr[m.bg_ix,0]
     #The first order variables need the full k values
-    dphi1 = myr[m.dps_ix]
-    dphi1dot = myr[m.dpdots_ix]
+    #Until the source term calculation is upgraded to use multiple fields
+    #just use the first (and only) field here
+    dphi1 = myr[m.dps_ix][0]
+    dphi1dot = myr[m.dpdots_ix][0]
     #Setup interpolation
     if _debug:
         source_logger.debug("Variables set. Getting potentials for this timestep...")
