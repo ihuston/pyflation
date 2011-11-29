@@ -64,11 +64,12 @@ def combine_source_and_fofile(sourcefile, fofile, newfile=None):
             raise ValueError("Not all timesteps have had source term calculated!")
         #Copy first order results
         numks = len(srck)
-        yres = fres.yresult.copy(nres, stop=numks)
+        #List of things to copy
+        numkscopylist = [fres.yresult, fres.fotstart, fres.tstartindex,
+                         fres.ystart]
+        for arr in numkscopylist:
+            nf.createArray(nres, arr.name, arr[...,:numks])
         tres = fres.tresult.copy(nres)
-        tstart = fres.fotstart.copy(nres, stop=numks)
-        tstartindex = fres.fotstartindex.copy(nres, stop=numks)
-        ystart = fres.foystart.copy(nres, stop=numks)
         params = fres.parameters.copy(nres)
         pot_params = fres.pot_params.copy(nres)
         bgres = nf.copyNode(ff.root.bgresults, nf.root, recursive=True)
