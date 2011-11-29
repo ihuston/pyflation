@@ -1,4 +1,5 @@
-''' pyflation.analysis.spectrum - Explanation
+''' pyflation.analysis.adiabatic - Tools to calculate the spectra of adiabatic
+perturbations
 
 Author: Ian Huston
 For license and copyright information see LICENSE.txt which was distributed with this file.

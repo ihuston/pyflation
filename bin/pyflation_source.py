@@ -2,9 +2,9 @@
 '''source.py - Compute the source term integral given first order results
 This should be run as a standalone script.
 
-Created on 6 Jul 2010
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
 
-@author: Ian Huston
 '''
 from __future__ import division
 

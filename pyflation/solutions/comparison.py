@@ -1,8 +1,9 @@
 '''
 comparison.py - Comparison of analytic and calculated solutions
-Created on 12 Aug 2010
 
-@author: Ian Huston
+Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 '''
 from __future__ import division
 

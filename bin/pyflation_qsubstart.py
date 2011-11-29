@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 """start.py - Generate bash scripts for qsub and execute.
+
 Author: Ian Huston
+For license and copyright information see LICENSE.txt which was distributed with this file.
+
 """
 from __future__ import print_function
 
