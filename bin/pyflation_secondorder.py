@@ -101,14 +101,15 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
         somodel.saveallresults(filename=filename, 
                              hdf5complevel=configuration.hdf5complevel,
                              hdf5complib=configuration.hdf5complib)
+        #Success!
+        log.info("Successfully ran and saved simulation in file %s.", filename)
     except Exception:
         log.exception("IO error, nothing saved!")
     #Destroy model instance to save memory
     if _debug:
         log.debug("Destroying model instance...")
     del somodel
-    #Success!
-    log.info("Successfully ran and saved simulation in file %s.", filename)
+    
     return filename
 
 
