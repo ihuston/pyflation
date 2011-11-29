@@ -2,11 +2,6 @@
 Pyflation
 =========
 
-Author: Ian Huston
-For copyright and license information please see the LICENSE.txt file. 
-
-For installation information see the INSTALL.txt file.
-
 Introduction
 ============
 
@@ -181,3 +176,8 @@ Acknowledgements
 
 This author of this software is supported by the Science & Technology Facilities 
 Council under grant ST/G002150/1.
+
+Author: Ian Huston
+For copyright and license information please see the LICENSE.txt file. 
+
+For installation information see the INSTALL.txt file.
