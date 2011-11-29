@@ -309,7 +309,8 @@ class CosmologicalModel(object):
                 yresarr = rf.createEArray(resgroup, "yresult", tables.ComplexAtom(itemsize=16), yresultshape, filters=filters, expectedrows=8194)
                 karr = rf.createArray(resgroup, "k", self.k)
                 ystartarr = rf.createArray(resgroup, "ystart", self.ystart)
-                bgystartarr = rf.createArray(resgroup, "bgystart", self.bgystart)
+                if hasattr(self, "bgystart"):
+                    bgystartarr = rf.createArray(resgroup, "bgystart", self.bgystart)
                 if hasattr(self, "foystart"):
                     foystarr = rf.createArray(resgroup, "foystart", self.foystart)
                     fotstarr = rf.createArray(resgroup, "fotstart", self.fotstart)
