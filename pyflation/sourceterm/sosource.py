@@ -99,6 +99,7 @@ def calculatesource(m, nix, integrand_elements, srceqns):
     #Shape of potentials is now determined by number of fields and not ks.
     #So no need to do this for each potential, but need to be careful about use
     #of potentials later on.
+    #Warning: This should be changed when source term calculation can do multiple fields
     potentials = [p if np.isscalar(p) else np.asscalar(p) for p in arraypotentials]
     #If the potential is k dependent this needs to be changed to include full
     #k behaviour. The bgvars variable should also include the full k range in
