@@ -32,7 +32,7 @@ try:
 except ImportError,e:
     if __name__ == "__main__":
         msg = """Pyflation module needs to be available. 
-Either run this script from the base directory as bin/pyflation-qsubstart.py or add directory enclosing pyflation package to PYTHONPATH."""
+Either run this script from the base directory as bin/pyflation_qsubstart.py or add directory enclosing pyflation package to PYTHONPATH."""
         print(msg, e)
         sys.exit(1)
     else:
@@ -121,7 +121,7 @@ def first_order_dict(template_dict):
     fo_dict = template_dict.copy()
     fo_dict["runname"] += "-fo"
     fo_dict["qsublogname"] += "-fo"
-    fo_dict["command"] = "python bin/pyflation-firstorder.py"
+    fo_dict["command"] = "python bin/pyflation_firstorder.py"
     return fo_dict
 
 def source_dict(template_dict, fo_jid=None):
@@ -136,7 +136,7 @@ def source_dict(template_dict, fo_jid=None):
                                     src_dict["hold_jid_list"] +
                                     "\n#$ -r y")
     #Formulate source term command
-    src_dict["command"] = ("python bin/pyflation-source.py --taskmin=$SGE_TASK_FIRST "
+    src_dict["command"] = ("python bin/pyflation_source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
                            "--taskid=$SGE_TASK_ID  --overwrite")
     return src_dict
@@ -153,7 +153,7 @@ def source_indiv_dict(template_dict):
                                               "SGE_TASK_STEPSIZE=1",
                                               "SGE_TASK_ID=$1"])
     #Formulate source term command
-    src_dict["command"] = ("python bin/pyflation-source.py --taskmin=$SGE_TASK_FIRST "
+    src_dict["command"] = ("python bin/pyflation_source.py --taskmin=$SGE_TASK_FIRST "
                            "--taskmax=$SGE_TASK_LAST --taskstep=$SGE_TASK_STEPSIZE "
                            "--taskid=$SGE_TASK_ID  --overwrite")
     return src_dict
@@ -166,7 +166,7 @@ def merge_dict(template_dict, src_jid=None):
     mrg_dict["hold_jid_list"] = src_jid
     mrg_dict["qsublogname"] += "-mrg"
     mrg_dict["extra_qsub_params"] = ("#$ -hold_jid " + mrg_dict["hold_jid_list"])
-    mrg_dict["command"] = "python bin/pyflation-srcmerge.py --merge"
+    mrg_dict["command"] = "python bin/pyflation_srcmerge.py --merge"
     return mrg_dict
 
 def second_order_dict(template_dict, mrg_jid=None):
@@ -177,7 +177,7 @@ def second_order_dict(template_dict, mrg_jid=None):
     so_dict["hold_jid_list"] = mrg_jid
     so_dict["qsublogname"] += "-so"
     so_dict["extra_qsub_params"] = ("#$ -hold_jid " + so_dict["hold_jid_list"])
-    so_dict["command"] = "python bin/pyflation-secondorder.py"
+    so_dict["command"] = "python bin/pyflation_secondorder.py"
     return so_dict
 
 def combine_dict(template_dict, so_jid=None):
@@ -188,7 +188,7 @@ def combine_dict(template_dict, so_jid=None):
     cmb_dict["hold_jid_list"] = so_jid
     cmb_dict["qsublogname"] += "-cmb"
     cmb_dict["extra_qsub_params"] = ("#$ -hold_jid " + cmb_dict["hold_jid_list"])
-    cmb_dict["command"] = "python bin/pyflation-combine.py"
+    cmb_dict["command"] = "python bin/pyflation_combine.py"
     return cmb_dict
 
 def main(argv=None):
