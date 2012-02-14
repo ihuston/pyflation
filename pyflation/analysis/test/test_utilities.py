@@ -1,8 +1,11 @@
-''' pyflation.analysis.test.test_utilities - Tests for utilities module
+""" pyflation.analysis.test.test_utilities - Tests for utilities module
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-'''
+
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 import numpy as np
 from numpy.testing import assert_, assert_almost_equal, assert_equal
 

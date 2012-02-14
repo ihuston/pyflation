@@ -1,10 +1,11 @@
-''' pyflation.analysis.adiabatic - Tools to calculate the spectra of adiabatic
+""" pyflation.analysis.adiabatic - Tools to calculate the spectra of adiabatic
 perturbations
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+
 from __future__ import division
 import numpy as np
 

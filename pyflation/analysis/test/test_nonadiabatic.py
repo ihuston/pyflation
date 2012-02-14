@@ -1,8 +1,11 @@
-''' test_nonadiabatic - Test functions for nonadiabatic module
+""" test_nonadiabatic - Test functions for nonadiabatic module
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-'''
+
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 import numpy as np
 from numpy.testing import assert_, assert_raises, \
                           assert_equal,\
