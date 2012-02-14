@@ -1,10 +1,11 @@
-'''generalsolution.py
-Holds the general solution base class
+"""generalsolution.py - Holds the general solution base class
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 
 import numpy as np
 

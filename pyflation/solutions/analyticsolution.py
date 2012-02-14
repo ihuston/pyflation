@@ -1,10 +1,11 @@
-'''analyticsolution.py
-Analytic solutions for the second order Klein-Gordon equation
+"""analyticsolution.py - Analytic solutions for the second order Klein-Gordon equation
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division
 import numpy as np
 import scipy

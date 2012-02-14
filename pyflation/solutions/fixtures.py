@@ -1,11 +1,11 @@
-'''fixtures.py
+"""fixtures.py - Module with fixture information and generating functions
 
-Module with fixture information and generating functions
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+
 
 from pyflation import helpers
 
