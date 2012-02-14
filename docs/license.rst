@@ -38,9 +38,11 @@ WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
 
+Scipy License
+=============
 
-This program contains code modified from the Scipy project in the file 
-romberg.pyx. This code is released under the following modified-BSD license:
+**This program contains code modified from the Scipy project in the file 
+romberg.pyx. This code is released under the following modified-BSD license:**
 
 Copyright (c) 2001, 2002 Enthought, Inc.
 All rights reserved.
