@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """secondorder.py - Run a second order simulation
-Created on 6 Jul 2010
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
 
 from __future__ import division
 

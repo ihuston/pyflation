@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """srcmerge.py - Combine sourcefiles in a directory into one master file by n index
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division
 
 import tables

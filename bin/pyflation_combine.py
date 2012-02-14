@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-"""combine.py - Combine second order, first order and source results in one file.
-
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
+"""pyflation_combine.py - Combine second order, first order and source results in one file.
 
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division
 
 import tables

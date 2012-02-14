@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-'''source.py - Compute the source term integral given first order results
-This should be run as a standalone script.
+"""source.py - Compute the source term integral given first order results
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division
 
 import os.path

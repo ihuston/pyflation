@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-firstorder.py - Run a first order simulation
-
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
+pyflation_firstorder.py - Run a first order Pyflation simulation
 
 This program will run a first order Pyflation simulation as a straight
 through run.  
@@ -13,6 +10,10 @@ Default configuration can be changed in run_config.py.
 
 
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 
 import sys

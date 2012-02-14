@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-''' Script to create and populate new run directory.
+"""pyflation_newrun - Script to create and populate new Pyflation run directory.
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
 
-'''
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
 
 import os.path
 import logging
