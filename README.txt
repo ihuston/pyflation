@@ -21,7 +21,7 @@ but only first order perturbations can be evolved for multi-field models.
 
 Alongside the Python package, the bin directory contains Python scripts which 
 can run first and second order simulations.
-A helper script called "pyflation-qsubstart.py" sets up a full second order run (including 
+A helper script called "pyflation_qsubstart.py" sets up a full second order run (including 
 background, first order and source calculations)
 to be used on queueing system which contains the "qsub" executable (e.g. a Rocks 
 cluster).
@@ -31,7 +31,7 @@ package can be installed as a normal Python package to the site-packages
 directory or each run of the code can be self-contained with code, results and 
 logs all contained in a run directory.
 
-The "pyflation-newrun.py" script creates a new run directory and populates it with the 
+The "pyflation_newrun.py" script creates a new run directory and populates it with the 
 code and sub-directories which are required.
 In particular the file "provenence.log" in the "applogs" directory contains 
 information about the version of the code and system libraries at the time of 
