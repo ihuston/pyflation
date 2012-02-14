@@ -1,0 +1,11 @@
+# Sphinx build dirs #
+_build
+_templates
+_static
+
+# Cython build dirs
+build
+
+# Individual Cython generated C files
+romberg.c
+srccython.c
