@@ -1,5 +1,9 @@
+************
+Installation
+************
+
 Quick Installation
-------------------
+==================
 
 Installing Pyflation is as simple as typing
 
@@ -8,7 +12,7 @@ $ python setup.py install
 inside the directory where this file is located.
 
 Requirements
-------------
+============
 Pyflation has the following requirements:
 
 Python 2.6 or higher (tested with 2.6.4) - http://www.python.org
@@ -22,7 +26,7 @@ with the Matplotlib package (http://matplotlib.sf.net) but this is not a
 requirement of the core modules. 
 
 Basic Installation
-------------------
+==================
  
 First unpack the pyflation-x.x.x.tar.gz file in a suitable location. From the 
 command line this can be done by using
@@ -56,7 +60,7 @@ more than one version of a particular library and want to be able to run them
 side by side. See http://virtualenv.openplans.org/ for more information.
 
 Developer Installation
-----------------------
+======================
 
 If you do not want to install Pyflation into your system or local python 
 site-packages directory, then it is possible to use it from within a separate
