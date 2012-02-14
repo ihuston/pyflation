@@ -1,11 +1,12 @@
-'''srcequations.py - Contains classes which implement source term calculation
+"""srcequations.py - Contains classes which implement source term calculation
 and are used by sosource.py.
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Select the class to be used in a run by changing the settings in run_config.py.
-'''
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division
 
 import numpy as np

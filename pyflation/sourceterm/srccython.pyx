@@ -1,11 +1,12 @@
 """srccython.pyx - Second order source helper module for cython.
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Provides the method interpdps which interpolates results in dp1 and dpdot1.
 
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 import numpy as N
 cimport numpy as N

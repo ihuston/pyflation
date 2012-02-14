@@ -1,13 +1,15 @@
 """sosource.py Second order source term calculation module.
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Provides the method getsourceandintegrate which uses an instance of a first
 order class from cosmomodels to calculate the source term required for second
 order models.
 
+
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 
