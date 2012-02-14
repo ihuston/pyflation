@@ -1,8 +1,5 @@
 """cosmomodels.py - Cosmological Model simulations
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Provides classes for modelling cosmological inflationary scenarios.
 Especially important classes are:
 
@@ -18,7 +15,12 @@ corresponding to the one stored in the file. This allows easier access to the
 results than through a direct inspection of the HDF5 results file.
 
 
+
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 
 from __future__ import division
 

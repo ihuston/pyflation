@@ -1,4 +1,4 @@
-'''romberg.pyx - Romb integration for samples from two dimensional complex arrays.
+"""romberg.pyx - Romb integration for samples from two dimensional complex arrays.
 
 Adapted by Ian Huston. 
 Includes code modified from scipy.integrate.romb released under BSD license:
@@ -34,7 +34,7 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
-'''
+"""
 
 from numpy import add, isscalar, asarray
 

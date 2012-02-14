@@ -1,10 +1,12 @@
 """sohelpers.py - Second order helper functions
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Provides helper functions for second order data from cosmomodels.py.
+
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
     
 import tables
 import logging

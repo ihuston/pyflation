@@ -1,14 +1,16 @@
 """cosmographs.py - Graphing functions for pyflation package
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 This module provides helper functions for graphing the results of 
 pyflation simulations using the Matplotlib package (http://matplotlib.sf.net). 
 
 Especially useful is the multi_format_save function which saves the specified
 figure to different formats as requested.
+
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 import os
 import itertools
 

@@ -1,14 +1,18 @@
-'''
+"""
 run_config.py - Configuration settings for a simulation run
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
+
 
 The user changeable values in this file are explained below. For each run 
 the main options include choice of potential and initial conditions, choice of 
 k mode range and selection of first, source and second order python classes.
 
-'''
+
+"""
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 ###############################################################################
 # DO NOT CHANGE ANYTHING IN THIS SECTION
 import numpy as np

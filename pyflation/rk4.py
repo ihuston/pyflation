@@ -1,11 +1,12 @@
 """rk4.py - Runge-Kutta ODE solver
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 Provides Runge-Kutta based ODE solvers for use with pyflation models.
 
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 from __future__ import division # Get rid of integer division problems, i.e. 1/2=0
 
 import numpy as np

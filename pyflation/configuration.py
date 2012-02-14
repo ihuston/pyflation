@@ -1,14 +1,16 @@
 """Configuration file for harness.py
 
-Author: Ian Huston
-For license and copyright information see LICENSE.txt which was distributed with this file.
-
 The main configuration options are for logging. By changing _debug to 1 (default
 is 0) much more debugging information will be added to the log files. 
 The overall logging level can also be set using the LOGLEVEL variable. This
 level can be overridden using command line options to the scripts.
 
+
 """
+#Author: Ian Huston
+#For license and copyright information see LICENSE.txt which was distributed with this file.
+
+
 import logging
 
 ##################################################
