@@ -57,7 +57,37 @@ cpdef interpdps(object dp1_obj,  object dp1dot_obj,
               DTYPEF_t kmin, DTYPEF_t dk, DTYPEI_t kix, 
               object theta_obj,
               DTYPEI_t rmax):
-    """Interpolate values of dphi1 and dphi1dot at k=klq."""
+    """Interpolate values of dphi1 and dphi1dot at k=klq.
+    
+    Parameters
+    ----------
+    dp1_obj: numpy array
+             One dimensional numpy array of dp1 values
+             
+    dp1dot_obj: numpy array
+                One dimensional numpy array of dp1dot values
+                
+    kmin: float
+          minimum k value
+          
+    dk: float
+        difference between two k values
+        
+    kix: int
+         index of current k value
+         
+    theta_obj: numpy array
+               One dimensional numpy array of theta values
+               
+    rmax: int
+          length of k array
+          
+    Returns
+    -------
+    dpres: numpy array
+           Three dimensional array of shape (2,rmax,tmax) where tmax is length of 
+           theta array.
+    """
     cdef N.ndarray[DTYPEC_t, ndim=1] dp1 = dp1_obj
     cdef N.ndarray[DTYPEC_t, ndim=1] dp1dot = dp1dot_obj
     cdef N.ndarray[DTYPEF_t, ndim=1] theta = theta_obj
