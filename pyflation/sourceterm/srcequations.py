@@ -14,51 +14,65 @@ import numpy as np
 from pyflation.romberg import romb #@UnresolvedImport
 from pyflation.sourceterm import srccython #@UnresolvedImport
 
-if not "profile" in __builtins__:
-    def profile(f):
-        return f
 
 def klessq(k, q, theta):
-    """Return the scalar magnitude of k^i - q^i squared, where theta is angle between vectors.
+    r"""Return the scalar magnitude of k^i - q^i squared, 
+    where theta is angle between vectors.
     
     Parameters
     ----------
-    k: float
+    k : float
        Single k value to compute array for.
     
-    q: array_like
+    q : array_like
        1-d array of q values to use
      
-    theta: array_like
+    theta : array_like
            1-d array of theta values to use
            
     Returns
     -------
-    klessq: array_like
-            len(q)*len(theta) array of values for
-            |k^i - q^i|^2 = (k^2 + q^2 - 2kq cos(theta))
+    klessq : array_like
+            len(q)*len(theta) array of values
+
+    Notes
+    -----
+    The expression evaluated is
+    
+    .. math::
+    
+            |k^i - q^i|^2 = (k^2 + q^2 - 2kq \cos(\theta))
     """
     return k**2+q[..., np.newaxis]**2-2*k*np.outer(q,np.cos(theta))
 
 def klessqksq(k, q, theta):
-    """Return the scalar magnitude of k^i - q^i squared* 1/k**2, where theta is angle between vectors.
+    r"""Return the scalar magnitude of (k^i - q^i) squared times 1/k^2, 
+    where theta is angle between vectors.
     
     Parameters
     ----------
-    k: float
+    k : float
        Single k value to compute array for.
     
-    q: array_like
+    q : array_like
        1-d array of q values to use
      
-    theta: array_like
+    theta : array_like
            1-d array of theta values to use
            
     Returns
     -------
-    klessq: array_like
-            len(q)*len(theta) array of values for
-            1/k**2 * |k^i - q^i|^2 = (1 + (q/k)^2 - 2(q/k) cos(theta))
+    klessq : array_like
+            len(q)*len(theta) array of values
+            
+    Notes
+    -----
+    The expression calculated is
+    
+    .. math::
+    
+        |k^i - q^i|^2/k^2 = (1 + (q/k)^2 - 2(q/k) \cos(\theta))
+        
     """
     return 1 + (q[..., np.newaxis]/k)**2 - 2*np.outer(q/k,np.cos(theta))
 
@@ -142,24 +156,34 @@ class SlowRollSource(SourceEquations):
     
     
     def getthetaterms(self, dp1, dp1dot):
-        """Return array of integrated values for specified theta function and dphi function.
+        r"""Return array of integrated values for specified theta function and dphi function.
         
         Parameters
         ----------
-        dp1: array_like
+        dp1 : array_like
              Array of values for dphi1
         
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of values for dphi1dot
                                       
         Returns
         -------
-        theta_terms: tuple
-                     Tuple of len(k)xlen(q) shaped arrays of integration results in form
-                     (\int(sin(theta) dp1(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-                      \int(sin(theta) dp1dot(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+        theta_terms : tuple
+                     Tuple of len(k)xlen(q) shaped arrays of integration results
+                     
+        Notes
+        -----
+        The returned expression is of the form
+        
+        .. math::
+        
+            \bigg(\int(\sin(\theta) \delta\varphi_1(k-q) d\theta,
+            
+             \int(\cos(\theta)\sin(\theta) \delta\varphi_1(k-q) d\theta,
+             
+             \int(\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta,
+             
+             \int(\cos(\theta)\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta)\bigg)
                      
         """
         
@@ -226,25 +250,25 @@ class SlowRollSource(SourceEquations):
         
         Parameters
         ----------
-        bgvars: tuple
+        bgvars : tuple
                 Tuple of background field values in the form `(phi, phidot, H)`
         
-        a: float
+        a : float
            Scale factor at the current timestep, `a = ainit*exp(n)`
         
-        potentials: tuple
+        potentials : tuple
                     Tuple of potential values in the form `(U, dU, dU2, dU3)`
                     
-        dp1: array_like
+        dp1 : array_like
              Array of known dp1 values
                  
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of dpdot1 values
                  
         
         Returns
         -------
-        src_integrand: array_like
+        src_integrand : array_like
             Array containing the unintegrated source terms for all k and q modes.
             
         References
@@ -331,27 +355,35 @@ class FullSingleFieldSource(SourceEquations):
         J_integral = romb(integrand, self.deltak)
         return J_integral
     
-    
-    @profile
     def getthetaterms(self, dp1, dp1dot):
-        """Return array of integrated values for specified theta function and dphi function.
+        r"""Return array of integrated values for specified theta function and dphi function.
         
         Parameters
         ----------
-        dp1: array_like
+        dp1 : array_like
              Array of values for dphi1
         
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of values for dphi1dot
                                       
         Returns
         -------
-        theta_terms: tuple
-                     Tuple of len(k)xlen(q) shaped arrays of integration results in form
-                     (\int(sin(theta) dp1(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-                      \int(sin(theta) dp1dot(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+        theta_terms : tuple
+                     Tuple of len(k)xlen(q) shaped arrays of integration results
+        
+        Notes
+        -----
+        The returned expression is of the form
+        
+        .. math::
+        
+            \bigg(\int(\sin(\theta) \delta\varphi_1(k-q) d\theta,
+            
+             \int(\cos(\theta)\sin(\theta) \delta\varphi_1(k-q) d\theta,
+             
+             \int(\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta,
+             
+             \int(\cos(\theta)\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta)\bigg)
                      
         """
         
@@ -365,8 +397,9 @@ class FullSingleFieldSource(SourceEquations):
         lenq = len(self.k)
         for n in xrange(len(self.k)):
             #klq = klessq(onek, q, theta)
-            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, n, self.theta, lenq)
-            
+            dphi_res = srccython.interpdps(dp1, dp1dot, self.kmin, self.deltak, 
+                                           n, self.theta, lenq)
+
             theta_terms[0,n] = romb(sinth*dphi_res[0], dx=self.dtheta)
             theta_terms[1,n] = romb(cossinth*dphi_res[0], dx=self.dtheta)
             theta_terms[2,n] = romb(sinth*dphi_res[1], dx=self.dtheta)
@@ -443,25 +476,25 @@ class FullSingleFieldSource(SourceEquations):
         
         Parameters
         ----------
-        bgvars: tuple
+        bgvars : tuple
                 Tuple of background field values in the form `(phi, phidot, H)`
         
-        a: float
+        a : float
            Scale factor at the current timestep, `a = ainit*exp(n)`
         
-        potentials: tuple
+        potentials : tuple
                     Tuple of potential values in the form `(U, dU, dU2, dU3)`
                 
-        dp1: array_like
+        dp1 : array_like
              Array of known dp1 values
                  
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of dpdot1 values
                  
         
         Returns
         -------
-        src_integrand: array_like
+        src_integrand : array_like
             Array containing the unintegrated source terms for all k and q modes.
             
         References
@@ -503,20 +536,30 @@ class SelectedkOnlyFullSource(FullSingleFieldSource):
         
         Parameters
         ----------
-        dp1: array_like
+        dp1 : array_like
              Array of values for dphi1
         
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of values for dphi1dot
                                       
         Returns
         -------
-        theta_terms: tuple
+        theta_terms : tuple
                      Tuple of len(k)xlen(q) shaped arrays of integration results in form
-                     (\int(sin(theta) dp1(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-                      \int(sin(theta) dp1dot(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+
+        Notes
+        -----
+        The returned expression is of the form
+        
+        .. math::
+        
+            \bigg(\int(\sin(\theta) \delta\varphi_1(k-q) d\theta,
+            
+             \int(\cos(\theta)\sin(\theta) \delta\varphi_1(k-q) d\theta,
+             
+             \int(\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta,
+             
+             \int(\cos(\theta)\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta)\bigg)
                      
         """
         
@@ -570,20 +613,30 @@ class SelectedkOnlySlowRollSource(SlowRollSource):
         
         Parameters
         ----------
-        dp1: array_like
+        dp1 : array_like
              Array of values for dphi1
         
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of values for dphi1dot
                                       
         Returns
         -------
-        theta_terms: tuple
+        theta_terms : tuple
                      Tuple of len(k)xlen(q) shaped arrays of integration results in form
-                     (\int(sin(theta) dp1(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1(k-q) dtheta,
-                      \int(sin(theta) dp1dot(k-q) dtheta,
-                      \int(cos(theta)sin(theta) dp1dot(k-q) dtheta)
+        
+        Notes
+        -----
+        The returned expression is of the form
+        
+        .. math::
+        
+            \bigg(\int(\sin(\theta) \delta\varphi_1(k-q) d\theta,
+            
+             \int(\cos(\theta)\sin(\theta) \delta\varphi_1(k-q) d\theta,
+             
+             \int(\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta,
+             
+             \int(\cos(\theta)\sin(\theta) \delta\varphi^\dagger_1(k-q) d\theta)\bigg)
                      
         """
         
@@ -622,25 +675,25 @@ class ConvolutionOnlyFullSource(SelectedkOnlyFullSource):
         
         Parameters
         ----------
-        bgvars: tuple
+        bgvars : tuple
                 Tuple of background field values in the form `(phi, phidot, H)`
         
-        a: float
+        a : float
            Scale factor at the current timestep, `a = ainit*exp(n)`
         
-        potentials: tuple
+        potentials : tuple
                     Tuple of potential values in the form `(U, dU, dU2, dU3)`
                 
-        dp1: array_like
+        dp1 : array_like
              Array of known dp1 values
                  
-        dp1dot: array_like
+        dp1dot : array_like
                 Array of dpdot1 values
                  
         
         Returns
         -------
-        src_integrand: array_like
+        src_integrand : array_like
             Array containing the unintegrated source terms for all k and q modes.
             
         References
@@ -664,3 +717,4 @@ class ConvolutionOnlyFullSource(SelectedkOnlyFullSource):
         
         src = 1/((2*np.pi)**2 ) * J_result
         return src
+    
