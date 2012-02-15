@@ -285,3 +285,7 @@ epub_copyright = u'2012, Ian Huston'
 
 # Allow duplicate toc entries.
 #epub_tocdup = True
+
+# ---Options for numpydoc --------------------------------------
+#Show module and class members in summaries
+numpydoc_show_class_members = False
