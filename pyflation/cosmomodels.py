@@ -1000,7 +1000,7 @@ class MultiStageDriver(CosmologicalModel):
         N : scalar, number of efolds after the end of inflation until today.
             N = ln (a_today/a_end) where a_end is scale factor at end of inflation.
             
-        Further Information
+        References
         -------------------
         See Huston, arXiv: 1006.5321, 
         Liddle and Lyth, Cambridge University Press 2000, or 
@@ -2011,16 +2011,19 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
     It should be remembered that these models with fixed ainit are equivalent
     to changing the number of efoldings from the end of inflation until today.
     
-    Extra argument in initialisation
-    --------------------------------
-    ainit - float, value of ainit to fix no matter what the value of H at the
-            end of inflation.
-    
     """ 
 
     def __init__(self, *args, **kwargs):
         """Extra keyword argument ainit is used to set value of ainit no matter
-        what the value of H at the end of inflation."""
+        what the value of H at the end of inflation.
+        
+        Parameters
+        ----------
+        ainit : float
+               value of ainit to fix no matter what the value of H at the
+               end of inflation.
+    
+        """
         super(FixedainitTwoStage, self).__init__(*args, **kwargs)
         if "ainit" in kwargs:
             self.fixedainit = kwargs["ainit"]
