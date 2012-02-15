@@ -33,6 +33,17 @@ The pyflation.cosmographs module contains helper functions to use
 with the Matplotlib package (http://matplotlib.sf.net) but this is not a
 requirement of the core modules. 
 
+Downloading Pyflation
+=====================
+Pyflation can be downloaded from the main website at http://pyflation.ianhuston.net or from
+the Python Package Index at http://pypi.python.org/pypi/pyflation.
+
+The latest development version is also available as a git and mercurial repository
+at https://bitbucket.org/ihuston/pyflation/overview. 
+For example to clone the git repository use::
+    
+    $ git clone git@bitbucket.org:ihuston/pyflation.git
+
 Basic Installation
 ==================
  
@@ -79,15 +90,3 @@ Execution of the other scripts should be done from within the new run directory,
 i.e. where run_config.py resides, or the run directory should be added to the
 PYTHONPATH environment variable. 
 
-It is also possible to use the Bazaar version control system to keep track of
-changes made and propogate them to newly created runs. This method requires bzr 
-to be available. In the unpacked directory run::
-
-    $ bzr init
-    $ bzr add
-    $ bzr commit -m "New Install"
-
-to initialise a Bazaar branch with the current directory as its contents.
-To start a new run with the code copied into the run directory use the 
-bin/pyflation-newrun.py script with the --copy-code and --codedir options and 
-the --bzr flag to specify use of Bazaar.
