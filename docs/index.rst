@@ -3,8 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 *************************************
-Welcome to Pyflation's documentation!
+Pyflation 
 *************************************
+Pyflation is a Python package for calculating cosmological perturbations during an inflationary 
+expansion of the universe.
+
+Pyflation was created by `Ian Huston <http://www.ianhuston.net>`_ while at `Queen Mary, University of London 
+<http://www.qmul.ac.uk>`_.
+
 Introduction
 ============
 
