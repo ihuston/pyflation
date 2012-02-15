@@ -57,17 +57,6 @@ class CosmologicalModel(object):
     
     All cosmological model classes are subclassed from this one.
     
-    Initialization arguments
-    ------------------------
-    ystart - array_like, initial values for y variables
-    simtstart - float, initial overall time for simulation to start
-    tstart - array, individual start times for each k mode
-    tstartindex - array, individual start time indices for each k mode
-    tend - float, overall end time for simulation
-    tstep_wanted - float, size of time step to use in evolution
-    solver - string, the name of the rk4 driver function to use
-    potential_func - string, the name of the potential function in cmpotentials
-    pot_params - dict, any modifications to the default parameters in the potential
     
     """
     solverlist = ["rkdriver_tsix"]
@@ -75,7 +64,43 @@ class CosmologicalModel(object):
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
                  potential_func=None, pot_params=None, nfields=1, **kwargs):
-        """Initialize model variables, some with default values. Default solver is odeint."""
+        """Initialize model variables, some with default values. 
+        
+        Parameters
+        ----------
+        ystart: array_like
+                initial values for y variables
+                
+        simtstart: float, optional
+                   initial overall time for simulation to start, default is 0.0.
+                   
+        tstart: array, optional
+                individual start times for each k mode, default is 0.0
+                
+        tstartindex: array, optional
+                     individual start time indices for each k mode, default is 0.0.
+                     
+        tend: float, optional
+              overall end time for simulation, default is 83.0
+              
+        tstep_wanted: float, optional
+                      size of time step to use in evolution, default is 0.01
+                      
+        solver: string, optional
+                the name of the rk4 driver function to use, default is "rkdriver_tsix"
+                
+        potential_func: string, optional
+                        the name of the potential function in cmpotentials,
+                        default is msqphisq
+                        
+        pot_params: dict, optional
+                    contains modifications to the default parameters in the potential,
+                    default is empty dictionary.
+                    
+        nfields: int, optional
+                 the number of fields in the model, default is 1.
+        
+        """
         #Start logging
         self._log = logging.getLogger('%s.%s' % (__name__, self.__class__.__name__))
         
@@ -256,8 +281,8 @@ class CosmologicalModel(object):
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
         """Create a new hdf5 file with the structure capable of holding results.
            
-           Arguments
-           ---------
+           Parameters
+           ----------
            filename: string
                      Path including filename of file to create
 
@@ -328,8 +353,8 @@ class CosmologicalModel(object):
     def saveresultsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
         
-        Arguments
-        ---------
+        Parameters
+        ----------
         rf: filelike
             File to save results in
 
@@ -965,7 +990,7 @@ class MultiStageDriver(CosmologicalModel):
         """Calculate the number of efolds after inflation given the reheating
         temperature and assuming standard calculation of radiation and matter phases.
         
-        Arguments
+        Parameters
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -995,7 +1020,7 @@ class MultiStageDriver(CosmologicalModel):
         caution. A more correct approach is to call find_efolds_after_inflation directly
         and to use the result as required. 
         
-        Arguments
+        Parameters
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -1014,7 +1039,7 @@ class MultiStageDriver(CosmologicalModel):
         """Given the Hubble parameter at the end of inflation and at the end of reheating,
         and the scale factor at the end of inflation, calculate the scale factor today.
         
-        Arguments
+        Parameters
         ----------
         Hend : scalar, value of Hubble parameter at end of inflation
         Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
@@ -1039,8 +1064,8 @@ class MultiStageDriver(CosmologicalModel):
     def findkcrossing(self, k, t, H, factor=None):
         """Given k, time variable and Hubble parameter, find when mode k crosses the horizon.
         
-        Arguments
-        ---------
+        Parameters
+        ----------
         k: float
            Single k value to compute crossing time with
 
@@ -1079,8 +1104,8 @@ class MultiStageDriver(CosmologicalModel):
     def findallkcrossings(self, t, H):
         """Iterate over findkcrossing to get full list
         
-        Arguments
-        ---------
+        Parameters
+        ----------
         t: array
            Array of t values to calculate over
 
@@ -1098,8 +1123,8 @@ class MultiStageDriver(CosmologicalModel):
     def findHorizoncrossings(self, factor=1):
         """Find horizon crossing time indices and efolds for all ks
         
-        Arguments
-        ---------
+        Parameters
+        ----------
         factor: float
                 Value of coefficient to calculate crossing time, k=a*H*factor
 
@@ -1374,7 +1399,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         times for the k modes. Then the initial conditions are set for the first order variables.
         Finally the first order model is run and the results are saved if required.
         
-        Arguments
+        Parameters
         ----------
         saveresults: boolean, optional
                      Should results be saved at the end of the run. Default is False.
@@ -1467,7 +1492,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         The result is stored as the instance variable m.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Arguments
+        Parameters
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1788,7 +1813,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Arguments
+        Parameters
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
@@ -1944,7 +1969,7 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         The result is stored as the instance variable self.deltaphi but will be recomputed
         if `recompute` is True.
         
-        Arguments
+        Parameters
         ----------
         recompute: boolean, optional
                    Should the values be recomputed? Default is False.
