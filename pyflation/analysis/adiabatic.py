@@ -20,7 +20,7 @@ def Pphi_modes(m):
     and requires only the model as an argument. Provided for compatibility 
     with previous versions.
     
-    Arguments
+    Parameters
     ---------
     m: Cosmomodels instance
        Model class instance from which the yresult variable will be used to 
@@ -48,8 +48,8 @@ def Pphi_matrix(modes, axis):
     For multifield systems the full crossterm matrix is returned which 
     has shape nfields*nfields. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     modes: array_like
            Mode matrix of first order perturbations. Component array should
            have two dimensions of length nfields.
@@ -84,8 +84,8 @@ def Pphi_matrix(modes, axis):
 def findns(sPr, k, kix, running=False):
     """Return the value of n_s
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     sPr: array_like
            Power spectrum of scalar curvature perturbations at a specific time
            This should be the *scaled* power spectrum i.e.
@@ -128,8 +128,8 @@ def findns(sPr, k, kix, running=False):
 def findHorizoncrossings(m, factor=1):
     """Find horizon crossing for all ks
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        Model for which to calculate horizon crossings
 
@@ -155,8 +155,8 @@ def Pr_spectrum(phidot, modes, axis):
     $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
     m.Pr. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
     
@@ -207,8 +207,8 @@ def Pr(m, tix=None, kix=None):
     The full calculation is done in the Pr_spectrum function in the 
     pyflation.analysis.adiabatic module.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        Model class instance from which the yresult variable will be used to 
        calculate P_R.
@@ -255,8 +255,8 @@ def scaled_Pr(m, tix=None, kix=None):
     This is the scaled power spectrum which is related to the unscaled version by
     $\mathcal{P}_\mathcal{R} = k^3/(2pi^2) P_\mathcal{R}$. 
      
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        Model class instance from which the yresult variable will be used to 
        calculate P_R.
@@ -284,8 +284,8 @@ def Pzeta(m, tix=None, kix=None):
     This is the unscaled version $P_\zeta$ which is related to the scaled version by
     $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        model containing yresult with which to calculate spectrum
     
@@ -317,8 +317,8 @@ def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis):
     This is the unscaled version $P_\zeta$ which is related to the scaled version by
     $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -360,8 +360,8 @@ def scaled_Pzeta(m, tix=None, kix=None):
     This is the scaled power spectrum which is related to the unscaled version by
     $\mathcal{P}_\zeta = k^3/(2pi^2) P_\zeta$. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        model containing yresult with which to calculate spectrum
         
@@ -394,8 +394,8 @@ def Pr_spectrum_from_Pphimodes(phidot, Pphi_modes, axis):
     $\mathcal{P}_R = k^3/(2pi^2) P_R$. Note that result is stored as the instance variable
     m.Pr. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
     

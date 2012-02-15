@@ -12,8 +12,8 @@ import numpy as np
 def kscaling(k, kix=None):
     """Return the k scaling for power spectrum calculations.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     k: array
        Array of k values to use
        
@@ -39,8 +39,8 @@ def kscaling(k, kix=None):
 def spectral_index(y, k, kix, running=False):
     """Return the value of spectral index (and running) of y at k[kix]
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     y: array_like
        Array of values 
        The array should be one-dimensional indexed by the x values.
@@ -105,7 +105,7 @@ def getmodematrix(y, nfields, ix=None, ixslice=None):
     """Helper function to reshape flat nfield^2 long y variable into nfield*nfield mode
     matrix. Returns a view of the y array (changes will be reflected in underlying array).
     
-    Arguments
+    Parameters
     ----------
     y: array
        Array of y values in which is nfields^2 long in dimension specified by ix
@@ -146,8 +146,8 @@ def getmodematrix(y, nfields, ix=None, ixslice=None):
 def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
     """Flatten the mode matrix given into nfield^2 long vector.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     modematrix: array
                 Array of values with two nfields long dimension
 
@@ -186,8 +186,8 @@ def flattenmodematrix(modematrix, nfields, ix1=None, ix2=None):
 def components_from_model(m, tix=None, kix=None):
     """Get the component variables of delta Prel from a model instance.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels model instance
        The model instance with which to perform the calculation
        
@@ -258,8 +258,8 @@ def makespectrum(modes_I, axis):
     Spectrum = \Sum_I modes_I * modes_I.conjugate, 
     where sum over I is on the dimension denoted by axis
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     modes_I: array_like
              Array of (complex) values to calculate spectrum with.
     
@@ -278,8 +278,8 @@ def makespectrum(modes_I, axis):
 def correct_shapes(Vphi, phidot, H, modes, modesdot, axis):
     """Return variables with the correct shapes for calculation.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           

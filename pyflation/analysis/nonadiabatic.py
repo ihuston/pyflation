@@ -15,8 +15,8 @@ import utilities
 def soundspeeds(Vphi, phidot, H):
     """Sound speeds of the background fields
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -42,8 +42,8 @@ def soundspeeds(Vphi, phidot, H):
 def totalsoundspeed(Vphi, phidot, H, axis):
     """Total sound speed of the fluids
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -78,8 +78,8 @@ def totalsoundspeed(Vphi, phidot, H, axis):
 def Pdots(Vphi, phidot, H):
     """Derivative of pressure of the background fields
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -105,8 +105,8 @@ def Pdots(Vphi, phidot, H):
 def fullPdot(Vphi, phidot, H, axis=-1):
     """Combined derivative in e-fold time of the pressure of the fields.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -126,8 +126,8 @@ def fullPdot(Vphi, phidot, H, axis=-1):
 def rhodots(phidot, H):
     """Derivative in e-fold time of the energy densities of the individual fields.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
             
@@ -142,8 +142,8 @@ def rhodots(phidot, H):
 def fullrhodot(phidot, H, axis=-1):
     """Combined derivative in e-fold time of the energy density of the field.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
             
@@ -162,8 +162,8 @@ def fullrhodot(phidot, H, axis=-1):
 def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
     """Matrix of the first order perturbed energy densities of the field components.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -214,8 +214,8 @@ def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
 def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     """Matrix of the first order perturbed pressure of the field components.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -265,8 +265,8 @@ def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
 def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -318,8 +318,8 @@ def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed non-adiabatic pressure of the fields given as quantum mode functions.
     
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -362,8 +362,8 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis):
     """Isocurvature perturbation S of the fields given as quantum mode functions.
     
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -398,8 +398,8 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis):
 def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the perturbed energy density.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -438,8 +438,8 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
 def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -478,8 +478,8 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
 def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -516,8 +516,8 @@ def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
 def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed non-adiabatic pressure.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -554,8 +554,8 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
 def Sspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the isocurvature perturbation S.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -594,8 +594,8 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Assumes that k dimension is last.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -637,8 +637,8 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Assumes that k dimension is last.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -679,8 +679,8 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Assumes that k dimension is last.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     Vphi: array_like
           First derivative of the potential with respect to the fields
           
@@ -723,8 +723,8 @@ def scaled_S_from_model(m, tix=None, kix=None):
     This is the scaled power spectrum which is related to the unscaled version by
     $\mathcal{P}_\mathcal{S} = k^3/(2pi^2) P_\mathcal{S}$. 
      
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels instance
        Model class instance from which the yresult variable will be used to 
        calculate P_R.
@@ -751,8 +751,8 @@ def scaled_S_from_model(m, tix=None, kix=None):
 def slope_of_S_spectrum(scaled_S, k, kix=None, running=False):
     """Return the value of the slope of the k-scaled spectrum of S
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     scaled_S: array_like
               Power spectrum of isocurvature perturbations at a specific time
               This should be the *scaled* power spectrum i.e.
@@ -796,8 +796,8 @@ def slope_of_S_spectrum(scaled_S, k, kix=None, running=False):
 def dprel_from_model(m, tix=None, kix=None):
     """Get the spectrum of delta Prel from a model instance.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     m: Cosmomodels model instance
        The model instance with which to perform the calculation
        
@@ -833,8 +833,8 @@ def S_alternate(phidot, Pphi_modes, axis):
     This is the unscaled version $P_S$ which is related to the scaled version by
     $\mathcal{P}_S = k^3/(2pi^2) P_S$. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
     
@@ -888,8 +888,8 @@ def scaled_S_alternate_spectrum(phidot, Pphi_modes, axis, k):
     This is the scaled version $\mathcal{P}_\bar{S} which is related to the unscaled version by
     $\mathcal{P}_\bar{S} = k^3/(2pi^2) P_\bar{S}$. 
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     phidot: array_like
             First derivative of the field values with respect to efold number N.
     
