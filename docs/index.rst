@@ -2,9 +2,10 @@
    sphinx-quickstart on Tue Feb 14 13:57:23 2012.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
-*************************************
+   
+*********
 Pyflation 
-*************************************
+*********
 Pyflation is a Python package for calculating cosmological perturbations during an inflationary 
 expansion of the universe.
 
