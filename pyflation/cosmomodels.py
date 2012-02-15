@@ -68,36 +68,36 @@ class CosmologicalModel(object):
         
         Parameters
         ----------
-        ystart: array_like
+        ystart : array_like
                 initial values for y variables
                 
-        simtstart: float, optional
+        simtstart : float, optional
                    initial overall time for simulation to start, default is 0.0.
                    
-        tstart: array, optional
+        tstart : array, optional
                 individual start times for each k mode, default is 0.0
                 
-        tstartindex: array, optional
+        tstartindex : array, optional
                      individual start time indices for each k mode, default is 0.0.
                      
-        tend: float, optional
+        tend : float, optional
               overall end time for simulation, default is 83.0
               
-        tstep_wanted: float, optional
+        tstep_wanted : float, optional
                       size of time step to use in evolution, default is 0.01
                       
-        solver: string, optional
+        solver : string, optional
                 the name of the rk4 driver function to use, default is "rkdriver_tsix"
                 
-        potential_func: string, optional
+        potential_func : string, optional
                         the name of the potential function in cmpotentials,
                         default is msqphisq
                         
-        pot_params: dict, optional
+        pot_params : dict, optional
                     contains modifications to the default parameters in the potential,
                     default is empty dictionary.
                     
-        nfields: int, optional
+        nfields : int, optional
                  the number of fields in the model, default is 1.
         
         """
@@ -281,27 +281,27 @@ class CosmologicalModel(object):
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
         """Create a new hdf5 file with the structure capable of holding results.
            
-           Parameters
-           ----------
-           filename: string
-                     Path including filename of file to create
-
-           grpname: string, optional
-                    Name of the HDF5 group to create, default is "results"
-
-           yresultshape: tuple, optional
-                         Shape of yresult variable to store
-           
-           hdf5complevel:  integer, optional
-                           Compression level to use with PyTables, default 2.
-
-           hdf5complib: string, optional
-                        Compression library to use with PyTables, default "blosc".
- 
-           Returns
-           -------
-           rf: file handle
-               Handle of file created 
+        Parameters
+        ----------
+        filename : string
+                   Path including filename of file to create
+    
+        grpname : string, optional
+                  Name of the HDF5 group to create, default is "results"
+    
+        yresultshape : tuple, optional
+                       Shape of yresult variable to store
+          
+        hdf5complevel :  integer, optional
+                         Compression level to use with PyTables, default 2.
+    
+        hdf5complib : string, optional
+                      Compression library to use with PyTables, default "blosc".
+    
+        Returns
+        -------
+        rf : file handle
+             Handle of file created 
         """
                     
         try:
@@ -355,10 +355,10 @@ class CosmologicalModel(object):
         
         Parameters
         ----------
-        rf: filelike
+        rf : filelike
             File to save results in
 
-        grpname: string, optional
+        grpname : string, optional
                  Name of the HDF5 group to create in the file
 
         """
@@ -421,8 +421,8 @@ class BasicBgModel(CosmologicalModel):
     """Basic model with background equations
         Array of dependent variables y is given by:
         
-       y[0] - \phi_0 : Background inflaton
-       y[1] - d\phi_0/d\eta : First deriv of \phi
+       y[0] - phi_0 : Background inflaton
+       y[1] - dphi_0/deta : First deriv of \phi
        y[2] - a : Scale Factor
     """
     
@@ -1001,7 +1001,7 @@ class MultiStageDriver(CosmologicalModel):
             N = ln (a_today/a_end) where a_end is scale factor at end of inflation.
             
         References
-        -------------------
+        ----------
         See Huston, arXiv: 1006.5321, 
         Liddle and Lyth, Cambridge University Press 2000, or 
         Peiris and Easther, JCAP 0807 (2008) 024, arXiv:0805.2154, 
@@ -1022,13 +1022,19 @@ class MultiStageDriver(CosmologicalModel):
         
         Parameters
         ----------
-        Hend : scalar, value of Hubble parameter at end of inflation
-        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
-        a_0 : scalar (default=1), value of scale factor today
+        Hend : scalar
+               value of Hubble parameter at end of inflation.
+               
+        Hreh : scalar, optional
+               value of Hubble parameter at end of reheating, default is Hend.
+                
+        a_0 : scalar, optional
+              value of scale factor today, default is 1. 
         
         Returns
         -------
-        a_end : scalar, scale factor at the end of inflation
+        a_end : scalar
+                scale factor at the end of inflation.
         
         """
         N_after = self.find_efolds_after_inflation(Hend, Hreh)
@@ -1041,14 +1047,20 @@ class MultiStageDriver(CosmologicalModel):
         
         Parameters
         ----------
-        Hend : scalar, value of Hubble parameter at end of inflation
-        Hreh : scalar (default=Hend), value of Hubble parameter at end of reheating
-        a_end : scalar (default calculated from tresult), value of scale factor 
-                at the end of inflation
+        Hend : scalar
+               value of Hubble parameter at end of inflation
+               
+        Hreh : scalar, optional
+               value of Hubble parameter at end of reheating, default is Hend.
+                
+        a_end : scalar, optional
+                value of scale factor at the end of inflation, default is calculated
+                from results. 
         
         Returns
         -------
-        a_0 : scalar, scale factor today
+        a_0 : scalar
+              scale factor today
         
         """
         if a_end is None:
@@ -1066,23 +1078,23 @@ class MultiStageDriver(CosmologicalModel):
         
         Parameters
         ----------
-        k: float
-           Single k value to compute crossing time with
+        k : float
+            Single k value to compute crossing time with
 
-        t: array
-           Array of time values
+        t : array
+            Array of time values
 
-        H: array
-           Array of values of the Hubble parameter
+        H : array
+            Array of values of the Hubble parameter
 
-        factor: float, optional
-                coefficient of crossing k = a*H*factor
+        factor : float, optional
+                 coefficient of crossing k = a*H*factor
 
         Returns
         -------
-        kcrindex, kcrefold: tuple
-                            Tuple containing k cross index (in t variable) and the efold number
-                            e.g. t[kcrindex]
+        kcrindex, kcrefold : tuple
+                             Tuple containing k cross index (in t variable) and the efold number
+                             e.g. t[kcrindex]
 
         """
         #threshold
@@ -1106,17 +1118,17 @@ class MultiStageDriver(CosmologicalModel):
         
         Parameters
         ----------
-        t: array
-           Array of t values to calculate over
+        t : array
+            Array of t values to calculate over
 
-        H: array
-           Array of Hubble parameter values, should be the same shape as t
+        H : array
+            Array of Hubble parameter values, should be the same shape as t
 
         Returns
         -------
-        kcrossings: array
-                    Array of (kcrindex, kcrefold) pairs of index (in to t) and efold number
-                    at which each k in self.k crosses the horizon (k=a*H).
+        kcrossings : array
+                     Array of (kcrindex, kcrefold) pairs of index (in to t) and efold number
+                     at which each k in self.k crosses the horizon (k=a*H).
         """
         return np.array([self.findkcrossing(onek, t, H) for onek in self.k])
     
@@ -1125,13 +1137,14 @@ class MultiStageDriver(CosmologicalModel):
         
         Parameters
         ----------
-        factor: float
-                Value of coefficient to calculate crossing time, k=a*H*factor
+        factor : float
+                 Value of coefficient to calculate crossing time, k=a*H*factor
 
         Returns
         -------
-        hcrossings: array
-                    Array of (kcrindex, kcrefold) pairs of time index and efold number pairs
+        hcrossings : array
+                     Array of (kcrindex, kcrefold) pairs of time index 
+                     and efold number pairs
                 
         
         """
@@ -1401,13 +1414,13 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         Parameters
         ----------
-        saveresults: boolean, optional
-                     Should results be saved at the end of the run. Default is False.
+        saveresults : boolean, optional
+                      Should results be saved at the end of the run. Default is False.
                      
         Returns
         -------
-        filename: string
-                  name of the results file if any
+        filename : string
+                   name of the results file if any
         """
         #Run bg model
         self.runbg()
@@ -1494,13 +1507,13 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         Parameters
         ----------
-        recompute: boolean, optional
-                   Should the values be recomputed? Default is False.
+        recompute : boolean, optional
+                    Should the values be recomputed? Default is False.
                    
         Returns
         -------
-        deltaphi: array_like, dtype: complex128
-                  Array of $\delta\phi$ values for all timesteps, fields and k modes.
+        deltaphi : array_like, dtype: complex128
+                   Array of $\delta\phi$ values for all timesteps, fields and k modes.
         """
         
         if not hasattr(self, "_deltaphi") or recompute:
@@ -1815,13 +1828,13 @@ class SOCanonicalThreeStage(MultiStageDriver):
         
         Parameters
         ----------
-        recompute: boolean, optional
-                   Should the values be recomputed? Default is False.
+        recompute : boolean, optional
+                    Should the values be recomputed? Default is False.
                    
         Returns
         -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
+        deltaphi : array_like
+                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
         
         if not hasattr(self, "_deltaphi") or recompute:
@@ -1971,13 +1984,13 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         
         Parameters
         ----------
-        recompute: boolean, optional
-                   Should the values be recomputed? Default is False.
+        recompute : boolean, optional
+                    Should the values be recomputed? Default is False.
                    
         Returns
         -------
-        deltaphi: array_like
-                  Array of $\delta\phi$ values for all timesteps and k modes.
+        deltaphi : array_like
+                   Array of $\delta\phi$ values for all timesteps and k modes.
         """
         if not hasattr(self, "deltaphi") or recompute:
             dp1 = self.dp1
@@ -2020,8 +2033,8 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         Parameters
         ----------
         ainit : float
-               value of ainit to fix no matter what the value of H at the
-               end of inflation.
+                value of ainit to fix no matter what the value of H at the
+                end of inflation.
     
         """
         super(FixedainitTwoStage, self).__init__(*args, **kwargs)
