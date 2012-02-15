@@ -1,4 +1,4 @@
-"""Configuration file for harness.py
+"""Configuration file
 
 The main configuration options are for logging. By changing _debug to 1 (default
 is 0) much more debugging information will be added to the log files. 

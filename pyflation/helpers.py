@@ -17,7 +17,23 @@ import os.path
 import logging
 
 def nanfillstart(a, l):
-    """Return an array of length l by appending array a to end of block of NaNs along axis 0."""
+    """Return an array of length l by appending array a 
+    to end of block of NaNs along axis 0.
+    
+    Parameters
+    ----------
+    a: numpy array
+       array to append to end of block of NaNs.
+       
+    l: integer
+       length of the new array to return.
+       
+    Returns
+    -------
+    c: numpy_array
+       array of length l with initial values filled with NaNs
+       and array a at the end.
+    """
     if len(a) >= l:
         return a #Array already as long or longer than required
     else:
@@ -29,6 +45,24 @@ def nanfillstart(a, l):
 
 def getkend(kinit, deltak, numsoks):
     """Correct kend value given the values of kinit, deltak and numsoks.
+    
+    Parameters
+    ----------
+    kinit: float
+           Initial k value in range.
+    
+    deltak: float
+            Difference between two k values in range.
+            
+    numsoks: integer
+             The number of second order k modes required.
+             
+    Returns
+    -------
+    kend: float
+          The value of the end of the first order k range required so that
+          the second order k range has numsoks modes in it.
+          
     """
     #Change from numsoks-1 to numsoks to include extra point when deltak!=kinit
     return 2*((numsoks)*deltak + kinit)

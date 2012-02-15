@@ -156,8 +156,8 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
                        size="large", ls=line_prop_default, halfticks=False):
     """Create a figure using \mathcal{N} on the x-axis.
     
-    Arguments 
-    ---------
+    Parameters
+    ----------
     ts: list of arrays
         x-axis values 
     
@@ -232,8 +232,8 @@ def generic_figure(xs, ys, fig=None, plot_fn=None, models_legends=None, xlabel=N
                        size="large", ls=line_prop_default, halfticks=False):
     """Create a generic figure with standard x-axis.
     
-    Arguments 
-    ---------
+    Parameters
+    ----------
     xs: list of arrays
         x-axis values 
     
