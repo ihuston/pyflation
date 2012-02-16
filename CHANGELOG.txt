@@ -1,5 +1,5 @@
 ***********************
-CHANGELOG for Pyflation
+Changelog for Pyflation
 ***********************
 
 * v0.2.1 16/02/2012 - Added Sphinx documentation in docs directory. Tidied up 
