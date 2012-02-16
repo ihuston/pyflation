@@ -9,3 +9,4 @@ build
 # Individual Cython generated C files
 romberg.c
 srccython.c
+/dist
