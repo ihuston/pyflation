@@ -531,7 +531,7 @@ class SelectedkOnlyFullSource(FullSingleFieldSource):
             self.kix_wanted = [52] #Hard coded for quick hack.
         
     def getthetaterms(self, dp1, dp1dot):
-        """Return array of integrated values for specified theta function and dphi function.
+        r"""Return array of integrated values for specified theta function and dphi function.
         This modified version only returns the result for one k value.
         
         Parameters
@@ -609,7 +609,7 @@ class SelectedkOnlySlowRollSource(SlowRollSource):
             self.kix_wanted = [52] #Hard coded for quick hack.
             
     def getthetaterms(self, dp1, dp1dot):
-        """Return array of integrated values for specified theta function and dphi function.
+        r"""Return array of integrated values for specified theta function and dphi function.
         
         Parameters
         ----------

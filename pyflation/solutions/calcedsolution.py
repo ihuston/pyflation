@@ -50,11 +50,14 @@ class CalcedSolution(GeneralSolution):
     
     
 class NoPhaseBunchDaviesCalced(CalcedSolution):
-    """Calced solution using the Bunch Davies initial conditions as the first order 
+    r"""Calced solution using the Bunch Davies initial conditions as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1 = alpha/sqrt(k) 
-    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+    .. math::
+        \delta\varphi_1 = \alpha/\sqrt(k)
+         
+        \delta\varphi^\dagger_1 = -\alpha/\sqrt(k) - \alpha/\beta \sqrt(k) i
+         
     """
         
     def __init__(self, *args, **kwargs):
@@ -89,11 +92,14 @@ class NoPhaseBunchDaviesCalced(CalcedSolution):
         return super(NoPhaseBunchDaviesCalced, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
 
 class SimpleInverseCalced(CalcedSolution):
-    """Calced solution using a simple inverse as the first order 
+    r"""Calced solution using a simple inverse as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1(x) = 1/x 
-    \dN{\delta\varphi_1} = 1/x 
+    .. math::
+        \delta\varphi_1(x) = 1/x
+         
+        \delta\varphi^\dagger_1 = 1/x
+         
     """
         
     def __init__(self, *args, **kwargs):
@@ -110,12 +116,15 @@ class SimpleInverseCalced(CalcedSolution):
         return dp1dot
     
 class ImaginaryInverseCalced(CalcedSolution):
-    """Calced solution using an imaginary inverse as the first order 
+    r"""Calced solution using an imaginary inverse as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1(x) = 1/x*1j 
-    \dN{\delta\varphi_1} = 1/x*1j
-    where j=sqrt(-1)
+    .. math::
+        \delta\varphi_1(x) = 1/x i
+         
+        \delta\varphi^\dagger_1 = 1/x i
+        
+    where :math:`i=sqrt(-1)`.
     """
         
     def __init__(self, *args, **kwargs):

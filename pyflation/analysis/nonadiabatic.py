@@ -17,18 +17,27 @@ def soundspeeds(Vphi, phidot, H):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
-       
+    H : array_like
+        The Hubble parameter
+    
+    Returns
+    -------
+    calphasq : array
+               sound speed (squared) of the background fields
+    
+    Notes
+    -----   
     All the arguments should have the same number of dimensions. Vphi and phidot
     should be arrays of the same size, but H should have a dimension of size 1 
     corresponding to the "field" dimension of the other variables.
+    
+    
     """
     try:
         calphasq = 1 + 2*Vphi/(3*H**2*phidot)
@@ -44,17 +53,17 @@ def totalsoundspeed(Vphi, phidot, H, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    axis: integer
-          Index of dimension to sum over (field dimension).
+    axis : integer
+           Index of dimension to sum over (field dimension).
        
     All the arguments should have the same number of dimensions. Vphi and phidot
     should be arrays of the same size, but H should have a dimension of size 1 
@@ -62,8 +71,8 @@ def totalsoundspeed(Vphi, phidot, H, axis):
     
     Returns
     -------
-    csq: array_like
-         The total sound speed of the fluid, csq = P'/rho'
+    csq : array_like
+          The total sound speed of the fluid, csq = P'/rho'
     """
     
     try:
@@ -80,15 +89,22 @@ def Pdots(Vphi, phidot, H):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
+    Returns
+    -------
+    Pdotalpha : array
+                Derivative of the pressure for the background fields
+                
+    Notes
+    -----
     All the arguments should have the same number of dimensions. Vphi and phidot
     should be arrays of the same size, but H should have a dimension of size 1 
     corresponding to the "field" dimension of the other variables.
@@ -107,19 +123,22 @@ def fullPdot(Vphi, phidot, H, axis=-1):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
     
-    axis: integer, optional
-          Specifies which axis is the field dimension, default is the last one.
+    axis : integer, optional
+           Specifies which axis is the field dimension, default is the last one.
             
-    
+    Returns
+    -------
+    fullPdot : array
+               The deriative of the pressure of the fields summed over the fields.
     """
     return np.sum(Pdots(Vphi, phidot, H), axis=axis)
 
@@ -128,14 +147,19 @@ def rhodots(phidot, H):
     
     Parameters
     ----------
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
     Both arrays should have the same number of dimensions, but H should have a 
     dimension of size 1 corresponding to the field dimension of phidot.
+    
+    Returns
+    -------
+    rhodots : array
+              The derivative of the energy densities of the fields
     """
     return -3*H**2*(phidot**2)
 
@@ -144,16 +168,19 @@ def fullrhodot(phidot, H, axis=-1):
     
     Parameters
     ----------
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
     
-    axis: integer, optional
-          Specifies which axis is the field dimension, default is the last one.
+    axis : integer, optional
+           Specifies which axis is the field dimension, default is the last one.
             
-    
+    Returns
+    -------
+    fullrhodot : array
+                 The derivative of the energy density summed over the fields.
     """
     return np.sum(rhodots(phidot, H), axis=axis)
 
@@ -164,32 +191,32 @@ def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
            
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    result: array_like
-            The matrix of the first order perturbed energy densities.
+    result : array_like
+             The matrix of the first order perturbed energy densities.
     
     """
     Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, 
@@ -216,32 +243,32 @@ def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
            
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    result: array_like
-            The matrix of the first order perturbed pressure.
+    result : array_like
+             The matrix of the first order perturbed pressure.
     
     """
     Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
@@ -267,28 +294,32 @@ def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    Returns
+    -------
+    result : array
+             Perturbed relative pressure of the fields.
     """
     
     Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
@@ -320,27 +351,27 @@ def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+            Mode matrix of N-derivative of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     """
     
@@ -364,28 +395,32 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    Returns
+    -------
+    result : array
+             Isocurvature perturbation S of the fields
     """
     
     dpnadmodes = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
@@ -400,32 +435,32 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    deltarhospectrum: array
-                      Spectrum of the perturbed energy density
+    deltarhospectrum : array
+                       Spectrum of the perturbed energy density
     """
     drhomodes = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
     
@@ -440,32 +475,32 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    deltaPspectrum: array
-                    Spectrum of the perturbed pressure
+    deltaPspectrum : array
+                     Spectrum of the perturbed pressure
     """
     dPmodes = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
     
@@ -480,32 +515,32 @@ def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    deltaPrelspectrum: array
-                      Spectrum of the perturbed relative pressure
+    deltaPrelspectrum : array
+                       Spectrum of the perturbed relative pressure
     """
     dPrelI = deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
     
@@ -518,32 +553,32 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    deltaPnadspectrum: array
-                      Spectrum of the non-adiabatic pressure perturbation
+    deltaPnadspectrum : array
+                        Spectrum of the non-adiabatic pressure perturbation
     """
     dPrelI = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
     
@@ -556,32 +591,32 @@ def Sspectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
     Returns
     -------
-    Sspectrum: array
-               Spectrum of the isocurvature perturbation S.
+    Sspectrum : array
+                Spectrum of the isocurvature perturbation S.
     """
     dSI = Smodes(Vphi, phidot, H, modes, modesdot, axis)
     
@@ -596,36 +631,36 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
           
-    k: array
-       The values of k to scale the result with.
+    k : array
+        The values of k to scale the result with.
     
     Returns
     -------
-    scaled_dPnad_spectrum: array
-                           Scaled spectrum of the non-adiabatic pressure 
-                           perturation.
+    scaled_dPnad_spectrum : array
+                            Scaled spectrum of the non-adiabatic pressure 
+                            perturation.
     """
     spectrum = deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
@@ -639,35 +674,35 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
-    k: array
-       The values of k to scale the result with.
+    k : array
+        The values of k to scale the result with.
     
     Returns
     -------
-    scaled_dP_spectrum: array
-                        Scaled spectrum of the perturbed pressure
+    scaled_dP_spectrum : array
+                         Scaled spectrum of the perturbed pressure
     """
     spectrum = deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
@@ -681,35 +716,35 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     Parameters
     ----------
-    Vphi: array_like
-          First derivative of the potential with respect to the fields
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
           
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
             
-    H: array_like
-       The Hubble parameter
+    H : array_like
+        The Hubble parameter
        
-    modes: array_like
-           Mode matrix of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
     
-    modesdot: array_like
-           Mode matrix of N-derivative of first order perturbations. Component array should
-           have two dimensions of length nfields.
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     
-    k: array
-       The values of k to scale the result with.
+    k : array
+        The values of k to scale the result with.
        
     Returns
     -------
-    scaled_S_spectrum: array
-                       Scaled spectrum of the isocurvature perturbation S
+    scaled_S_spectrum : array
+                        Scaled spectrum of the isocurvature perturbation S
     """
     spectrum = Sspectrum(Vphi, phidot, H, modes, modesdot, axis)
     #Add extra dimensions to k if necessary
@@ -717,28 +752,28 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     return scaled_spectrum
 
 def scaled_S_from_model(m, tix=None, kix=None):
-    """Return the spectrum of isocurvature perturbations $\mathcal{P}_\mathcal{S}$ 
+    """Return the spectrum of isocurvature perturbations :math:`\mathcal{P}_\mathcal{S}` 
     for each timestep and k mode.
     
     This is the scaled power spectrum which is related to the unscaled version by
-    $\mathcal{P}_\mathcal{S} = k^3/(2pi^2) P_\mathcal{S}$. 
+    :math:`\mathcal{P}_\mathcal{S} = k^3/(2\pi^2) P_\mathcal{S}`. 
      
     Parameters
     ----------
-    m: Cosmomodels instance
-       Model class instance from which the yresult variable will be used to 
-       calculate P_R.
+    m : Cosmomodels instance
+        Model class instance from which the yresult variable will be used to 
+        calculate P_R.
     
-    tix: integer, optional
-         index of timestep at which to calculate, defaults to full range of steps.
+    tix : integer, optional
+          index of timestep at which to calculate, defaults to full range of steps.
          
-    kix: integer, optional
-         integer of k value at which to calculate, defaults to full range of ks.
+    kix : integer, optional
+          integer of k value at which to calculate, defaults to full range of ks.
             
     Returns
     -------
-    scaled_S: array_like
-        Array of spectrum values for all timesteps and k modes
+    scaled_S : array_like
+               Array of spectrum values for all timesteps and k modes
     """
     if kix is None:
         kslice = slice(None)
@@ -749,46 +784,51 @@ def scaled_S_from_model(m, tix=None, kix=None):
     return spectrum
 
 def slope_of_S_spectrum(scaled_S, k, kix=None, running=False):
-    """Return the value of the slope of the k-scaled spectrum of S
+    r"""Return the value of the slope of the k-scaled spectrum of S
     
     Parameters
     ----------
-    scaled_S: array_like
-              Power spectrum of isocurvature perturbations at a specific time
-              This should be the *scaled* power spectrum i.e.
-               scaled_S = k^3/(2*pi)^2 * P_S, 
-               <S(k)S(k')> = (2pi^3) \delta(k+k') P_S
+    scaled_S : array_like
+               Power spectrum of isocurvature perturbations at a specific time
+               This should be the *scaled* power spectrum i.e.
+              
+               .. math::
+                   \rm{scaled_S} = k^3/(2\pi)^2 P_S,
+                    
+                   <S(k)S(k')> = (2\pi^3) \delta(k+k') P_S
                
-           The array should be one-dimensional indexed by the k value.
+               The array should be one-dimensional indexed by the k value.
            
-    k: array_like
-       Array of k values for which sPr has been calculated.
+    k : array_like
+        Array of k values for which sPr has been calculated.
        
-    kix: integer
-         Index value of k for which to return spec_S.
+    kix : integer
+          Index value of k for which to return spec_S.
          
-    running: boolean, optional
-             Whether running should be allowed or not. If true, a quadratic
-             polynomial fit is made instead of linear and the value of the 
-             running is returned along with the slope. Defaults to False.
+    running : boolean, optional
+              Whether running should be allowed or not. If true, a quadratic
+              polynomial fit is made instead of linear and the value of the 
+              running is returned along with the slope. Defaults to False.
        
-         
     Returns
     -------
-    spec_S: float
+    spec_S : float
              The value of the spectral index of S at the requested k value and timestep.
              Normalised in the same way as n_s
              
-             spec_S = 1 - d ln(scaled_S) / d ln(k) evaluated at k[kix]
+             .. math::
+                 \rm{spec_S} = 1 - d \log(\rm{scaled_S}) / d \log(k) 
+                 
+             evaluated at k[kix].
              
-        This is calculated using a polynomial least squares fit with 
-        numpy.polyfit. If running is True then a quadratic polynomial is fit,
-        otherwise only a linear fit is made.
+             This is calculated using a polynomial least squares fit with 
+             numpy.polyfit. If running is True then a quadratic polynomial is fit,
+             otherwise only a linear fit is made.
     
-    running_S: float, present only if running = True
-               If running=True the value of the derivative of the slope 
-               at k[kix] is returned in a tuple along with spec_S.
-    """
+    running_S : float, present only if running = True
+                If running=True the value of the derivative of the slope 
+                at k[kix] is returned in a tuple along with spec_S.
+    """ 
     
     result = utilities.spectral_index(scaled_S, k, kix, running)
     return result
@@ -798,22 +838,22 @@ def dprel_from_model(m, tix=None, kix=None):
     
     Parameters
     ----------
-    m: Cosmomodels model instance
-       The model instance with which to perform the calculation
+    m : Cosmomodels model instance
+        The model instance with which to perform the calculation
        
-    tix: integer
-         Index for timestep at which to perform calculation. Default is to 
-         calculate over all timesteps.
+    tix : integer
+          Index for timestep at which to perform calculation. Default is to 
+          calculate over all timesteps.
         
-    kix: integer
-         Index for k mode for which to perform the calculation. Default is to
-         calculate over all k modes.
+    kix : integer
+          Index for k mode for which to perform the calculation. Default is to
+          calculate over all k modes.
          
     Returns
     -------
-    spectrum: array
-              Array of values of the power spectrum of the relativistic pressure
-              perturbation
+    spectrum : array
+               Array of values of the power spectrum of the relativistic pressure
+               perturbation
     """
     components = utilities.components_from_model(m, tix, kix)
     result = deltaPrelspectrum(*components)
@@ -821,37 +861,42 @@ def dprel_from_model(m, tix=None, kix=None):
     return result
 
 def S_alternate(phidot, Pphi_modes, axis):
-    """Return the alternate spectrum of (first order) isocurvature perturbations $P_S$ for each k.
+    r"""Return the alternate spectrum of (first order) isocurvature perturbations P_S for each k.
     This is only available for a two field model and is given by:
     
-    P_S = (H/\dot{\sigma})**2 <\delta s \delta s*>
+    .. math::
+        \rm{P_S} = (H/\dot{\sigma})^2 \langle\delta s \delta s*\rangle
             
-    where \dot{\sigma} = \sqrt{\dot{\phi}**2 + \dot{\chi}**2} and
-          \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
+    where 
+    
+    .. math::
+        \dot{\sigma} = \sqrt{\dot{\phi}^2 + \dot{\chi}^2}
+        
+        \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
                      + \dot{\phi}/\dot{\sigma} \delta \chi
     
-    This is the unscaled version $P_S$ which is related to the scaled version by
-    $\mathcal{P}_S = k^3/(2pi^2) P_S$. 
+    This is the unscaled version :math:`P_S` which is related to the scaled version by
+    :math:`\mathcal{P}_S = k^3/(2\pi^2) P_S`. 
     
     Parameters
     ----------
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
     
-    Pphi_modes: array_like
-           Mode matrix of first order perturbation power spectrum given by
-           adiabatic.Pphi_matrix. Component array should have two dimensions of 
-           length nfields.
+    Pphi_modes : array_like
+                 Mode matrix of first order perturbation power spectrum given by
+                 adiabatic.Pphi_matrix. Component array should have two dimensions 
+                 of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
                
     Returns
     -------
-    Pr: array_like, dtype: float64
-        Array of Pr values for all timesteps and k modes
+    Pr : array_like, dtype: float64
+         Array of Pr values for all timesteps and k modes
     """      
     nfields = Pphi_modes.shape[axis]
     if nfields != 2:
@@ -876,37 +921,39 @@ def S_alternate(phidot, Pphi_modes, axis):
     return Pr
 
 def scaled_S_alternate_spectrum(phidot, Pphi_modes, axis, k):
-    """Return the scaled alternate spectrum of (first order) isocurvature perturbations for each k.
+    r"""Return the scaled alternate spectrum of (first order) isocurvature perturbations for each k.
     This is only available for a two field model and is given by:
     
-    P_\bar{S} = (H/\dot{\sigma})**2 <\delta s \delta s*>
+    .. math::
+        P_{\bar{S}} = (H/\dot{\sigma})^2 <\delta s \delta s*>
             
-    where \dot{\sigma} = \sqrt{\dot{\phi}**2 + \dot{\chi}**2} and
-          \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
+        \dot{\sigma} = \sqrt{\dot{\phi}^2 + \dot{\chi}^2} 
+        
+        \delta s = - \dot{\chi}/\dot{\sigma} \delta \phi
                      + \dot{\phi}/\dot{\sigma} \delta \chi
     
-    This is the scaled version $\mathcal{P}_\bar{S} which is related to the unscaled version by
-    $\mathcal{P}_\bar{S} = k^3/(2pi^2) P_\bar{S}$. 
+    This is the scaled version :math:`\mathcal{P}_{\bar{S}}` which is related to the unscaled version by
+    :math:`\mathcal{P}_{\bar{S}} = k^3/(2\pi^2) P_{\bar{S}}`. 
     
     Parameters
     ----------
-    phidot: array_like
-            First derivative of the field values with respect to efold number N.
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
     
-    Pphi_modes: array_like
-           Mode matrix of first order perturbation power spectrum given by
-           adiabatic.Pphi_matrix. Component array should have two dimensions of 
-           length nfields.
+    Pphi_modes : array_like
+                 Mode matrix of first order perturbation power spectrum given by
+                 adiabatic.Pphi_matrix. Component array should have two dimensions 
+                 of length nfields.
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
                
     Returns
     -------
-    Pr: array_like, dtype: float64
-        Array of Pr values for all timesteps and k modes
+    Pr : array_like, dtype: float64
+         Array of Pr values for all timesteps and k modes
     """      
     spectrum = S_alternate(phidot, Pphi_modes, axis)
         #Add extra dimensions to k if necessary

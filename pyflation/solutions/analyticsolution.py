@@ -55,11 +55,13 @@ class AnalyticSolution(GeneralSolution):
     
     
 class NoPhaseBunchDaviesSolution(AnalyticSolution):
-    """Analytic solution using the Bunch Davies initial conditions as the first order 
+    r"""Analytic solution using the Bunch Davies initial conditions as the first order 
     solution and with no phase information.
-    
-    \delta\varphi_1 = alpha/sqrt(k) 
-    \dN{\delta\varphi_1} = -alpha/sqrt(k) - alpha/beta *sqrt(k)*1j 
+        
+    .. math::
+        \delta\varphi_1 = \alpha/\sqrt(k)
+         
+        \delta\varphi^\dagger_1 = -\alpha/\sqrt(k) - \alpha/\beta \sqrt(k) i
     """
     
     def __init__(self, *args, **kwargs):
@@ -290,11 +292,14 @@ class NoPhaseBunchDaviesSolution(AnalyticSolution):
         return super(NoPhaseBunchDaviesSolution, self).full_source_from_model(m, nix, alpha=alpha, beta=beta)
     
 class SimpleInverseSolution(AnalyticSolution):
-    """Analytic solution using a simple inverse solution as the first order 
+    r"""Analytic solution using a simple inverse solution as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1 = 1/k 
-    \dN{\delta\varphi_1} = 1/k
+    .. math::
+        \delta\varphi_1 = 1/k
+         
+        \delta\varphi^\dagger_1 = 1/k
+        
     """
     
     def __init__(self, *args, **kwargs):
@@ -358,12 +363,15 @@ class SimpleInverseSolution(AnalyticSolution):
     
     
 class ImaginaryInverseSolution(AnalyticSolution):
-    """Analytic solution using an imaginary inverse solution as the first order 
+    r"""Analytic solution using an imaginary inverse solution as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1 = 1/k*1j
-    \dN{\delta\varphi_1} = 1/k*1j
-    where j=sqrt(-1) 
+    .. math::
+        \delta\varphi_1 = 1/k i
+        
+        \delta\varphi^\dagger_1 = 1/k i
+        
+    where :math:`i=\sqrt(-1)` 
     """
     
     def __init__(self, *args, **kwargs):
@@ -608,11 +616,14 @@ class OldSimpleInverseFull(AnalyticSolution):
     
     
 class SimpleInverseFull(AnalyticSolution):
-    """Analytic solution using a simple inverse solution as the first order 
+    r"""Analytic solution using a simple inverse solution as the first order 
     solution and with no phase information.
     
-    \delta\varphi_1 = 1/k 
-    \dN{\delta\varphi_1} = 1/k
+    .. math::
+        \delta\varphi_1 = 1/k
+         
+        \delta\varphi^\dagger_1 = 1/k
+        
     """
     
     def __init__(self, *args, **kwargs):

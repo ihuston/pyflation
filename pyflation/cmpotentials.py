@@ -19,26 +19,26 @@ def msqphisq(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -77,28 +77,28 @@ def lambdaphi4(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "lambda" which specifies lambda
-            above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "lambda" which specifies lambda
+             above.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
     
     Notes
     -----
     lambda can be specified in the dictionary params or otherwise
     it defaults to the value as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    #set_trace()
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "lambda" in params:
         l = params["lambda"]
@@ -134,20 +134,20 @@ def linde(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameters "mass" and "lambda" which specifies 
-            the variables.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameters "mass" and "lambda" which specifies 
+             the variables.
              
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
@@ -158,8 +158,8 @@ def linde(y, params=None):
     
     mass can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -204,20 +204,20 @@ def hybrid2and4(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameters "mass" and "lambda" which specifies 
-            the variables.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameters "mass" and "lambda" which specifies 
+             the variables.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
@@ -274,20 +274,20 @@ def phi2over3(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "sigma" which specifies lambda
-            above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "sigma" which specifies lambda
+             above.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
@@ -331,27 +331,27 @@ def msqphisq_withV0(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----  
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -396,27 +396,27 @@ def step_potential(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----  
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -473,27 +473,27 @@ def bump_potential(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----  
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -550,28 +550,28 @@ def resonance(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above, 
-            and the parameters "c" and "d" which tune the oscillation.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above, 
+             and the parameters "c" and "d" which tune the oscillation.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----  
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -626,27 +626,27 @@ def bump_nothirdderiv(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
     -----  
     m can be specified in the dictionary params or otherwise
     it defaults to the mass as normalized with the WMAP spectrum
-    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1."""
-    
+    Pr = 2.457e-9 at the WMAP pivot scale of 0.002 Mpc^-1.
+    """
     #Check if mass is specified in params
     if params is not None and "mass" in params:
         m = params["mass"]
@@ -700,19 +700,19 @@ def hybridquadratic(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameters "m1" and "m2" specified above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameters "m1" and "m2" specified above.
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     """
@@ -747,19 +747,19 @@ def ridge_twofield(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameters "V0", "g", "m".
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameters "V0", "g", "m".
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     """
@@ -795,20 +795,20 @@ def nflation(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameter "mass" which specifies m above.
-            The number of fields is specified through "nfields".
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameter "mass" which specifies m above.
+             The number of fields is specified through "nfields".
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
         
     Notes
@@ -852,19 +852,19 @@ def quartictwofield(y, params=None):
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values in this case should
-            hold the parameters "m1", "m2", "l1", "l2", as specified above.
+    params : dict
+             Dictionary of parameter values in this case should
+             hold the parameters "m1", "m2", "l1", "l2", as specified above.
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
              
     """
@@ -894,26 +894,32 @@ def quartictwofield(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def hybridquartic(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
-    V = \Lambda^4 [ (1-\chi^2/v^2)^2 + \phi^2/\mu^2 
+    """Return the potential and its first three derivatives for the hybrid
+    quartic model.
+    
+    The potential is given by
+    
+    .. math:: 
+        V = \Lambda^4 [ (1-\chi^2/v^2)^2 + \phi^2/\mu^2 
                     + 2\phi^2\chi^2/(\phi_c^2 v^2) ]
-    where the parameter are \Lambda, v, \mu and \phi_c. Needs nfields=2.
+                    
+    where the parameter are :math:`\Lambda, v, \mu and \phi_c`. Needs nfields=2.
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values labelled "lambda" , "v", 
-            "mu", "phi_c".
+    params : dict
+             Dictionary of parameter values labelled "lambda" , "v", 
+             "mu", "phi_c".
             
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
         Tuple of the potential and its first three derivatives.
              
     """
@@ -955,26 +961,32 @@ def hybridquartic(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def inflection(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
-    V = V_0 + 0.5 m^2 \phi^2 + g \chi + 1/6 \lambda \chi^3 + \lambda/(8 r) \chi^4
-        where V_0 = 0.75gr + \lambda/24 r^3 + g/(4r^3)
-        and the parameters are \lambda, m, g and r . Needs nfields=2.
+    r"""Return the potential and its first three derivatives for an inflection
+    point model.
+    
+    The potential is given by
+    
+    .. math:: 
+        V = V_0 + 0.5 m^2 \phi^2 + g \chi + 1/6 \lambda \chi^3 + \lambda/(8 r) \chi^4
+    
+    where :math:`V_0 = 0.75gr + \lambda/24 r^3 + g/(4r^3)`
+    and the parameters are :math:`\lambda, m, g and r`. Needs nfields=2.
     
     Parameters
     ----------
-    y: array
-       Array of variables with background phi as y[0]
-       If you want to specify a vector of phi values, make sure
-       that the first index still runs over the different 
-       variables, using newaxis if necessary.
+    y : array
+        Array of variables with background phi as y[0]
+        If you want to specify a vector of phi values, make sure
+        that the first index still runs over the different 
+        variables, using newaxis if necessary.
     
-    params: dict
-            Dictionary of parameter values labelled "lambda" , "m", "g", "r".
+    params : dict
+             Dictionary of parameter values labelled "lambda" , "m", "g", "r".
     
     Returns
     -------
-    U, dUdphi, d2Udphi2, d3Udphi3: tuple of arrays
-        Tuple of the potential and its first three derivatives.
+    U, dUdphi, d2Udphi2, d3Udphi3 : tuple of arrays
+         Tuple of the potential and its first three derivatives.
          
     """
     #Check if mass is specified in params
@@ -1012,9 +1024,15 @@ def inflection(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def hilltopaxion(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
-    V = 0.5 m^2 \phi^2 + \Lambda^4 (1 - cos(2\pi\chi/f))
-        where the parameters are \Lambda, m, and f . Needs nfields=2.
+    r"""Return the potential and its first three derivatives for a hilltop axion
+    model.
+    
+    The potential is given by
+    
+    .. math:: 
+        V = 0.5 m^2 \varphi^2 + \Lambda^4 (1 - \cos(2\pi\chi/f))
+        
+    where the parameters are \Lambda, m, and f . Needs nfields=2.
     
     Parameters
     ----------
@@ -1068,9 +1086,15 @@ def hilltopaxion(y, params=None):
     return U, dUdphi, d2Udphi2, d3Udphi3
 
 def productexponential(y, params=None):
-    """Return (V, dV/dphi, d2V/dphi2, d3V/dphi3) for 
-    V = V_0 \phi^2 \exp(-\lambda \chi^2)
-        where the parameters are V_0, \lambda. Needs nfields=2.
+    r"""Return the potential and its first three derivatives for a product
+    exponential potential.
+    
+    The potential is given by
+    
+    .. math:: 
+        V = V_0 \phi^2 \exp(-\lambda \chi^2)
+        
+    where the parameters are :math:`V_0, \lambda`. Needs nfields=2.
     
     Parameters
     ----------

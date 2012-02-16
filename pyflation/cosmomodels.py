@@ -3,14 +3,13 @@
 Provides classes for modelling cosmological inflationary scenarios.
 Especially important classes are:
 
-FOCanonicalTwoStage - drives first order calculation 
-SOCanonicalThreeStage - drives second order calculation
+* :class:`FOCanonicalTwoStage` - drives first order calculation 
+* :class:`SOCanonicalThreeStage` - drives second order calculation
+* :class:`CanonicalFirstOrder` - the class containing derivatives for first order calculation
+* :class:`CanonicalRampedSecondOrder` - the class containing derivatives and ramped \
+source term for second order calculation.
 
-CanonicalFirstOrder - the class containing derivatives for first order calculation
-CanonicalRampedSecondOrder - the class containing derivatives and ramped
-                             source term for second order calculation.
-
-The make_wrapper_model function takes a filename and returns a model instance
+The :func:`make_wrapper_model` function takes a filename and returns a model instance
 corresponding to the one stored in the file. This allows easier access to the
 results than through a direct inspection of the HDF5 results file.
 
@@ -1158,7 +1157,7 @@ class MultiStageDriver(CosmologicalModel):
     @property
     def Pr(self):
         """The power spectrum of comoving curvature perturbation.
-        This is the unscaled spectrum P_\mathcal{R} calculated for all timesteps and ks. 
+        This is the unscaled spectrum P_R calculated for all timesteps and ks. 
         Calculated using the pyflation.analysis package.
         """
         return analysis.Pr(self)
