@@ -59,6 +59,7 @@ Contents
    installation
    usage
    scripts
+   changelog
    license
 
 Package and Module Reference
