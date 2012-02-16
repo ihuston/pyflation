@@ -11,7 +11,7 @@ Pyflation to generate results in any academic work.
 License Text
 ============
 
-Copyright (c) 2008-2011, Ian Huston, Queen Mary, University of London
+Copyright (c) 2008-2012, Ian Huston, Queen Mary, University of London
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
