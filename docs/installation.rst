@@ -11,14 +11,6 @@ Installing Pyflation is as simple as typing::
 
 inside the directory where this file is located.
 
-Alternatively you can use `pip` or `easy_install` to download directly from the `Python
-Package Index <http://pypi.python.org/pypi/pyflation>`_::
-    
-    $ pip install pyflation
-
-Please be aware that some of the requirements may not be installed automatically using
-this method.
-
 Requirements
 ============
 Pyflation has the following requirements:
@@ -32,6 +24,10 @@ Pyflation has the following requirements:
 The pyflation.cosmographs module contains helper functions to use 
 with the Matplotlib package (http://matplotlib.sf.net) but this is not a
 requirement of the core modules. 
+
+In order to compile the documentation you will also need
+* Sphinx (tested with 1.1.2) - http://http://sphinx.pocoo.org
+* numpydoc (tested with 0.4) - http://pypi.python.org/pypi/numpydoc
 
 Downloading Pyflation
 =====================
