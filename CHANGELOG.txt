@@ -1,6 +1,10 @@
 CHANGELOG for Pyflation
 -----------------------
 
+v0.2.1 16/02/2012 - Added Sphinx documentation in docs directory. Tidied up 
+docstrings throughout the project and split some of the README file into USAGE.txt.
+Documentation is available online at http://pyflation.ianhuston.net/docs. 
+
 v0.2 01/12/2011 - Major new release including multifield calculations for first order
 perturbations. Second order calculations are not yet posible for multiple fields. 
 Models now include the parameter "nfields" which specifies how many fields are used.
