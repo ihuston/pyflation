@@ -1,7 +1,5 @@
 # Sphinx build dirs #
 _build
-_templates
-_static
 
 # Cython build dirs
 build
