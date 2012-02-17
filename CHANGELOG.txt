@@ -7,7 +7,7 @@ Changelog for Pyflation
 	Documentation is available online at http://pyflation.ianhuston.net/docs. 
 	
 * v0.2 01/12/2011 - Major new release including multifield calculations for first order
-	perturbations. Second order calculations are not yet posible for multiple fields. 
+	perturbations. Second order calculations are not yet possible for multiple fields. 
 	Models now include the parameter "nfields" which specifies how many fields are used.
 	This parameter is used by the potentials function and needs to be passed to it.
 	New potentials have been included in the cmpotentials module, including two field

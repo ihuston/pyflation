@@ -26,6 +26,7 @@ with the Matplotlib package (http://matplotlib.sf.net) but this is not a
 requirement of the core modules. 
 
 In order to compile the documentation you will also need
+
 * Sphinx (tested with 1.1.2) - http://http://sphinx.pocoo.org
 * numpydoc (tested with 0.4) - http://pypi.python.org/pypi/numpydoc
 
