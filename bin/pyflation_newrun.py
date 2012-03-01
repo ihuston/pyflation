@@ -133,9 +133,9 @@ def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False)
     return mytree
 
 def create_run_directory(newrundir, codedir, copy_code=False, 
-                         use_bzr=False):
+                         use_bzr=False, overwrite=False):
     """Create the run directory using `newdir` as directory name."""
-    if os.path.isdir(newrundir):
+    if os.path.isdir(newrundir) and not overwrite:
         raise IOError("New run directory already exists!")
     
     try:
@@ -243,6 +243,8 @@ def main(argv = None):
                       help="new run directory name, default is pyflation_run")
     parser.add_option("-c", "--codedir", dest="codedir",
                   help="copy code from CODEDIR (where run_config.py resides)", metavar="CODEDIR")
+    parser.add_option("-o", "--overwrite", action="store_true", dest="overwrite",
+                      default=False, help="Overwrite into directory if it exists")
     parser.add_option("-q", "--quiet",
                   action="store_const", const=logging.FATAL, dest="loglevel", 
                   help="only print fatal error messages")
@@ -289,7 +291,7 @@ def main(argv = None):
         
     try:
         create_run_directory(newdir, codedir, options.copy_code,
-                             options.use_bzr)
+                             options.use_bzr, options.overwrite)
     except Exception, e:
         logging.critical("Something went wrong! Quitting.")
         sys.exit(e)
