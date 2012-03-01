@@ -182,13 +182,12 @@ class CosmologicalModel(object):
                 raise ModelError("Need to specify initial starting indices!")
             if _debug:
                 self._log.debug("Starting simulation with %s.", self.solver)
-            solver = rk4.__getattribute__(self.solver)
+            solver = getattr(rk4, self.solver)
             try:
                 self.tresult, self.yresult = solver(ystart=self.ystart, 
                                                     simtstart=self.simtstart, 
                                                     tsix=self.tstartindex, 
-                                                    tend=self.tend, 
-                                                    allks=self.k, 
+                                                    tend=self.tend,
                                                     h=self.tstep_wanted, 
                                                     derivs=self.derivs)
             except StandardError:

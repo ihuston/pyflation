@@ -55,7 +55,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     return yout
 
 #@profile
-def rkdriver_tsix(ystart, simtstart, tsix, tend, allks, h, derivs):
+def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
