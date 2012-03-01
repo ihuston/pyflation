@@ -14,16 +14,16 @@ import logging
 
 from configuration import _debug
 
-#if not "profile" in __builtins__:
-#    def profile(f):
-#        return f
+if not "profile" in __builtins__:
+    def profile(f):
+        return f
 
 #Start logging
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
 
-#@profile
+@profile
 def rk4stepks(x, y, h, dydx, dargs, derivs):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
