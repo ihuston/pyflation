@@ -212,11 +212,6 @@ hold_jid_list= "" # List of jobs this task depends on
 ###############################################################################
 ###############################################################################
 
-#Add nfields into pot_params dictionary if not already there
-if not "nfields" in foargs["pot_params"]:
-    foargs["pot_params"]["nfields"] = foargs["nfields"]
-
-
 soargs = {"solver": "rkdriver_tsix",
           "nfields": 1, #Only single field models can have second order calced
           "soclass": soclass}
