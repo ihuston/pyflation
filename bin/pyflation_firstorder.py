@@ -155,6 +155,11 @@ def main(argv=None):
                       default=run_config.foresults, type="string", 
                       metavar="FILE", help="file to store results")
     
+    parser.add_option("-p", "--potential", action="store", dest="fixture", 
+                      default="", type="string", 
+                      metavar="POTENTIAL", 
+                      help="the potential to use, choose from the fixtures dict in run_config.py")
+    
     loggroup = optparse.OptionGroup(parser, "Log Options", 
                            "These options affect the verbosity of the log files generated.")
     loggroup.add_option("-q", "--quiet",
@@ -187,8 +192,15 @@ def main(argv=None):
     
     if os.path.isfile(options.foresults):
         raise IOError("First order results file already exists!") 
-      
-    foargs = run_config.foargs.copy()
+    
+    if options.fixture != "":
+        try:
+            foargs = run_config.fixtures[options.fixture]
+        except ValueError:
+            log.exception("Fixture doesn't exist in run_config.py!")
+    else:
+        foargs = run_config.foargs.copy()
+        
     #Get k variable for first order run
     foargs["k"] = helpers.seq(run_config.kinit, run_config.kend, run_config.deltak)
     
