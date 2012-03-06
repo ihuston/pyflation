@@ -196,6 +196,7 @@ def main(argv=None):
     if options.fixture != "":
         try:
             foargs = run_config.fixtures[options.fixture]
+            log.info("Potential %s selected." % foargs["potential_func"])
         except ValueError:
             log.exception("Fixture doesn't exist in run_config.py!")
     else:
