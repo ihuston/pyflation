@@ -43,62 +43,90 @@ LOGLEVEL = configuration.LOGLEVEL
 # The following dictionary structure contains various present combinations of 
 # potentials and initial conditions. To add a new combination just enter it as 
 # the next item of the dictionary.
+#
+# The cq parameter controls how far into the subhorizon stage is the 
+# initialisation of each k mode pertubation. Initialisation takes place when
+# k/aH = cq. Default value is 50. 
 
 fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([18.0, -0.1,0])},
+                                "bgystart": np.array([18.0, -0.1,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "lambdaphi4":      {"potential_func": "lambdaphi4",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([25.0, 0,0])},
+                                "bgystart": np.array([25.0, 0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "hybrid2and4":     {"potential_func": "hybrid2and4",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([25.0, 0,0])},
+                                "bgystart": np.array([25.0, 0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "linde":           {"potential_func": "linde",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([25.0, 0,0])},
+                                "bgystart": np.array([25.0, 0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "phi2over3":       {"potential_func": "phi2over3",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([10.0, 0,0])},
+                                "bgystart": np.array([10.0, 0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "msqphisq_withV0": {"potential_func": "msqphisq_withV0",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([18.0, 0,0])},
+                                "bgystart": np.array([18.0, 0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "step_potential":  {"potential_func": "step_potential",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([18.0, -0.1,0])},
+                                "bgystart": np.array([18.0, -0.1,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "bump_potential":  {"potential_func": "bump_potential",
                                 "pot_params": {},
                                 "nfields": 1,
-                                "bgystart": np.array([18.0, -0.1,0])},
+                                "bgystart": np.array([18.0, -0.1,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "hybridquadratic":  {"potential_func": "hybridquadratic",
                                 "pot_params": {},
                                 "nfields": 2,
-                                "bgystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0])},
+                                "bgystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "nflation":  {"potential_func": "nflation",
                                 "pot_params": {},
                                 "nfields": 2,
-                                "bgystart": None,}, #Defaults to (18,-0.1)/sqrt(nfields)
+                                "bgystart": None, #Defaults to (18,-0.1)/sqrt(nfields)
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"}, 
             "hybridquartic":  {"potential_func": "hybridquartic",
                                 "pot_params": {},
                                 "nfields": 2,
-                                "bgystart": np.array([1e-2, 2e-8, 1.63e-9,3.26e-7,0])},
+                                "bgystart": np.array([1e-2, 2e-8, 1.63e-9,3.26e-7,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             "productexponential":  {"potential_func": "productexponential",
                                 "pot_params": {},
                                 "nfields": 2,
-                                "bgystart": np.array([18.0, 0.0, 0.001,0,0])},
+                                "bgystart": np.array([18.0, 0.0, 0.001,0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_tsix"},
             }
 
 ##############################
 # CHOOSE FIXTURE HERE
 # Choose one of the combinations of potential and initial conditions described
 # above by selecting it by name.
-fx = fixtures["msqphisq"]
+foargs = fixtures["msqphisq"]
 ##############################
 ###############################################################################
 
@@ -156,10 +184,7 @@ soclass = c.CanonicalRampedSecondOrder
 # integration of the convolution terms. Default is 513.
 ntheta = 513
 
-# The cq parameter controls how far into the subhorizon stage is the 
-# initialisation of each k mode pertubation. Initialisation takes place when
-# k/aH = cq. Default value is 50. 
-cq = 50
+
 
 ###############################################################################
 
@@ -188,18 +213,12 @@ hold_jid_list= "" # List of jobs this task depends on
 ###############################################################################
 
 #Add nfields into pot_params dictionary if not already there
-if not "nfields" in fx["pot_params"]:
-    fx["pot_params"]["nfields"] = fx["nfields"]
+if not "nfields" in foargs["pot_params"]:
+    foargs["pot_params"]["nfields"] = foargs["nfields"]
 
-#Arguments for first and second order models
-foargs = {"potential_func": fx["potential_func"],
-          "pot_params": fx["pot_params"],
-          "nfields": fx["nfields"],
-          "bgystart": fx["bgystart"],
-          "cq": cq,
-          "solver": "rkdriver_tsix"}
+
 soargs = {"solver": "rkdriver_tsix",
-          "nfields": fx["nfields"],
+          "nfields": 1, #Only single field models can have second order calced
           "soclass": soclass}
 
 #If sourceterm files already exist should they be overwritten?
