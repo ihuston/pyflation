@@ -136,7 +136,7 @@ class CosmologicalModel(object):
         #Change potentials to be right function
         if potential_func is None:
             potential_func = "msqphisq"
-        self.potentials = cmpotentials.__getattribute__(potential_func)
+        self.potentials = getattr(cmpotentials, potential_func)
         self.potential_func = potential_func
         
         #Set potential parameters to default to empty dictionary.
