@@ -1764,7 +1764,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 for ix, val in enumerate(params[0]):
                     self.__setattr__(params.colnames[ix], val)
                 #set correct potential function (only works with cmpotentials currently)
-                self.potentials = cmpotentials.__getattribute__(self.potential_func)
+                self.potentials = getattr(cmpotentials, self.potential_func)
             except IOError:
                 raise
             
@@ -2141,11 +2141,11 @@ class CombinedCanonicalFromFile(MultiStageDriver):
         if "bgclass" not in kwargs or kwargs["bgclass"] is None:
             self.bgclass = CanonicalBackground
         else:
-            self.bgclass = bgclass
+            self.bgclass = kwargs["bgclass"]
         if "foclass" not in kwargs or kwargs["foclass"] is None:
             self.foclass = CanonicalFirstOrder
         else:
-            self.foclass = foclass
+            self.foclass = kwargs["foclass"]
     
     @property
     def deltaphi(self, recompute=False):
