@@ -93,3 +93,47 @@ class ReheatingModels(c.CosmologicalModel):
         epsilon = (0.5*rhomatter + 2.0/3.0*rhogamma)/Hsq + 0.5*np.sum(phidots**2, axis=1)
         return epsilon        
     
+class ReheatingBackground(ReheatingModels):
+    """Model of background equations for reheating in a two field, two fluid system
+    """
+        
+    def __init__(self,  *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(ReheatingBackground, self).__init__(*args, **kwargs)
+        
+        #Set field indices. These can be used to select only certain parts of
+        #the y variable, e.g. y[self.bg_ix] is the array of background values.
+        self.H_ix = self.nfields*2
+        self.bg_ix = slice(0,self.nfields*2+3)
+        self.phis_ix = slice(0,self.nfields*2,2)
+        self.phidots_ix = slice(1,self.nfields*2,2)
+        self.rhogamma_ix = self.nfields*2 + 1
+        self.rhomatter_ix = self.nfields*2 + 2
+        
+        #Set initial H value if None
+        if np.all(self.ystart[self.H_ix] == 0.0):
+            U = self.potentials(self.ystart, self.pot_params)[0]
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
+    
+    def derivs(self, y, t, **kwargs):
+        """Basic background equations of motion.
+            dydx[0] = dy[0]/dn etc"""
+        
+                
+        #get potential from function
+        U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
+        
+        #Set derivatives
+        dydx = np.zeros_like(y)
+        
+        #d\phi_0/dn = y_1
+        dydx[self.phis_ix] = y[self.phidots_ix] 
+        
+        #dphi^prime/dn
+        dydx[self.phidots_ix] = -(U*y[self.phidots_ix] + dUdphi[...,np.newaxis])/(y[self.H_ix]**2)
+        
+        #dH/dn
+        dydx[self.H_ix] = -0.5*(np.sum(y[self.phidots_ix]**2, axis=0))*y[self.H_ix]
+
+        return dydx
