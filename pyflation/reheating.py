@@ -157,7 +157,7 @@ class ReheatingBackground(ReheatingModels):
         dydx[self.phis_ix] = phidots
         
         #dphi^prime/dn
-        dydx[self.phidots_ix] = -(((3 + Hdot/H + 0.5/H**2 * (tgamma + tmatter))*phidots 
+        dydx[self.phidots_ix] = -(((3 + Hdot/H + 0.5/H**2 * (tgamma + tmatter))[...,np.newaxis]*phidots 
                                    + dUdphi[...,np.newaxis])/(H**2))
         
         #dH/dn
