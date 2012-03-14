@@ -146,6 +146,10 @@ class ReheatingBackground(ReheatingModels):
         tgamma = self.transfers[:,self.tgamma_ix]
         tmatter = self.transfers[:,self.tmatter_ix]
         
+        #Calculate H derivative now as we need it later
+        Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H
+                 + 0.5*H*np.sum(phidots**2,axis=0))
+        
         #Set derivatives
         dydx = np.zeros_like(y)
         
@@ -153,10 +157,15 @@ class ReheatingBackground(ReheatingModels):
         dydx[self.phis_ix] = phidots
         
         #dphi^prime/dn
-        dydx[self.phidots_ix] = (-(U*phidots + dUdphi[...,np.newaxis])
-                                 /(H**2))
+        dydx[self.phidots_ix] = -(((3 + Hdot/H + 0.5/H**2 * (tgamma + tmatter)) 
+                                   + dUdphi[...,np.newaxis])/(H**2))
         
         #dH/dn
-        dydx[self.H_ix] = -0.5*(np.sum(phidots**2, axis=0))*H
+        dydx[self.H_ix] = Hdot
+        
+        # Fluids
+        dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
+        
+        dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
 
         return dydx
