@@ -143,8 +143,8 @@ class ReheatingBackground(ReheatingModels):
         H = y[self.H_ix]
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
-        tgamma = self.transfers[:,self.tgamma_ix]
-        tmatter = self.transfers[:,self.tmatter_ix]
+        tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
+        tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
         
         #Calculate H derivative now as we need it later
         Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H
@@ -157,7 +157,7 @@ class ReheatingBackground(ReheatingModels):
         dydx[self.phis_ix] = phidots
         
         #dphi^prime/dn
-        dydx[self.phidots_ix] = -(((3 + Hdot/H + 0.5/H**2 * (tgamma + tmatter))[...,np.newaxis]*phidots 
+        dydx[self.phidots_ix] = -(((3 + Hdot/H + 0.5/H**2 * (tgamma + tmatter))*phidots 
                                    + dUdphi[...,np.newaxis])/(H**2))
         
         #dH/dn
