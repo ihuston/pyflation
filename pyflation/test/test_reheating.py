@@ -17,7 +17,7 @@ class TestBgNoFluids():
         self.fx =  {"potential_func": "hybridquadratic",
                "pot_params": {"nfields": 2},
                "nfields": 2,
-               "bgystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0]),
+               "ystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0,0,0]),
                "cq": 50,
                "solver": "rkdriver_tsix"}
         self.m = reheating.ReheatingBackground(**self.fx)
