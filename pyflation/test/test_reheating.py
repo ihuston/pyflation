@@ -42,3 +42,23 @@ class TestBgNoFluids():
         newfx = self.fx.copy()
         newfx["transfers"] = np.zeros((newfx["nfields"],1))
         assert_raises(ValueError, reheating.ReheatingBackground, **newfx)
+        
+class TestBackground():
+    
+    def setup(self):
+        self.fx =  {"potential_func": "hybridquadratic",
+               "pot_params": {"nfields": 2},
+               "nfields": 2,
+               "ystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0,0,0]),
+               "cq": 50,
+               "solver": "rkdriver_tsix",
+               "transfers": np.ones((2,2))*1e-8,
+               }
+        self.m = reheating.ReheatingBackground(**self.fx)
+        return
+     
+    def test_transfers_stored(self):
+        assert_almost_equal(self.transfers, 
+                            np.ones((2,2))*1e-8, 
+                            err_msg="Transfer coefficients not saved correctly.")
+        
