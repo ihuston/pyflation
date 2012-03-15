@@ -41,6 +41,12 @@ class ReheatingModels(c.CosmologicalModel):
         Constructor
         '''
         super(ReheatingModels, self).__init__(*args, **kwargs)
+        
+        # Set default transfer coefficient values if not specified
+        # Default is no transfer to fluids from fields
+        self.transfers = kwargs.get("transfers", np.zeros((self.nfields,2)))
+        if self.transfers.shape != (self.nfields,2):
+            raise ValueError("Shape of transfer coefficient is array is wrong.")
  
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
@@ -111,9 +117,7 @@ class ReheatingBackground(ReheatingModels):
             U = self.potentials(self.ystart, self.pot_params)[0]
             self.ystart[self.H_ix] = self.findH(U, self.ystart)
             
-        # Set default transfer coefficient values if not specified
-        # Default is no transfer to fluids from fields
-        self.transfers = kwargs.get("transfers", np.zeros((self.nfields,2))) 
+
     
     def setfieldindices(self):
         """Set field indices. These can be used to select only certain parts of
