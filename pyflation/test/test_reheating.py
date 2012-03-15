@@ -32,7 +32,7 @@ class TestBgNoFluids():
         nofluidend = nofluid.findinflend()[1]
         
         assert_array_almost_equal(self.m.yresult[:mend,0:5], nofluid.yresult[:nofluidend,0:5], 
-                                  err_msg="Run without fluids does not equal standard background run.")
+                                  decimal=3, err_msg="Run without fluids does not equal standard background run.")
 
     def test_notransfers(self):
         assert_array_almost_equal(self.m.transfers, np.zeros_like(self.m.transfers),
