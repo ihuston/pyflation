@@ -28,7 +28,10 @@ class TestBgNoFluids():
         nofluid = c.CanonicalBackground(**self.fx)
         nofluid.run(saveresults=False)
         
-        assert_array_almost_equal(self.m.yresult[:,0:5], nofluid.yresult[:,0:5], 
+        mend = self.m.findinflend()[1]
+        nofluidend = nofluid.findinflend()[1]
+        
+        assert_array_almost_equal(self.m.yresult[:mend,0:5], nofluid.yresult[:nofluidend,0:5], 
                                   err_msg="Run without fluids does not equal standard background run.")
 
     def test_notransfers(self):
