@@ -37,11 +37,7 @@ class TestBgNoFluids():
     def test_notransfers(self):
         assert_array_almost_equal(self.m.transfers, np.zeros_like(self.m.transfers),
                                   err_msg="Transfer coefficients should be zero.")
-        
-    def test_transfers_shape(self):
-        newfx = self.fx.copy()
-        newfx["transfers"] = np.zeros((newfx["nfields"],1))
-        assert_raises(ValueError, reheating.ReheatingBackground, **newfx)
+
         
 class TestBackground():
     
@@ -56,7 +52,12 @@ class TestBackground():
                }
         self.m = reheating.ReheatingBackground(**self.fx)
         return
-     
+    
+    def test_transfers_shape(self):
+        newfx = self.fx.copy()
+        newfx["transfers"] = np.zeros((newfx["nfields"],1))
+        assert_raises(ValueError, reheating.ReheatingBackground, **newfx)
+        
     def test_transfers_stored(self):
         assert_almost_equal(self.transfers, 
                             np.ones((2,2))*1e-8, 
