@@ -30,7 +30,7 @@ module_logger = logging.getLogger(root_log_name + "." + __name__)
 
 
 
-class ReheatingModels(c.CosmologicalModel):
+class ReheatingModels(c.PhiModels):
     '''
     Base class for background and first order reheating model classes.
     '''
@@ -58,30 +58,6 @@ class ReheatingModels(c.CosmologicalModel):
         H = np.sqrt((rhomatter + rhogamma + U)/(3.0-0.5*(np.sum(phidot**2))))
         return H
     
-    def potentials(self, y, pot_params=None):
-        """Return value of potential at y, along with first and second derivs."""
-        pass
-    
-    def findinflend(self):
-        """Find the efold time where inflation ends,
-            i.e. the hubble flow parameter epsilon >1.
-            Returns tuple of endefold and endindex (in tresult)."""
-        
-        self.epsilon = self.getepsilon()
-        if not any(self.epsilon>1):
-            raise c.ModelError("Inflation did not end during specified number of efoldings. Increase tend and try again!")
-        endindex = np.where(self.epsilon>=1)[0][0]
-        
-        #Interpolate results to find more accurate endpoint
-        tck = interpolate.splrep(self.tresult[:endindex], self.epsilon[:endindex])
-        t2 = np.linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
-        y2 = interpolate.splev(t2, tck)
-        endindex2 = np.where(y2>1)[0][0]
-        #Return efold of more accurate endpoint
-        endefold = t2[endindex2]
-        
-        return endefold, endindex
-    
     def getepsilon(self):
         """Return an array of epsilon = -\dot{H}/H values for each timestep."""
         #Find Hdot
@@ -97,7 +73,56 @@ class ReheatingModels(c.CosmologicalModel):
             Hsq = self.yresult[:,self.H_ix]**2
         #Make sure to do sum across only phidot axis (1 in this case)
         epsilon = (0.5*rhomatter + 2.0/3.0*rhogamma)/Hsq + 0.5*np.sum(phidots**2, axis=1)
-        return epsilon        
+        return epsilon 
+    
+    def getrho_fields(self):
+        """Return an array of the total energy density of the scalar
+        fields and the total energy density for each timestep.
+        
+        Returns
+        -------
+        rho_fields : array
+                     Energy density of the scalar fields at all timesteps
+                     
+        total_rho : array
+                    Total energy density of the system at all timesteps
+        """
+        #Find Hdot
+        if len(self.yresult.shape) == 3:
+            rhogamma = self.yresult[:,self.rhogamma_ix,0]
+            rhomatter = self.yresult[:,self.rhomatter_ix,0]
+            Hsq = self.yresult[:,self.H_ix,0]**2
+        else:
+            rhogamma = self.yresult[:,self.rhogamma_ix]
+            rhomatter = self.yresult[:,self.rhomatter_ix]
+            Hsq = self.yresult[:,self.H_ix]**2
+        #Make sure to do sum across only phidot axis (1 in this case)
+        rho_fields = 3*Hsq - rhogamma - rhomatter
+        return rho_fields, 3*Hsq
+    
+    def find_reheating_end(self):
+        """Find the efold time where reheating ends,
+            i.e. the energy density of inflaton fields < 1% of total.
+            Returns tuple of endefold and endindex (in tresult)."""
+        
+        rho_fields, total_rho = self.getrho_fields()
+        
+        rho_fraction = rho_fields/total_rho
+        
+        if not any(self.epsilon>1):
+            raise c.ModelError("Reheating did not end during specified number of efoldings.")
+        
+        endindex = np.where(rho_fraction<=0.01)[0][0]
+        
+        #Interpolate results to find more accurate endpoint
+        tck = interpolate.splrep(self.tresult[:endindex], rho_fraction[:endindex])
+        t2 = np.linspace(self.tresult[endindex-1], self.tresult[endindex], 100)
+        y2 = interpolate.splev(t2, tck)
+        endindex2 = np.where(y2 < 0.01)[0][0]
+        #Return efold of more accurate endpoint
+        endefold = t2[endindex2]
+        
+        return endefold, endindex
     
 class ReheatingBackground(ReheatingModels):
     """Model of background equations for reheating in a two field, two fluid system
