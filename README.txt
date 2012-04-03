@@ -2,8 +2,6 @@
 Pyflation
 *********
 
-Author: Ian Huston
-
 Introduction
 ============
 
