@@ -2,6 +2,8 @@
 Pyflation
 *********
 
+Author: Ian Huston
+
 Introduction
 ============
 
@@ -48,11 +50,32 @@ For copyright and license information please see the LICENSE.txt file. For
 installation information see the INSTALL.txt file. For usage information see 
 the USAGE.txt file.
 
+Relevant Publications
+=====================
+
+Pyflation has been used to generate results for peer-reviewed publications 
+including
+* Ian Huston, Adam Christopherson, Calculating Non-adiabatic Pressure 
+  Perturbations during Multi-field Inflation, 
+  Physical Review D85, 063507 (2012), http://arXiv.org/abs/1111.6919
+* Ian Huston, Karim A. Malik, Second Order Perturbations During Inflation 
+  Beyond Slow-roll, 
+  Journal of Cosmology and Astroparticle Physics 10(2011)029, 
+  http://arXiv.org/abs/1103.0912
+* Ian Huston, Karim A. Malik, Numerical calculation of second order perturbations, 
+  Journal of Cosmology and Astroparticle Physics 09(2009)019, 
+  http://arXiv.org/abs/0907.2917
+  
+As a courtesy please cite one or more of these
+papers in any publication which uses Pyflation.
+
 Acknowledgements
 ================
 
 This author of this software is supported by the Science & Technology Facilities 
-Council under grant ST/G002150/1.
+Council under grants ST/G002150/1 and ST/J001546/1.
 
-Author: Ian Huston
+Thank you to Adam Christopherson, Karim Malik, David Mulryne and Jason Furtney 
+for their discussions and contributions.
+
 

@@ -60,6 +60,7 @@ Contents
    usage
    scripts
    changelog
+   publications
    license
 
 Package and Module Reference
@@ -76,7 +77,10 @@ Acknowledgements
 ================
 
 This author of this software is supported by the Science & Technology Facilities 
-Council under grant ST/G002150/1.
+Council under grants ST/G002150/1 and ST/J001546/1.
+
+Thank you to Adam Christopherson, Karim Malik, David Mulryne and Jason Furtney 
+for their discussions and contributions.
 
 Indices and tables
 ==================
