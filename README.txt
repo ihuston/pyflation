@@ -53,6 +53,7 @@ Relevant Publications
 
 Pyflation has been used to generate results for peer-reviewed publications 
 including
+
 * Ian Huston, Adam Christopherson, Calculating Non-adiabatic Pressure 
   Perturbations during Multi-field Inflation, 
   Physical Review D85, 063507 (2012), http://arXiv.org/abs/1111.6919
