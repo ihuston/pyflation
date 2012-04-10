@@ -259,10 +259,8 @@ class ReheatingFirstOrder(ReheatingModels):
         self.dpdots_ix = slice(self.dps_ix.start + 1, self.dps_ix.stop, 2)
         
         #Fluid perturbations
-        self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + 2*self.nfields, 2)
-        self.dgammadot_ix = slice(self.dpdots_ix.stop + 1, self.dpdots_ix.stop + 2*self.nfields, 2)
-        self.dmatter_ix = slice(self.dgammadot_ix.stop, self.dgammadot_ix.stop + 2*self.nfields, 2)
-        self.dmatterdot_ix = slice(self.dgammadot_ix.stop + 1, self.dgammadot_ix.stop + 2*self.nfields, 2)
+        self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + self.nfields, 2)
+        self.dmatter_ix = slice(self.dgamma_ix.stop, self.dgamma_ix.stop + self.nfields, 2)
         
         #Indices for transfer array
         self.tgamma_ix = 0
