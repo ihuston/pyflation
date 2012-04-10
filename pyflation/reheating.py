@@ -198,3 +198,125 @@ class ReheatingBackground(ReheatingModels):
         dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
 
         return dydx
+
+
+class ReheatingFirstOrder(ReheatingModels):
+    """First order model with two fluids for reheating.
+    
+    nfields holds the number of fields and the yresult variable is then laid
+    out as follows:
+    
+    yresult[0:nfields*2] : background fields and derivatives
+    yresult[nfields*2] : Hubble variable H
+    yresult[nfields*2 + 1:] : perturbation fields and derivatives
+       """
+            
+    def __init__(self,  k=None, ainit=None, *args, **kwargs):
+        """Initialize variables and call superclass"""
+        
+        super(ReheatingFirstOrder, self).__init__(*args, **kwargs)
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+        
+        #Let k roam for a start if not given
+        if k is None:
+            self.k = 10**(np.arange(10.0)-8)
+        else:
+            self.k = k
+        
+        #Set the field indices to use
+        self.setfieldindices()
+        
+        #Initial conditions for each of the variables.
+        if self.ystart is None:
+            self.ystart= np.array([18.0,-0.1]*self.nfields + [0.0] + [1.0,0.0]*self.nfields)
+        
+        #Set initial H value if None
+        if np.all(self.ystart[self.H_ix] == 0.0):
+            U = self.potentials(self.ystart, self.pot_params)[0]
+            self.ystart[self.H_ix] = self.findH(U, self.ystart)
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+                
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        
+        self.H_ix = slice(self.phidots_ix.stop, self.phidots_ix.stop + 1)
+                
+        self.rhogamma_ix = slice(self.H_ix.stop, self.H_ix.stop + 1)
+        self.rhomatter_ix = slice(self.rhogamma_ix.stop, self.rhogamma_ix.stop + 1)
+        
+        self.bg_ix = slice(0, self.rhomatter_ix.stop)
+        
+        self.pert_ix = slice(self.bg_ix.stop, None)
+        self.dps_ix = slice(self.pert_ix.start, self.pert_ix.start + 2*self.nfields**2, 2)
+        self.dpdots_ix = slice(self.dps_ix.start + 1, self.dps_ix.stop, 2)
+        
+        #Fluid perturbations
+        self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + 2*self.nfields, 2)
+        self.dgammadot_ix = slice(self.dpdots_ix.stop + 1, self.dpdots_ix.stop + 2*self.nfields, 2)
+        self.dmatter_ix = slice(self.dgammadot_ix.stop, self.dgammadot_ix.stop + 2*self.nfields, 2)
+        self.dmatterdot_ix = slice(self.dgammadot_ix.stop + 1, self.dgammadot_ix.stop + 2*self.nfields, 2)
+        
+        #Indices for transfer array
+        self.tgamma_ix = 0
+        self.tmatter_ix = 1
+        return
+                       
+    def derivs(self, y, t, **kwargs):
+        """Return derivatives of fields in y at time t."""
+        #If k not given select all
+        if "k" not in kwargs or kwargs["k"] is None:
+            k = self.k
+        else:
+            k = kwargs["k"]
+        
+        #Set up variables    
+        phidots = y[self.phidots_ix]
+        lenk = len(k)
+        #Get a
+        a = self.ainit*np.exp(t)
+        H = y[self.H_ix]
+        nfields = self.nfields    
+        #get potential from function
+        U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
+        
+        #Set derivatives taking care of k type
+        if type(k) is np.ndarray or type(k) is list: 
+            dydx = np.zeros((2*nfields**2 + 2*nfields + 1,lenk), dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields,lenk), dtype=y.dtype)
+        else:
+            dydx = np.zeros(2*nfields**2 + 2*nfields + 1, dtype=y.dtype)
+            innerterm = np.zeros((nfields,nfields), y.dtype)
+        
+        #d\phi_0/dn = y_1
+        dydx[self.phis_ix] = phidots
+        #dphi^prime/dn
+        dydx[self.phidots_ix] = -(U*phidots+ dUdphi[...,np.newaxis])/(H**2)
+        #dH/dn Do sum over fields not ks so use axis=0
+        dydx[self.H_ix] = -0.5*(np.sum(phidots**2, axis=0))*H
+        #d\delta \phi_I / dn
+        dydx[self.dps_ix] = y[self.dpdots_ix]
+        
+        #Set up delta phis in nfields*nfields array        
+        dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
+        #This for loop runs over i,j and does the inner summation over l
+        for i in range(nfields):
+            for j in range(nfields):
+                #Inner loop over fields
+                for l in range(nfields):
+                    innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
+                                        + dUdphi[i]*phidots[l] 
+                                        + phidots[i]*phidots[l]*U))*dpmodes[l,j]
+        #Reshape this term so that it is nfields**2 long        
+        innerterm = innerterm.reshape((nfields**2,lenk))
+        #d\deltaphi_1^prime/dn
+        dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+                                + innerterm/H**2)
+        return dydx
