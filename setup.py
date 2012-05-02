@@ -34,9 +34,11 @@ if use_cython:
     cmdclass.update({ 'build_ext': build_ext })
 else:
     ext_modules += [
-        Extension("pyflation.sourceterm.srccython", [ "pyflation/sourceterm/srccython.c" ]),
+        Extension("pyflation.sourceterm.srccython", [ "pyflation/sourceterm/srccython.c" ],
+                  include_dirs=[numpy.get_include()]),
         #
-        Extension("pyflation.romberg", [ "pyflation/romberg.c" ]),
+        Extension("pyflation.romberg", [ "pyflation/romberg.c" ],
+                  include_dirs=[numpy.get_include()]),
     ]
 
 
