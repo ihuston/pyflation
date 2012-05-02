@@ -1,5 +1,6 @@
 include *.txt
 recursive-include pyflation *.template
+recursive-include pyflation *.c
 include *.in
 include bin/pyflation_*
 recursive-include pyflation test*
