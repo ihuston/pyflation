@@ -160,7 +160,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     else:
         logging.debug("The run_config.py file already exists in correct directory.")
     
-    provenance.write_provenance_file(mytree)
+    provenance.write_provenance_file(newrundir, codedir, mytree)
     
     return
  
