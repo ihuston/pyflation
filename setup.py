@@ -18,14 +18,29 @@ from pyflation import __version__ as pyflation_version
 ###############
 VERSION = pyflation_version
 
+use_cython = True
 
-ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"],
+cmdclass = { }
+ext_modules = [ ]
+
+if use_cython:
+    ext_modules += [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"],
                include_dirs=[numpy.get_include()]),
                #
                Extension("pyflation.romberg", ["pyflation/romberg.pyx"], 
                include_dirs=[numpy.get_include()]),
                #
                ]
+    cmdclass.update({ 'build_ext': build_ext })
+else:
+    ext_modules += [
+        Extension("pyflation.sourceterm.srccython", [ "pyflation/sourceterm/srccython.c" ]),
+        #
+        Extension("pyflation.romberg", [ "pyflation/romberg.c" ]),
+    ]
+
+
+
 
 
 setup_args = dict(name='pyflation',
@@ -44,7 +59,7 @@ setup_args = dict(name='pyflation',
                            'bin/pyflation_newrun.py'],
                   package_data={'pyflation': ['qsub-sh.template', 
                                               'run_config.template']},
-                  cmdclass = {'build_ext': build_ext},
+                  cmdclass = cmdclass,
                   ext_modules = ext_modules,
                   license="Modified BSD license",
                   description="""Pyflation is a Python package for calculating 
