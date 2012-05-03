@@ -18,7 +18,7 @@ from pyflation import __version__ as pyflation_version
 ###############
 VERSION = pyflation_version
 
-use_cython = True
+use_cython = False
 
 cmdclass = { }
 ext_modules = [ ]
