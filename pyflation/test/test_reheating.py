@@ -59,7 +59,7 @@ class TestBackground():
         assert_raises(ValueError, reheating.ReheatingBackground, **newfx)
         
     def test_transfers_stored(self):
-        assert_almost_equal(self.transfers, 
+        assert_almost_equal(self.m.transfers, 
                             np.ones((2,2))*1e-8, 
                             err_msg="Transfer coefficients not saved correctly.")
         
