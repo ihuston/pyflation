@@ -167,7 +167,6 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     #New y results array
     yshape = [number_steps]
     yshape.extend(v.shape)
-    yarr = np.ones(yshape, dtype=ystart.dtype)*np.nan
     
     #Set up x counter and index for x
     xix = 0 # first index
@@ -181,20 +180,21 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         if _debug:
             rk_log.debug("rkdriver_append: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
         xarr.append(simtstart + np.arange(xix+1, first_real_step+1)*h)
+        
+        #Add in first_real_step ystart value
+        #Need to append a result for step xix unlike in xarr case
+        yarr.append(np.tile(v, (first_real_step - xix, 1)))
+        #Move pointer up to first_real_step
         xix = first_real_step
-    
-    #Get the last start step. Only need to check for NaNs before this.
-    last_start_step = tsix.max()    
-    
-    
-    
-    #Change yresults at each timestep in tsix to value in ystart
-    #The transpose of ystart is used so that the start_value variable is an array
-    #of all the dynamical variables at the start time given by timeindex.
-    #Test whether the timeindex array has more than one value, i.e. more than one k value
-    for kindex, (timeindex, start_value) in enumerate(zip(tsix, ystart.transpose())):
-        yarr[timeindex, ..., kindex] = start_value
-    
+        
+    #Save first set of y values
+    ks_starting = np.where(tsix == xix)
+    y_to_save = np.copy(v)
+    y_to_save[..., ks_starting] = ystart[..., ks_starting]
+    yarr.append(y_to_save)
+    last_y = y_to_save
+        
+    # Go through all remaining timesteps
     for xix in range(first_real_step + 1, number_steps):
         if _debug:
             rk_log.debug("rkdriver_append: xix=%f", xix)
@@ -209,18 +209,19 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         #Setup any arguments that are needed to send to derivs function
         dargs = {}
         #Find first derivative term for the last time step
-        dv = derivs(yarr[xix-1], last_x, **dargs)
+        dv = derivs(last_y, last_x, **dargs)
         #Do a rk4 step starting from last time step
-        v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs)
-        #This masks all the NaNs in the v result so that they are not copied
-        if xix <= last_start_step:
-            v_nonan = ~np.isnan(v)
-            #Save current result without overwriting with NaNs
-            yarr[xix, v_nonan] = v[v_nonan]
-        else:
-            yarr[xix] = np.copy(v)
+        v = rk4stepks(last_x, last_y, h, dv, dargs, derivs)
+    
+        #Check whether next time step has new ystart values
+        ks_starting = np.where(tsix == xix)
+        y_to_save = np.copy(v)
+        y_to_save[..., ks_starting] = ystart[..., ks_starting]
+        yarr.append(y_to_save)
         #Save current timestep
         xarr.append(np.copy(current_x))
+        #Save last y value
+        last_y = y_to_save
         
     #Get results 
     rk_log.info("Execution of Runge-Kutta method has finished.")
