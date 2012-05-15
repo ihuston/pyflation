@@ -172,9 +172,7 @@ class CosmologicalModel(object):
     
     def run(self, saveresults=True):
         """Execute a simulation run using the parameters already provided."""
-        if self.solver not in self.solverlist:
-            raise ModelError("Unknown solver!")
-            
+        
         if self.solver in ["rkdriver_tsix"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
@@ -193,16 +191,17 @@ class CosmologicalModel(object):
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
-            
         
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()       
-        if saveresults:
-            try:
-                fname = self.saveallresults()
-                self._log.info("Results saved in " + fname)
-            except IOError, er:
-                self._log.error("Error trying to save results! Results NOT saved.\n" + er)            
+            #Aggregrate results and calling parameters into results list
+            self.lastparams = self.callingparams()       
+            if saveresults:
+                try:
+                    fname = self.saveallresults()
+                    self._log.info("Results saved in " + fname)
+                except IOError, er:
+                    self._log.error("Error trying to save results! Results NOT saved.\n" + er)
+        else:
+            raise ModelError("Unknown solver!")            
         return
     
     def callingparams(self):
