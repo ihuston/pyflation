@@ -158,8 +158,6 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
-    #Set up x results array
-    xarr = np.zeros((number_steps,))
     
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
@@ -176,13 +174,13 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     
     
     #Record first x value
-    xarr[xix] = simtstart
+    xarr.append(simtstart)
     
     first_real_step = np.int(tsix.min())
     if first_real_step > xix:
         if _debug:
             rk_log.debug("rkdriver_append: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
-        xarr[xix+1:first_real_step+1] = simtstart + np.arange(xix+1, first_real_step+1)*h
+        xarr.append(simtstart + np.arange(xix+1, first_real_step+1)*h)
         xix = first_real_step
     
     #Get the last start step. Only need to check for NaNs before this.
@@ -222,7 +220,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         else:
             yarr[xix] = np.copy(v)
         #Save current timestep
-        xarr[xix] = np.copy(current_x)
+        xarr.append(np.copy(current_x))
         
     #Get results 
     rk_log.info("Execution of Runge-Kutta method has finished.")
