@@ -150,9 +150,6 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     if h is None:
         raise SimRunError("Need to specify h.")
     
-    #Set up x counter and index for x
-    xix = 0 # first index
-    
     #The number of steps is now calculated using around. This matches with the
     #expression used in second order classes to calculate the first order timestep.
     #Around rounds .5 values towards even numbers so 0.5->0 and 1.5->2.
@@ -163,18 +160,6 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     
     #Set up x results array
     xarr = np.zeros((number_steps,))
-    #Record first x value
-    xarr[xix] = simtstart
-    
-    first_real_step = np.int(tsix.min())
-    if first_real_step > xix:
-        if _debug:
-            rk_log.debug("rkdriver_tsix: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
-        xarr[xix+1:first_real_step+1] = simtstart + np.arange(xix+1, first_real_step+1)*h
-        xix = first_real_step
-    
-    #Get the last start step. Only need to check for NaNs before this.
-    last_start_step = tsix.max()    
     
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
@@ -186,6 +171,25 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     yshape.extend(v.shape)
     yarr = np.ones(yshape, dtype=ystart.dtype)*np.nan
     
+    #Set up x counter and index for x
+    xix = 0 # first index
+    
+    
+    #Record first x value
+    xarr[xix] = simtstart
+    
+    first_real_step = np.int(tsix.min())
+    if first_real_step > xix:
+        if _debug:
+            rk_log.debug("rkdriver_append: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
+        xarr[xix+1:first_real_step+1] = simtstart + np.arange(xix+1, first_real_step+1)*h
+        xix = first_real_step
+    
+    #Get the last start step. Only need to check for NaNs before this.
+    last_start_step = tsix.max()    
+    
+    
+    
     #Change yresults at each timestep in tsix to value in ystart
     #The transpose of ystart is used so that the start_value variable is an array
     #of all the dynamical variables at the start time given by timeindex.
@@ -195,7 +199,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     
     for xix in range(first_real_step + 1, number_steps):
         if _debug:
-            rk_log.debug("rkdriver_tsix: xix=%f", xix)
+            rk_log.debug("rkdriver_append: xix=%f", xix)
         if xix % 1000 == 0:
             rk_log.info("Step number %i of %i", xix, number_steps)
         
