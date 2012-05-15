@@ -158,20 +158,13 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
-    
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
         ystart = ystart[..., np.newaxis]
     v = np.ones_like(ystart)*np.nan
     
-    #New y results array
-    yshape = [number_steps]
-    yshape.extend(v.shape)
-    
     #Set up x counter and index for x
     xix = 0 # first index
-    
-    
     #Record first x value
     xarr.append(simtstart)
     
@@ -180,7 +173,6 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         if _debug:
             rk_log.debug("rkdriver_append: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
         xarr.append(simtstart + np.arange(xix+1, first_real_step+1)*h)
-        
         #Add in first_real_step ystart value
         #Need to append a result for step xix unlike in xarr case
         yarr.append(np.tile(v, (first_real_step - xix, 1)))
