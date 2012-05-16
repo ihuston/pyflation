@@ -232,14 +232,39 @@ class CosmologicalModel(object):
         }
         return params   
            
-    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
-        """Saves results already calculated into a file."""
+
+    def openresultsfile(self, filename=None, filetype="hdf5", yresultshape=None, **kwargs):
+        """Open a results file and create the necessary structure.
         
+        Parameters
+        ----------
+        filename : string
+                   full path to file
+            
+        filetype : string
+                   filetype to open (currently only "hdf5")
+                   
+        yresultshape : tuple
+                       shape of one row the yresult array, first entry should 
+                       be 0.
+                       
+        kwargs : additional arguments for createhdf5structure method.
+        
+        Returns
+        -------
+        
+        rf : file handle
+        
+        grpname : name of results group in file
+        
+        filename : path to file 
+        
+        
+        """
         now = self.lastparams["datetime"]
         if not filename:
             filename = os.path.join(os.getcwd(), "run" + now + "." + filetype)
             self._log.info("Filename set to " + filename)
-            
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
                 if _debug:
@@ -251,17 +276,14 @@ class CosmologicalModel(object):
                 filemode = "w" #Writing to new file
         else:
             raise IOError("Directory %s does not exist" % os.path.dirname(filename))
-        
         if yresultshape is None:
             yresultshape = list(self.yresult.shape)
             yresultshape[0] = 0
-        
-        #Check whether we should store ks and set group name accordingly
+    #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
         else:
             grpname = "results"
-                
         if filetype is "hf5":
             try:
                 if filemode == "w":
@@ -272,6 +294,12 @@ class CosmologicalModel(object):
                 raise
         else:
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
+        return rf, grpname, filename
+
+    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
+        """Saves results already calculated into a file."""
+        
+        rf, grpname, filename = self.openresultsfile(filename, filetype, yresultshape, **kwargs)
         
         #Try to save results
         try:
