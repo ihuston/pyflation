@@ -268,7 +268,9 @@ class CosmologicalModel(object):
                     rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
                 elif filemode == "a":
                     rf = tables.openFile(filename, filemode)
-                self.saveresultsinhdf5(rf, grpname)
+                resgrp = self.saveresultsinhdf5(rf, grpname)
+                self.appendresults(resgrp)
+                self.closehdf5file(rf)
             except IOError:
                 raise
         else:
@@ -347,6 +349,9 @@ class CosmologicalModel(object):
         
         return rf
         
+
+
+
     def saveresultsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
         
@@ -356,7 +361,11 @@ class CosmologicalModel(object):
             File to save results in
 
         grpname : string, optional
-                 Name of the HDF5 group to create in the file
+                 Name of the HDF5 results group
+                 
+        Returns
+        -------
+        resgrp : handle for results group in HDF5 file
 
         """
         try:
@@ -382,23 +391,34 @@ class CosmologicalModel(object):
                 potparamsrow.append()
             potparamstab.flush()
              
-            #Get yresult array handle
-            yresarr = resgrp.yresult
-            yresarr.append(self.yresult)
             
-            #Save tresults
-            tresarr = resgrp.tresult
-            tresarr.append(self.tresult)
-            
-            #Flush saved results to file
-            rf.flush()
-            #Close file
-            rf.close()
             #Log success
             if _debug:
-                self._log.debug("Successfully wrote results to file " + rf.filename)
+                self._log.debug("Successfully wrote parameters to file " + rf.filename)
         except IOError:
             raise
+        return resgrp
+        
+    def closehdf5file(self, rf):
+        #Flush saved results to file
+        rf.flush() #Close file
+        rf.close()
+        if _debug:
+            self._log.debug("File successfully closed")
+        return
+
+    def appendresults(self, resgrp):
+        #Get yresult array handle
+        yresarr = resgrp.yresult
+        yresarr.append(self.yresult)
+        if _debug:
+            self._log.debug("yresult array succesfully written.")
+        #Save tresults
+        tresarr = resgrp.tresult
+        tresarr.append(self.tresult)
+        if _debug:
+            self._log.debug("tresult array successfully written.")
+        return
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
