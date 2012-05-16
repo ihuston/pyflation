@@ -268,13 +268,20 @@ class CosmologicalModel(object):
                     rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
                 elif filemode == "a":
                     rf = tables.openFile(filename, filemode)
-                resgrp = self.saveresultsinhdf5(rf, grpname)
-                self.appendresults(resgrp)
-                self.closehdf5file(rf)
             except IOError:
                 raise
         else:
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
+        
+        #Try to save results
+        try:
+            resgrp = self.saveresultsinhdf5(rf, grpname)
+            self.appendresults(resgrp)
+            self.closehdf5file(rf)
+        except IOError:
+            self._log.error("Error saving results to %s" % rf)
+            raise
+        
         return filename
     
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
