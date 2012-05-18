@@ -200,6 +200,43 @@ class CosmologicalModel(object):
                     self._log.info("Results saved in " + fname)
                 except IOError, er:
                     self._log.error("Error trying to save results! Results NOT saved.\n" + er)
+            ###################################
+        elif self.solver in ["rkdriver_append"]:
+            #set_trace()
+            #Loosely estimate number of steps based on requested step size
+            if not hasattr(self, "tstartindex"):
+                raise ModelError("Need to specify initial starting indices!")
+            if _debug:
+                self._log.debug("Starting simulation with %s.", self.solver)
+            solver = getattr(rk4, self.solver)
+            
+            #Aggregrate results and calling parameters into results list
+            self.lastparams = self.callingparams()
+            if saveresults:
+                try:
+                    rf, grpname, fname = self.openresultsfile(filename, filetype, yresultshape)
+                    self._log.info("Results file created in " + fname)
+                except IOError, er:
+                    self._log.error("Error trying to save results! Results NOT saved.\n" + er)
+            else:
+                # Use python lists instead of pytables earray
+                self.yresult = []
+                self.tresult = []
+            try:
+                self.tresult, self.yresult = solver(ystart=self.ystart, 
+                                                    simtstart=self.simtstart, 
+                                                    tsix=self.tstartindex, 
+                                                    tend=self.tend,
+                                                    h=self.tstep_wanted, 
+                                                    derivs=self.derivs,
+                                                    yarr=self.yresult,
+                                                    xarr=self.tresult)
+            except StandardError:
+                self._log.exception("Error running %s!", self.solver)
+                raise
+        
+                   
+            
         else:
             raise ModelError("Unknown solver!")            
         return
