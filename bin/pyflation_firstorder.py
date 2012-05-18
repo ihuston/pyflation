@@ -101,31 +101,44 @@ def runfomodel(filename=None, foargs=None, foclass=None):
     #Create model instance
     model = foclass(**foargs)
     
+    log.debug("Path for model data file is %s.", filename)
+    try:
+        helpers.ensurepath(filename)
+    except IOError:
+        log.exception("Error creating save file directory.")
+        return 1
+    
+    #Create saving arguments
+    saveargs = dict(filename=filename, 
+                    hdf5complevel=configuration.hdf5complevel,
+                    hdf5complib=configuration.hdf5complib)
+    
     try:
         log.debug("Starting model run...")
-        model.run(saveresults=False)
+        model.run(saveresults=True, saveargs=saveargs)
         log.debug("Model run finished.")
     except c.ModelError:
         log.exception("Something went wrong with model, quitting!")
-        sys.exit(1)
-        
-    #Save data
-    try:
-        log.debug("Trying to save model data to %s...", filename)
-        helpers.ensurepath(filename)
-        model.saveallresults(filename=filename, 
-                             hdf5complevel=configuration.hdf5complevel,
-                             hdf5complib=configuration.hdf5complib)
-        #Success!
-        log.info("Successfully ran and saved simulation in file %s.", filename)
-    except Exception:
+        return 1
+    except IOError:
         log.exception("IO error, nothing saved!")
+        return 1    
+    #Save data
+    
+    
+    
+    #Success!
+    log.info("Successfully ran and saved simulation in file %s.", filename)
+
         
     #Destroy model instance to save memory
     log.debug("Destroying model instance...")
-    del model
+    try:
+        del model
+    except:
+        pass
     
-    return filename
+    return 0
 
 
 def main(argv=None):
@@ -207,10 +220,13 @@ def main(argv=None):
     
     #Start first order run
     try:
-        runfomodel(filename=options.foresults, foargs=foargs)
+        retval = runfomodel(filename=options.foresults, foargs=foargs)
     except Exception:
         log.exception("Something went wrong during first order run!")
         return 1
+    if retval != 0:
+        log.error("Model run ended with error!")
+        return retval
     
     log.info("----------First order run finished-------------------")
     return 0

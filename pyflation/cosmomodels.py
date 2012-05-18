@@ -340,7 +340,7 @@ class CosmologicalModel(object):
         
         #Try to save results
         try:
-            resgrp = self.saveresultsinhdf5(rf, grpname)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
             self.appendresults(resgrp)
             self.closehdf5file(rf)
         except IOError:
@@ -424,7 +424,7 @@ class CosmologicalModel(object):
 
 
 
-    def saveresultsinhdf5(self, rf, grpname="results"):
+    def saveparamsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
         
         Parameters
@@ -1494,7 +1494,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, saveargs=None):
         """Run the full model.
         
         The background model is first run to establish the end time of inflation and the start
@@ -1504,7 +1504,12 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Parameters
         ----------
         saveresults : boolean, optional
-                      Should results be saved at the end of the run. Default is False.
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
                      
         Returns
         -------
@@ -1517,19 +1522,28 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Set initial conditions for first order model
         self.setfoics()
         
-        #Run first order model
-        self.runfo()
-        
-        #Save results in file
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()   
         
         if saveresults:
+            saveargs["yresultshape"] = list(self.foystart).insert(0, 0)
+            #Set up results file
+            rf, grpname, filename = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        #Run first order model
+        self.runfo()
+        
+        #Save results in file
+        if saveresults:
             try:
-                self._log.info("Results saved in " + self.saveallresults())
-            except IOError, er:
+                self._log.info("Saving results")
+                self.appendresults(resgrp)
+                self.closehdf5file(rf)
+            except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
-        return
+        return filename
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
