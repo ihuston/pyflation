@@ -199,6 +199,11 @@ class CosmologicalModel(object):
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
+            #Change lists back into arrays
+            if isinstance(self.yresult, list):
+                self.yresult = np.asanyarray(self.yresult)
+            if isinstance(self.tresult, list):
+                self.tresult = np.asanyarray(self.tresult)
         
 
             ###################################
