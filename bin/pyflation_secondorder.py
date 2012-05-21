@@ -163,7 +163,7 @@ def main(argv=None):
         log.warn("Debugging information will not be stored due to setting in run_config.")
     
     if not os.path.isfile(options.mrgresults):
-        raise IOError("Merged results file %s does not exist!" % options.foresults)
+        raise IOError("Merged results file %s does not exist!" % options.mrgresults)
     
     try:
         log.info("-----------Second order run requested------------------")
