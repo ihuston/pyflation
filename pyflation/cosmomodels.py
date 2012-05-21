@@ -270,7 +270,7 @@ class CosmologicalModel(object):
         return params   
            
 
-    def openresultsfile(self, filename=None, filetype="hdf5", yresultshape=None, **kwargs):
+    def openresultsfile(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
         """Open a results file and create the necessary structure.
         
         Parameters
