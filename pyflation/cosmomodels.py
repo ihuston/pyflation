@@ -1526,7 +1526,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self.lastparams = self.callingparams()   
         
         if saveresults:
-            saveargs["yresultshape"] = list(self.foystart).insert(0, 0)
+            ystartshape = list(self.foystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
             #Set up results file
             rf, grpname, filename = self.openresultsfile(**saveargs)
             self._log.info("Opened results file %s.", filename)
