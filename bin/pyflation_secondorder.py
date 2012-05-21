@@ -60,8 +60,8 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
     
     Returns
     -------
-    filename: String
-              Name of the file where results have been saved.
+    retval: integer
+            Non-zero if error.
               
     Raises
     ------
@@ -83,34 +83,39 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
     if sodriver is None:
         sodriver = c.SOCanonicalThreeStage
     somodel = sodriver(fomodel, **soargs)
+    
+    if filename is None:
+        filename = run_config.soresults
+    if _debug:
+        log.debug("Trying to save model data to %s...", filename)
+    try:
+        helpers.ensurepath(filename)
+    except IOError:
+        log.exception("Error creating save file directory.")
+        return 1
+    #Create save arguments
+    saveargs = dict(filename=filename, 
+                             hdf5complevel=configuration.hdf5complevel,
+                             hdf5complib=configuration.hdf5complib)
     try:
         if _debug:
             log.debug("Starting model run...")
-        somodel.run(saveresults=False)
+        somodel.run(saveresults=True, saveargs=saveargs)
         if _debug:
             log.debug("Model run finished.")
     except c.ModelError:
         log.exception("Something went wrong with model, quitting!")
-        sys.exit(1)
-    if filename is None:
-        filename = run_config.soresults
-    try:
-        if _debug:
-            log.debug("Trying to save model data to %s...", filename)
-        helpers.ensurepath(filename)
-        somodel.saveallresults(filename=filename, 
-                             hdf5complevel=configuration.hdf5complevel,
-                             hdf5complib=configuration.hdf5complib)
-        #Success!
-        log.info("Successfully ran and saved simulation in file %s.", filename)
-    except Exception:
+        return 1
+    except IOError:
         log.exception("IO error, nothing saved!")
+        
+    log.info("Successfully ran and saved simulation in file %s.", filename)
     #Destroy model instance to save memory
     if _debug:
         log.debug("Destroying model instance...")
     del somodel
     
-    return filename
+    return 0
 
 
 def main(argv=None):
@@ -162,12 +167,12 @@ def main(argv=None):
     
     try:
         log.info("-----------Second order run requested------------------")
-        runsomodel(mrgfile=options.mrgresults, soargs=run_config.soargs)
+        retval = runsomodel(mrgfile=options.mrgresults, soargs=run_config.soargs)
     except Exception:
         log.exception("Error getting second order results!")
         return 1
     
-    return 0
+    return retval
         
       
 

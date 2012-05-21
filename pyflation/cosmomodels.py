@@ -1525,6 +1525,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()   
         
+        if saveargs is None:
+            saveargs = {}
+        
         if saveresults:
             ystartshape = list(self.foystart.shape)
             ystartshape.insert(0, 0)
@@ -1909,20 +1912,56 @@ class SOCanonicalThreeStage(MultiStageDriver):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True):
-        """Run simulation and save results."""
-        #Run second order model
-        self.runso()
+    def run(self, saveresults=True, saveargs=None):
+        """Run the full model.
+        
+        The second order model is run in full using the first order and convolution results.
+        
+        Parameters
+        ----------
+        saveresults : boolean, optional
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
+                     
+        Returns
+        -------
+        filename : string
+                   name of the results file if any
+        """
+        
         
         #Save results in file
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
+
+        if saveargs is None:
+            saveargs = {}
+
+        if saveresults:
+            ystartshape = list(self.ystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
+            #Set up results file
+            rf, grpname, filename = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        
+        #Run second order model
+        self.runso()
+        
         if saveresults:
             try:
-                self._log.info("Results saved in " + self.saveallresults())
-            except IOError, er:
+                self._log.info("Saving results")
+                self.appendresults(resgrp)
+                self.closehdf5file(rf)
+            except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
-        return
+        return filename
     
     @property
     def deltaphi(self, recompute=False):
