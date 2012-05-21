@@ -58,7 +58,7 @@ class CosmologicalModel(object):
     
     
     """
-    solverlist = ["rkdriver_tsix"]
+    solverlist = ["rkdriver_tsix", "rkdriver_append"]
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
