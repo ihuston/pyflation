@@ -1477,7 +1477,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
-    def runfo(self):
+    def runfo(self, yresarr, tresarr):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
@@ -1499,7 +1499,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
-            self.firstordermodel.run(saveresults=False)
+            self.firstordermodel.run(saveresults=False, yresarr=yresarr,
+                                     tresarr=tresarr)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
@@ -1551,7 +1552,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
             resgrp = self.saveparamsinhdf5(rf, grpname)
             self._log.info("Saved parameters in file.")
         #Run first order model
-        self.runfo()
+        self.runfo(yresarr, tresarr)
         
         #Save results in file
         if saveresults:
