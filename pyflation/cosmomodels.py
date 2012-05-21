@@ -214,7 +214,7 @@ class CosmologicalModel(object):
             self.lastparams = self.callingparams()
             if saveresults:
                 try:
-                    rf, grpname, fname = self.openresultsfile(filename, filetype, yresultshape)
+                    rf, grpname, fname, yresarr, tresarr = self.openresultsfile(filename, filetype, yresultshape)
                     self._log.info("Results file created in " + fname)
                 except IOError, er:
                     self._log.error("Error trying to save results! Results NOT saved.\n" + er)
@@ -296,6 +296,12 @@ class CosmologicalModel(object):
         
         filename : path to file 
         
+        yresarr : handle to EArray
+                  array for saving y results
+                  
+        tresarr : handle to EArray
+                  array for saving t results
+        
         
         """
         now = self.lastparams["datetime"]
@@ -324,24 +330,26 @@ class CosmologicalModel(object):
         if filetype is "hf5":
             try:
                 if filemode == "w":
-                    rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
+                    rf, yresarr, tresarr = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
                 elif filemode == "a":
                     rf = tables.openFile(filename, filemode)
+                    yresarr = rf.getNode(rf.root, grpname + ".yresult")
+                    tresarr = rf.getNode(rf.root, grpname + ".tresult")
             except IOError:
                 raise
         else:
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
-        return rf, grpname, filename
+        return rf, grpname, filename, yresarr, tresarr
 
     def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
         """Saves results already calculated into a file."""
         
-        rf, grpname, filename = self.openresultsfile(filename, filetype, yresultshape, **kwargs)
+        rf, grpname, filename, yresarr, tresarr = self.openresultsfile(filename, filetype, yresultshape, **kwargs)
         
         #Try to save results
         try:
             resgrp = self.saveparamsinhdf5(rf, grpname)
-            self.appendresults(resgrp)
+            self.appendresults(yresarr, tresarr)
             self.closehdf5file(rf)
         except IOError:
             self._log.error("Error saving results to %s" % rf)
@@ -373,6 +381,12 @@ class CosmologicalModel(object):
         -------
         rf : file handle
              Handle of file created 
+             
+        yresarr : handle to EArray
+                  array for saving y results
+                  
+        tresarr : handle to EArray
+                  array for saving t results
         """
                     
         try:
@@ -419,7 +433,7 @@ class CosmologicalModel(object):
         except IOError:
             raise
         
-        return rf
+        return rf, yresarr, tresarr
         
 
 
@@ -479,14 +493,12 @@ class CosmologicalModel(object):
             self._log.debug("File successfully closed")
         return
 
-    def appendresults(self, resgrp):
-        #Get yresult array handle
-        yresarr = resgrp.yresult
+    def appendresults(self, yresarr, tresarr):
+        #Append y results
         yresarr.append(self.yresult)
         if _debug:
             self._log.debug("yresult array succesfully written.")
         #Save tresults
-        tresarr = resgrp.tresult
         tresarr.append(self.tresult)
         if _debug:
             self._log.debug("tresult array successfully written.")
@@ -1533,7 +1545,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
             ystartshape.insert(0, 0)
             saveargs["yresultshape"] = ystartshape 
             #Set up results file
-            rf, grpname, filename = self.openresultsfile(**saveargs)
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
             self._log.info("Opened results file %s.", filename)
             resgrp = self.saveparamsinhdf5(rf, grpname)
             self._log.info("Saved parameters in file.")
@@ -1544,7 +1556,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         if saveresults:
             try:
                 self._log.info("Saving results")
-                self.appendresults(resgrp)
+                self.appendresults(yresarr, tresarr)
                 self.closehdf5file(rf)
             except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
@@ -1946,7 +1958,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
             ystartshape.insert(0, 0)
             saveargs["yresultshape"] = ystartshape 
             #Set up results file
-            rf, grpname, filename = self.openresultsfile(**saveargs)
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
             self._log.info("Opened results file %s.", filename)
             resgrp = self.saveparamsinhdf5(rf, grpname)
             self._log.info("Saved parameters in file.")
@@ -1957,7 +1969,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         if saveresults:
             try:
                 self._log.info("Saving results")
-                self.appendresults(resgrp)
+                self.appendresults(yresarr, tresarr)
                 self.closehdf5file(rf)
             except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
