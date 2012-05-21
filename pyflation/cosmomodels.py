@@ -170,9 +170,17 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, yresarr=None, tresarr=None):
         """Execute a simulation run using the parameters already provided."""
-        
+            
+        # Use python lists instead of pytables earray if not available
+        if yresarr is None:
+            yresarr = []
+        if tresarr is None:
+            tresarr = []
+        # Set up results variables
+        self.yresult = yresarr
+        self.tresult = tresarr
         if self.solver in ["rkdriver_tsix"]:
             #set_trace()
             #Loosely estimate number of steps based on requested step size
@@ -187,7 +195,9 @@ class CosmologicalModel(object):
                                                     tsix=self.tstartindex, 
                                                     tend=self.tend,
                                                     h=self.tstep_wanted, 
-                                                    derivs=self.derivs)
+                                                    derivs=self.derivs,
+                                                    yarr=self.yresult,
+                                                    xarr=self.tresult)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
@@ -212,16 +222,7 @@ class CosmologicalModel(object):
             
             #Aggregrate results and calling parameters into results list
             self.lastparams = self.callingparams()
-            if saveresults:
-                try:
-                    rf, grpname, fname, yresarr, tresarr = self.openresultsfile(filename, filetype, yresultshape)
-                    self._log.info("Results file created in " + fname)
-                except IOError, er:
-                    self._log.error("Error trying to save results! Results NOT saved.\n" + er)
-            else:
-                # Use python lists instead of pytables earray
-                self.yresult = []
-                self.tresult = []
+            
             try:
                 self.tresult, self.yresult = solver(ystart=self.ystart, 
                                                     simtstart=self.simtstart, 

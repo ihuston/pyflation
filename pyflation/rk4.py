@@ -55,7 +55,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     return yout
 
 #@profile
-def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
+def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
@@ -74,6 +74,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
+    # We do not use the given yarr and xarr variables but initialize new ones
     #Set up x results array
     xarr = np.zeros((number_steps,))
     #Record first x value
