@@ -167,7 +167,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     #Set up x counter and index for x
     xix = 0 # first index
     #Record first x value
-    xarr.append(np.atleast_1d(simtstart))
+    xarr.append(np.array(simtstart))
     
     first_real_step = np.int(tsix.min())
     if first_real_step > xix:
