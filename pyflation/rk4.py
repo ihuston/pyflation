@@ -185,7 +185,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         
     #Save first set of y values
     ks_starting = np.where(tsix == xix)
-    y_to_save = np.copy(v)
+    y_to_save = np.copy(v[np.newaxis])
     y_to_save[..., ks_starting] = ystart[..., ks_starting]
     yarr.append(y_to_save)
     last_y = y_to_save
