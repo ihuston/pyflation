@@ -201,9 +201,9 @@ class CosmologicalModel(object):
                 raise
             #Change lists back into arrays
             if isinstance(self.yresult, list):
-                self.yresult = np.asanyarray(self.yresult)
+                self.yresult = np.vstack(self.yresult)
             if isinstance(self.tresult, list):
-                self.tresult = np.asanyarray(self.tresult)
+                self.tresult = np.hstack(self.tresult)
         
 
             ###################################
