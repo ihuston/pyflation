@@ -213,7 +213,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
             y_to_save[..., ks_starting] = ystart[..., ks_starting]
         yarr.append(y_to_save)
         #Save current timestep
-        xarr.append(np.copy(current_x))
+        xarr.append(np.atleast_1d(current_x))
         #Save last y value but remove first axis
         last_y = y_to_save[0]
         
