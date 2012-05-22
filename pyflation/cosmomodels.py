@@ -58,7 +58,7 @@ class CosmologicalModel(object):
     
     
     """
-    solverlist = ["rkdriver_tsix"]
+    solverlist = ["rkdriver_tsix", "rkdriver_append"]
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
@@ -170,14 +170,18 @@ class CosmologicalModel(object):
         """Return value of comoving Hubble variable given potential and y."""
         pass
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, yresarr=None, tresarr=None):
         """Execute a simulation run using the parameters already provided."""
-        if self.solver not in self.solverlist:
-            raise ModelError("Unknown solver!")
             
-        if self.solver in ["rkdriver_tsix"]:
-            #set_trace()
-            #Loosely estimate number of steps based on requested step size
+        # Use python lists instead of pytables earray if not available
+        if yresarr is None:
+            yresarr = []
+        if tresarr is None:
+            tresarr = []
+        # Set up results variables
+        self.yresult = yresarr
+        self.tresult = tresarr
+        if self.solver in ["rkdriver_tsix", "rkdriver_append"]:
             if not hasattr(self, "tstartindex"):
                 raise ModelError("Need to specify initial starting indices!")
             if _debug:
@@ -189,20 +193,32 @@ class CosmologicalModel(object):
                                                     tsix=self.tstartindex, 
                                                     tend=self.tend,
                                                     h=self.tstep_wanted, 
-                                                    derivs=self.derivs)
+                                                    derivs=self.derivs,
+                                                    yarr=self.yresult,
+                                                    xarr=self.tresult)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
-            
+            #Change lists back into arrays
+            if isinstance(self.yresult, list):
+                self.yresult = np.vstack(self.yresult)
+            if isinstance(self.tresult, list):
+                self.tresult = np.hstack(self.tresult)
         
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()       
-        if saveresults:
-            try:
-                fname = self.saveallresults()
-                self._log.info("Results saved in " + fname)
-            except IOError, er:
-                self._log.error("Error trying to save results! Results NOT saved.\n" + er)            
+
+            ###################################
+        else:
+            raise ModelError("Unknown solver!")            
+        
+        if self.solver in ["rkdriver_tsix"]:
+            #Need to save results if called with saveresults=True
+   
+            if saveresults:
+                try:
+                    self._log.info("Appending results to opened file")
+                    self.appendresults(yresarr, tresarr)
+                except IOError, er:
+                    self._log.error("Error trying to save results! Results NOT saved.\n" + er)
         return
     
     def callingparams(self):
@@ -233,14 +249,45 @@ class CosmologicalModel(object):
         }
         return params   
            
-    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
-        """Saves results already calculated into a file."""
+
+    def openresultsfile(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
+        """Open a results file and create the necessary structure.
         
+        Parameters
+        ----------
+        filename : string
+                   full path to file
+            
+        filetype : string
+                   filetype to open (currently only "hdf5")
+                   
+        yresultshape : tuple
+                       shape of one row the yresult array, first entry should 
+                       be 0.
+                       
+        kwargs : additional arguments for createhdf5structure method.
+        
+        Returns
+        -------
+        
+        rf : file handle
+        
+        grpname : name of results group in file
+        
+        filename : path to file 
+        
+        yresarr : handle to EArray
+                  array for saving y results
+                  
+        tresarr : handle to EArray
+                  array for saving t results
+        
+        
+        """
         now = self.lastparams["datetime"]
         if not filename:
             filename = os.path.join(os.getcwd(), "run" + now + "." + filetype)
             self._log.info("Filename set to " + filename)
-            
         if os.path.isdir(os.path.dirname(filename)):
             if os.path.isfile(filename):
                 if _debug:
@@ -252,28 +299,42 @@ class CosmologicalModel(object):
                 filemode = "w" #Writing to new file
         else:
             raise IOError("Directory %s does not exist" % os.path.dirname(filename))
-        
         if yresultshape is None:
             yresultshape = list(self.yresult.shape)
             yresultshape[0] = 0
-        
-        #Check whether we should store ks and set group name accordingly
+    #Check whether we should store ks and set group name accordingly
         if self.k is None:
             grpname = "bgresults"
         else:
             grpname = "results"
-                
         if filetype is "hf5":
             try:
                 if filemode == "w":
-                    rf = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
+                    rf, yresarr, tresarr = self.createhdf5structure(filename, grpname, yresultshape, **kwargs)
                 elif filemode == "a":
                     rf = tables.openFile(filename, filemode)
-                self.saveresultsinhdf5(rf, grpname)
+                    yresarr = rf.getNode(rf.root, grpname + ".yresult")
+                    tresarr = rf.getNode(rf.root, grpname + ".tresult")
             except IOError:
                 raise
         else:
             raise NotImplementedError("Saving results in format %s is not implemented." % filetype)
+        return rf, grpname, filename, yresarr, tresarr
+
+    def saveallresults(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
+        """Saves results already calculated into a file."""
+        
+        rf, grpname, filename, yresarr, tresarr = self.openresultsfile(filename, filetype, yresultshape, **kwargs)
+        
+        #Try to save results
+        try:
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self.appendresults(yresarr, tresarr)
+            self.closehdf5file(rf)
+        except IOError:
+            self._log.error("Error saving results to %s" % rf)
+            raise
+        
         return filename
     
     def createhdf5structure(self, filename, grpname="results", yresultshape=None, hdf5complevel=2, hdf5complib="blosc"):
@@ -300,6 +361,12 @@ class CosmologicalModel(object):
         -------
         rf : file handle
              Handle of file created 
+             
+        yresarr : handle to EArray
+                  array for saving y results
+                  
+        tresarr : handle to EArray
+                  array for saving t results
         """
                     
         try:
@@ -346,9 +413,12 @@ class CosmologicalModel(object):
         except IOError:
             raise
         
-        return rf
+        return rf, yresarr, tresarr
         
-    def saveresultsinhdf5(self, rf, grpname="results"):
+
+
+
+    def saveparamsinhdf5(self, rf, grpname="results"):
         """Save simulation results in a HDF5 format file with filename.
         
         Parameters
@@ -357,7 +427,11 @@ class CosmologicalModel(object):
             File to save results in
 
         grpname : string, optional
-                 Name of the HDF5 group to create in the file
+                 Name of the HDF5 results group
+                 
+        Returns
+        -------
+        resgrp : handle for results group in HDF5 file
 
         """
         try:
@@ -383,23 +457,32 @@ class CosmologicalModel(object):
                 potparamsrow.append()
             potparamstab.flush()
              
-            #Get yresult array handle
-            yresarr = resgrp.yresult
-            yresarr.append(self.yresult)
             
-            #Save tresults
-            tresarr = resgrp.tresult
-            tresarr.append(self.tresult)
-            
-            #Flush saved results to file
-            rf.flush()
-            #Close file
-            rf.close()
             #Log success
             if _debug:
-                self._log.debug("Successfully wrote results to file " + rf.filename)
+                self._log.debug("Successfully wrote parameters to file " + rf.filename)
         except IOError:
             raise
+        return resgrp
+        
+    def closehdf5file(self, rf):
+        #Flush saved results to file
+        rf.flush() #Close file
+        rf.close()
+        if _debug:
+            self._log.debug("File successfully closed")
+        return
+
+    def appendresults(self, yresarr, tresarr):
+        #Append y results
+        yresarr.append(self.yresult)
+        if _debug:
+            self._log.debug("yresult array succesfully written.")
+        #Save tresults
+        tresarr.append(self.tresult)
+        if _debug:
+            self._log.debug("tresult array successfully written.")
+        return
             
 class TestModel(CosmologicalModel):
     """Test class defining a very simple function"""
@@ -1373,7 +1456,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
-    def runfo(self):
+    def runfo(self, saveresults, yresarr, tresarr):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
@@ -1395,7 +1478,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
-            self.firstordermodel.run(saveresults=False)
+            self.firstordermodel.run(saveresults=saveresults, yresarr=yresarr,
+                                     tresarr=tresarr)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
         
@@ -1403,7 +1487,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
         return
     
-    def run(self, saveresults=True):
+    def run(self, saveresults=True, saveargs=None):
         """Run the full model.
         
         The background model is first run to establish the end time of inflation and the start
@@ -1413,7 +1497,12 @@ class FOCanonicalTwoStage(MultiStageDriver):
         Parameters
         ----------
         saveresults : boolean, optional
-                      Should results be saved at the end of the run. Default is False.
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
                      
         Returns
         -------
@@ -1426,19 +1515,32 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Set initial conditions for first order model
         self.setfoics()
         
-        #Run first order model
-        self.runfo()
-        
-        #Save results in file
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()   
         
+        if saveargs is None:
+            saveargs = {}
+        
+        if saveresults:
+            ystartshape = list(self.foystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
+            #Set up results file
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        #Run first order model
+        self.runfo(saveresults, yresarr, tresarr)
+        
+        #Save results in file
         if saveresults:
             try:
-                self._log.info("Results saved in " + self.saveallresults())
-            except IOError, er:
-                self._log.exception("Error trying to save results! Results NOT saved.")        
-        return
+                self._log.info("Closing file")
+                self.closehdf5file(rf)
+            except IOError:
+                self._log.exception("Error trying to close file! Results may not be saved.")        
+        return filename
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
@@ -1785,7 +1887,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         self.somodel.second_stage = self.second_stage
         return
     
-    def runso(self):
+    def runso(self, saveresults, yresarr, tresarr):
         """Run second order model."""
         
         #Initialize second order class
@@ -1793,7 +1895,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=False)
+            self.somodel.run(saveresults, yresarr, tresarr)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
@@ -1802,20 +1904,55 @@ class SOCanonicalThreeStage(MultiStageDriver):
         self.tresult, self.yresult = self.somodel.tresult, self.somodel.yresult
         return
     
-    def run(self, saveresults=True):
-        """Run simulation and save results."""
-        #Run second order model
-        self.runso()
+    def run(self, saveresults=True, saveargs=None):
+        """Run the full model.
+        
+        The second order model is run in full using the first order and convolution results.
+        
+        Parameters
+        ----------
+        saveresults : boolean, optional
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
+                     
+        Returns
+        -------
+        filename : string
+                   name of the results file if any
+        """
+        
         
         #Save results in file
         #Aggregrate results and calling parameters into results list
         self.lastparams = self.callingparams()
+
+        if saveargs is None:
+            saveargs = {}
+
+        if saveresults:
+            ystartshape = list(self.ystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
+            #Set up results file
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        
+        #Run second order model
+        self.runso(saveresults, yresarr, tresarr)
+        
         if saveresults:
             try:
-                self._log.info("Results saved in " + self.saveallresults())
-            except IOError, er:
+                self._log.info("Closing file")
+                self.closehdf5file(rf)
+            except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
-        return
+        return filename
     
     @property
     def deltaphi(self, recompute=False):

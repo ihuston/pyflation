@@ -55,7 +55,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     return yout
 
 #@profile
-def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
+def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
@@ -74,6 +74,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
     if np.any(tsix>number_steps):
         raise SimRunError("Start times outside range of steps.")
     
+    # We do not use the given yarr and xarr variables but initialize new ones
     #Set up x results array
     xarr = np.zeros((number_steps,))
     #Record first x value
@@ -137,6 +138,88 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs):
     rk_log.info("Execution of Runge-Kutta method has finished.")
     return xarr, yarr
    
+
+#@profile
+def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
+    """Driver function for classical Runge Kutta 4th Order method.
+    Results for y and x are appended to the yarr and xarr variables to allow
+    for buffering in the case of PyTables writing to disk.
+     
+    Uses indexes of starting time values instead of actual times.
+    Indexes are number of steps of size h away from initial time simtstart."""
+    #Make sure h is specified
+    if h is None:
+        raise SimRunError("Need to specify h.")
+    
+    #The number of steps is now calculated using around. This matches with the
+    #expression used in second order classes to calculate the first order timestep.
+    #Around rounds .5 values towards even numbers so 0.5->0 and 1.5->2.
+    #The added one is because the step at simtstart should also be counted.
+    number_steps = np.int(np.around((tend - simtstart)/h) + 1)
+    if np.any(tsix>number_steps):
+        raise SimRunError("Start times outside range of steps.")
+    
+    #Check whether ystart is one dimensional and change to at least two dimensions
+    if ystart.ndim == 1:
+        ystart = ystart[..., np.newaxis]
+    v = np.ones_like(ystart)*np.nan
+    
+    #Set up x counter and index for x
+    xix = 0 # first index
+    #Record first x value
+    xarr.append(np.atleast_1d(simtstart))
+    
+    first_real_step = np.int(tsix.min())
+    if first_real_step > xix:
+        if _debug:
+            rk_log.debug("rkdriver_append: Storing x values for steps from %d to %d", xix+1, first_real_step+1)
+        xarr.append(simtstart + np.arange(xix+1, first_real_step+1)*h)
+        #Add in first_real_step ystart value
+        #Need to append a result for step xix unlike in xarr case
+        yarr.append(np.tile(v, (first_real_step - xix, 1, 1)))
+        #Move pointer up to first_real_step
+        xix = first_real_step
+        
+    #Save first set of y values
+    ks_starting = np.where(tsix == xix)
+    y_to_save = np.copy(v[np.newaxis])
+    y_to_save[..., ks_starting] = ystart[..., ks_starting]
+    yarr.append(y_to_save)
+    last_y = y_to_save[0]
+        
+    # Go through all remaining timesteps
+    for xix in range(first_real_step + 1, number_steps):
+        if _debug:
+            rk_log.debug("rkdriver_append: xix=%f", xix)
+        if xix % 1000 == 0:
+            rk_log.info("Step number %i of %i", xix, number_steps)
+        
+        # xix labels the current timestep to be saved
+        current_x = simtstart + xix*h
+        #last_x is the timestep before, which we will need to use for calc
+        last_x = simtstart + (xix-1)*h
+        
+        #Setup any arguments that are needed to send to derivs function
+        dargs = {}
+        #Find first derivative term for the last time step
+        dv = derivs(last_y, last_x, **dargs)
+        #Do a rk4 step starting from last time step
+        v = rk4stepks(last_x, last_y, h, dv, dargs, derivs)
+    
+        #Check whether next time step has new ystart values
+        ks_starting = np.where(tsix == xix)[0]
+        y_to_save = np.copy(v[np.newaxis])
+        if len(ks_starting) > 0:
+            y_to_save[..., ks_starting] = ystart[..., ks_starting]
+        yarr.append(y_to_save)
+        #Save current timestep
+        xarr.append(np.atleast_1d(current_x))
+        #Save last y value but remove first axis
+        last_y = y_to_save[0]
+        
+    #Get results 
+    rk_log.info("Execution of Runge-Kutta method has finished.")
+    return xarr, yarr
 
 class SimRunError(StandardError):
     """Generic error for model simulating run. Attributes include current results stack."""
