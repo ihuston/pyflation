@@ -23,7 +23,9 @@ class Test_rkdriver_tsix_basic():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2
+                           derivs = lambda y,x,k=None: x**2,
+                           yarr = [],
+                           xarr = [],
                            )
         self.x,self.y = rk4.rkdriver_tsix(**self.rkargs)
 
@@ -55,7 +57,9 @@ class Test_rkdriver_tsix_2vars():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2
+                           derivs = lambda y,x,k=None: x**2,
+                           yarr = [],
+                           xarr = [],
                            )
         self.x,self.y = rk4.rkdriver_tsix(**self.rkargs)
 
@@ -87,7 +91,9 @@ class Test_rkdriver_tsix_difftsix():
                            tsix = np.array([0, 500]),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2
+                           derivs = lambda y,x,k=None: x**2,
+                           yarr = [],
+                           xarr = [],
                            )
         self.x,self.y = rk4.rkdriver_tsix(**self.rkargs)
 
@@ -130,8 +136,8 @@ class Test_rkdriver_append_basic():
                            xarr=[]
                            )
         self.x,self.y = rk4.rkdriver_append(**self.rkargs)
-        self.x = np.array(self.x)
-        self.y = np.array(self.y)
+        self.x = np.hstack(self.x)
+        self.y = np.vstack(self.y)
 
     def test_xresult(self):
         
@@ -166,8 +172,8 @@ class Test_rkdriver_append_2vars():
                            xarr = []
                            )
         self.x,self.y = rk4.rkdriver_append(**self.rkargs)
-        self.x = np.array(self.x)
-        self.y = np.array(self.y)
+        self.x = np.hstack(self.x)
+        self.y = np.vstack(self.y)
 
     def test_xresult(self):
         
@@ -202,8 +208,8 @@ class Test_rkdriver_append_difftsix():
                            xarr = []
                            )
         self.x,self.y = rk4.rkdriver_append(**self.rkargs)
-        self.x = np.array(self.x)
-        self.y = np.array(self.y)
+        self.x = np.hstack(self.x)
+        self.y = np.vstack(self.y)
 
     def test_xresult(self):
         
