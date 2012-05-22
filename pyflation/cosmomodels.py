@@ -1895,7 +1895,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=saveresults, yresarr, tresarr)
+            self.somodel.run(saveresults, yresarr, tresarr)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
