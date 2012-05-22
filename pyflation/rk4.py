@@ -167,10 +167,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     #Set up x counter and index for x
     xix = 0 # first index
     #Record first x value
-    if isinstance(xarr, list):
-        xarr.append(simtstart)
-    else:
-        xarr.append(np.atleast_1d(simtstart))
+    xarr.append(np.atleast_1d(simtstart))
     
     first_real_step = np.int(tsix.min())
     if first_real_step > xix:
@@ -210,13 +207,14 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         v = rk4stepks(last_x, last_y, h, dv, dargs, derivs)
     
         #Check whether next time step has new ystart values
-        ks_starting = np.where(tsix == xix)
+        ks_starting = np.where(tsix == xix)[0]
         y_to_save = np.copy(v)
-        y_to_save[..., ks_starting] = ystart[..., ks_starting]
+        if len(ks_starting) > 0:
+            y_to_save[..., ks_starting] = ystart[..., ks_starting]
         yarr.append(y_to_save)
         #Save current timestep
         xarr.append(np.copy(current_x))
-        #Save last y value
+        #Save last y value but remove first axis
         last_y = y_to_save
         
     #Get results 
