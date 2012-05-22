@@ -15,4 +15,4 @@ For more information please visit http://pyflation.ianhuston.net.
 #For license and copyright information see LICENSE.txt which was distributed with this file.
 
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
