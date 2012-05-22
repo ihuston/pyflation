@@ -185,7 +185,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     y_to_save = np.copy(v[np.newaxis])
     y_to_save[..., ks_starting] = ystart[..., ks_starting]
     yarr.append(y_to_save)
-    last_y = y_to_save
+    last_y = y_to_save[0]
         
     # Go through all remaining timesteps
     for xix in range(first_real_step + 1, number_steps):
@@ -208,14 +208,14 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
     
         #Check whether next time step has new ystart values
         ks_starting = np.where(tsix == xix)[0]
-        y_to_save = np.copy(v)
+        y_to_save = np.copy(v[np.newaxis])
         if len(ks_starting) > 0:
             y_to_save[..., ks_starting] = ystart[..., ks_starting]
         yarr.append(y_to_save)
         #Save current timestep
         xarr.append(np.copy(current_x))
         #Save last y value but remove first axis
-        last_y = y_to_save
+        last_y = y_to_save[0]
         
     #Get results 
     rk_log.info("Execution of Runge-Kutta method has finished.")
