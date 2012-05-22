@@ -2,6 +2,11 @@
 Changelog for Pyflation
 ***********************
 
+* v0.2.4 XX/XX/XXXX - For next release
+    There is a new driving function in pyflation.rk4 which allows for results to
+    be appended to an already opened HDF5 file. This will reduce the memory 
+    requirements for very large runs.
+
 * v0.2.3 22/05/2012 - Fix a major issue with the nfields parameter not being
     passed down into the model instance. This would prevent multifield models
     from running correctly and was introduced in rev f65ecd4e on 28/11/11.
