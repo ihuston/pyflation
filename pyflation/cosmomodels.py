@@ -212,12 +212,11 @@ class CosmologicalModel(object):
         
         if self.solver in ["rkdriver_tsix"]:
             #Need to save results if called with saveresults=True
-            #Aggregrate results and calling parameters into results list
-            self.lastparams = self.callingparams()       
+   
             if saveresults:
                 try:
-                    fname = self.saveallresults()
-                    self._log.info("Results saved in " + fname)
+                    self._log.info("Appending results to opened file")
+                    self.appendresults(yresarr, tresarr)
                 except IOError, er:
                     self._log.error("Error trying to save results! Results NOT saved.\n" + er)
         return
@@ -1457,7 +1456,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
         return
         
-    def runfo(self, yresarr, tresarr):
+    def runfo(self, saveresults, yresarr, tresarr):
         """Run first order model after setting initial conditions."""
 
         #Initialize first order model
@@ -1479,7 +1478,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Start first order run
         self._log.info("Beginning first order run...")
         try:
-            self.firstordermodel.run(saveresults=False, yresarr=yresarr,
+            self.firstordermodel.run(saveresults=saveresults, yresarr=yresarr,
                                      tresarr=tresarr)
         except ModelError, er:
             raise ModelError("Error in first order run, aborting! Message: " + er.message)
@@ -1532,16 +1531,15 @@ class FOCanonicalTwoStage(MultiStageDriver):
             resgrp = self.saveparamsinhdf5(rf, grpname)
             self._log.info("Saved parameters in file.")
         #Run first order model
-        self.runfo(yresarr, tresarr)
+        self.runfo(saveresults, yresarr, tresarr)
         
         #Save results in file
         if saveresults:
             try:
-                self._log.info("Saving results")
-                self.appendresults(yresarr, tresarr)
+                self._log.info("Closing file")
                 self.closehdf5file(rf)
             except IOError:
-                self._log.exception("Error trying to save results! Results NOT saved.")        
+                self._log.exception("Error trying to close file! Results may not be saved.")        
         return filename
         
     def getfoystart(self, ts=None, tsix=None):
@@ -1889,7 +1887,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         self.somodel.second_stage = self.second_stage
         return
     
-    def runso(self):
+    def runso(self, saveresults, yresarr, tresarr):
         """Run second order model."""
         
         #Initialize second order class
@@ -1897,7 +1895,7 @@ class SOCanonicalThreeStage(MultiStageDriver):
         #Start second order run
         self._log.info("Beginning second order run...")
         try:
-            self.somodel.run(saveresults=False)
+            self.somodel.run(saveresults=saveresults, yresarr, tresarr)
             pass
         except ModelError:
             self._log.exception("Error in second order run, aborting!")
@@ -1946,12 +1944,11 @@ class SOCanonicalThreeStage(MultiStageDriver):
             self._log.info("Saved parameters in file.")
         
         #Run second order model
-        self.runso()
+        self.runso(saveresults, yresarr, tresarr)
         
         if saveresults:
             try:
-                self._log.info("Saving results")
-                self.appendresults(yresarr, tresarr)
+                self._log.info("Closing file")
                 self.closehdf5file(rf)
             except IOError:
                 self._log.exception("Error trying to save results! Results NOT saved.")        
