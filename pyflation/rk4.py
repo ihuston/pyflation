@@ -179,7 +179,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         xarr.append(simtstart + np.arange(xix+1, first_real_step+1)*h)
         #Add in first_real_step ystart value
         #Need to append a result for step xix unlike in xarr case
-        yarr.append(np.tile(v, (first_real_step - xix, 1)))
+        yarr.append(np.tile(v, (first_real_step - xix, 1, 1)))
         #Move pointer up to first_real_step
         xix = first_real_step
         
