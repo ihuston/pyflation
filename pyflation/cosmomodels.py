@@ -1388,7 +1388,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       ainit=self.ainit, 
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
-                      fields=self.nfields)
+                      nfields=self.nfields)
         
         self.firstordermodel = self.foclass(**kwargs)
 
