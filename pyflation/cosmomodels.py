@@ -475,7 +475,7 @@ class CosmologicalModel(object):
             provtab = resgrp.provenance
             provtabrow = provtab.row
             provvalues = self.provenance_values()
-            for key in self.pot_params:
+            for key in provvalues:
                 provtabrow["name"] = key
                 provtabrow["value"] = provvalues[key]
                 provtabrow.append()
