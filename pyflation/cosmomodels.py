@@ -36,6 +36,7 @@ from configuration import _debug
 import cmpotentials
 import rk4
 import analysis
+import provenance
 
 #Start logging
 root_log_name = logging.getLogger().name
@@ -248,7 +249,15 @@ class CosmologicalModel(object):
         "nfields" : tables.IntCol()
         }
         return params   
-           
+    
+    def provenance_values(self):
+        """Returns dictionary of provenance details."""      
+        #Form dictionary of inputs
+        rundir = os.getcwd()
+        codedir = os.path.abspath(provenance.__file__)
+        provdict = provenance.provenance(rundir, codedir)
+        return provdict
+               
 
     def openresultsfile(self, filename=None, filetype="hf5", yresultshape=None, **kwargs):
         """Open a results file and create the necessary structure.
@@ -389,6 +398,11 @@ class CosmologicalModel(object):
                               "value": tables.Float64Col()}
             potparamstab = rf.createTable(resgroup, "pot_params", 
                                           potparamsshape, filters=filters)
+            #Add provenance information
+            provhape = {"name": tables.StringCol(255),
+                        "value": tables.StringCol(255)}
+            provtab = rf.createTable(resgroup, "provenance", 
+                                          provshape, filters=filters)
             
             #Need to check if results are k dependent
             if grpname is "results":
@@ -457,6 +471,15 @@ class CosmologicalModel(object):
                 potparamsrow.append()
             potparamstab.flush()
              
+            #Save provenance
+            provtab = resgrp.provenance
+            provtabrow = provtab.row
+            provvalues = self.provenance_values()
+            for key in self.pot_params:
+                provtabrow["name"] = key
+                provtabrow["value"] = provvalues[key]
+                provtabrow.append()
+            provtab.flush()
             
             #Log success
             if _debug:

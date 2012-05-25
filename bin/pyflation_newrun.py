@@ -174,7 +174,7 @@ def main(argv = None):
                   action="store_const", const=logging.DEBUG, dest="loglevel", 
                   help="print lots of debugging information")
     parser.add_option("--copy-code", action="store_true", dest="copy_code",
-                      default=False, help="copy code directory into run directory (using Bazaar)")
+                      default=False, help="copy code directory into run directory")
     parser.add_option("--qsub", action="store_true", dest="qsub",
                       default=False, help="create QSub queueing log and scripts directories")
         
