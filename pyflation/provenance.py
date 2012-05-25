@@ -21,18 +21,9 @@ from Cython.Compiler.Version import version as cython_version
 
 
 
-try:
-    #Local modules from pyflation package
-    from pyflation import __version__ as pyflation_version
-    from pyflation import configuration
-except ImportError,e:
-    if __name__ == "__main__":
-        msg = """Pyflation module needs to be available. 
-Either run this script from the base directory as bin/newrun.py or add directory enclosing pyflation package to PYTHONPATH."""
-        print msg, e
-        sys.exit(1)
-    else:
-        raise
+#Local modules from pyflation package
+from pyflation import __version__ as pyflation_version
+from pyflation import configuration
     
 
 
@@ -72,28 +63,32 @@ This information added on: %(now)s.
 """
 
 
-def write_provenance_file(newrundir, codedir, mytree):
-    #Create provenance file detailing revision and branch used
-    prov_dict = dict(version=pyflation_version,
-                     python_version=python_version,
-                     numpy_version=numpy_version,
-                     scipy_version=scipy_version,
-                     tables_version=tables_version,
-                     cython_version=cython_version,
-                     codedir=codedir,
-                     newrundir=newrundir,
-                     now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
+
+def provenance(newrundir, codedir, mytree):
+    prov_dict = dict(version=pyflation_version, python_version=python_version, 
+        numpy_version=numpy_version, 
+        scipy_version=scipy_version, 
+        tables_version=tables_version, 
+        cython_version=cython_version, 
+        codedir=codedir, 
+        newrundir=newrundir, 
+        now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
     if mytree:
         prov_dict["bzrinfo"] = """
 Bazaar Revision Control Information
 -------------------------------------------------
 Branch name: %(nick)s
 Branch revision number: %(revno)s
-Branch revision id: %(revid)s""" % {"nick": mytree.branch.nick,
-                                    "revno": mytree.branch.revno(),
-                                    "revid": mytree.branch.last_revision()}
+Branch revision id: %(revid)s""" % {"nick":mytree.branch.nick, 
+            "revno":mytree.branch.revno(), 
+            "revid":mytree.branch.last_revision()}
     else:
         prov_dict["bzrinfo"] = ""
+    return newrundir, prov_dict
+
+def write_provenance_file(newrundir, codedir, mytree):
+    #Create provenance file detailing revision and branch used
+    newrundir, prov_dict = provenance(newrundir, codedir, mytree)
          
     provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
                                    configuration.provenancefilename) 
