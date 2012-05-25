@@ -75,7 +75,8 @@ def copy_code_directory(codedir, newcodedir):
     
     return newcodedir
 
-def create_run_directory(newrundir, codedir, copy_code=False, overwrite=False):
+def create_run_directory(newrundir, codedir, copy_code=False, overwrite=False,
+                         qsub=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir) and not overwrite:
         raise IOError("New run directory already exists!")
@@ -103,17 +104,21 @@ def create_run_directory(newrundir, codedir, copy_code=False, overwrite=False):
     
     resultsdir = os.path.join(newrundir, configuration.RESULTSDIRNAME)
     logdir = os.path.join(newrundir, configuration.LOGDIRNAME)
-    qsublogsdir = os.path.join(newrundir, configuration.QSUBLOGSDIRNAME)
-    qsubscriptsdir = os.path.join(newrundir, configuration.QSUBSCRIPTSDIRNAME)
     #debug info
-    logging.debug("resultsdir=%s, logdir=%s, qsublogsdir=%s, qsubscriptsdir=%s",
-                  resultsdir, logdir, qsublogsdir, qsubscriptsdir)
+    logging.debug("resultsdir=%s, logdir=%s", resultsdir, logdir)
+    if qsub:
+        qsublogsdir = os.path.join(newrundir, configuration.QSUBLOGSDIRNAME)
+        qsubscriptsdir = os.path.join(newrundir, configuration.QSUBSCRIPTSDIRNAME)
+        #debug info
+        logging.debug("qsub=True, qsublogsdir=%s, qsubscriptsdir=%s",
+                  qsublogsdir, qsubscriptsdir)
     
     try:
         os.makedirs(resultsdir)
         os.makedirs(logdir)
-        os.makedirs(qsublogsdir)
-        os.makedirs(qsubscriptsdir)
+        if qsub:
+            os.makedirs(qsublogsdir)
+            os.makedirs(qsubscriptsdir)
     except OSError:
         logging.error("Creating subdirectories in new run directory failed.")
         raise
@@ -170,8 +175,8 @@ def main(argv = None):
                   help="print lots of debugging information")
     parser.add_option("--copy-code", action="store_true", dest="copy_code",
                       default=False, help="copy code directory into run directory (using Bazaar)")
-    parser.add_option("--bzr", action="store_true", dest="use_bzr",
-                      default=False, help="use Bazaar to create branch of code")
+    parser.add_option("--qsub", action="store_true", dest="qsub",
+                      default=False, help="create QSub queueing log and scripts directories")
         
     (options, args) = parser.parse_args(args=argv[1:])
     
@@ -205,7 +210,7 @@ def main(argv = None):
         
     try:
         create_run_directory(newdir, codedir, options.copy_code,
-                             options.use_bzr, options.overwrite)
+                             options.overwrite, options.qsub)
     except Exception, e:
         logging.critical("Something went wrong! Quitting.")
         sys.exit(e)
