@@ -35,7 +35,7 @@ Code Directory Information
 --------------------------   
 Original code directory: %(codedir)s
 New run directory: %(newrundir)s
-Date run directory was created: %(now)s
+Date run directory was created: %(timestamp)s
        
 Library version information at time of run creation
 -------------------------------------------
@@ -45,7 +45,7 @@ Scipy version: %(scipy_version)s
 PyTables version: %(tables_version)s
 Cython version: %(cython_version)s
 
-This information added on: %(now)s.
+This information added on: %(timestamp)s.
 -----------------------------------------------
         
 """
@@ -62,7 +62,7 @@ def provenance(newrundir, codedir):
                      cython_version=cython_version, 
                      codedir=codedir, 
                      newrundir=newrundir, 
-                     now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
+                     timestamp=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
     
     return prov_dict
 
