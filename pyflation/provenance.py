@@ -23,7 +23,7 @@ from Cython.Compiler.Version import version as cython_version
 from pyflation import __version__ as pyflation_version
 from pyflation import configuration
 
-provenance_template = """Provenance document for this Pyflation run
+run_creation_template = """Provenance document for this Pyflation run
 ------------------------------------------
 
 Pyflation Version
@@ -84,7 +84,7 @@ def write_provenance_file(newrundir, codedir):
     provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
                                    configuration.provenancefilename) 
     with open(provenance_file, "w") as f:
-        f.write(provenance_template % prov_dict)
+        f.write(run_creation_template % prov_dict)
         logging.info("Created provenance file %s." % provenance_file)
         
     return provenance_file
