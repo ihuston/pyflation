@@ -254,7 +254,7 @@ class CosmologicalModel(object):
         """Returns dictionary of provenance details."""      
         #Form dictionary of inputs
         rundir = os.getcwd()
-        codedir = os.path.abspath(provenance.__file__)
+        codedir = os.path.abspath(os.path.dirname(provenance.__file__))
         provdict = provenance.provenance(rundir, codedir)
         return provdict
                
