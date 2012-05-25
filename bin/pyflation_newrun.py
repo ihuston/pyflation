@@ -33,34 +33,14 @@ Either run this script from the base directory as bin/newrun.py or add directory
         raise
     
 
-
-# Test whether Bazaar is available
-try:
-    import bzrlib.export, bzrlib.workingtree
-    bzr_available = True
-except ImportError:
-    bzr_available = False
-
-
-def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False):
+def copy_code_directory(codedir, newcodedir):
     """Create code directory and copy from Bazaar repository."""
-    mytree = None
-    if bzr_available and use_bzr:
-        try:            
-            mytree =  bzrlib.workingtree.WorkingTree.open(codedir)
-            newtree = mytree.branch.create_checkout(newcodedir, lightweight=True)
-            logging.debug("Bazaar code copied successfully.")
-        except bzrlib.errors.NotBranchError, e:
-            mytree = None
-            logging.error("Error using bazaar. Directory %s is not a branch." % codedir)
-    else:
-        if use_bzr:
-            logging.error("Bazaar not available, copying code instead.")
-        try:
-            shutil.copytree(codedir, newcodedir)
-            logging.debug("Copying of code successful.")
-        except:
-            logging.error("Error copying code. Please do so manually.")
+    
+    try:
+        shutil.copytree(codedir, newcodedir)
+        logging.debug("Copying of code successful.")
+    except:
+        logging.error("Error copying code. Please do so manually.")
     
     
     ext_modules = [Extension("pyflation.sourceterm.srccython", ["pyflation/sourceterm/srccython.pyx"], 
@@ -93,10 +73,9 @@ def copy_code_directory(codedir, newcodedir, use_bzr=False, bzr_available=False)
     except:
         logging.exception("Compiling additional modules did not work. Please do so by hand!")
     
-    return mytree
+    return newcodedir
 
-def create_run_directory(newrundir, codedir, copy_code=False, 
-                         use_bzr=False, overwrite=False):
+def create_run_directory(newrundir, codedir, copy_code=False, overwrite=False):
     """Create the run directory using `newdir` as directory name."""
     if os.path.isdir(newrundir) and not overwrite:
         raise IOError("New run directory already exists!")
@@ -107,13 +86,11 @@ def create_run_directory(newrundir, codedir, copy_code=False,
         logging.error("Cannot create parent directories for run.")
         raise
     
-    mytree = None
     if copy_code:
-        #Check for bzr
-        logging.debug("bzr_available=%s", bzr_available)
+    
         newcodedir = os.path.join(newrundir, configuration.CODEDIRNAME)
         logging.debug("Attempting to copy code directory...")
-        mytree = copy_code_directory(codedir, newcodedir, use_bzr, bzr_available)    
+        newcodedir = copy_code_directory(codedir, newcodedir)    
     else:
         logging.debug("No copying of code directory attempted.")
     
@@ -160,7 +137,7 @@ def create_run_directory(newrundir, codedir, copy_code=False,
     else:
         logging.debug("The run_config.py file already exists in correct directory.")
     
-    provenance.write_provenance_file(newrundir, codedir, mytree)
+    provenance.write_provenance_file(newrundir, codedir)
     
     return
  
