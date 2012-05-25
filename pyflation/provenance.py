@@ -10,6 +10,7 @@ import os.path
 import logging
 import sys
 import time
+import subprocess
 
 #Version information
 from sys import version as python_version
@@ -18,30 +19,17 @@ from scipy import __version__ as scipy_version
 from tables import __version__ as tables_version 
 from Cython.Compiler.Version import version as cython_version
 
-
-
-
 #Local modules from pyflation package
 from pyflation import __version__ as pyflation_version
 from pyflation import configuration
-    
-
-
-# Test whether Bazaar is available
-try:
-    import bzrlib.export, bzrlib.workingtree
-    bzr_available = True
-except ImportError:
-    bzr_available = False
 
 provenance_template = """Provenance document for this Pyflation run
 ------------------------------------------
 
 Pyflation Version
 -----------------
-Version: %(version)s
+Version: %(pyflation_version)s
                     
-%(bzrinfo)s
  
 Code Directory Information
 --------------------------   
@@ -64,31 +52,23 @@ This information added on: %(now)s.
 
 
 
-def provenance(newrundir, codedir, mytree):
-    prov_dict = dict(version=pyflation_version, python_version=python_version, 
-        numpy_version=numpy_version, 
-        scipy_version=scipy_version, 
-        tables_version=tables_version, 
-        cython_version=cython_version, 
-        codedir=codedir, 
-        newrundir=newrundir, 
-        now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
-    if mytree:
-        prov_dict["bzrinfo"] = """
-Bazaar Revision Control Information
--------------------------------------------------
-Branch name: %(nick)s
-Branch revision number: %(revno)s
-Branch revision id: %(revid)s""" % {"nick":mytree.branch.nick, 
-            "revno":mytree.branch.revno(), 
-            "revid":mytree.branch.last_revision()}
-    else:
-        prov_dict["bzrinfo"] = ""
-    return newrundir, prov_dict
+def provenance(newrundir, codedir):
+    
+    prov_dict = dict(pyflation_version=pyflation_version, 
+                     python_version=python_version, 
+                     numpy_version=numpy_version, 
+                     scipy_version=scipy_version, 
+                     tables_version=tables_version, 
+                     cython_version=cython_version, 
+                     codedir=codedir, 
+                     newrundir=newrundir, 
+                     now=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
+    
+    return prov_dict
 
-def write_provenance_file(newrundir, codedir, mytree):
+def write_provenance_file(newrundir, codedir):
     #Create provenance file detailing revision and branch used
-    newrundir, prov_dict = provenance(newrundir, codedir, mytree)
+    prov_dict = provenance(newrundir, codedir)
          
     provenance_file = os.path.join(newrundir, configuration.LOGDIRNAME, 
                                    configuration.provenancefilename) 
