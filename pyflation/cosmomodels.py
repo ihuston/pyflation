@@ -1748,6 +1748,8 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                         self._log.debug("No pot_params table in file.") 
                         
                 # Put provenance values into right variable
+                if not hasattr(self, "provenance"):
+                    self.provenance = {}
                 try:
                     provtab = results.provenance
                     for row in provtab:
