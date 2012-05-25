@@ -399,7 +399,7 @@ class CosmologicalModel(object):
             potparamstab = rf.createTable(resgroup, "pot_params", 
                                           potparamsshape, filters=filters)
             #Add provenance information
-            provhape = {"name": tables.StringCol(255),
+            provshape = {"name": tables.StringCol(255),
                         "value": tables.StringCol(255)}
             provtab = rf.createTable(resgroup, "provenance", 
                                           provshape, filters=filters)
