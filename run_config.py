@@ -230,24 +230,27 @@ LOGDIR = os.path.join(RUNDIR, configuration.LOGDIRNAME)
 QSUBSCRIPTSDIR = os.path.join(RUNDIR, configuration.QSUBSCRIPTSDIRNAME)
 QSUBLOGSDIR = os.path.join(RUNDIR, configuration.QSUBLOGSDIRNAME)
 
-if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR, QSUBSCRIPTSDIR, QSUBLOGSDIR])):
+if not all(map(os.path.isdir, [RESULTSDIR, LOGDIR])):
     raise IOError("Directory structure is not correct!")
+if not all(map(os.path.isdir, [QSUBSCRIPTSDIR, QSUBLOGSDIR])):
+    #Qsub directories are not present
+    qsub = False
 
 # This is the default log file although scripts do write to their own files.
 logfile = os.path.join(LOGDIR, "run.log")
  
 # qsub script values
-
-runname = "pyfl"
-qsublogname = os.path.join(QSUBLOGSDIR, "log" )
-templatefilename = "qsub-sh.template"
-templatefile = os.path.join(CODEDIR, templatefilename)
-foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
-srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
-src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
-mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
-soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
-cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
+if qsub:
+    runname = "pyfl"
+    qsublogname = os.path.join(QSUBLOGSDIR, "log" )
+    templatefilename = "qsub-sh.template"
+    templatefile = os.path.join(CODEDIR, templatefilename)
+    foscriptname = os.path.join(QSUBSCRIPTSDIR, "fo.qsub")
+    srcscriptname = os.path.join(QSUBSCRIPTSDIR, "src.qsub")
+    src_indivscriptname = os.path.join(QSUBSCRIPTSDIR, "src_individual.qsub")
+    mrgscriptname = os.path.join(QSUBSCRIPTSDIR, "mrg.qsub")
+    soscriptname = os.path.join(QSUBSCRIPTSDIR, "so.qsub")
+    cmbscriptname = os.path.join(QSUBSCRIPTSDIR, "cmb.qsub")
 
 # Results filenames
 foresults = os.path.join(RESULTSDIR, "fo.hf5")
