@@ -250,12 +250,13 @@ class CosmologicalModel(object):
         }
         return params   
     
-    def provenance_values(self):
+    def get_provenance_values(self):
         """Returns dictionary of provenance details."""      
         #Form dictionary of inputs
         rundir = os.getcwd()
         codedir = os.path.abspath(os.path.dirname(provenance.__file__))
         provdict = provenance.provenance(rundir, codedir)
+        self.provenance = provdict
         return provdict
                
 
@@ -474,7 +475,7 @@ class CosmologicalModel(object):
             #Save provenance
             provtab = resgrp.provenance
             provtabrow = provtab.row
-            provvalues = self.provenance_values()
+            provvalues = self.get_provenance_values()
             for key in provvalues:
                 provtabrow["name"] = key
                 provtabrow["value"] = provvalues[key]
@@ -1744,7 +1745,18 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                         self.pot_params[key] = val
                 except tables.NoSuchNodeError:
                     if _debug:
-                        self._log.debug("No pot_params table in file.")                
+                        self._log.debug("No pot_params table in file.") 
+                        
+                # Put provenance values into right variable
+                try:
+                    provtab = results.provenance
+                    for row in provtab:
+                        key = row["name"]
+                        val = row["value"]
+                        self.provenance[key] = val
+                except tables.NoSuchNodeError:
+                    if _debug:
+                        self._log.debug("No provenance table in file.")               
                 
                 #Put params in right slots
                 for ix, val in enumerate(params[0]):
