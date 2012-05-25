@@ -29,6 +29,7 @@ provenance_template = """Provenance document for this Pyflation run
 Pyflation Version
 -----------------
 Version: %(pyflation_version)s
+Git revision: %(git_revision)s
                     
  
 Code Directory Information
@@ -54,12 +55,22 @@ This information added on: %(timestamp)s.
 
 def provenance(newrundir, codedir):
     
+    #Get git revision number if available
+    proc= subprocess.Popen("git rev-parse HEAD", stdout=subprocess.PIPE, 
+                           stderr=subprocess.PIPE, shell=True)
+    response = proc.communicate()
+    if response[0] == '' or response[1] != '':
+        git_revision = "Not available"
+    else:
+        git_revision = response[0].strip()
+    
     prov_dict = dict(pyflation_version=pyflation_version, 
                      python_version=python_version, 
                      numpy_version=numpy_version, 
                      scipy_version=scipy_version, 
                      tables_version=tables_version, 
-                     cython_version=cython_version, 
+                     cython_version=cython_version,
+                     git_revision=git_revision, 
                      codedir=codedir, 
                      newrundir=newrundir, 
                      timestamp=time.strftime("%Y/%m/%d %H:%M:%S %Z"))
