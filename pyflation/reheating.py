@@ -47,6 +47,11 @@ class ReheatingModels(c.PhiModels):
         self.transfers = kwargs.get("transfers", np.zeros((self.nfields,2)))
         if self.transfers.shape != (self.nfields,2):
             raise ValueError("Shape of transfer coefficient is array is wrong.")
+        
+        # Set default value of rho_limit. If ratio of energy density of 
+        # fields to total energy density falls below this the fields are not
+        # included in the calculation any longer.
+        self.rho_limit = kwargs.get("rho_limit", 1e-5)
  
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
@@ -90,10 +95,12 @@ class ReheatingModels(c.PhiModels):
         #Find Hdot
         if len(self.yresult.shape) == 3:
             Hsq = self.yresult[:,self.H_ix,0]**2
-            pdotsq = self.yresult[:,self.phidots_ix,0]**2
+            phidots = self.yresult[:,self.phidots_ix,0]
+            
         else:
             Hsq = self.yresult[:,self.H_ix]**2
-            pdotsq = self.yresult[:,self.phidots_ix]**2
+            phidots = self.yresult[:,self.phidots_ix]
+        pdotsq = 0.5*sum(phidots**2, axis=1)
         U = np.array([self.potentials(myr, self.pot_params)[0] for myr in self.yresult])
         #Make sure to do sum across only phidot axis (1 in this case)
         rho_fields = 0.5*Hsq*pdotsq + U 
@@ -174,27 +181,49 @@ class ReheatingBackground(ReheatingModels):
         tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
         tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
         
-        #Calculate H derivative now as we need it later
-        Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H
-                 + 0.5*H*np.sum(phidots**2,axis=0))
+        #Calculate rho for the fields to check if it's not negligible
+        pdotsq = sum(phidots**2, axis=0)
+        rho_fields = 0.5*H**2*pdotsq + U
+        rho_total = 3*H**2 
+        
+        
         
         #Set derivatives
         dydx = np.zeros_like(y)
         
-        #d\phi_0/dn = y_1
-        dydx[self.phis_ix] = phidots
-        
-        #dphi^prime/dn
-        dydx[self.phidots_ix] = -((3 + Hdot/H + 0.5/H * (tgamma + tmatter))*phidots 
-                                   + dUdphi[...,np.newaxis]/(H**2))
-        
-        #dH/dn
-        dydx[self.H_ix] = Hdot
-        
-        # Fluids
-        dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
-        
-        dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
+        if rho_fields/rho_total > self.rho_limit:
+            #Calculate H derivative now as we need it later
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
+            #d\phi_0/dn = y_1
+            dydx[self.phis_ix] = phidots
+            
+            #dphi^prime/dn
+            dydx[self.phidots_ix] = -((3 + Hdot/H + 0.5/H * (tgamma + tmatter))*phidots 
+                                       + dUdphi[...,np.newaxis]/(H**2))
+            
+            #dH/dn
+            dydx[self.H_ix] = Hdot
+            
+            # Fluids
+            dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
+            
+            dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
+        else:
+            #Calculate H derivative now as we need it later
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H)
+            #d\phi_0/dn = y_1
+            dydx[self.phis_ix] = 0
+            
+            #dphi^prime/dn
+            dydx[self.phidots_ix] = 0
+            
+            #dH/dn
+            dydx[self.H_ix] = Hdot
+            
+            # Fluids
+            dydx[self.rhogamma_ix] = -4*rhogamma
+            
+            dydx[self.rhomatter_ix] = -3*rhomatter
 
         return dydx
 
