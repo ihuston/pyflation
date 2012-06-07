@@ -52,6 +52,8 @@ class ReheatingModels(c.PhiModels):
         # fields to total energy density falls below this the fields are not
         # included in the calculation any longer.
         self.rho_limit = kwargs.get("rho_limit", 1e-5)
+        # This setting means the fields will be evolved initially.
+        self.fields_off = False
  
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
@@ -169,29 +171,31 @@ class ReheatingBackground(ReheatingModels):
         """Basic background equations of motion.
             dydx[0] = dy[0]/dn etc"""
         
-                
-        #get potential from function
-        U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
-        
         #Set local variables
-        phidots = y[self.phidots_ix]
         H = y[self.H_ix]
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
-        tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
-        tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
         
-        #Calculate rho for the fields to check if it's not negligible
-        pdotsq = sum(phidots**2, axis=0)
-        rho_fields = 0.5*H**2*pdotsq + U
-        rho_total = 3*H**2 
-        
-        
+        if not self.fields_off:
+            #get potential from function
+            U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
+            # Get field dependent variables
+            phidots = y[self.phidots_ix]
+            tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
+            tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
+            
+            #Calculate rho for the fields to check if it's not negligible
+            pdotsq = sum(phidots**2, axis=0)
+            rho_fields = 0.5*H**2*pdotsq + U
+            rho_total = 3*H**2 
+            
+            if rho_fields/rho_total < self.rho_limit:
+                self.fields_off = True
         
         #Set derivatives
         dydx = np.zeros_like(y)
         
-        if rho_fields/rho_total > self.rho_limit:
+        if not self.fields_off:
             #Calculate H derivative now as we need it later
             Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
             #d\phi_0/dn = y_1
