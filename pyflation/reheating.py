@@ -191,6 +191,7 @@ class ReheatingBackground(ReheatingModels):
             
             if rho_fields/rho_total < self.rho_limit:
                 self.fields_off = True
+                self.fields_off_time = t
         
         #Set derivatives
         dydx = np.zeros_like(y)
