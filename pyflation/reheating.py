@@ -102,7 +102,7 @@ class ReheatingModels(c.PhiModels):
         else:
             Hsq = self.yresult[:,self.H_ix]**2
             phidots = self.yresult[:,self.phidots_ix]
-        pdotsq = 0.5*sum(phidots**2, axis=1)
+        pdotsq = 0.5*np.sum(phidots**2, axis=1)
         U = np.array([self.potentials(myr, self.pot_params)[0] for myr in self.yresult])
         #Make sure to do sum across only phidot axis (1 in this case)
         rho_fields = 0.5*Hsq*pdotsq + U 
@@ -185,7 +185,7 @@ class ReheatingBackground(ReheatingModels):
             tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
             
             #Calculate rho for the fields to check if it's not negligible
-            pdotsq = sum(phidots**2, axis=0)
+            pdotsq = np.sum(phidots**2, axis=0)
             rho_fields = 0.5*H**2*pdotsq + U
             rho_total = 3*H**2 
             
