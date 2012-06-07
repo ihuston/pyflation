@@ -172,20 +172,27 @@ class ReheatingBackground(ReheatingModels):
             dydx[0] = dy[0]/dn etc"""
         
         #Set local variables
-        H = y[self.H_ix]
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
+        
+        #Set H without fields first
+        Hsq = 1/3.0 * (rhogamma + rhomatter)
+        H = np.sqrt(Hsq)
         
         if not self.fields_off:
             #get potential from function
             U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
             # Get field dependent variables
             phidots = y[self.phidots_ix]
+            pdotsq = np.sum(phidots**2, axis=0)
             tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
             tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
             
+            #Update H to use fields
+            Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
+            H = np.sqrt(Hsq)
             #Calculate rho for the fields to check if it's not negligible
-            pdotsq = np.sum(phidots**2, axis=0)
+            
             rho_fields = 0.5*H**2*pdotsq + U
             rho_total = 3*H**2 
             
