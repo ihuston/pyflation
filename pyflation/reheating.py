@@ -89,15 +89,14 @@ class ReheatingModels(c.PhiModels):
         """
         #Find Hdot
         if len(self.yresult.shape) == 3:
-            rhogamma = self.yresult[:,self.rhogamma_ix,0]
-            rhomatter = self.yresult[:,self.rhomatter_ix,0]
             Hsq = self.yresult[:,self.H_ix,0]**2
+            pdotsq = self.yresult[:,self.phidots_ix,0]**2
         else:
-            rhogamma = self.yresult[:,self.rhogamma_ix]
-            rhomatter = self.yresult[:,self.rhomatter_ix]
             Hsq = self.yresult[:,self.H_ix]**2
+            pdotsq = self.yresult[:,self.phidots_ix]**2
+        U = np.array([self.potentials(myr, self.pot_params)[0] for myr in self.yresult])
         #Make sure to do sum across only phidot axis (1 in this case)
-        rho_fields = 3*Hsq - rhogamma - rhomatter
+        rho_fields = 0.5*Hsq*pdotsq + U 
         return rho_fields, 3*Hsq
     
     def find_reheating_end(self):
