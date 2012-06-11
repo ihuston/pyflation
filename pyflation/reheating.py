@@ -254,11 +254,7 @@ class ReheatingBackground(ReheatingModels):
         #Set local variables
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
-        #get potential from function
-        U = self.potentials(y, self.pot_params)[0]       
-        # Get field dependent variables
-        phidots = y[self.phidots_ix]
-        pdotsq = np.sum(phidots**2, axis=0)
+        
         
         # Only do check if fields are still being used
         if self.fields_off:
@@ -267,6 +263,11 @@ class ReheatingBackground(ReheatingModels):
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
         else:
+            #get potential from function
+            U = self.potentials(y, self.pot_params)[0]       
+            # Get field dependent variables
+            phidots = y[self.phidots_ix]
+            pdotsq = np.sum(phidots**2, axis=0)
             #Calculate rho for the fields to check if it's not negligible
             #Update H to use fields
             Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
