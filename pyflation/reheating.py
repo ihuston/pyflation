@@ -259,15 +259,17 @@ class ReheatingBackground(ReheatingModels):
         # Get field dependent variables
         phidots = y[self.phidots_ix]
         pdotsq = np.sum(phidots**2, axis=0)
-    
-        #Update H to use fields
-        Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
-        y[self.H_ix] = np.sqrt(Hsq)
         
         # Only do check if fields are still being used
-        if not self.fields_off:
+        if self.fields_off:
+            Hsq = (rhomatter + rhogamma)/3.0
+            #Fields are off but set to zero anyway
+            y[self.phis_ix] = 0
+            y[self.phidots_ix] = 0
+        else:
             #Calculate rho for the fields to check if it's not negligible
-            
+            #Update H to use fields
+            Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
             rho_fields = 0.5*Hsq*pdotsq + U
             rho_total = 3*Hsq
             
@@ -277,10 +279,8 @@ class ReheatingBackground(ReheatingModels):
                 #Set fields at this timestep to be zero.
                 y[self.phis_ix] = 0
                 y[self.phidots_ix] = 0
-        else:
-            #Fields are off but set to zero anyway
-            y[self.phis_ix] = 0
-            y[self.phidots_ix] = 0
+        #For both cases change H.
+        y[self.H_ix] = np.sqrt(Hsq)
         
         return y
         
