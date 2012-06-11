@@ -175,11 +175,30 @@ class ReheatingBackground(ReheatingModels):
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
         
-        #Set H without fields first
-        Hsq = 1/3.0 * (rhogamma + rhomatter)
-        H = np.sqrt(Hsq)
+        #Set derivatives
+        dydx = np.zeros_like(y)
         
-        if not self.fields_off:
+        if self.fields_off:
+            #Set H without fields 
+            Hsq = 1/3.0 * (rhogamma + rhomatter)
+            H = np.sqrt(Hsq)
+            
+            #Calculate H derivative now as we need it later
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H)
+            #d\phi_0/dn = y_1
+            dydx[self.phis_ix] = 0
+            
+            #dphi^prime/dn
+            dydx[self.phidots_ix] = 0
+            
+            #dH/dn
+            dydx[self.H_ix] = Hdot
+            
+            # Fluids
+            dydx[self.rhogamma_ix] = -4*rhogamma
+            
+            dydx[self.rhomatter_ix] = -3*rhomatter
+        else: #Fields are on and need to be used
             #get potential from function
             U, dUdphi = self.potentials(y, self.pot_params)[0:2]       
             # Get field dependent variables
@@ -191,19 +210,7 @@ class ReheatingBackground(ReheatingModels):
             #Update H to use fields
             Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
             H = np.sqrt(Hsq)
-            #Calculate rho for the fields to check if it's not negligible
             
-            rho_fields = 0.5*H**2*pdotsq + U
-            rho_total = 3*H**2 
-            
-            if rho_fields/rho_total < self.rho_limit:
-                self.fields_off = True
-                self.fields_off_time = t
-        
-        #Set derivatives
-        dydx = np.zeros_like(y)
-        
-        if not self.fields_off:
             #Calculate H derivative now as we need it later
             Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
             #d\phi_0/dn = y_1
@@ -220,22 +227,7 @@ class ReheatingBackground(ReheatingModels):
             dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
             
             dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
-        else:
-            #Calculate H derivative now as we need it later
-            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H)
-            #d\phi_0/dn = y_1
-            dydx[self.phis_ix] = 0
-            
-            #dphi^prime/dn
-            dydx[self.phidots_ix] = 0
-            
-            #dH/dn
-            dydx[self.H_ix] = Hdot
-            
-            # Fluids
-            dydx[self.rhogamma_ix] = -4*rhogamma
-            
-            dydx[self.rhomatter_ix] = -3*rhomatter
+        
 
         return dydx
     
