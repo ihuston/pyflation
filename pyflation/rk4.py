@@ -59,7 +59,7 @@ def rk4stepks(x, y, h, dydx, dargs, derivs, postprocess=None):
     return yout
 
 #@profile
-def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
+def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postprocess=None):
     """Driver function for classical Runge Kutta 4th Order method.
     Uses indexes of starting time values instead of actual times.
     Indexes are number of steps of size h away from initial time simtstart."""
@@ -127,7 +127,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         #Find first derivative term for the last time step
         dv = derivs(yarr[xix-1], last_x, **dargs)
         #Do a rk4 step starting from last time step
-        v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs)
+        v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs, postprocess)
         #This masks all the NaNs in the v result so that they are not copied
         if xix <= last_start_step:
             v_nonan = ~np.isnan(v)
@@ -144,7 +144,7 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
    
 
 #@profile
-def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
+def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postprocess=None):
     """Driver function for classical Runge Kutta 4th Order method.
     Results for y and x are appended to the yarr and xarr variables to allow
     for buffering in the case of PyTables writing to disk.
@@ -208,7 +208,7 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr):
         #Find first derivative term for the last time step
         dv = derivs(last_y, last_x, **dargs)
         #Do a rk4 step starting from last time step
-        v = rk4stepks(last_x, last_y, h, dv, dargs, derivs)
+        v = rk4stepks(last_x, last_y, h, dv, dargs, derivs, postprocess)
     
         #Check whether next time step has new ystart values
         ks_starting = np.where(tsix == xix)[0]
