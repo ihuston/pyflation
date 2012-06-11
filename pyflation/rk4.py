@@ -24,7 +24,7 @@ rk_log = logging.getLogger(root_log_name + "." + __name__)
 
 
 #@profile
-def rk4stepks(x, y, h, dydx, dargs, derivs):
+def rk4stepks(x, y, h, dydx, dargs, derivs, postprocess=None):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
@@ -51,6 +51,10 @@ def rk4stepks(x, y, h, dydx, dargs, derivs):
     
     #Accumulate increments with proper weights
     yout = y + h6*(dydx + dyt + 2*dym)
+    
+    if postprocess is not None:
+        #Allow post processing function to change y depending on y and x
+        yout = postprocess(yout, x+h)
     
     return yout
 
