@@ -24,7 +24,7 @@ rk_log = logging.getLogger(root_log_name + "." + __name__)
 
 
 #@profile
-def rk4stepks(x, y, h, dydx, dargs, derivs, postprocess=None):
+def rk4stepks(x, y, h, dargs, derivs, postprocess=None):
     '''Do one step of the classical 4th order Runge Kutta method,
     starting from y at x with time step h and derivatives given by derivs'''
     
@@ -32,7 +32,8 @@ def rk4stepks(x, y, h, dydx, dargs, derivs, postprocess=None):
     h6 = h/6.0 #Sixth of time step
     xh = x + hh # Halfway point in x direction
     
-    #First step, we already have derivatives from dydx
+    dydx = derivs(y, x, **dargs)
+    #First step, using dydx
     yt = y + hh*dydx
     
     #Second step, get new derivatives
@@ -124,10 +125,8 @@ def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postproc
         
         #Setup any arguments that are needed to send to derivs function
         dargs = {}
-        #Find first derivative term for the last time step
-        dv = derivs(yarr[xix-1], last_x, **dargs)
         #Do a rk4 step starting from last time step
-        v = rk4stepks(last_x, yarr[xix-1], h, dv, dargs, derivs, postprocess)
+        v = rk4stepks(last_x, yarr[xix-1], h, dargs, derivs, postprocess)
         #This masks all the NaNs in the v result so that they are not copied
         if xix <= last_start_step:
             v_nonan = ~np.isnan(v)
@@ -205,10 +204,9 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postpr
         
         #Setup any arguments that are needed to send to derivs function
         dargs = {}
-        #Find first derivative term for the last time step
-        dv = derivs(last_y, last_x, **dargs)
+        
         #Do a rk4 step starting from last time step
-        v = rk4stepks(last_x, last_y, h, dv, dargs, derivs, postprocess)
+        v = rk4stepks(last_x, last_y, h, dargs, derivs, postprocess)
     
         #Check whether next time step has new ystart values
         ks_starting = np.where(tsix == xix)[0]
