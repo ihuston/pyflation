@@ -179,6 +179,9 @@ class CosmologicalModel(object):
             yresarr = []
         if tresarr is None:
             tresarr = []
+        # Check whether postprocess function exists or pass None
+        postprocess = getattr(self, "postprocess", None)
+        
         # Set up results variables
         self.yresult = yresarr
         self.tresult = tresarr
@@ -196,7 +199,8 @@ class CosmologicalModel(object):
                                                     h=self.tstep_wanted, 
                                                     derivs=self.derivs,
                                                     yarr=self.yresult,
-                                                    xarr=self.tresult)
+                                                    xarr=self.tresult,
+                                                    postprocess=postprocess)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
