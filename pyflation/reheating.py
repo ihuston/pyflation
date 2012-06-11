@@ -238,6 +238,63 @@ class ReheatingBackground(ReheatingModels):
             dydx[self.rhomatter_ix] = -3*rhomatter
 
         return dydx
+    
+    def postprocess(self, y, t):
+        """Postprocess step takes place after RK4 step and can modify y values
+        at the end of that step.
+        
+        This is used to turn off scalar fields when they drop below a specified
+        level of the matter and radiation energy densities.
+        The value of H is also recalculated to improve numerical stability.
+        
+        Parameters
+        ----------
+        y : array_like
+            array of this timesteps y values
+            
+        t : float
+            value of t variable at this timestep
+            
+        Returns
+        -------
+        y : array_like
+            modified array of y values.
+            
+        """
+        
+        #Set local variables
+        rhogamma = y[self.rhogamma_ix]
+        rhomatter = y[self.rhomatter_ix]
+        #get potential from function
+        U = self.potentials(y, self.pot_params)[0]       
+        # Get field dependent variables
+        phidots = y[self.phidots_ix]
+        pdotsq = np.sum(phidots**2, axis=0)
+    
+        #Update H to use fields
+        Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
+        y[self.H_ix] = np.sqrt(Hsq)
+        
+        # Only do check if fields are still being used
+        if not self.fields_off:
+            #Calculate rho for the fields to check if it's not negligible
+            
+            rho_fields = 0.5*Hsq*pdotsq + U
+            rho_total = 3*Hsq
+            
+            if rho_fields/rho_total < self.rho_limit:
+                self.fields_off = True
+                self.fields_off_time = t
+                #Set fields at this timestep to be zero.
+                y[self.phis_ix] = 0
+                y[self.phidots_ix] = 0
+        else:
+            #Fields are off but set to zero anyway
+            y[self.phis_ix] = 0
+            y[self.phidots_ix] = 0
+        
+        return y
+        
 
 
 class ReheatingFirstOrder(ReheatingModels):
