@@ -19,9 +19,6 @@ from scipy import interpolate
 import logging
 
 #local modules from pyflation
-from configuration import _debug
-import cmpotentials
-import analysis
 from pyflation import cosmomodels as c
 
 #Start logging
