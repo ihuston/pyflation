@@ -1573,6 +1573,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
             self._log.info("Opened results file %s.", filename)
             resgrp = self.saveparamsinhdf5(rf, grpname)
             self._log.info("Saved parameters in file.")
+        else:
+            yresarr = None
+            tresarr = None
         #Run first order model
         self.runfo(saveresults, yresarr, tresarr)
         
