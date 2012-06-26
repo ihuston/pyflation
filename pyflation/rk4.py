@@ -22,6 +22,15 @@ from configuration import _debug
 root_log_name = logging.getLogger().name
 rk_log = logging.getLogger(root_log_name + "." + __name__)
 
+#Constants for rkf45
+rkc = np.array([0.25, #[0] for K2 
+                3/8.0, 3/32.0, 9/32.0, #[1-3] for K3 
+                12/13.0, 1932/2197.0, -7200/2197.0, 7296/2197.0, #[4-7] for K4
+                439/216.0, -8.0, 3680/513.0, -845/4104.0, #[8-11] for K5
+                0.5, -8/27.0, 2.0, -3544/2565.0, 1859/4104.0, -11/40.0, #[12-17] for K6
+                1/360.0, -128/4275.0, -2197/75240.0, 1/50.0, 2/55.0, # [18-22] for R
+                25/216.0, 1408/2565.0, 2197/4104.0, -0.2, # [23-26] for yout
+                ])
 
 #@profile
 def rk4stepks(x, y, h, dargs, derivs, postprocess=None):
@@ -58,6 +67,70 @@ def rk4stepks(x, y, h, dargs, derivs, postprocess=None):
         yout = postprocess(yout, x+h)
     
     return yout
+
+def rkf45(x, y, h, dargs, derivs):
+    '''Do one internal step of the Runge Kutta Fehlberg 4-5 method,
+    starting from y at x with time step h and derivatives given by derivs.
+    
+    Parameters
+    ----------
+    x : float
+        time to start from
+        
+    y : array_like
+        array of y values to start from
+        
+    h : float
+        step size to use in this step
+        
+    dargs : dict
+            dictionary of extra arguments to pass to derivs function
+            
+    derivs : function
+             derivatives function called using derivs(y, x, **dargs) signature
+    
+    Returns
+    -------
+    yout : array_like
+           array of possible y values (not accepted yet)
+           
+    xout : float
+           possible new x value (not accepted yet)
+           
+    R : array_like
+        value of R variable to test against tolerance value
+        
+    
+    Notes
+    -----
+    The Runge-Kutta-Fehlberg method used here is as outlined in Algorithm 5.3 of 
+    "Numerical Analysis" by Burden & Faires, 3rd edition.
+    '''
+    
+    K1 = h*derivs(y, x, **dargs)
+    
+    K2 = h*derivs(y + rkc[0]*K1, x + rkc[0]*h, **dargs)
+    
+    K3 = h*derivs(y + rkc[2]*K1 + rkc[3]*K2, x + rkc[1]*h, **dargs)
+    
+    K4 = h*derivs(y + rkc[5]*K1 + rkc[6]*K2 + rkc[7]*K3, x + rkc[4]*h, **dargs)
+    
+    K5 = h*derivs(y + rkc[8]*K1 + rkc[9]*K2 + rkc[10]*K3 + rkc[11]*K4, 
+                  x + h, **dargs)
+    
+    K6 = h*derivs(y + rkc[13]*K1 + rkc[14]*K2 + rkc[15]*K3 + rkc[16]*K4 + rkc[17]*K5, 
+                  x + rkc[12]*h, **dargs)
+    
+    #Calculate difference R
+    R = np.abs(rkc[18]*K1 + rkc[19]*K3 + rkc[20]*K4 + rkc[21]*K5 + rkc[22]*K6)/h
+    
+    #Possible yout and xout which have yet to be accepted
+    yout = y + rkc[23]*K1 + rkc[24]*K3 + rkc[25]*K4 + rkc[26]*K5
+    xout = x + h
+    
+    
+    
+    return yout, xout, R
 
 #@profile
 def rkdriver_tsix(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postprocess=None):
@@ -218,6 +291,134 @@ def rkdriver_append(ystart, simtstart, tsix, tend, h, derivs, yarr, xarr, postpr
         xarr.append(np.atleast_1d(current_x))
         #Save last y value but remove first axis
         last_y = y_to_save[0]
+        
+    #Get results 
+    rk_log.info("Execution of Runge-Kutta method has finished.")
+    return xarr, yarr
+
+def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr, 
+                   hmax, hmin, abstol, reltol, postprocess=None):
+    """Driver function for Runge Kutta Fehlberg 4-5 method.
+    Results for y and x are appended to the yarr and xarr variables to allow
+    for buffering in the case of PyTables writing to disk.
+    
+    Parameters
+    ----------
+    ystart : array_like
+             Array of initial values in ystart for time xstart.
+             
+    xstart : float
+             initial start time of this run
+             
+    xend : float
+           end time of the run (included in result)
+           
+    h : float
+        initial step size to use
+        
+    derivs : function
+             derivatives function called using derivs(y, x, **dargs) signature
+             
+    yarr : list_like
+           output for y variable, should implement append method
+           
+    xarr : list_like
+           output for x variable, should implement append method
+           
+    hmax : float
+           maximum allowed value of step size
+           
+    hmin : float
+           minimum allowed value of step size, ValueError is raised if step
+           size needs to be below this.
+           
+    abstol : float
+             absolute tolerance value to be applied in acceptance of new y value
+             
+    reltol : float
+             relative tolerance value to be applied in acceptance of new y value
+             
+    postprocess : function, optional
+                  if specified this function with signature (y, x) is run after
+                  a new y value has been accepted but before it is saved.
+                  This allows any post-processing to be applied.
+                  
+    Returns
+    -------
+    xarr : list_like
+           container for x results
+           
+    yarr : list_like
+           container for y result
+    
+    Notes
+    -----
+    The Runge-Kutta-Fehlberg method used here is as outlined in Algorithm 5.3 of 
+    "Numerical Analysis" by Burden & Faires, 3rd edition.
+    """
+    #Make sure h is specified
+    if h is None:
+        raise SimRunError("Need to specify h.")
+    
+    #Check whether ystart is one dimensional and change to at least two dimensions
+    if ystart.ndim == 1:
+        ystart = ystart[..., np.newaxis]
+    
+    
+    #Record first x value
+    xarr.append(np.atleast_1d(xstart))
+    last_x = xstart
+    xdiff = xend - xstart
+    
+    #Save first set of y values
+    y_to_save = np.copy(ystart[np.newaxis])
+    yarr.append(y_to_save)
+    last_y = ystart
+        
+    # Go through all remaining timesteps
+    while(last_x < xend):
+        if _debug:
+            rk_log.debug("rkdriver_rkf45: last_x=%f", last_x)
+        if last_x % xdiff/10 == 0:
+            rk_log.info("Last saved time step %f", last_x)
+        
+        # Align stepsize with end of x range if needed
+        h = min(h, xend-last_x)
+        
+        #Setup any arguments that are needed to send to derivs function
+        dargs = {}
+        
+        #Do a rk4 step starting from last time step
+        yout, xout, R = rkf45(last_x, last_y, h, dargs, derivs)
+        
+        #Get the tolerance in terms of abstol and reltol 
+        tol = abstol + reltol*max(np.max(np.abs(yout)), np.max(np.abs(last_y)))
+        
+        if R <= tol:
+            if postprocess:
+                #Allow post processing function to change y depending on y and x
+                yout = postprocess(yout, xout)
+            # Approximation has been accepted
+            y_to_save = np.copy(yout[np.newaxis])
+            yarr.append(y_to_save)
+            #Save current timestep
+            xarr.append(np.atleast_1d(xout))
+            #Save last values
+            last_y = yout
+            last_x = xout
+        
+        # Change timestep for next attempt
+        delta = 0.84*(tol/R)**(0.25)
+        if delta <= 0.1:
+            h = 0.1*h
+        elif delta >= 4:
+            h = 4*h
+        else:
+            h = delta*h
+        h = min(h, hmax)
+        if h < hmin:
+            raise ValueError("Step size needed is smaller than minimum.")
+        
         
     #Get results 
     rk_log.info("Execution of Runge-Kutta method has finished.")

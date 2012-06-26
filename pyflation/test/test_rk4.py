@@ -229,3 +229,72 @@ class Test_rkdriver_append_difftsix():
                                         /self.rkargs["h"]) + 1)
         assert_equal(self.y.shape, (number_steps,1,2), "Result y array not correct shape")
         
+####################################
+# tests for rkdriver_rkf45
+        
+class Test_rkdriver_rkf45_basic():
+
+
+    def setup(self):
+        # Basic setup for rk4driver
+        self.rkargs = dict(
+                           ystart = np.zeros((1,1)),
+                           xstart = 0,
+                           xend = 10,
+                           h = 0.01,
+                           derivs = lambda y,x,k=None: x**2,
+                           yarr=[],
+                           xarr=[],
+                           hmax=1,
+                           hmin=1e-10,
+                           abstol=0,
+                           reltol=1e-6
+                           )
+        self.x,self.y = rk4.rkdriver_rkf45(**self.rkargs)
+        self.x = np.hstack(self.x)
+        self.y = np.vstack(self.y)
+
+    def test_xresult(self):
+        
+        assert_almost_equal(self.x[-1], self.rkargs["xend"], 10, "End time not correct")
+        
+    def test_yresult(self):
+        assert_almost_equal(self.y[-1], 1e3/3.0, 10, "Final y result not correct")
+        
+    def test_yarr_shape(self):
+        number_steps = self.x.shape[0]
+        assert_equal(self.y.shape, (number_steps,1,1), "Result y array not correct shape")
+
+class Test_rkdriver_rkf45_2vars():
+
+
+    def setup(self):
+        # Basic setup for rk4driver
+        self.rkargs = dict(
+                           ystart = np.zeros((2,1)),
+                           xstart = 0,
+                           xend = 10,
+                           h = 0.01,
+                           derivs = lambda y,x,k=None: x**2,
+                           yarr = [],
+                           xarr = [],
+                           hmax=1,
+                           hmin=1e-10,
+                           abstol=0,
+                           reltol=1e-6
+                           )
+        self.x,self.y = rk4.rkdriver_rkf45(**self.rkargs)
+        self.x = np.hstack(self.x)
+        self.y = np.vstack(self.y)
+
+    def test_xresult(self):
+        
+        assert_almost_equal(self.x[-1], self.rkargs["xend"], 10, "End time not correct")
+        
+    def test_yresult(self):
+        assert_almost_equal(self.y[-1], np.ones((2,1))*1e3/3.0, 10, "Final y result not correct")
+        
+    def test_yarr_shape(self):
+        number_steps = self.x.shape[0]
+        assert_equal(self.y.shape, (number_steps,2,1), "Result y array not correct shape")
+
