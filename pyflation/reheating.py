@@ -17,6 +17,8 @@ from __future__ import division
 import numpy as np
 from scipy import interpolate
 import logging
+import tables
+import datetime
 
 #local modules from pyflation
 from pyflation import cosmomodels as c
@@ -406,4 +408,115 @@ class ReheatingFirstOrder(ReheatingModels):
                                 + innerterm/H**2)
         return dydx
     
+
+class ReheatingTwoStage(c.FOCanonicalTwoStage):
+    """Run a first order simulation taking account of the times that transfer
+    coefficients should be turned on, after the first time each field passes
+    through its minimum.
+    """
     
+    def __init__(self, *args, **kwargs):
+        """Initialize model"""
+        super(ReheatingTwoStage, self).__init__(*args, **kwargs)
+        
+    def run(self, saveresults=True, saveargs=None):
+        """Run the full model.
+        
+        The background model is first run to establish the end time of inflation and the start
+        times for the k modes. Then the initial conditions are set for the first order variables.
+        Finally the first order model is run and the results are saved if required.
+        
+        Parameters
+        ----------
+        saveresults : boolean, optional
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
+                     
+        Returns
+        -------
+        filename : string
+                   name of the results file if any
+        """
+        #Run bg model
+        self.runbg()
+        
+        #Find when fields first reach minima
+        self.minima_times, self.minima_indices = self.firstminima(offset=0)
+        
+        #Run should reach last minima
+        self.fotend = max(self.fotend, np.max(self.minima_times))
+        self.fotendindex = max(self.fotendindex, np.max(self.minima_indices))
+        
+        #Set initial conditions for first order model
+        self.setfoics()
+        
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()   
+        
+        if saveargs is None:
+            saveargs = {}
+        
+        if saveresults:
+            ystartshape = list(self.foystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
+            #Set up results file
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        #Run first order model
+        self.runfo(saveresults, yresarr, tresarr)
+        
+        #Save results in file
+        if saveresults:
+            try:
+                self._log.info("Closing file")
+                self.closehdf5file(rf)
+            except IOError:
+                self._log.exception("Error trying to close file! Results may not be saved.")        
+        return filename
+        
+    def callingparams(self):
+        """Returns list of parameters to save with results."""
+        #Test whether k has been set
+        try:
+            self.k
+        except (NameError, AttributeError):
+            self.k=None
+        #Form dictionary of inputs
+        params = {"tstart":self.tstart,
+                  "ainit":self.ainit,
+                  "potential_func":self.potentials.__name__,
+                  "tend":self.tend,
+                  "tstep_wanted":self.tstep_wanted,
+                  "solver":self.solver,
+                  "classname":self.__class__.__name__,
+                  "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                  "nfields":self.nfields,
+                  "minima_times":self.minima_times,
+                  "minima_indices":self.minima_indices
+                  }
+        return params
+    
+    def gethf5paramsdict(self):
+        """Describes the fields required to save the calling parameters."""
+        params = {
+        "solver" : tables.StringCol(50),
+        "classname" : tables.StringCol(255),
+        "tstart" : tables.Float64Col(np.shape(self.tstart)),
+        "simtstart" : tables.Float64Col(),
+        "ainit" : tables.Float64Col(),
+        "potential_func" : tables.StringCol(255),
+        "tend" : tables.Float64Col(),
+        "tstep_wanted" : tables.Float64Col(),
+        "datetime" : tables.Float64Col(),
+        "nfields" : tables.IntCol(),
+        "minima_times":tables.Float64Col(np.shape(self.minima_times)),
+        "minima_indices":tables.Int64Col(np.shape(self.minima_indices))
+        }
+        return params
