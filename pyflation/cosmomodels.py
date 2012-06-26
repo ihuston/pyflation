@@ -1576,6 +1576,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         else:
             yresarr = None
             tresarr = None
+            filename = None
         #Run first order model
         self.runfo(saveresults, yresarr, tresarr)
         
