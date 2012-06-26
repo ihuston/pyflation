@@ -59,7 +59,7 @@ class CosmologicalModel(object):
     
     
     """
-    solverlist = ["rkdriver_tsix", "rkdriver_append"]
+    solverlist = ["rkdriver_tsix", "rkdriver_append", "rkdriver_rkf45"]
     
     def __init__(self, ystart=None, simtstart=0.0, tstart=0.0, tstartindex=None, 
                  tend=83.0, tstep_wanted=0.01, solver="rkdriver_tsix", 
@@ -186,21 +186,36 @@ class CosmologicalModel(object):
         self.yresult = yresarr
         self.tresult = tresarr
         if self.solver in ["rkdriver_tsix", "rkdriver_append"]:
+            solverargs = dict(ystart=self.ystart, 
+                            simtstart=self.simtstart, 
+                            tsix=self.tstartindex, 
+                            tend=self.tend,
+                            h=self.tstep_wanted, 
+                            derivs=self.derivs,
+                            yarr=self.yresult,
+                            xarr=self.tresult,
+                            postprocess=postprocess)
+        elif self.solver in ["rkdriver_rkf45"]:
+            solverargs = dict(ystart=self.ystart, 
+                            xstart=self.simtstart, 
+                            xend=self.tend,
+                            h=self.tstep_wanted, 
+                            derivs=self.derivs,
+                            yarr=self.yresult,
+                            xarr=self.tresult,
+                            hmax=getattr(self, "hmax", self.tstep_wanted*1e4),
+                            hmin=getattr(self, "hmin", self.tstep_wanted*1e-10),
+                            abstol=getattr(self, "abstol", 0),
+                            reltol=getattr(self, "reltol", 1e-6),
+                            postprocess=postprocess)
+        if self.solver in self.solverlist:
             if not hasattr(self, "tstartindex"):
                 raise ModelError("Need to specify initial starting indices!")
             if _debug:
                 self._log.debug("Starting simulation with %s.", self.solver)
             solver = getattr(rk4, self.solver)
             try:
-                self.tresult, self.yresult = solver(ystart=self.ystart, 
-                                                    simtstart=self.simtstart, 
-                                                    tsix=self.tstartindex, 
-                                                    tend=self.tend,
-                                                    h=self.tstep_wanted, 
-                                                    derivs=self.derivs,
-                                                    yarr=self.yresult,
-                                                    xarr=self.tresult,
-                                                    postprocess=postprocess)
+                self.tresult, self.yresult = solver(**solverargs)
             except StandardError:
                 self._log.exception("Error running %s!", self.solver)
                 raise
