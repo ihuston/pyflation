@@ -419,6 +419,21 @@ class ReheatingTwoStage(c.FOCanonicalTwoStage):
         """Initialize model"""
         super(ReheatingTwoStage, self).__init__(*args, **kwargs)
         
+    def firstminima(self, offset=0):
+        """Return the times and indices of the first time the fields reach their
+        minima."""
+        minima_bools = ((self.bgmodel.yresult[:-1,self.bgmodel.phidots_ix,0]<0) 
+                        * (self.bgmodel.yresult[1:,self.bgmodel.phidots_ix,0]>0))
+        minima_times = []
+        minima_indices = []
+        for i in range(minima_bools.shape[1]):
+            minima_index = np.nonzero(minima_bools[:,i])[0][0]
+            minima_indices.append(minima_index)
+            minima_times.append(self.bgmodel.tresult[minima_index])
+        
+        return np.array(minima_times), np.array(minima_indices)
+            
+        
     def run(self, saveresults=True, saveargs=None):
         """Run the full model.
         
