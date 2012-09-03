@@ -46,6 +46,9 @@ class ReheatingModels(c.PhiModels):
         self.transfers = kwargs.get("transfers", np.zeros((self.nfields,2)))
         if self.transfers.shape != (self.nfields,2):
             raise ValueError("Shape of transfer coefficient is array is wrong.")
+        self.transfers_on = np.zeros_like(self.transfers)
+        self.transfers_switch_times = np.zeros_like(self.transfers)
+        self.last_pdot_sign = np.zeros((self.nfields,))
         
         # Set default value of rho_limit. If ratio of energy density of 
         # fields to total energy density falls below this the fields are not
@@ -203,8 +206,9 @@ class ReheatingBackground(ReheatingModels):
             # Get field dependent variables
             phidots = y[self.phidots_ix]
             pdotsq = np.sum(phidots**2, axis=0)
-            tgamma = self.transfers[:,self.tgamma_ix][...,np.newaxis]
-            tmatter = self.transfers[:,self.tmatter_ix][...,np.newaxis]
+            active_transfers = self.transfers*self.transfers_on
+            tgamma = active_transfers[:,self.tgamma_ix][...,np.newaxis]
+            tmatter = active_transfers[:,self.tmatter_ix][...,np.newaxis]
             
             #Update H to use fields
             Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
@@ -257,7 +261,11 @@ class ReheatingBackground(ReheatingModels):
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
         
-        
+        #Check whether transfers should be on
+        if not np.all(self.transfers_on):
+            #Switch on any transfers if minimum is passed
+            self.transfers_on[self.last_pdot_sign*y[self.phidots_ix] < 0] = 1
+                
         # Only do check if fields are still being used
         if self.fields_off:
             Hsq = (rhomatter + rhogamma)/3.0
@@ -418,22 +426,7 @@ class ReheatingTwoStage(c.FOCanonicalTwoStage):
     def __init__(self, *args, **kwargs):
         """Initialize model"""
         super(ReheatingTwoStage, self).__init__(*args, **kwargs)
-        
-    def firstminima(self, offset=0):
-        """Return the times and indices of the first time the fields reach their
-        minima."""
-        minima_bools = ((self.bgmodel.yresult[:-1,self.bgmodel.phidots_ix,0]<0) 
-                        * (self.bgmodel.yresult[1:,self.bgmodel.phidots_ix,0]>0))
-        minima_times = []
-        minima_indices = []
-        for i in range(minima_bools.shape[1]):
-            minima_index = np.nonzero(minima_bools[:,i])[0][0]
-            minima_indices.append(minima_index)
-            minima_times.append(self.bgmodel.tresult[minima_index])
-        
-        return np.array(minima_times), np.array(minima_indices)
             
-        
     def run(self, saveresults=True, saveargs=None):
         """Run the full model.
         
@@ -459,10 +452,9 @@ class ReheatingTwoStage(c.FOCanonicalTwoStage):
         #Run bg model
         self.runbg()
         
-        #Find when fields first reach minima
-        self.minima_times, self.minima_indices = self.firstminima(offset=0)
         
         #Run should reach last minima
+        #FIXME Need to use normal end times
         self.fotend = max(self.fotend, np.max(self.minima_times))
         self.fotendindex = max(self.fotendindex, np.max(self.minima_indices))
         
@@ -517,8 +509,8 @@ class ReheatingTwoStage(c.FOCanonicalTwoStage):
                   "classname":self.__class__.__name__,
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
                   "nfields":self.nfields,
-                  "minima_times":self.minima_times,
-                  "minima_indices":self.minima_indices
+                  "transfers":self.transfers,
+                  "transfers_on_times":self.transfers_on_times
                   }
         return params
     
@@ -535,7 +527,7 @@ class ReheatingTwoStage(c.FOCanonicalTwoStage):
         "tstep_wanted" : tables.Float64Col(),
         "datetime" : tables.Float64Col(),
         "nfields" : tables.IntCol(),
-        "minima_times":tables.Float64Col(np.shape(self.minima_times)),
-        "minima_indices":tables.Int64Col(np.shape(self.minima_indices))
+        "transfers":tables.Float64Col(np.shape(self.transfers)),
+        "transfers_on_times":tables.Float64Col(np.shape(self.transfers_on_times))
         }
         return params
