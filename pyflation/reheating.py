@@ -46,7 +46,7 @@ class ReheatingModels(c.PhiModels):
         self.transfers = kwargs.get("transfers", np.zeros((self.nfields,2)))
         if self.transfers.shape != (self.nfields,2):
             raise ValueError("Shape of transfer coefficient is array is wrong.")
-        self.transfers_on = np.zeros_like(self.transfers)
+        self.transfers_on = np.zeros_like(self.transfers, dtype=np.bool)
         self.transfers_on_times = np.zeros_like(self.transfers)
         self.last_pdot_sign = np.zeros((self.nfields,))
         
@@ -265,8 +265,8 @@ class ReheatingBackground(ReheatingModels):
         if not np.all(self.transfers_on):
             #Switch on any transfers if minimum is passed
             signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
-            self.transfers_on[signchanged] = 1
-            self.transfers_on_times[signchanged] = t
+            self.transfers_on_times[signchanged*(np.logical_not(self.transfers_on))] = t
+            self.transfers_on[signchanged] = True
             self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
                 
         # Only do check if fields are still being used
