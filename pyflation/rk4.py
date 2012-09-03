@@ -301,6 +301,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     """Driver function for Runge Kutta Fehlberg 4-5 method.
     Results for y and x are appended to the yarr and xarr variables to allow
     for buffering in the case of PyTables writing to disk.
+    Initial conditions must be at a single time for all k modes.
     
     Parameters
     ----------
@@ -388,7 +389,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         #Setup any arguments that are needed to send to derivs function
         dargs = {}
         
-        #Do a rk4 step starting from last time step
+        #Do a rkf45 step starting from last time step
         yout, xout, R = rkf45(last_x, last_y, h, dargs, derivs)
         
         #Get the tolerance in terms of abstol and reltol 
