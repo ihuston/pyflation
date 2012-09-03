@@ -391,11 +391,11 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         
         #Do a rkf45 step starting from last time step
         yout, xout, R = rkf45(last_x, last_y, h, dargs, derivs)
-        
+        Rmax = R.max()
         #Get the tolerance in terms of abstol and reltol 
-        tol = abstol + reltol*max(np.max(np.abs(yout)), np.max(np.abs(last_y)))
+        tol = abstol + reltol*np.max([np.abs(yout), np.abs(last_y)], axis=0)
         
-        if R.max() <= tol:
+        if np.all(R <= tol):
             if postprocess:
                 #Allow post processing function to change y depending on y and x
                 yout = postprocess(yout, xout)
@@ -409,7 +409,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             last_x = xout
         
         # Change timestep for next attempt
-        delta = 0.84*(tol/R)**(0.25)
+        delta = np.nanmin(0.84*(tol/R)**(0.25))
         if delta <= 0.1:
             h = 0.1*h
         elif delta >= 4:
