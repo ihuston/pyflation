@@ -418,7 +418,8 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             h = delta*h
         h = min(h, hmax)
         if h < hmin:
-            raise ValueError("Step size needed is smaller than minimum.")
+            rk_log.warn("Step size needed is smaller than minimum. Run halted!")
+            return xarr, yarr
         
         
     #Get results 
