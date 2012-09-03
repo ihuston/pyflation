@@ -264,10 +264,10 @@ class ReheatingBackground(ReheatingModels):
         #Check whether transfers should be on
         if not np.all(self.transfers_on):
             #Switch on any transfers if minimum is passed
-            signchanged = self.last_pdot_sign*y[self.phidots_ix] < 0
+            signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
             self.transfers_on[signchanged] = 1
             self.transfers_on_times[signchanged] = t
-            self.last_pdot_sign = np.sign(y[self.phidots_ix])
+            self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
                 
         # Only do check if fields are still being used
         if self.fields_off:
