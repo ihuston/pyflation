@@ -47,7 +47,7 @@ class ReheatingModels(c.PhiModels):
         if self.transfers.shape != (self.nfields,2):
             raise ValueError("Shape of transfer coefficient is array is wrong.")
         self.transfers_on = np.zeros_like(self.transfers)
-        self.transfers_switch_times = np.zeros_like(self.transfers)
+        self.transfers_on_times = np.zeros_like(self.transfers)
         self.last_pdot_sign = np.zeros((self.nfields,))
         
         # Set default value of rho_limit. If ratio of energy density of 
@@ -264,7 +264,9 @@ class ReheatingBackground(ReheatingModels):
         #Check whether transfers should be on
         if not np.all(self.transfers_on):
             #Switch on any transfers if minimum is passed
-            self.transfers_on[self.last_pdot_sign*y[self.phidots_ix] < 0] = 1
+            signchanged = self.last_pdot_sign*y[self.phidots_ix] < 0
+            self.transfers_on[signchanged] = 1
+            self.transfers_on_times[signchanged] = t
                 
         # Only do check if fields are still being used
         if self.fields_off:
