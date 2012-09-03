@@ -395,7 +395,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         #Get the tolerance in terms of abstol and reltol 
         tol = abstol + reltol*max(np.max(np.abs(yout)), np.max(np.abs(last_y)))
         
-        if R <= tol:
+        if R.max() <= tol:
             if postprocess:
                 #Allow post processing function to change y depending on y and x
                 yout = postprocess(yout, xout)
