@@ -182,8 +182,7 @@ class ReheatingBackground(ReheatingModels):
         
         if self.fields_off:
             #Set H without fields 
-            Hsq = 1/3.0 * (rhogamma + rhomatter)
-            H = np.sqrt(Hsq)
+            H = y[self.H_ix]
             
             #Calculate H derivative now as we need it later
             Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H)
@@ -210,9 +209,8 @@ class ReheatingBackground(ReheatingModels):
             tgamma = active_transfers[:,self.tgamma_ix][...,np.newaxis]
             tmatter = active_transfers[:,self.tmatter_ix][...,np.newaxis]
             
-            #Update H to use fields
-            Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
-            H = np.sqrt(Hsq)
+            #Use H from y variable
+            H = y[self.H_ix]
             
             #Calculate H derivative now as we need it later
             Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
@@ -271,7 +269,6 @@ class ReheatingBackground(ReheatingModels):
                 
         # Only do check if fields are still being used
         if self.fields_off:
-            Hsq = (rhomatter + rhogamma)/3.0
             #Fields are off but set to zero anyway
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
@@ -283,7 +280,7 @@ class ReheatingBackground(ReheatingModels):
             pdotsq = np.sum(phidots**2, axis=0)
             #Calculate rho for the fields to check if it's not negligible
             #Update H to use fields
-            Hsq = (rhomatter + rhogamma + U)/(3 - 0.5*pdotsq)
+            Hsq = y[self.H_ix]**2
             rho_fields = 0.5*Hsq*pdotsq + U
             rho_total = 3*Hsq
             
@@ -293,8 +290,6 @@ class ReheatingBackground(ReheatingModels):
                 #Set fields at this timestep to be zero.
                 y[self.phis_ix] = 0
                 y[self.phidots_ix] = 0
-        #For both cases change H.
-        y[self.H_ix] = np.sqrt(Hsq)
         
         return y
         
