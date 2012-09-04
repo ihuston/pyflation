@@ -376,12 +376,13 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     yarr.append(y_to_save)
     last_y = ystart
         
+    stepcounter = 0
     # Go through all remaining timesteps
     while(last_x < xend):
         if _debug:
             rk_log.debug("rkdriver_rkf45: last_x=%f", last_x)
-        if last_x % (xdiff/10) < 1e-10*last_x:
-            rk_log.info("Last saved time step %f", last_x)
+        if stepcounter % 1000 == 0:
+            rk_log.info("Step number %d at time %f", stepcounter, last_x)
         
         # Align stepsize with end of x range if needed
         h = min(h, xend-last_x)
@@ -420,6 +421,8 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         if h < hmin:
             rk_log.warn("Step size needed is smaller than minimum. Run halted!")
             return xarr, yarr
+        #End of loop update counter
+        stepcounter += 1
         
         
     #Get results 
