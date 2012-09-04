@@ -380,7 +380,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     while(last_x < xend):
         if _debug:
             rk_log.debug("rkdriver_rkf45: last_x=%f", last_x)
-        if last_x % (xdiff/10) == 0:
+        if last_x % (xdiff/10) < 1e-10*last_x:
             rk_log.info("Last saved time step %f", last_x)
         
         # Align stepsize with end of x range if needed
