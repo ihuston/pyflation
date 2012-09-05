@@ -193,7 +193,7 @@ class ReheatingBackground(ReheatingModels):
             dydx[self.phidots_ix] = 0
             
             #dH/dn We do not evolve H at each step, only saving the result 
-            #of the Freidmann constraint equation at each step.
+            #of the Friedmann constraint equation at each step.
             dydx[self.H_ix] = 0
             
             # Fluids
@@ -223,7 +223,7 @@ class ReheatingBackground(ReheatingModels):
                                        + dUdphi[...,np.newaxis]/(H**2))
             
             #dH/dn We do not evolve H in this case, only storing the 
-            #result from the Freidmann constraint at each time step.
+            #result from the Friedmann constraint at each time step.
             dydx[self.H_ix] = 0
             
             # Fluids
