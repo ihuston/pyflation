@@ -193,7 +193,7 @@ class ReheatingBackground(ReheatingModels):
             dydx[self.phidots_ix] = 0
             
             #dH/dn
-            dydx[self.H_ix] = Hdot
+            dydx[self.H_ix] = 0
             
             # Fluids
             dydx[self.rhogamma_ix] = -4*rhogamma
@@ -222,7 +222,7 @@ class ReheatingBackground(ReheatingModels):
                                        + dUdphi[...,np.newaxis]/(H**2))
             
             #dH/dn
-            dydx[self.H_ix] = Hdot
+            dydx[self.H_ix] = 0
             
             # Fluids
             dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
@@ -270,6 +270,9 @@ class ReheatingBackground(ReheatingModels):
         # Only do check if fields are still being used
         if self.fields_off:
             #Fields are off but set to zero anyway
+            Hsq = (rhogamma + rhomatter)/(3)
+            H = np.sqrt(Hsq)
+            y[self.H_ix] = H
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
         else:
@@ -280,7 +283,10 @@ class ReheatingBackground(ReheatingModels):
             pdotsq = np.sum(phidots**2, axis=0)
             #Calculate rho for the fields to check if it's not negligible
             #Update H to use fields
-            Hsq = y[self.H_ix]**2
+            Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
+            H = np.sqrt(Hsq)
+            y[self.H_ix] = H
+            
             rho_fields = 0.5*Hsq*pdotsq + U
             rho_total = 3*Hsq
             
