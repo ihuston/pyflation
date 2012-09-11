@@ -110,7 +110,7 @@ class ReheatingModels(c.PhiModels):
         rho_fields = 0.5*Hsq*pdotsq + U 
         return rho_fields, 3*Hsq
     
-    def find_reheating_end(self):
+    def find_reheating_end(self, fraction=0.01):
         """Find the efold time where reheating ends,
             i.e. the energy density of inflaton fields < 1% of total.
             Returns tuple of endefold and endindex (in tresult)."""
@@ -122,7 +122,7 @@ class ReheatingModels(c.PhiModels):
         if not any(self.epsilon>1):
             raise c.ModelError("Reheating did not end during specified number of efoldings.")
         
-        endindex = np.where(rho_fraction<=0.01)[0][0]
+        endindex = np.where(rho_fraction<=fraction)[0][0]
         
         #Interpolate results to find more accurate endpoint
         tck = interpolate.splrep(self.tresult[:endindex], rho_fraction[:endindex])
