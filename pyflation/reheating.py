@@ -364,6 +364,8 @@ class ReheatingFirstOrder(ReheatingModels):
         #Fluid perturbations
         self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + self.nfields, 2)
         self.dmatter_ix = slice(self.dgamma_ix.stop, self.dgamma_ix.stop + self.nfields, 2)
+        self.Vgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields, 2)
+        self.Vmatter_ix = slice(self.Vgamma_ix.stop, self.Vgamma_ix.stop + self.nfields, 2)
         
         #Indices for transfer array
         self.tgamma_ix = 0
@@ -381,6 +383,9 @@ class ReheatingFirstOrder(ReheatingModels):
         #Set up variables    
         phidots = y[self.phidots_ix]
         lenk = len(k)
+        #Set local variables
+        rhogamma = y[self.rhogamma_ix]
+        rhomatter = y[self.rhomatter_ix]
         #Get a
         a = self.ainit*np.exp(t)
         H = y[self.H_ix]
@@ -396,29 +401,56 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx = np.zeros(2*nfields**2 + 2*nfields + 1, dtype=y.dtype)
             innerterm = np.zeros((nfields,nfields), y.dtype)
         
-        #d\phi_0/dn = y_1
-        dydx[self.phis_ix] = phidots
-        #dphi^prime/dn
-        dydx[self.phidots_ix] = -(U*phidots+ dUdphi[...,np.newaxis])/(H**2)
-        #dH/dn Do sum over fields not ks so use axis=0
-        dydx[self.H_ix] = -0.5*(np.sum(phidots**2, axis=0))*H
-        #d\delta \phi_I / dn
-        dydx[self.dps_ix] = y[self.dpdots_ix]
-        
-        #Set up delta phis in nfields*nfields array        
-        dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
-        #This for loop runs over i,j and does the inner summation over l
-        for i in range(nfields):
-            for j in range(nfields):
-                #Inner loop over fields
-                for l in range(nfields):
-                    innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
-                                        + dUdphi[i]*phidots[l] 
-                                        + phidots[i]*phidots[l]*U))*dpmodes[l,j]
-        #Reshape this term so that it is nfields**2 long        
-        innerterm = innerterm.reshape((nfields**2,lenk))
-        #d\deltaphi_1^prime/dn
-        dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
+        if self.fields_off:
+            #Set H without fields 
+            H = y[self.H_ix]
+            dydx[self.phis_ix] = 0
+            dydx[self.phidots_ix] = 0
+            #Do not save result of dH/dN at each step, see postprocess method
+            dydx[self.H_ix] = 0
+            dydx[self.rhogamma_ix] = -4*rhogamma
+            dydx[self.rhomatter_ix] = -3*rhomatter
+            #Perturbations without fields
+            
+            
+        else: # Fields are on and need to be used
+            pdotsq = np.sum(phidots**2, axis=0)
+            active_transfers = self.transfers*self.transfers_on
+            tgamma = active_transfers[:,self.tgamma_ix][...,np.newaxis]
+            tmatter = active_transfers[:,self.tmatter_ix][...,np.newaxis]
+            #Calculate H derivative now as we need it later
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
+            #d\phi_0/dn = y_1
+            dydx[self.phis_ix] = phidots
+            #dphi^prime/dn
+            dydx[self.phidots_ix] = -((3 + Hdot/H + 0.5/H * (tgamma + tmatter))*phidots 
+                                       + dUdphi[...,np.newaxis]/(H**2))
+            #dH/dn is not recorded, see postprocess method
+            dydx[self.H_ix] = 0
+            
+            # Background Fluids
+            dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
+            dydx[self.rhomatter_ix] = -3*rhomatter + 0.5*H*np.sum(tmatter*phidots**2, axis=0)
+            
+            #****************************
+            # Perturbations
+            #d\delta \phi_I / dn
+            dydx[self.dps_ix] = y[self.dpdots_ix]
+            
+            #Set up delta phis in nfields*nfields array        
+            dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
+            #This for loop runs over i,j and does the inner summation over l
+            for i in range(nfields):
+                for j in range(nfields):
+                    #Inner loop over fields
+                    for l in range(nfields):
+                        innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
+                                            + dUdphi[i]*phidots[l] 
+                                            + phidots[i]*phidots[l]*U))*dpmodes[l,j]
+            #Reshape this term so that it is nfields**2 long        
+            innerterm = innerterm.reshape((nfields**2,lenk))
+            #d\deltaphi_1^prime/dn
+            dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
                                 + innerterm/H**2)
         return dydx
     
