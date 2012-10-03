@@ -371,10 +371,16 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         ystart = ystart[..., np.newaxis]
     
     
+    
+    #Get first value
+    last_x = xstart.min()
+    #Need xstart in order
+    if last_x != xstart[0]:
+        raise SimRunError("Need to specify xstart in sorted order.")
     #Record first x value
-    xarr.append(xstart)
-    last_x = xstart
-    xdiff = xend - xstart
+    xarr.append(last_x)
+    #The next start time to be used
+    next_to_start = 1
     
     #Save first set of y values
     y_to_save = np.copy(ystart[np.newaxis])
