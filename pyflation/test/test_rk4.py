@@ -305,7 +305,7 @@ class Test_rkdriver_rkf45_difftsix():
         # Basic setup for rk4driver
         self.rkargs = dict(
                            ystart = np.zeros((1,2)),
-                           start = np.array([0, 500]),
+                           xstart = np.array([0, 500]),
                            tend = 10,
                            h = 0.01,
                            derivs = lambda y,x,k=None: x**2,
