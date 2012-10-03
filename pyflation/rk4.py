@@ -306,10 +306,14 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     Parameters
     ----------
     ystart : array_like
-             Array of initial values in ystart for time xstart.
+             Array of initial values in ystart for times xstart. If ystart is
+             two dimensional then second axis is over individual modes with 
+             corresponding start times in the vector xstart.
              
-    xstart : float
-             initial start time of this run
+    xstart : array_like
+             initial start times of this run. If ystart is 2-d then this should
+             be a vector of start times with indices corresponding to the second
+             axis in ystart. 
              
     xend : float
            end time of the run (included in result)
@@ -360,6 +364,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     #Make sure h is specified
     if h is None:
         raise SimRunError("Need to specify h.")
+    xstart = np.atleast_1d(xstart)
     
     #Check whether ystart is one dimensional and change to at least two dimensions
     if ystart.ndim == 1:
@@ -367,7 +372,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     
     
     #Record first x value
-    xarr.append(np.atleast_1d(xstart))
+    xarr.append(xstart)
     last_x = xstart
     xdiff = xend - xstart
     
