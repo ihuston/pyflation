@@ -310,7 +310,11 @@ class Test_rkdriver_rkf45_difftsix():
                            h = 0.01,
                            derivs = lambda y,x,k=None: x**2,
                            yarr = [],
-                           xarr = []
+                           xarr = [],
+                           hmax=1,
+                           hmin=1e-10,
+                           abstol=0,
+                           reltol=1e-6
                            )
         self.x,self.y = rk4.rkdriver_rkf45(**self.rkargs)
         self.x = np.hstack(self.x)
