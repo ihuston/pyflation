@@ -197,7 +197,7 @@ class CosmologicalModel(object):
                             postprocess=postprocess)
         elif self.solver in ["rkdriver_rkf45"]:
             solverargs = dict(ystart=self.ystart, 
-                            xstart=self.simtstart, 
+                            xstart=self.tstart, 
                             xend=self.tend,
                             h=self.tstep_wanted, 
                             derivs=self.derivs,
