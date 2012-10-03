@@ -322,18 +322,12 @@ class Test_rkdriver_rkf45_difftsix():
 
     def test_xresult(self):
         
-        assert_almost_equal(self.x[-1], self.rkargs["tend"], 10, "End time not correct")
-        
-    def test_xarr_shape(self):
-        number_steps = np.int(np.around((self.rkargs["tend"] - self.rkargs["simtstart"])
-                                        /self.rkargs["h"]) + 1)
-        assert_equal(self.x.shape, (number_steps,), "Result x array not correct shape")
-        
+        assert_almost_equal(self.x[-1], self.rkargs["xend"], 10, "End time not correct")
+       
     def test_yresult(self):
         desired = np.array([[1e3/3.0, 1e3/3.0 - 5**3/3.0 ]])
         assert_almost_equal(self.y[-1], desired, 10, "Final y result not correct")
         
     def test_yarr_shape(self):
-        number_steps = np.int(np.around((self.rkargs["tend"] - self.rkargs["simtstart"])
-                                        /self.rkargs["h"]) + 1)
+        number_steps = self.x.shape[0]
         assert_equal(self.y.shape, (number_steps,1,2), "Result y array not correct shape")
