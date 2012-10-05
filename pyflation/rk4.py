@@ -418,6 +418,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             # Add initial conditions for this x value
             if ks_starting.size:
                 y_to_save[..., ks_starting] = ystart[..., ks_starting]
+                has_started[ks_starting] = True
             yarr.append(y_to_save)
             #Save current timestep
             xarr.append(np.atleast_1d(xout))
