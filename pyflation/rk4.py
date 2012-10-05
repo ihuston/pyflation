@@ -437,7 +437,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         h = min(h, hmax)
         #Check whether modes need to be initialised
         ks_starting = np.where((last_x + h >= xstart) & (~has_started) )[0]
-        if ks_starting:
+        if ks_starting.size:
             h = np.min(xstart[ks_starting]) - last_x
             rk_log.debug("Step size changed to %f for initialization.", h)
             # Need index in xstart of minimum value that provided next h
