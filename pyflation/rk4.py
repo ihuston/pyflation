@@ -405,9 +405,9 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         
         #Do a rkf45 step starting from last time step
         yout, xout, R = rkf45(last_x, last_y, h, dargs, derivs)
-        
+        R = np.atleast_1d(R)
         #Get the tolerance in terms of abstol and reltol 
-        tol = abstol + reltol*np.max([np.abs(yout), np.abs(last_y)], axis=0)
+        tol = np.atleast_1d(abstol + reltol*np.max([np.abs(yout), np.abs(last_y)], axis=0))
         
         if np.all(R[~np.isnan(R)] <= tol[~np.isnan(tol)]):
             if postprocess:
