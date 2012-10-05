@@ -441,7 +441,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             rk_log.info("Step size changed to %f for initialization.", h)
             next_ix = np.argmin(xstart[ks_starting])
             #Refresh to latest h
-            ks_starting = np.where((last_x + h > xstart & (~has_started)))[0]
+            ks_starting = np.where((last_x + h > xstart) & (~has_started))[0]
             ks_starting[next_ix] = True # Make sure next step is included, bypassing floating comparison
             
         if h < hmin:
