@@ -416,7 +416,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             # Approximation has been accepted
             y_to_save = np.copy(yout[np.newaxis])
             # Add initial conditions for this x value
-            if ks_starting:
+            if ks_starting.size:
                 y_to_save[..., ks_starting] = ystart[..., ks_starting]
             yarr.append(y_to_save)
             #Save current timestep
