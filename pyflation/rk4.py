@@ -422,7 +422,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
             #Save current timestep
             xarr.append(np.atleast_1d(xout))
             #Save last values
-            last_y = yout
+            last_y = y_to_save[0]
             last_x = xout
         
         # Change timestep for next attempt
