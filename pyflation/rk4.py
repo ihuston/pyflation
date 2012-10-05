@@ -365,12 +365,11 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     if h is None:
         raise SimRunError("Need to specify h.")
     xstart = np.atleast_1d(xstart)
+    # Boolean array of whether mode has started
+    has_started = np.zeros_like(xstart, dtype=np.bool)
     
     #Check whether ystart is one dimensional and change to at least two dimensions
-    if ystart.ndim == 1:
-        ystart = ystart[..., np.newaxis]
-    
-    
+    ystart = np.atleast_2d(ystart)
     
     #Get first value
     last_x = xstart.min()
@@ -379,13 +378,14 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         raise SimRunError("Need to specify xstart in sorted order.")
     #Record first x value
     xarr.append(last_x)
-    #The next start time to be used
-    next_to_start = 1
-    
-    #Save first set of y values
-    y_to_save = np.copy(ystart[np.newaxis])
+    ks_starting = np.where(xstart <= last_x)[0]
+        
+    #Save first set of y values, nans if not used
+    y_to_save = np.ones_like(ystart[np.newaxis])*np.nan
+    y_to_save[..., ks_starting] = ystart[..., ks_starting]
+    has_started[ks_starting] = True
     yarr.append(y_to_save)
-    last_y = ystart
+    last_y = y_to_save[0]
         
     stepcounter = 0
     # Go through all remaining timesteps
@@ -413,6 +413,9 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
                 yout = postprocess(yout, xout)
             # Approximation has been accepted
             y_to_save = np.copy(yout[np.newaxis])
+            # Add initial conditions for this x value
+            if ks_starting:
+                y_to_save[..., ks_starting] = ystart[..., ks_starting]
             yarr.append(y_to_save)
             #Save current timestep
             xarr.append(np.atleast_1d(xout))
@@ -429,6 +432,15 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         else:
             h = delta*h
         h = min(h, hmax)
+        #Check whether modes need to be initialised
+        ks_starting = np.where((last_x + h > xstart) and (not has_started) )[0]
+        if ks_starting:
+            h = np.min(xstart[ks_starting])
+            next_ix = np.argmin(xstart[ks_starting])
+            #Refresh to latest h
+            ks_starting = np.where((last_x + h > xstart and (not has_started)))[0]
+            ks_starting[next_ix] = True # Make sure next step is included, bypassing floating comparison
+            
         if h < hmin:
             rk_log.warn("Step size needed is smaller than minimum. Run halted!")
             return xarr, yarr
