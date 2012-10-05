@@ -369,7 +369,9 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     has_started = np.zeros_like(xstart, dtype=np.bool)
     
     #Check whether ystart is one dimensional and change to at least two dimensions
-    ystart = np.atleast_2d(ystart)
+    #Need to add new dimension at end unlike behaviour of np.atleast_2d
+    if ystart.ndim == 1:
+        ystart = ystart[..., np.newaxis]
     
     #Get first value
     last_x = xstart.min()
