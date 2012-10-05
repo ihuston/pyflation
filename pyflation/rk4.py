@@ -379,7 +379,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
     if last_x != xstart[0]:
         raise SimRunError("Need to specify xstart in sorted order.")
     #Record first x value
-    xarr.append(last_x)
+    xarr.append(np.atleast_1d(last_x))
     ks_starting = np.where(xstart <= last_x)[0]
         
     #Save first set of y values, nans if not used
