@@ -388,6 +388,8 @@ class ReheatingFirstOrder(ReheatingModels):
         rhomatter = y[self.rhomatter_ix]
         Vmatter = y[self.Vmatter_ix]
         Vgamma = y[self.Vgamma_ix]
+        dgamma = y[self.dgamma_ix]
+        dmatter = y[self.dmatter_ix]
         #Get a
         a = self.ainit*np.exp(t)
         H = y[self.H_ix]
@@ -415,6 +417,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #Perturbations without fields
             metric_phi = -1/(2*H) * (rhomatter*Vmatter + 4/3.0 * rhogamma*Vgamma)
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma)
+            drho_full = dmatter + dgamma
             
             
         else: # Fields are on and need to be used
@@ -443,11 +446,16 @@ class ReheatingFirstOrder(ReheatingModels):
             
             #Set up delta phis in nfields*nfields array        
             dpmodes = y[self.dps_ix].reshape((nfields, nfields, lenk))
+            dpdotmodes = y[self.dpdots_ix].reshape((nfields, nfields, lenk))
             
-            # Set up metric phi
+            # Set up metric phi, V and drho_full
             metric_phi = -0.5 * (1/H * (rhomatter*Vmatter + 4/3.0 * rhogamma*Vgamma)
                                  - np.sum(phidots[:,np.newaxis] * dpmodes, axis=0))
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma + H**2*pdotsq)
+            drho_full = (dmatter + dgamma 
+                         + np.sum(H**2*phidots[:,np.newaxis]*dpdotmodes 
+                                  -H**2*phidots[:,np.newaxis]**2*metric_phi
+                                  -dUdphi[:,np.newaxis]*dpmodes, axis=0))
             
             #This for loop runs over i,j and does the inner summation over l
             for i in range(nfields):
