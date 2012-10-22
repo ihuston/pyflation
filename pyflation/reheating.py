@@ -424,6 +424,13 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.Vmatter_ix] = -metric_phi/H
             dydx[self.Vgamma_ix] = Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
             
+            #Metric_phi_dot
+            metric_phi_dot = (-metric_phi*Hdot/H 
+                              -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
+                                        + rhomatter*dydx[self.Vmatter_ix])
+                              +4/3.0*(dydx[self.rhogamma_ix]*Vgamma 
+                                        + rhogamma*dydx[self.Vgamma_ix]))
+            
             
         else: # Fields are on and need to be used
             pdotsq = np.sum(phidots**2, axis=0)
@@ -469,6 +476,17 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.Vgamma_ix] = (Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
                                     -1/(2*rhogamma)*np.sum(H*tgamma*phidots**2, axis=0)*(
                                       Vgamma - 0.75*V_full))
+            
+            #Metric_phi_dot
+            metric_phi_dot = (-metric_phi*Hdot/H 
+                              -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
+                                        + rhomatter*dydx[self.Vmatter_ix])
+                              +4/3.0*(dydx[self.rhogamma_ix]*Vgamma 
+                                        + rhogamma*dydx[self.Vgamma_ix])
+                              -H*np.sum((dydx[self.dpdots_ix][:,np.newaxis] 
+                                         + Hdot/H*phidots[:,np.newaxis])*dpmodes
+                                        + phidots[:,np.newaxis]*dpdotmodes, axis=0)
+                              )
             
             #This for loop runs over i,j and does the inner summation over l
             for i in range(nfields):
