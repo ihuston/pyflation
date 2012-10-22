@@ -393,6 +393,7 @@ class ReheatingFirstOrder(ReheatingModels):
         #Get a
         a = self.ainit*np.exp(t)
         H = y[self.H_ix]
+        
         nfields = self.nfields    
         #get potential from function
         U, dUdphi, d2Udphi2 = self.potentials(y[self.bg_ix,0], self.pot_params)[0:3]        
@@ -406,8 +407,8 @@ class ReheatingFirstOrder(ReheatingModels):
             innerterm = np.zeros((nfields,nfields), y.dtype)
         
         if self.fields_off:
-            #Set H without fields 
-            H = y[self.H_ix]
+            #Calculate H derivative now as we need it later
+            Hdot = -(0.5*rhomatter + 2.0/3.0*rhogamma)/H
             dydx[self.phis_ix] = 0
             dydx[self.phidots_ix] = 0
             #Do not save result of dH/dN at each step, see postprocess method
@@ -418,6 +419,10 @@ class ReheatingFirstOrder(ReheatingModels):
             metric_phi = -1/(2*H) * (rhomatter*Vmatter + 4/3.0 * rhogamma*Vgamma)
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma)
             drho_full = dmatter + dgamma
+            
+            #Vmatter and Vgamma perturbation equations
+            dydx[self.Vmatter_ix] = -metric_phi/H
+            dydx[self.Vgamma_ix] = Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
             
             
         else: # Fields are on and need to be used
@@ -456,6 +461,14 @@ class ReheatingFirstOrder(ReheatingModels):
                          + np.sum(H**2*phidots[:,np.newaxis]*dpdotmodes 
                                   -H**2*phidots[:,np.newaxis]**2*metric_phi
                                   -dUdphi[:,np.newaxis]*dpmodes, axis=0))
+            
+            #Vmatter and Vgamma perturbation equations
+            dydx[self.Vmatter_ix] = (-metric_phi/H 
+                                     -1/(2*rhomatter)*np.sum(H*tmatter*phidots**2, axis=0)*(
+                                      Vmatter - V_full))
+            dydx[self.Vgamma_ix] = (Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
+                                    -1/(2*rhogamma)*np.sum(H*tgamma*phidots**2, axis=0)*(
+                                      Vgamma - 0.75*V_full))
             
             #This for loop runs over i,j and does the inner summation over l
             for i in range(nfields):
