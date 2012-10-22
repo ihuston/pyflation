@@ -437,6 +437,10 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.dmatter_ix] = -(3*dmatter + k**2/(H*a**2)*Vmatter*rhomatter
                                      -1/(2*H**2) * rhomatter*drho_full - 3*rhomatter*metric_phi)
             
+            #Field perturbations
+            dydx[self.dps_ix] = 0
+            dydx[self.dpdots_ix] = 0
+            
             
         else: # Fields are on and need to be used
             pdotsq = np.sum(phidots**2, axis=0)
@@ -509,14 +513,19 @@ class ReheatingFirstOrder(ReheatingModels):
                 for j in range(nfields):
                     #Inner loop over fields
                     for l in range(nfields):
-                        innerterm[i,j] += (d2Udphi2[i,l] + (phidots[i]*dUdphi[l] 
-                                            + dUdphi[i]*phidots[l] 
-                                            + phidots[i]*phidots[l]*U))*dpmodes[l,j]
+                        innerterm[i,j] += (d2Udphi2[i,l])*dpmodes[l,j]
             #Reshape this term so that it is nfields**2 long        
             innerterm = innerterm.reshape((nfields**2,lenk))
             #d\deltaphi_1^prime/dn
-            dydx[self.dpdots_ix] = -(U * y[self.dpdots_ix]/H**2 + (k/(a*H))**2 * y[self.dps_ix]
-                                + innerterm/H**2)
+            dydx[self.dpdots_ix] = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*y[self.dpdots_ix] 
+                                     + (k/(a*H))**2 * y[self.dps_ix]
+                                     + innerterm/H**2
+                                     + (2/H**2 * dUdphi[:,np.newaxis] 
+                                        + 0.5/H*phidots[:,np.newaxis]*(tgamma+tmatter)
+                                        - 3*phidots[:,np.newaxis])*metric_phi[np.newaxis,:]
+                                     - phidots[:,np.newaxis]*metric_phi_dot[np.newaxis,:]
+                                     - 1/(2*H**2) * phidots[:,np.newaxis]*drho_full[np.newaxis,:]
+                                     )
         return dydx
     
 
