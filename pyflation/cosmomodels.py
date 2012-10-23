@@ -1363,9 +1363,9 @@ class FODriver(MultiStageDriver):
         """Find initial conditions for 1st order model
            Find a_end using instantaneous reheating
         """
-        Hend = self.bgmodel.yresult[self.inflendindex, self.H_ix]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex])
+        Hend = np.asscalar(self.bgmodel.yresult[self.inflendindex, self.H_ix])
+        self.a_end = np.asscalar(self.finda_end(Hend))
+        self.ainit = np.asscalar(self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex]))
         return
     
     def setfoics(self):
