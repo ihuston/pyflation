@@ -10,10 +10,25 @@ import numpy as np
 from pyflation import reheating
 from pyflation import cosmomodels as c
 
+import logging
+import sys
+
+log = logging.getLogger()
+log.level = logging.DEBUG
+stream_handler = None
+
+def startlog():
+    stream_handler = logging.StreamHandler(sys.stdout)
+    log.addHandler(stream_handler)
+    
+def remlog():
+    if stream_handler:
+        log.removeHandler(stream_handler)
 
 class TestBgNoFluids():
 
     def setup(self):
+        startlog()
         self.fx =  {"potential_func": "hybridquadratic",
                "pot_params": {"nfields": 2},
                "nfields": 2,
@@ -37,11 +52,15 @@ class TestBgNoFluids():
     def test_notransfers(self):
         assert_array_almost_equal(self.m.transfers, np.zeros_like(self.m.transfers),
                                   err_msg="Transfer coefficients should be zero.")
+        
+    def teardown(self):
+        remlog()
 
         
 class TestBackground():
     
     def setup(self):
+        startlog()
         self.fx =  {"potential_func": "hybridquadratic",
                "pot_params": {"nfields": 2},
                "nfields": 2,
@@ -63,3 +82,25 @@ class TestBackground():
                             np.ones((2,2))*1e-8, 
                             err_msg="Transfer coefficients not saved correctly.")
         
+    def teardown(self):
+        remlog()
+        
+class TestFO():
+    
+    def setup(self):
+        startlog()
+        self.fx = {"potential_func": "msqphisq",
+                   "pot_params": {"nfields": 1},
+                   "nfields": 1,
+                   "ystart": np.array([18.0, -0.1,0,0,0,0,0,0,0,0,0]),
+                   "k": np.array([1e-60]),
+                   "cq": 50,
+                   "solver": "rkdriver_rkf45"}
+        self.m = reheating.ReheatingFirstOrder(**self.fx)
+        
+    @dec.slow
+    def test_fo(self):
+        self.m.run(saveresults=False)
+        
+    def teardown(self):
+        remlog()
