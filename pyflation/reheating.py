@@ -295,6 +295,7 @@ class ReheatingBackground(ReheatingModels):
             if rho_fields/rho_total < self.rho_limit:
                 self.fields_off = True
                 self.fields_off_time = t
+                module_logger.info("Fields turned off at time %f.", t)
                 #Set fields at this timestep to be zero.
                 y[self.phis_ix] = 0
                 y[self.phidots_ix] = 0
@@ -532,6 +533,77 @@ class ReheatingFirstOrder(ReheatingModels):
                                      )
         return dydx
     
+    def postprocess(self, y, t):
+        """Postprocess step takes place after RK4 step and can modify y values
+        at the end of that step.
+        
+        This is used to turn off scalar fields when they drop below a specified
+        level of the matter and radiation energy densities.
+        The value of H is also recalculated to improve numerical stability.
+        
+        Parameters
+        ----------
+        y : array_like
+            array of this timesteps y values
+            
+        t : float
+            value of t variable at this timestep
+            
+        Returns
+        -------
+        y : array_like
+            modified array of y values.
+            
+        """
+        
+        #Set local variables
+        rhogamma = y[self.rhogamma_ix]
+        rhomatter = y[self.rhomatter_ix]
+        
+        #Check whether transfers should be on
+        if not np.all(self.transfers_on):
+            #Switch on any transfers if minimum is passed
+            signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
+            self.transfers_on_times[signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))] = t
+            self.transfers_on[signchanged] = True
+            self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
+                
+        # Only do check if fields are still being used
+        if self.fields_off:
+            #Fields are off but set to zero anyway
+            Hsq = (rhogamma + rhomatter)/(3)
+            H = np.sqrt(Hsq)
+            y[self.H_ix] = H
+            y[self.phis_ix] = 0
+            y[self.phidots_ix] = 0
+            y[self.dps_ix] = 0
+            y[self.dpdots_ix] = 0
+        else:
+            #get potential from function
+            U = self.potentials(y, self.pot_params)[0]       
+            # Get field dependent variables
+            phidots = y[self.phidots_ix]
+            pdotsq = np.sum(phidots**2, axis=0)
+            #Calculate rho for the fields to check if it's not negligible
+            #Update H to use fields
+            Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
+            H = np.sqrt(Hsq)
+            y[self.H_ix] = H
+            
+            rho_fields = 0.5*Hsq*pdotsq + U
+            rho_total = 3*Hsq
+            
+            if rho_fields/rho_total < self.rho_limit:
+                self.fields_off = True
+                self.fields_off_time = t
+                module_logger.info("Fields turned off at time %f.", t)
+                #Set fields at this timestep to be zero.
+                y[self.phis_ix] = 0
+                y[self.phidots_ix] = 0
+                y[self.dps_ix] = 0
+                y[self.dpdots_ix] = 0
+        
+        return y
 
 class ReheatingTwoStage(c.FODriver):
     """Uses a background and firstorder class to run a full (first-order) reheating
