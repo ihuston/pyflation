@@ -500,14 +500,14 @@ class ReheatingFirstOrder(ReheatingModels):
             
             #Fluid perturbations
             dydx[self.dgamma_ix] = (-4*dgamma - 4*k**2/(3*H*a**2)*Vgamma*rhogamma
-                                     +2/(3*H**2) * rhogamma*drho_full + 4*rhomatter*metric_phi
+                                     +2/(3*H**2) * rhogamma*drho_full + 4*rhogamma*metric_phi
                                      +np.sum(H*tgamma*(phidots[:,np.newaxis]*dpdotmodes
-                                        -0.5*phidots[:,np.newaxis]**2*metric_phi), axis=0))
+                                        -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
             
             dydx[self.dmatter_ix] = (-3*dmatter - k**2/(H*a**2)*Vmatter*rhomatter
                                      +1/(2*H**2) * rhomatter*drho_full + 3*rhomatter*metric_phi
                                      +np.sum(H*tmatter*(phidots[:,np.newaxis]*dpdotmodes
-                                        -0.5*phidots[:,np.newaxis]**2*metric_phi), axis=0))
+                                        -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
             #This for loop runs over i,j and does the inner summation over l
             for i in range(nfields):
                 for j in range(nfields):
