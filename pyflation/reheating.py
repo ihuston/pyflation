@@ -757,10 +757,10 @@ class ReheatingTwoStage(c.FODriver):
         """
         #Find when reheating ended
         
-        Hend = self.bgmodel.yresult[self.inflendindex, self.H_ix]
-        Hreh = self.bgmodel.yresult[self.rehendindex, self.H_ix]
-        self.a_end = self.finda_end(Hend, Hreh)
-        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex])
+        Hend = np.asscalar(self.bgmodel.yresult[self.inflendindex, self.H_ix])
+        Hreh = np.asscalar(self.bgmodel.yresult[self.rehendindex, self.H_ix])
+        self.a_end = np.asscalar(self.finda_end(Hend, Hreh))
+        self.ainit = np.asscalar(self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex]))
         return
         
     def find_fotend(self):
