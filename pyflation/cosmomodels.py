@@ -1359,20 +1359,23 @@ class FODriver(MultiStageDriver):
     def __init__(self, *args, **kwargs):
         super(FODriver, self).__init__(*args, **kwargs)
         
+    def find_ainit(self):
+        """Find initial conditions for 1st order model
+           Find a_end using instantaneous reheating
+        """
+        Hend = self.bgmodel.yresult[self.inflendindex, self.H_ix]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex])
+        return self.ainit
+    
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
             first order run."""
         #debug
         #set_trace()
-        
-        #Find initial conditions for 1st order model
-        #Find a_end using instantaneous reheating
-        #Need to change to find using splines
-        Hend = self.bgmodel.yresult[self.fotendindex, self.H_ix]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
-        
-        
+        # Make sure ainit has been calculated.
+        self.find_ainit()
+            
         #Find epsilon from bg model
         try:
             self.bgepsilon
@@ -1382,8 +1385,8 @@ class FODriver(MultiStageDriver):
         self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex, self.H_ix])
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.inflendindex], 
+                            self.bgmodel.yresult[:self.inflendindex, self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
@@ -1415,8 +1418,8 @@ class FODriver(MultiStageDriver):
         except ModelError:
             self._log.exception("Error in background run, aborting!")
         #Find end of inflation
-        self.fotend, self.fotendindex = self.bgmodel.findinflend()
-        self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        self.inflation_end, self.inflendindex = self.bgmodel.findinflend()
+        self._log.info("Background run complete, inflation ended " + str(self.inflation_end) + " efoldings after start.")
         return
     
     def runfo(self, saveresults, yresarr, tresarr):
@@ -1659,7 +1662,7 @@ class FOCanonicalTwoStage(FODriver):
                       tstart=self.fotstart,
                       simtstart=self.simtstart, 
                       tstartindex = self.fotstartindex, 
-                      tend=self.fotend, 
+                      tend=self.inflation_end, 
                       tstep_wanted=self.tstep_wanted,
                       solver=self.solver,
                       k=self.k, 
@@ -2282,8 +2285,8 @@ class FixedainitTwoStage(FOCanonicalTwoStage):
         self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
         
         #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex,self.H_ix])
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.inflendindex], 
+                            self.bgmodel.yresult[:self.inflendindex,self.H_ix])
         kcrossefolds = kcrossings[:,1]
                 
         #If mode crosses horizon before t=0 then we will not be able to propagate it
