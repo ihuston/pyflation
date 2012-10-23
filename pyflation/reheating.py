@@ -529,80 +529,206 @@ class ReheatingFirstOrder(ReheatingModels):
         return dydx
     
 
-class ReheatingTwoStage(c.FOCanonicalTwoStage):
-    """Run a first order simulation taking account of the times that transfer
-    coefficients should be turned on, after the first time each field passes
-    through its minimum.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        """Initialize model"""
-        super(ReheatingTwoStage, self).__init__(*args, **kwargs)
-            
-    def run(self, saveresults=True, saveargs=None):
-        """Run the full model.
+class ReheatingTwoStage(c.FODriver):
+    """Uses a background and firstorder class to run a full (first-order) reheating
+        simulation.
         
-        The background model is first run to establish the end time of inflation and the start
-        times for the k modes. Then the initial conditions are set for the first order variables.
-        Finally the first order model is run and the results are saved if required.
-        
-        Parameters
-        ----------
-        saveresults : boolean, optional
-                      Should results be saved at the end of the run. Default is True.
-                      
-        saveargs : dict, optional
-                   Dictionary of keyword arguments to pass to file saving routines.
-                   See Cosmomodels.openresultsfile, .saveallresults, 
-                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
-                     
-        Returns
-        -------
-        filename : string
-                   name of the results file if any
-        """
-        #Run bg model
-        self.runbg()
+        Main additional functionality is in determining initial conditions.
+        Variables finally stored are as in first order class.
+    """ 
+                                                      
+    def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
+                 k=None, ainit=None, solver="rkdriver_rkf45", bgclass=None, foclass=None, 
+                 potential_func=None, pot_params=None, simtstart=0, nfields=1, 
+                 **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+      
+        #Set number of fluids and length of variable array
+        nfluids = 2 # only implemented for 2 fluids at the moment
+        self.nvars = 2*nfields*(nfields + nfluids + 1) + nfluids + 1
         
         
-        #Run should reach last minima
-        #FIXME Need to use normal end times
-        self.fotend = max(self.fotend, np.max(self.minima_times))
-        self.fotendindex = max(self.fotendindex, np.max(self.minima_indices))
-        
-        #Set initial conditions for first order model
-        self.setfoics()
-        
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()   
-        
-        if saveargs is None:
-            saveargs = {}
-        
-        if saveresults:
-            ystartshape = list(self.foystart.shape)
-            ystartshape.insert(0, 0)
-            saveargs["yresultshape"] = ystartshape 
-            #Set up results file
-            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
-            self._log.info("Opened results file %s.", filename)
-            resgrp = self.saveparamsinhdf5(rf, grpname)
-            self._log.info("Saved parameters in file.")
+        #Initial conditions for each of the variables.
+        if bgystart is None:
+            self.bgystart = np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
+                                  + [0.0]*(nfluids+1))
         else:
-            yresarr = None
-            tresarr = None
-            filename = None
-        #Run first order model
-        self.runfo(saveresults, yresarr, tresarr)
+            self.bgystart = bgystart
+        #Lengthen bgystart to add perturbed fields.
+        self.ystart= np.append(self.bgystart, ([0.0])*(2*nfields**2 + 2*nfluids*nfields))
+            
+        if not tstartindex:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
+        #Call superclass
+        newkwargs = dict(ystart=self.ystart, 
+                         tstart=tstart,
+                         tstartindex=self.tstartindex, 
+                         tend=tend, 
+                         tstep_wanted=tstep_wanted,
+                         solver=solver, 
+                         potential_func=potential_func, 
+                         pot_params=pot_params,
+                         nfields=nfields, 
+                         **kwargs)
         
-        #Save results in file
-        if saveresults:
-            try:
-                self._log.info("Closing file")
-                self.closehdf5file(rf)
-            except IOError:
-                self._log.exception("Error trying to close file! Results may not be saved.")        
-        return filename
+        super(ReheatingTwoStage, self).__init__(**newkwargs)
+        
+        #Set the field indices
+        self.setfieldindices()
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+                
+        #Let k roam if we don't know correct ks
+        if k is None:
+            self.k = 10**(np.arange(7.0)-62)
+        else:
+            self.k = k
+        self.simtstart = simtstart
+            
+        if bgclass is None:
+            self.bgclass = ReheatingBackground
+        else:
+            self.bgclass = bgclass
+        if foclass is None:
+            self.foclass = ReheatingFirstOrder
+        else:
+            self.foclass = foclass
+        
+        #Setup model variables    
+        self.bgmodel = self.firstordermodel = None
+        return
+
+    def setfieldindices(self):
+        """Set field indices. These can be used to select only certain parts of
+        the y variable, e.g. y[self.bg_ix] is the array of background values."""
+                
+        self.phis_ix = slice(0, self.nfields * 2, 2)
+        self.phidots_ix = slice(1, self.nfields * 2, 2)
+        
+        self.H_ix = slice(self.phidots_ix.stop, self.phidots_ix.stop + 1)
+                
+        self.rhogamma_ix = slice(self.H_ix.stop, self.H_ix.stop + 1)
+        self.rhomatter_ix = slice(self.rhogamma_ix.stop, self.rhogamma_ix.stop + 1)
+        
+        self.bg_ix = slice(0, self.rhomatter_ix.stop)
+        
+        self.pert_ix = slice(self.bg_ix.stop, None)
+        self.dps_ix = slice(self.pert_ix.start, self.pert_ix.start + 2*self.nfields**2, 2)
+        self.dpdots_ix = slice(self.dps_ix.start + 1, self.dps_ix.stop, 2)
+        
+        #Fluid perturbations
+        self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + self.nfields)
+        self.dmatter_ix = slice(self.dgamma_ix.stop, self.dgamma_ix.stop + self.nfields)
+        self.Vgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields)
+        self.Vmatter_ix = slice(self.Vgamma_ix.stop, self.Vgamma_ix.stop + self.nfields)
+        
+        #Indices for transfer array
+        self.tgamma_ix = 0
+        self.tmatter_ix = 1
+        return
+    
+    def getbgargs(self):
+        #Check ystart is in right form (1-d array of three values)
+        if len(self.ystart.shape) == 1:
+            ys = self.ystart[self.bg_ix]
+        elif len(self.ystart.shape) == 2:
+            ys = self.ystart[self.bg_ix,0]
+        #Choose tstartindex to be simply the first timestep.
+        tstartindex = np.array([0])
+        
+        args = dict(ystart=ys, 
+                      tstart=self.tstart,
+                      tstartindex=tstartindex, 
+                      tend=self.tend,
+                      tstep_wanted=self.tstep_wanted, 
+                      solver=self.solver,
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params,
+                      nfields=self.nfields,
+                      transfers=self.transfers)
+        return args
+        
+    def getfoargs(self):
+        #Initialize first order model
+        kwargs = dict(ystart=self.foystart, 
+                      tstart=self.fotstart,
+                      simtstart=self.simtstart, 
+                      tstartindex = self.fotstartindex, 
+                      tend=self.inflation_end, 
+                      tstep_wanted=self.tstep_wanted,
+                      solver=self.solver,
+                      k=self.k, 
+                      ainit=self.ainit, 
+                      potential_func=self.potential_func, 
+                      pot_params=self.pot_params,
+                      nfields=self.nfields,
+                      transfers=self.transfers)
+        return kwargs
+    
+    
+        
+    def getfoystart(self, ts=None, tsix=None):
+        """Model dependent setting of ystart"""
+        #Set variables in standard case:
+        if ts is None or tsix is None:
+            ts, tsix = self.fotstart, self.fotstartindex
+            
+        #Reset starting conditions at new time
+        foystart = np.zeros((self.nvars, len(self.k)), dtype=np.complex128)
+        #set_trace()
+        #Get values of needed variables at crossing time.
+        astar = self.ainit*np.exp(ts)
+        
+        #Truncate bgmodel yresult down if there is an extra dimension
+        if len(self.bgmodel.yresult.shape) > 2:
+            bgyresult = self.bgmodel.yresult[..., 0]
+        else:
+            bgyresult = self.bgmodel.yresult
+            
+        Hstar = bgyresult[tsix,self.H_ix]
+        Hzero = bgyresult[0,self.H_ix]
+        
+        epsstar = self.bgepsilon[tsix]
+        etastar = -1/(astar*Hstar*(1-epsstar))
+        try:
+            etadiff = etastar - self.etainit
+        except AttributeError:
+            etadiff = etastar + 1/(self.ainit*Hzero*(1-self.bgepsilon[0]))
+        keta = self.k*etadiff
+        
+        #Set bg init conditions based on previous bg evolution
+        try:
+            foystart[self.bg_ix] = bgyresult[tsix,:].transpose()
+        except ValueError:
+            foystart[self.bg_ix] = bgyresult[tsix,:][:, np.newaxis]
+        
+        #Find 1/asqrt(2k)
+        arootk = 1/(astar*(np.sqrt(2*self.k)))
+                
+        #Only want to set the diagonal elements of the mode matrix
+        #Use a.flat[::a.shape[1]+1] to set diagonal elements only
+        #In our case already flat so foystart[slice,:][::nfields+1]
+        #Set \delta\phi_1 initial condition
+        foystart[self.dps_ix,:][::self.nfields+1] = arootk*np.exp(-keta*1j)
+        #set \dot\delta\phi_1 ic
+
+        foystart[self.dpdots_ix,:][::self.nfields+1] = -arootk*np.exp(-keta*1j)*(1 + (self.k/(astar*Hstar))*1j)
+        
+        #Set fluid perturbations to be zero
+        foystart[self.dgamma_ix,:] = 0
+        foystart[self.dmatter_ix,:] = 0
+        
+        #Set Vm and Vgamma to be zero
+        foystart[self.Vgamma_ix,:] = 0
+        foystart[self.Vmatter_ix,:] = 0
+        
+        return foystart
         
     def callingparams(self):
         """Returns list of parameters to save with results."""
