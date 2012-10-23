@@ -428,7 +428,7 @@ class ReheatingFirstOrder(ReheatingModels):
             metric_phi_dot = (-metric_phi*Hdot/H 
                               -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
                                         + rhomatter*dydx[self.Vmatter_ix])
-                              +4/3.0*(dydx[self.rhogamma_ix]*Vgamma 
+                              -2/(3.0*H)*(dydx[self.rhogamma_ix]*Vgamma 
                                         + rhogamma*dydx[self.Vgamma_ix]))
             
             #Fluid perturbations
@@ -491,9 +491,9 @@ class ReheatingFirstOrder(ReheatingModels):
             metric_phi_dot = (-metric_phi*Hdot/H 
                               -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
                                         + rhomatter*dydx[self.Vmatter_ix])
-                              +4/3.0*(dydx[self.rhogamma_ix]*Vgamma 
+                              -2/(3.0*H)*(dydx[self.rhogamma_ix]*Vgamma 
                                         + rhogamma*dydx[self.Vgamma_ix])
-                              -H*np.sum((dydx[self.dpdots_ix][:,np.newaxis] 
+                              +0.5*np.sum((dydx[self.dpdots_ix][:,np.newaxis] 
                                          + Hdot/H*phidots[:,np.newaxis])*dpmodes
                                         + phidots[:,np.newaxis]*dpdotmodes, axis=0)
                               )
