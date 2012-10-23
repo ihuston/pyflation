@@ -835,6 +835,7 @@ class ReheatingTwoStage(c.FODriver):
             self.k
         except (NameError, AttributeError):
             self.k=None
+            
         #Form dictionary of inputs
         params = {"tstart":self.tstart,
                   "ainit":self.ainit,
@@ -845,8 +846,7 @@ class ReheatingTwoStage(c.FODriver):
                   "classname":self.__class__.__name__,
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
                   "nfields":self.nfields,
-                  "transfers":self.transfers,
-                  "transfers_on_times":self.transfers_on_times
+                  "transfers":self.transfers
                   }
         return params
     
@@ -863,7 +863,6 @@ class ReheatingTwoStage(c.FODriver):
         "tstep_wanted" : tables.Float64Col(),
         "datetime" : tables.Float64Col(),
         "nfields" : tables.IntCol(),
-        "transfers":tables.Float64Col(np.shape(self.transfers)),
-        "transfers_on_times":tables.Float64Col(np.shape(self.transfers_on_times))
+        "transfers":tables.Float64Col(np.shape(self.transfers))
         }
         return params
