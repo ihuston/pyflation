@@ -1351,8 +1351,268 @@ class MultiStageDriver(CosmologicalModel):
         "nfields" : tables.IntCol()
         }
         return params
+
+
+class FODriver(MultiStageDriver): 
+    """Generic class for two stage model with a background and first order pass."""
+       
+    def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
+                 k=None, ainit=None, solver="rkdriver_tsix", bgclass=None, foclass=None, 
+                 potential_func=None, pot_params=None, simtstart=0, nfields=1, **kwargs):
+        """Initialize model and ensure initial conditions are sane."""
+      
+        #Initial conditions for each of the variables.
+        if bgystart is None:
+            self.bgystart = np.array([18.0/np.sqrt(nfields),-0.1/np.sqrt(nfields)]*nfields 
+                                  + [0.0])
+        else:
+            self.bgystart = bgystart
+        #Lengthen bgystart to add perturbed fields.
+        self.ystart= np.append(self.bgystart, [0.0,0.0]*nfields**2)
+            
+        if not tstartindex:
+            self.tstartindex = np.array([0])
+        else:
+            self.tstartindex = tstartindex
+        #Call superclass
+        newkwargs = dict(ystart=self.ystart, 
+                         tstart=tstart,
+                         tstartindex=self.tstartindex, 
+                         tend=tend, 
+                         tstep_wanted=tstep_wanted,
+                         solver=solver, 
+                         potential_func=potential_func, 
+                         pot_params=pot_params,
+                         nfields=nfields, 
+                         **kwargs)
+        
+        super(FOCanonicalTwoStage, self).__init__(**newkwargs)
+        
+        #Set the field indices
+        self.setfieldindices()
+        
+        if ainit is None:
+            #Don't know value of ainit yet so scale it to 1
+            self.ainit = 1
+        else:
+            self.ainit = ainit
+                
+        #Let k roam if we don't know correct ks
+        if k is None:
+            self.k = 10**(np.arange(7.0)-62)
+        else:
+            self.k = k
+        self.simtstart = simtstart
+            
+        if bgclass is None:
+            self.bgclass = CanonicalBackground
+        else:
+            self.bgclass = bgclass
+        if foclass is None:
+            self.foclass = CanonicalFirstOrder
+        else:
+            self.foclass = foclass
+        
+        #Setup model variables    
+        self.bgmodel = self.firstordermodel = None
+        
+    def setfoics(self):
+        """After a bg run has completed, set the initial conditions for the 
+            first order run."""
+        #debug
+        #set_trace()
+        
+        #Find initial conditions for 1st order model
+        #Find a_end using instantaneous reheating
+        #Need to change to find using splines
+        Hend = self.bgmodel.yresult[self.fotendindex, self.H_ix]
+        self.a_end = self.finda_end(Hend)
+        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
+        
+        
+        #Find epsilon from bg model
+        try:
+            self.bgepsilon
+        except AttributeError:            
+            self.bgepsilon = self.bgmodel.getepsilon()
+        #Set etainit, initial eta at n=0
+        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
+        
+        #find k crossing indices
+        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
+                            self.bgmodel.yresult[:self.fotendindex, self.H_ix])
+        kcrossefolds = kcrossings[:,1]
+                
+        #If mode crosses horizon before t=0 then we will not be able to propagate it
+        if any(kcrossefolds==0):
+            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
+        
+        #Find new start time from earliest kcrossing
+        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(np.int)
+        self.foystart = self.getfoystart()
+        return
     
-class FOCanonicalTwoStage(MultiStageDriver):
+    #These should be implemented in concrete classes
+    def getbgargs(self):
+        pass
+    
+    def getfoargs(self):
+        pass
+    
+    def runbg(self):
+        """Run bg model after setting initial conditions."""
+
+        kwargs = self.getbgargs()
+         
+        self.bgmodel = self.bgclass(**kwargs)
+        #Start background run
+        self._log.info("Running background model...")
+        try:
+            self.bgmodel.run(saveresults=False)
+        except ModelError:
+            self._log.exception("Error in background run, aborting!")
+        #Find end of inflation
+        self.fotend, self.fotendindex = self.bgmodel.findinflend()
+        self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
+        return
+    
+    def runfo(self, saveresults, yresarr, tresarr):
+        """Run first order model after setting initial conditions."""
+
+        kwargs = self.getfoargs()
+        
+        self.firstordermodel = self.foclass(**kwargs)
+
+        #Start first order run
+        self._log.info("Beginning first order run...")
+        try:
+            self.firstordermodel.run(saveresults=saveresults, yresarr=yresarr,
+                                     tresarr=tresarr)
+        except ModelError, er:
+            raise ModelError("Error in first order run, aborting! Message: " + er.message)
+        
+        #Set results to current object
+        self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        return
+    
+    def run(self, saveresults=True, saveargs=None):
+        """Run the full model.
+        
+        The background model is first run to establish the end time of inflation and the start
+        times for the k modes. Then the initial conditions are set for the first order variables.
+        Finally the first order model is run and the results are saved if required.
+        
+        Parameters
+        ----------
+        saveresults : boolean, optional
+                      Should results be saved at the end of the run. Default is True.
+                      
+        saveargs : dict, optional
+                   Dictionary of keyword arguments to pass to file saving routines.
+                   See Cosmomodels.openresultsfile, .saveallresults, 
+                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
+                     
+        Returns
+        -------
+        filename : string
+                   name of the results file if any
+        """
+        #Run bg model
+        self.runbg()
+        
+        #Set initial conditions for first order model
+        self.setfoics()
+        
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()   
+        
+        if saveargs is None:
+            saveargs = {}
+        
+        if saveresults:
+            ystartshape = list(self.foystart.shape)
+            ystartshape.insert(0, 0)
+            saveargs["yresultshape"] = ystartshape 
+            #Set up results file
+            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
+            self._log.info("Opened results file %s.", filename)
+            resgrp = self.saveparamsinhdf5(rf, grpname)
+            self._log.info("Saved parameters in file.")
+        else:
+            yresarr = None
+            tresarr = None
+            filename = None
+        #Run first order model
+        self.runfo(saveresults, yresarr, tresarr)
+        
+        #Save results in file
+        if saveresults:
+            try:
+                self._log.info("Closing file")
+                self.closehdf5file(rf)
+            except IOError:
+                self._log.exception("Error trying to close file! Results may not be saved.")        
+        return filename
+    
+    def getdeltaphi(self):
+        return self.deltaphi
+    
+    def deltaphi(self, recompute=False):
+        """Return the calculated values of $\delta\phi$ for all times, fields and modes.
+        For multifield systems this is the quantum matrix of solutions:
+        
+        \hat{\delta\phi} = \Sum_{\alpha, I} xi_{\alpha I} \hat{a}_I
+        
+        The result is stored as the instance variable m.deltaphi but will be recomputed
+        if `recompute` is True.
+        
+        Parameters
+        ----------
+        recompute : boolean, optional
+                    Should the values be recomputed? Default is False.
+                   
+        Returns
+        -------
+        deltaphi : array_like, dtype: complex128
+                   Array of $\delta\phi$ values for all timesteps, fields and k modes.
+        """
+        
+        if not hasattr(self, "_deltaphi") or recompute:
+            self._deltaphi = self.yresult[:,self.dps_ix,:]
+        return self._deltaphi
+    
+    #Helper functions to access results variables
+    @property
+    def phis(self):
+        """Background fields \phi_i"""
+        return self.yresult[:,self.phis_ix]
+    
+    @property
+    def phidots(self):
+        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
+        return self.yresult[:,self.phidots_ix]
+    
+    @property
+    def H(self):
+        """Hubble parameter"""
+        return self.yresult[:,self.H_ix]
+    
+    @property
+    def dpmodes(self):
+        """Quantum modes of first order perturbations"""
+        return self.yresult[:,self.dps_ix]
+    
+    @property
+    def dpdotmodes(self):
+        """Quantum modes of derivatives of first order perturbations"""
+        return self.yresult[:,self.dpdots_ix]
+    
+    @property
+    def a(self):
+        """Scale factor of the universe"""
+        return self.ainit*np.exp(self.tresult)
+
+class FOCanonicalTwoStage(FODriver):
     """Uses a background and firstorder class to run a full (first-order) simulation.
         Main additional functionality is in determining initial conditions.
         Variables finally stored are as in first order class.
@@ -1429,46 +1689,8 @@ class FOCanonicalTwoStage(MultiStageDriver):
         self.dps_ix = slice(self.nfields * 2 + 1, None, 2)
         self.dpdots_ix = slice(self.nfields * 2 + 2, None, 2)
         return
-                    
-    def setfoics(self):
-        """After a bg run has completed, set the initial conditions for the 
-            first order run."""
-        #debug
-        #set_trace()
-        
-        #Find initial conditions for 1st order model
-        #Find a_end using instantaneous reheating
-        #Need to change to find using splines
-        Hend = self.bgmodel.yresult[self.fotendindex, self.H_ix]
-        self.a_end = self.finda_end(Hend)
-        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.fotendindex])
-        
-        
-        #Find epsilon from bg model
-        try:
-            self.bgepsilon
-        except AttributeError:            
-            self.bgepsilon = self.bgmodel.getepsilon()
-        #Set etainit, initial eta at n=0
-        self.etainit = -1/(self.ainit*self.bgmodel.yresult[0,self.H_ix]*(1-self.bgepsilon[0]))
-        
-        #find k crossing indices
-        kcrossings = self.findallkcrossings(self.bgmodel.tresult[:self.fotendindex], 
-                            self.bgmodel.yresult[:self.fotendindex, self.H_ix])
-        kcrossefolds = kcrossings[:,1]
-                
-        #If mode crosses horizon before t=0 then we will not be able to propagate it
-        if any(kcrossefolds==0):
-            raise ModelError("Some k modes crossed horizon before simulation began and cannot be initialized!")
-        
-        #Find new start time from earliest kcrossing
-        self.fotstart, self.fotstartindex = kcrossefolds, kcrossings[:,0].astype(np.int)
-        self.foystart = self.getfoystart()
-        return  
-        
-    def runbg(self):
-        """Run bg model after setting initial conditions."""
-
+    
+    def getbgargs(self):
         #Check ystart is in right form (1-d array of three values)
         if len(self.ystart.shape) == 1:
             ys = self.ystart[self.bg_ix]
@@ -1477,7 +1699,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         #Choose tstartindex to be simply the first timestep.
         tstartindex = np.array([0])
         
-        kwargs = dict(ystart=ys, 
+        args = dict(ystart=ys, 
                       tstart=self.tstart,
                       tstartindex=tstartindex, 
                       tend=self.tend,
@@ -1486,22 +1708,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
                       nfields=self.nfields)
-         
-        self.bgmodel = self.bgclass(**kwargs)
-        #Start background run
-        self._log.info("Running background model...")
-        try:
-            self.bgmodel.run(saveresults=False)
-        except ModelError:
-            self._log.exception("Error in background run, aborting!")
-        #Find end of inflation
-        self.fotend, self.fotendindex = self.bgmodel.findinflend()
-        self._log.info("Background run complete, inflation ended " + str(self.fotend) + " efoldings after start.")
-        return
+        return args
         
-    def runfo(self, saveresults, yresarr, tresarr):
-        """Run first order model after setting initial conditions."""
-
+    def getfoargs(self):
         #Initialize first order model
         kwargs = dict(ystart=self.foystart, 
                       tstart=self.fotstart,
@@ -1515,79 +1724,9 @@ class FOCanonicalTwoStage(MultiStageDriver):
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
                       nfields=self.nfields)
-        
-        self.firstordermodel = self.foclass(**kwargs)
-
-        #Start first order run
-        self._log.info("Beginning first order run...")
-        try:
-            self.firstordermodel.run(saveresults=saveresults, yresarr=yresarr,
-                                     tresarr=tresarr)
-        except ModelError, er:
-            raise ModelError("Error in first order run, aborting! Message: " + er.message)
-        
-        #Set results to current object
-        self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
-        return
+        return kwargs
     
-    def run(self, saveresults=True, saveargs=None):
-        """Run the full model.
-        
-        The background model is first run to establish the end time of inflation and the start
-        times for the k modes. Then the initial conditions are set for the first order variables.
-        Finally the first order model is run and the results are saved if required.
-        
-        Parameters
-        ----------
-        saveresults : boolean, optional
-                      Should results be saved at the end of the run. Default is True.
-                      
-        saveargs : dict, optional
-                   Dictionary of keyword arguments to pass to file saving routines.
-                   See Cosmomodels.openresultsfile, .saveallresults, 
-                   .createhdf5structure, .saveparamsinhdf5 for more arguments.
-                     
-        Returns
-        -------
-        filename : string
-                   name of the results file if any
-        """
-        #Run bg model
-        self.runbg()
-        
-        #Set initial conditions for first order model
-        self.setfoics()
-        
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()   
-        
-        if saveargs is None:
-            saveargs = {}
-        
-        if saveresults:
-            ystartshape = list(self.foystart.shape)
-            ystartshape.insert(0, 0)
-            saveargs["yresultshape"] = ystartshape 
-            #Set up results file
-            rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
-            self._log.info("Opened results file %s.", filename)
-            resgrp = self.saveparamsinhdf5(rf, grpname)
-            self._log.info("Saved parameters in file.")
-        else:
-            yresarr = None
-            tresarr = None
-            filename = None
-        #Run first order model
-        self.runfo(saveresults, yresarr, tresarr)
-        
-        #Save results in file
-        if saveresults:
-            try:
-                self._log.info("Closing file")
-                self.closehdf5file(rf)
-            except IOError:
-                self._log.exception("Error trying to close file! Results may not be saved.")        
-        return filename
+    
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
@@ -1640,63 +1779,7 @@ class FOCanonicalTwoStage(MultiStageDriver):
         
         return foystart
     
-    def getdeltaphi(self):
-        return self.deltaphi
     
-    def deltaphi(self, recompute=False):
-        """Return the calculated values of $\delta\phi$ for all times, fields and modes.
-        For multifield systems this is the quantum matrix of solutions:
-        
-        \hat{\delta\phi} = \Sum_{\alpha, I} xi_{\alpha I} \hat{a}_I
-        
-        The result is stored as the instance variable m.deltaphi but will be recomputed
-        if `recompute` is True.
-        
-        Parameters
-        ----------
-        recompute : boolean, optional
-                    Should the values be recomputed? Default is False.
-                   
-        Returns
-        -------
-        deltaphi : array_like, dtype: complex128
-                   Array of $\delta\phi$ values for all timesteps, fields and k modes.
-        """
-        
-        if not hasattr(self, "_deltaphi") or recompute:
-            self._deltaphi = self.yresult[:,self.dps_ix,:]
-        return self._deltaphi
-    
-    #Helper functions to access results variables
-    @property
-    def phis(self):
-        """Background fields \phi_i"""
-        return self.yresult[:,self.phis_ix]
-    
-    @property
-    def phidots(self):
-        """Derivatives of background fields w.r.t N \phi_i^\dagger"""
-        return self.yresult[:,self.phidots_ix]
-    
-    @property
-    def H(self):
-        """Hubble parameter"""
-        return self.yresult[:,self.H_ix]
-    
-    @property
-    def dpmodes(self):
-        """Quantum modes of first order perturbations"""
-        return self.yresult[:,self.dps_ix]
-    
-    @property
-    def dpdotmodes(self):
-        """Quantum modes of derivatives of first order perturbations"""
-        return self.yresult[:,self.dpdots_ix]
-    
-    @property
-    def a(self):
-        """Scale factor of the universe"""
-        return self.ainit*np.exp(self.tresult)
 
 def make_wrapper_model(modelfile, *args, **kwargs):
     """Return a wrapper class that provides the given model class from a file."""
