@@ -1228,7 +1228,7 @@ class MultiStageDriver(CosmologicalModel):
         #get aHs
         if len(H.shape) > 1:
             #Use only one dimensional H
-            H = H[:,0]
+            H = np.squeeze(H)
         aH = self.ainit*np.exp(t)*H
         try:
             kcrindex = np.where(np.sign(k - (factor*aH))<0)[0][0]
