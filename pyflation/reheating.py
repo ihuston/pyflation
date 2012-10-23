@@ -544,13 +544,17 @@ class ReheatingTwoStage(c.FODriver):
     def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_rkf45", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, nfields=1, 
-                 **kwargs):
+                 transfers=None, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Set number of fluids and length of variable array
         nfluids = 2 # only implemented for 2 fluids at the moment
         self.nvars = 2*nfields*(nfields + nfluids + 1) + nfluids + 1
         
+        if transfers is None:
+            self.transfers = np.zeros((nfields,nfluids))
+        else:
+            self.transfers = transfers
         
         #Initial conditions for each of the variables.
         if bgystart is None:
