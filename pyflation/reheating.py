@@ -119,7 +119,7 @@ class ReheatingModels(c.PhiModels):
         
         rho_fraction = rho_fields/total_rho
         
-        if not any(self.epsilon>1):
+        if not any(rho_fraction<=fraction):
             raise c.ModelError("Reheating did not end during specified number of efoldings.")
         
         endindex = np.where(rho_fraction<=fraction)[0][0]
