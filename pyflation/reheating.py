@@ -355,9 +355,9 @@ class ReheatingFirstOrder(ReheatingModels):
         self.phis_ix = slice(0, self.nfields * 2, 2)
         self.phidots_ix = slice(1, self.nfields * 2, 2)
         
-        self.H_ix = slice(self.phidots_ix.stop, self.phidots_ix.stop + 1)
+        self.H_ix = self.phidots_ix.stop
                 
-        self.rhogamma_ix = slice(self.H_ix.stop, self.H_ix.stop + 1)
+        self.rhogamma_ix = slice(self.H_ix+1, self.H_ix + 2)
         self.rhomatter_ix = slice(self.rhogamma_ix.stop, self.rhogamma_ix.stop + 1)
         
         self.bg_ix = slice(0, self.rhomatter_ix.stop)
@@ -691,9 +691,9 @@ class ReheatingTwoStage(c.FODriver):
         self.phis_ix = slice(0, self.nfields * 2, 2)
         self.phidots_ix = slice(1, self.nfields * 2, 2)
         
-        self.H_ix = slice(self.phidots_ix.stop, self.phidots_ix.stop + 1)
+        self.H_ix = self.phidots_ix.stop
                 
-        self.rhogamma_ix = slice(self.H_ix.stop, self.H_ix.stop + 1)
+        self.rhogamma_ix = slice(self.H_ix+1, self.H_ix + 2)
         self.rhomatter_ix = slice(self.rhogamma_ix.stop, self.rhogamma_ix.stop + 1)
         
         self.bg_ix = slice(0, self.rhomatter_ix.stop)
