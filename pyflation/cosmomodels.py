@@ -1366,7 +1366,7 @@ class FODriver(MultiStageDriver):
         Hend = self.bgmodel.yresult[self.inflendindex, self.H_ix]
         self.a_end = self.finda_end(Hend)
         self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex])
-        return self.ainit
+        return
     
     def setfoics(self):
         """After a bg run has completed, set the initial conditions for the 
@@ -1405,6 +1405,13 @@ class FODriver(MultiStageDriver):
     def getfoargs(self):
         pass
     
+    def find_fotend(self):
+        """Set the end time of first order run.
+            Override to use different end time e.g. after reheating"""
+        self.fotend = self.inflation_end
+        self.fotendindex = self.inflendindex
+        return
+    
     def runbg(self):
         """Run bg model after setting initial conditions."""
 
@@ -1420,6 +1427,7 @@ class FODriver(MultiStageDriver):
         #Find end of inflation
         self.inflation_end, self.inflendindex = self.bgmodel.findinflend()
         self._log.info("Background run complete, inflation ended " + str(self.inflation_end) + " efoldings after start.")
+        self.find_fotend()
         return
     
     def runfo(self, saveresults, yresarr, tresarr):
@@ -1662,7 +1670,7 @@ class FOCanonicalTwoStage(FODriver):
                       tstart=self.fotstart,
                       simtstart=self.simtstart, 
                       tstartindex = self.fotstartindex, 
-                      tend=self.inflation_end, 
+                      tend=self.fotend, 
                       tstep_wanted=self.tstep_wanted,
                       solver=self.solver,
                       k=self.k, 

@@ -319,6 +319,10 @@ class ReheatingFirstOrder(ReheatingModels):
         
         super(ReheatingFirstOrder, self).__init__(*args, **kwargs)
         
+        #Set number of fluids and length of variable array
+        nfluids = 2 # only implemented for 2 fluids at the moment
+        self.nvars = 2*self.nfields*(self.nfields + nfluids + 1) + nfluids + 1
+        
         if ainit is None:
             #Don't know value of ainit yet so scale it to 1
             self.ainit = 1
@@ -400,10 +404,10 @@ class ReheatingFirstOrder(ReheatingModels):
         
         #Set derivatives taking care of k type
         if type(k) is np.ndarray or type(k) is list: 
-            dydx = np.zeros((2*nfields**2 + 2*nfields + 1,lenk), dtype=y.dtype)
+            dydx = np.zeros((self.nvars,lenk), dtype=y.dtype)
             innerterm = np.zeros((nfields,nfields,lenk), dtype=y.dtype)
         else:
-            dydx = np.zeros(2*nfields**2 + 2*nfields + 1, dtype=y.dtype)
+            dydx = np.zeros(self.nvars, dtype=y.dtype)
             innerterm = np.zeros((nfields,nfields), y.dtype)
         
         if self.fields_off:
@@ -660,7 +664,7 @@ class ReheatingTwoStage(c.FODriver):
                       tstart=self.fotstart,
                       simtstart=self.simtstart, 
                       tstartindex = self.fotstartindex, 
-                      tend=self.inflation_end, 
+                      tend=self.fotend, 
                       tstep_wanted=self.tstep_wanted,
                       solver=self.solver,
                       k=self.k, 
@@ -671,7 +675,25 @@ class ReheatingTwoStage(c.FODriver):
                       transfers=self.transfers)
         return kwargs
     
-    
+    def find_ainit(self):
+        """Find initial conditions for 1st order model
+           Find a_end using the correct reheating temperature
+        """
+        #Find when reheating ended
+        
+        Hend = self.bgmodel.yresult[self.inflendindex, self.H_ix]
+        Hreh = self.bgmodel.yresult[self.rehendindex, self.H_ix]
+        self.a_end = self.finda_end(Hend, Hreh)
+        self.ainit = self.a_end*np.exp(-self.bgmodel.tresult[self.inflendindex])
+        return
+        
+    def find_fotend(self):
+        """Set the end time of first order run.
+            Find reheating time and set fotend to it"""
+        self.reheating_end, self.rehendindex = self.bgmodel.find_reheating_end()
+        self.fotend = self.reheating_end
+        self.fotendindex = self.rehendindex
+        return
         
     def getfoystart(self, ts=None, tsix=None):
         """Model dependent setting of ystart"""
