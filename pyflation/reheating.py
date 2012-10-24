@@ -485,14 +485,14 @@ class ReheatingFirstOrder(ReheatingModels):
                                   -dUdphi[:,np.newaxis]*dpmodes, axis=0))
             
             #Vmatter and Vgamma perturbation equations
-            if np.any(active_transfers[:,self.tmatter_ix]):
+            if np.any(active_transfers[:,self.tmatter_ix]*rhomatter[0]):
                 dydx[self.Vmatter_ix] = (-metric_phi/H 
                                      -1/(2*rhomatter)*np.sum(H*tmatter*phidots**2, axis=0)*(
                                       Vmatter - V_full))
             else:
                 dydx[self.Vmatter_ix] = 0
                 
-            if np.any(active_transfers[:,self.tgamma_ix]):
+            if np.any(active_transfers[:,self.tgamma_ix]*rhogamma[0]):
                 dydx[self.Vgamma_ix] = (Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
                                     -1/(2*rhogamma)*np.sum(H*tgamma*phidots**2, axis=0)*(
                                       Vgamma - 0.75*V_full))
