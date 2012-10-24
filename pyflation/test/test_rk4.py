@@ -11,7 +11,23 @@ from numpy.testing import assert_, assert_raises, \
                           assert_almost_equal
 
 from pyflation import rk4
-                          
+
+import logging
+import sys
+
+log = logging.getLogger()
+log.level = logging.DEBUG
+stream_handler = None
+
+def startlog():
+    stream_handler = logging.StreamHandler(sys.stdout)
+    log.addHandler(stream_handler)
+    
+def remlog():
+    if stream_handler:
+        log.removeHandler(stream_handler)
+  
+startlog()                        
 class Test_rkdriver_tsix_basic():
 
 
@@ -23,7 +39,7 @@ class Test_rkdriver_tsix_basic():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = [],
                            )
@@ -57,7 +73,7 @@ class Test_rkdriver_tsix_2vars():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = [],
                            )
@@ -91,7 +107,7 @@ class Test_rkdriver_tsix_difftsix():
                            tsix = np.array([0, 500]),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = [],
                            )
@@ -131,7 +147,7 @@ class Test_rkdriver_append_basic():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr=[],
                            xarr=[]
                            )
@@ -167,7 +183,7 @@ class Test_rkdriver_append_2vars():
                            tsix = np.zeros((1,)),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = []
                            )
@@ -203,7 +219,7 @@ class Test_rkdriver_append_difftsix():
                            tsix = np.array([0, 500]),
                            tend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = []
                            )
@@ -236,13 +252,14 @@ class Test_rkdriver_rkf45_basic():
 
 
     def setup(self):
+        startlog()
         # Basic setup for rk4driver
         self.rkargs = dict(
                            ystart = np.zeros((1,1)),
                            xstart = 0,
                            xend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr=[],
                            xarr=[],
                            hmax=1,
@@ -265,6 +282,10 @@ class Test_rkdriver_rkf45_basic():
         number_steps = self.x.shape[0]
         assert_equal(self.y.shape, (number_steps,1,1), "Result y array not correct shape")
 
+    def teardown(self):
+        remlog()
+        
+        
 class Test_rkdriver_rkf45_2vars():
 
 
@@ -275,7 +296,7 @@ class Test_rkdriver_rkf45_2vars():
                            xstart = 0,
                            xend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = [],
                            hmax=1,
@@ -308,7 +329,7 @@ class Test_rkdriver_rkf45_difftsix():
                            xstart = np.array([0, 5]),
                            xend = 10,
                            h = 0.01,
-                           derivs = lambda y,x,k=None: x**2,
+                           derivs = lambda y,x,k=None: np.ones_like(y)*x**2,
                            yarr = [],
                            xarr = [],
                            hmax=1,
