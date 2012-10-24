@@ -408,8 +408,8 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         R = np.atleast_1d(R)
         #Get the tolerance in terms of abstol and reltol 
         tol = np.atleast_1d(abstol + reltol*np.max([np.abs(yout), np.abs(last_y)], axis=0))
-        
-        if np.all(R[~np.isnan(R)] <= tol[~np.isnan(tol)]):
+        #rk_log.info("Shapes: %s %s",(~np.isnan(R)).shape, (~np.isnan(tol)).shape)
+        if np.all(R[~np.isnan(tol)] <= tol[~np.isnan(tol)]):
             if postprocess:
                 #Allow post processing function to change y depending on y and x
                 yout = postprocess(yout, xout)
