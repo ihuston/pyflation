@@ -564,8 +564,8 @@ class ReheatingFirstOrder(ReheatingModels):
         """
         
         #Set local variables
-        rhogamma = y[self.rhogamma_ix]
-        rhomatter = y[self.rhomatter_ix]
+        rhogamma = y[self.rhogamma_ix,0]
+        rhomatter = y[self.rhomatter_ix,0]
         
         #Check whether transfers should be on
         if not np.all(self.transfers_on):
@@ -597,8 +597,8 @@ class ReheatingFirstOrder(ReheatingModels):
             H = np.sqrt(Hsq)
             y[self.H_ix] = H
             
-            rho_fields = 0.5*Hsq*pdotsq + U
-            rho_total = 3*Hsq
+            rho_fields = (0.5*Hsq*pdotsq + U)[0]
+            rho_total = (3*Hsq)[0]
             
             if rho_fields/rho_total < self.rho_limit:
                 self.fields_off = True
