@@ -213,13 +213,11 @@ class ReheatingBackground(ReheatingModels):
             #Use H from y variable
             H = y[self.H_ix]
             
-            #Calculate H derivative now as we need it later
-            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
             #d\phi_0/dn = y_1
             dydx[self.phis_ix] = phidots
             
             #dphi^prime/dn
-            dydx[self.phidots_ix] = -((3 + Hdot/H + 0.5/H * (tgamma + tmatter))*phidots 
+            dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
             
             #dH/dn We do not evolve H in this case, only storing the 
