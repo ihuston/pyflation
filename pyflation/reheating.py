@@ -219,7 +219,7 @@ class ReheatingBackground(ReheatingModels):
             #dphi^prime/dn
             dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
-            
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
             #dH/dn We do not evolve H in this case, only storing the 
             #result from the Friedmann constraint at each time step.
             dydx[self.H_ix] = Hdot
