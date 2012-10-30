@@ -481,7 +481,7 @@ class ReheatingFirstOrder(ReheatingModels):
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma + H**2*pdotsq)
             drho_full = (dmatter + dgamma 
                          + np.sum(H**2*phidots[:,np.newaxis]*dpdotmodes 
-                                  -H**2*phidots[:,np.newaxis]**2*metric_phi
+                                  -H**2*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]
                                   +dUdphi[:,np.newaxis]*dpmodes, axis=0))
             
             #Vmatter and Vgamma perturbation equations
@@ -505,7 +505,7 @@ class ReheatingFirstOrder(ReheatingModels):
                                         + rhomatter*dydx[self.Vmatter_ix])
                               -2/(3.0*H)*(dydx[self.rhogamma_ix]*Vgamma 
                                         + rhogamma*dydx[self.Vgamma_ix])
-                              +0.5*np.sum((dydx[self.dpdots_ix][:,np.newaxis] 
+                              +0.5*np.sum((dydx[self.phidots_ix][:,np.newaxis] 
                                          + Hdot/H*phidots[:,np.newaxis])*dpmodes
                                         + phidots[:,np.newaxis]*dpdotmodes, axis=0)
                               )
