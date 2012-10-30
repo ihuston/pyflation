@@ -455,7 +455,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #d\phi_0/dn = y_1
             dydx[self.phis_ix] = phidots
             #dphi^prime/dn
-            dydx[self.phidots_ix] = -((3 + Hdot/H + 0.5/H * (tgamma + tmatter))*phidots 
+            dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
             #dH/dn is not recorded, see postprocess method
             dydx[self.H_ix] = 0
