@@ -192,8 +192,7 @@ class ReheatingBackground(ReheatingModels):
             #dphi^prime/dn
             dydx[self.phidots_ix] = 0
             
-            #dH/dn We do not evolve H at each step, only saving the result 
-            #of the Friedmann constraint equation at each step.
+            #dH/dn 
             dydx[self.H_ix] = Hdot
             
             # Fluids
@@ -220,8 +219,7 @@ class ReheatingBackground(ReheatingModels):
             dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
             Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
-            #dH/dn We do not evolve H in this case, only storing the 
-            #result from the Friedmann constraint at each time step.
+            #dH/dn 
             dydx[self.H_ix] = Hdot
             
             # Fluids
@@ -269,10 +267,7 @@ class ReheatingBackground(ReheatingModels):
                 
         # Only do check if fields are still being used
         if self.fields_off:
-            #Fields are off but set to zero anyway
-            Hsq = (rhogamma + rhomatter)/(3)
-            H = np.sqrt(Hsq)
-            #y[self.H_ix] = H
+            
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
         else:
@@ -284,9 +279,7 @@ class ReheatingBackground(ReheatingModels):
             #Calculate rho for the fields to check if it's not negligible
             #Update H to use fields
             Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
-            H = np.sqrt(Hsq)
-            #y[self.H_ix] = H
-            
+                        
             rho_fields = 0.5*Hsq*pdotsq + U
             rho_total = 3*Hsq
             
@@ -414,7 +407,6 @@ class ReheatingFirstOrder(ReheatingModels):
             Hdot = -(0.5*rhomatter + 2.0/3.0*rhogamma)/H
             dydx[self.phis_ix] = 0
             dydx[self.phidots_ix] = 0
-            #Do not save result of dH/dN at each step, see postprocess method
             dydx[self.H_ix] = Hdot
             dydx[self.rhogamma_ix] = -4*rhogamma
             dydx[self.rhomatter_ix] = -3*rhomatter
@@ -457,7 +449,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #dphi^prime/dn
             dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
-            #dH/dn is not recorded, see postprocess method
+            
             dydx[self.H_ix] = Hdot
             
             # Background Fluids
@@ -576,9 +568,6 @@ class ReheatingFirstOrder(ReheatingModels):
         # Only do check if fields are still being used
         if self.fields_off:
             #Fields are off but set to zero anyway
-            Hsq = (rhogamma + rhomatter)/(3)
-            H = np.sqrt(Hsq)
-            #y[self.H_ix] = H
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
             y[self.dps_ix] = 0
@@ -592,8 +581,6 @@ class ReheatingFirstOrder(ReheatingModels):
             #Calculate rho for the fields to check if it's not negligible
             #Update H to use fields
             Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
-            H = np.sqrt(Hsq)
-            #y[self.H_ix] = H
             
             rho_fields = (0.5*Hsq*pdotsq + U)[0]
             rho_total = (3*Hsq)[0]
