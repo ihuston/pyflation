@@ -194,7 +194,7 @@ class ReheatingBackground(ReheatingModels):
             
             #dH/dn We do not evolve H at each step, only saving the result 
             #of the Friedmann constraint equation at each step.
-            dydx[self.H_ix] = 0
+            dydx[self.H_ix] = Hdot
             
             # Fluids
             dydx[self.rhogamma_ix] = -4*rhogamma
@@ -222,7 +222,7 @@ class ReheatingBackground(ReheatingModels):
             
             #dH/dn We do not evolve H in this case, only storing the 
             #result from the Friedmann constraint at each time step.
-            dydx[self.H_ix] = 0
+            dydx[self.H_ix] = Hdot
             
             # Fluids
             dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
@@ -272,7 +272,7 @@ class ReheatingBackground(ReheatingModels):
             #Fields are off but set to zero anyway
             Hsq = (rhogamma + rhomatter)/(3)
             H = np.sqrt(Hsq)
-            y[self.H_ix] = H
+            #y[self.H_ix] = H
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
         else:
@@ -285,7 +285,7 @@ class ReheatingBackground(ReheatingModels):
             #Update H to use fields
             Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
             H = np.sqrt(Hsq)
-            y[self.H_ix] = H
+            #y[self.H_ix] = H
             
             rho_fields = 0.5*Hsq*pdotsq + U
             rho_total = 3*Hsq
@@ -415,7 +415,7 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.phis_ix] = 0
             dydx[self.phidots_ix] = 0
             #Do not save result of dH/dN at each step, see postprocess method
-            dydx[self.H_ix] = 0
+            dydx[self.H_ix] = Hdot
             dydx[self.rhogamma_ix] = -4*rhogamma
             dydx[self.rhomatter_ix] = -3*rhomatter
             #Perturbations without fields
@@ -458,7 +458,7 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.phidots_ix] = -(((0.5*rhomatter + 1/3.0*rhogamma + U)/H**2 + 0.5/H * (tgamma + tmatter))*phidots 
                                        + dUdphi[...,np.newaxis]/(H**2))
             #dH/dn is not recorded, see postprocess method
-            dydx[self.H_ix] = 0
+            dydx[self.H_ix] = Hdot
             
             # Background Fluids
             dydx[self.rhogamma_ix] = -4*rhogamma + 0.5*H*np.sum(tgamma*phidots**2, axis=0)
