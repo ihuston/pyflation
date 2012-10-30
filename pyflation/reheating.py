@@ -578,7 +578,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #Fields are off but set to zero anyway
             Hsq = (rhogamma + rhomatter)/(3)
             H = np.sqrt(Hsq)
-            y[self.H_ix] = H
+            #y[self.H_ix] = H
             y[self.phis_ix] = 0
             y[self.phidots_ix] = 0
             y[self.dps_ix] = 0
@@ -593,7 +593,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #Update H to use fields
             Hsq = (rhogamma + rhomatter + U)/(3-0.5*pdotsq)
             H = np.sqrt(Hsq)
-            y[self.H_ix] = H
+            #y[self.H_ix] = H
             
             rho_fields = (0.5*Hsq*pdotsq + U)[0]
             rho_total = (3*Hsq)[0]
