@@ -360,8 +360,8 @@ class ReheatingFirstOrder(ReheatingModels):
         #Fluid perturbations
         self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + self.nfields)
         self.dmatter_ix = slice(self.dgamma_ix.stop, self.dgamma_ix.stop + self.nfields)
-        self.Vgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields)
-        self.Vmatter_ix = slice(self.Vgamma_ix.stop, self.Vgamma_ix.stop + self.nfields)
+        self.qgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields)
+        self.qmatter_ix = slice(self.qgamma_ix.stop, self.qgamma_ix.stop + self.nfields)
         
         #Indices for transfer array
         self.tgamma_ix = 0
@@ -382,8 +382,8 @@ class ReheatingFirstOrder(ReheatingModels):
         #Set local variables
         rhogamma = y[self.rhogamma_ix]
         rhomatter = y[self.rhomatter_ix]
-        Vmatter = y[self.Vmatter_ix]
-        Vgamma = y[self.Vgamma_ix]
+        qmatter = y[self.qmatter_ix]
+        qgamma = y[self.qgamma_ix]
         dgamma = y[self.dgamma_ix]
         dmatter = y[self.dmatter_ix]
         #Get a
@@ -411,25 +411,23 @@ class ReheatingFirstOrder(ReheatingModels):
             dydx[self.rhogamma_ix] = -4*rhogamma
             dydx[self.rhomatter_ix] = -3*rhomatter
             #Perturbations without fields
-            metric_phi = -1/(2*H) * (rhomatter*Vmatter + 4/3.0 * rhogamma*Vgamma)
+            metric_phi = -1/(2*H) * (qmatter + qgamma)
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma)
             drho_full = dmatter + dgamma
             
-            #Vmatter and Vgamma perturbation equations
-            dydx[self.Vmatter_ix] = -metric_phi/H
-            dydx[self.Vgamma_ix] = Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
+            #dqmatter and dqgamma perturbation equations
+            dydx[self.qmatter_ix] = -3*qmatter - rhomatter*metric_phi/H
+            dydx[self.qgamma_ix] = (-3*qgamma - 4*rhogamma*metric_phi/(3.0*H) 
+                                    - dgamma/(3*H*rhogamma))
             
             #Metric_phi_dot
             metric_phi_dot = (-metric_phi*Hdot/H 
-                              -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
-                                        + rhomatter*dydx[self.Vmatter_ix])
-                              -2/(3.0*H)*(dydx[self.rhogamma_ix]*Vgamma 
-                                        + rhogamma*dydx[self.Vgamma_ix]))
+                              -1/(2*H)*(dydx[self.qmatter_ix] + dydx[self.qgamma_ix]))
             
             #Fluid perturbations
-            dydx[self.dgamma_ix] = -(4*dgamma - 4*k**2/(3*H*a**2)*Vgamma*rhogamma
+            dydx[self.dgamma_ix] = -(4*dgamma - k**2/(H*a**2)*qgamma
                                      +2/(3*H**2) * rhogamma*drho_full + 4*rhogamma*metric_phi)
-            dydx[self.dmatter_ix] = -(3*dmatter - k**2/(H*a**2)*Vmatter*rhomatter
+            dydx[self.dmatter_ix] = -(3*dmatter - k**2/(H*a**2)*qmatter
                                      +1/(2*H**2) * rhomatter*drho_full + 3*rhomatter*metric_phi)
             
             #Field perturbations
@@ -466,7 +464,7 @@ class ReheatingFirstOrder(ReheatingModels):
             dpdotmodes = y[self.dpdots_ix].reshape((nfields, nfields, lenk))
             
             # Set up metric phi, V and drho_full
-            metric_phi = -0.5 * (1/H * (rhomatter*Vmatter + 4/3.0 * rhogamma*Vgamma)
+            metric_phi = -0.5 * (1/H * (qmatter + qgamma)
                                  - np.sum(phidots[:,np.newaxis] * dpmodes, axis=0))
             V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma + H**2*pdotsq)
             drho_full = (dmatter + dgamma 
@@ -474,39 +472,28 @@ class ReheatingFirstOrder(ReheatingModels):
                                   -H**2*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]
                                   +dUdphi[:,np.newaxis]*dpmodes, axis=0))
             
-            #Vmatter and Vgamma perturbation equations
-            if np.any(active_transfers[:,self.tmatter_ix]*np.nan_to_num(dydx[self.rhomatter_ix])):
-                dydx[self.Vmatter_ix] = (-metric_phi/H 
-                                     -1/(2*rhomatter)*np.sum(H*tmatter*phidots**2, axis=0)*(
-                                      Vmatter - V_full))
-            else:
-                dydx[self.Vmatter_ix] = 0
-                
-            if np.any(active_transfers[:,self.tgamma_ix]*np.nan_to_num(dydx[self.rhogamma_ix])):
-                dydx[self.Vgamma_ix] = (Vgamma - metric_phi/H - dgamma/(4*H*rhogamma)
-                                    -1/(2*rhogamma)*np.sum(H*tgamma*phidots**2, axis=0)*(
-                                      Vgamma - 0.75*V_full))
-            else:
-                dydx[self.Vgamma_ix] = 0
+            dydx[self.qmatter_ix] = (-3*qmatter -rhomatter*metric_phi/H 
+                                     + H/2 * V_full * np.sum(tmatter*phidots**2, axis=0))
+            
+            dydx[self.qgamma_ix] = (-3*qgamma - 4*rhogamma*metric_phi/(3.0*H) 
+                                    - dgamma/(3*H)
+                                    +H/2 * V_full * np.sum(tgamma*phidots**2, axis=0))
             
             #Metric_phi_dot
             metric_phi_dot = (-metric_phi*Hdot/H 
-                              -1/(2*H)*(dydx[self.rhomatter_ix]*Vmatter 
-                                        + rhomatter*dydx[self.Vmatter_ix])
-                              -2/(3.0*H)*(dydx[self.rhogamma_ix]*Vgamma 
-                                        + rhogamma*dydx[self.Vgamma_ix])
+                              -1/(2*H)*(dydx[self.qmatter_ix] + dydx[self.qgamma_ix])
                               +0.5*np.sum((dydx[self.phidots_ix][:,np.newaxis] 
                                          + Hdot/H*phidots[:,np.newaxis])*dpmodes
                                         + phidots[:,np.newaxis]*dpdotmodes, axis=0)
                               )
             
             #Fluid perturbations
-            dydx[self.dgamma_ix] = (-4*dgamma + 4*k**2/(3*H*a**2)*Vgamma*rhogamma
+            dydx[self.dgamma_ix] = (-4*dgamma + k**2/(H*a**2)*qgamma
                                      -2/(3*H**2) * rhogamma*drho_full - 4*rhogamma*metric_phi
                                      +np.sum(H*tgamma*(phidots[:,np.newaxis]*dpdotmodes
                                         -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
             
-            dydx[self.dmatter_ix] = (-3*dmatter + k**2/(H*a**2)*Vmatter*rhomatter
+            dydx[self.dmatter_ix] = (-3*dmatter + k**2/(H*a**2)*qmatter
                                      -1/(2*H**2) * rhomatter*drho_full - 3*rhomatter*metric_phi
                                      +np.sum(H*tmatter*(phidots[:,np.newaxis]*dpdotmodes
                                         -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
