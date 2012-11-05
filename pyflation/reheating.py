@@ -503,10 +503,9 @@ class ReheatingFirstOrder(ReheatingModels):
                     #Inner loop over fields
                     for l in range(nfields):
                         innerterm[i,j] += (d2Udphi2[i,l])*dpmodes[l,j]
-            #Reshape this term so that it is nfields**2 long        
-            innerterm = innerterm.reshape((nfields**2,lenk))
+            
             #d\deltaphi_1^prime/dn
-            dydx[self.dpdots_ix] = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*y[self.dpdots_ix] 
+            dpdotsterm = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*y[self.dpdots_ix] 
                                      + (k/(a*H))**2 * y[self.dps_ix]
                                      + innerterm/H**2
                                      + (2/H**2 * dUdphi[:,np.newaxis] 
@@ -515,6 +514,9 @@ class ReheatingFirstOrder(ReheatingModels):
                                      - phidots[:,np.newaxis]*metric_phi_dot[np.newaxis,:]
                                      + 1/(2*H**2) * phidots[:,np.newaxis]*drho_full[np.newaxis,:]
                                      )
+            #Reshape this term so that it is nfields**2 long        
+            dpdotsterm = dpdotsterm.reshape((nfields**2,lenk))
+            dydx[self.dpdots_ix] = dpdotsterm
         return dydx
     
     def postprocess(self, y, t):
