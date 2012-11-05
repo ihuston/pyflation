@@ -505,8 +505,8 @@ class ReheatingFirstOrder(ReheatingModels):
                         innerterm[i,j] += (d2Udphi2[i,l])*dpmodes[l,j]
             
             #d\deltaphi_1^prime/dn
-            dpdotsterm = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*y[self.dpdots_ix] 
-                                     + (k/(a*H))**2 * y[self.dps_ix]
+            dpdotsterm = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*dpdotmodes
+                                     + (k/(a*H))**2 * dpmodes
                                      + innerterm/H**2
                                      + (2/H**2 * dUdphi[:,np.newaxis] 
                                         + 0.5/H*phidots[:,np.newaxis]*(tgamma+tmatter)
