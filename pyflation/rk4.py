@@ -439,7 +439,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
         ks_starting = np.where((last_x + h >= xstart) & (~has_started) )[0]
         if ks_starting.size:
             h = np.min(xstart[ks_starting]) - last_x
-            rk_log.debug("Step size changed to %f for initialization.", h)
+            rk_log.debug("Step size changed to %e for initialization.", h)
             # Need index in xstart of minimum value that provided next h
             next_ix = ks_starting[np.argmin(xstart[ks_starting])]
             #Refresh to latest h
@@ -449,7 +449,7 @@ def rkdriver_rkf45(ystart, xstart, xend, h, derivs, yarr, xarr,
                 ks_starting = np.insert(ks_starting, 0, next_ix) 
             
         if h < hmin:
-            rk_log.warn("Step size needed is smaller than minimum. Run halted!")
+            rk_log.warn("Step size %e needed is smaller than minimum %e. Run halted!", h,hmin)
             return xarr, yarr
         #End of loop update counter
         stepcounter += 1
