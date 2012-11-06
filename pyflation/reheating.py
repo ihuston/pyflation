@@ -686,8 +686,8 @@ class ReheatingTwoStage(c.FODriver):
         #Fluid perturbations
         self.dgamma_ix = slice(self.dpdots_ix.stop, self.dpdots_ix.stop + self.nfields)
         self.dmatter_ix = slice(self.dgamma_ix.stop, self.dgamma_ix.stop + self.nfields)
-        self.Vgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields)
-        self.Vmatter_ix = slice(self.Vgamma_ix.stop, self.Vgamma_ix.stop + self.nfields)
+        self.qgamma_ix = slice(self.dmatter_ix.stop, self.dmatter_ix.stop + self.nfields)
+        self.qmatter_ix = slice(self.qgamma_ix.stop, self.qgamma_ix.stop + self.nfields)
         
         #Indices for transfer array
         self.tgamma_ix = 0
