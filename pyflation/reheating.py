@@ -804,8 +804,8 @@ class ReheatingTwoStage(c.FODriver):
         foystart[self.dmatter_ix,:] = 0
         
         #Set Vm and Vgamma to be zero
-        foystart[self.Vgamma_ix,:] = 0
-        foystart[self.Vmatter_ix,:] = 0
+        foystart[self.qgamma_ix,:] = 0
+        foystart[self.qmatter_ix,:] = 0
         
         return foystart
         
