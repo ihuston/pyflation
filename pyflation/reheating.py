@@ -470,7 +470,7 @@ class ReheatingFirstOrder(ReheatingModels):
             drho_full = (dmatter + dgamma 
                          + np.sum(H**2*phidots[:,np.newaxis]*dpdotmodes 
                                   -H**2*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]
-                                  +dUdphi[:,np.newaxis]*dpmodes, axis=0))
+                                  +dUdphi[:,np.newaxis,np.newaxis]*dpmodes, axis=0))
             
             dydx[self.qmatter_ix] = (-3*qmatter -rhomatter*metric_phi/H 
                                      + H/2 * V_full * np.sum(tmatter*phidots**2, axis=0))
@@ -490,12 +490,12 @@ class ReheatingFirstOrder(ReheatingModels):
             #Fluid perturbations
             dydx[self.dgamma_ix] = (-4*dgamma + k**2/(H*a**2)*qgamma
                                      -2/(3*H**2) * rhogamma*drho_full - 4*rhogamma*metric_phi
-                                     +np.sum(H*tgamma*(phidots[:,np.newaxis]*dpdotmodes
+                                     +np.sum(H*tgamma[:,np.newaxis]*(phidots[:,np.newaxis]*dpdotmodes
                                         -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
             
             dydx[self.dmatter_ix] = (-3*dmatter + k**2/(H*a**2)*qmatter
                                      -1/(2*H**2) * rhomatter*drho_full - 3*rhomatter*metric_phi
-                                     +np.sum(H*tmatter*(phidots[:,np.newaxis]*dpdotmodes
+                                     +np.sum(H*tmatter[:,np.newaxis]*(phidots[:,np.newaxis]*dpdotmodes
                                         -0.5*phidots[:,np.newaxis]**2*metric_phi[np.newaxis,:]), axis=0))
             #This for loop runs over i,j and does the inner summation over l
             for i in range(nfields):
@@ -505,12 +505,12 @@ class ReheatingFirstOrder(ReheatingModels):
                         innerterm[i,j] += (d2Udphi2[i,l])*dpmodes[l,j]
             
             #d\deltaphi_1^prime/dn
-            dpdotsterm = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))*dpdotmodes
+            dpdotsterm = -((3+Hdot/H +1/(2*H)*(tgamma+tmatter))[:,np.newaxis]*dpdotmodes
                                      + (k/(a*H))**2 * dpmodes
                                      + innerterm/H**2
                                      + (2/H**2 * dUdphi[:,np.newaxis] 
-                                        + 0.5/H*phidots[:,np.newaxis]*(tgamma+tmatter)
-                                        + 3*phidots[:,np.newaxis])*metric_phi[np.newaxis,:]
+                                        + 0.5/H*phidots*(tgamma+tmatter)
+                                        + 3*phidots)[:,np.newaxis]*metric_phi[np.newaxis,:]
                                      - phidots[:,np.newaxis]*metric_phi_dot[np.newaxis,:]
                                      + 1/(2*H**2) * phidots[:,np.newaxis]*drho_full[np.newaxis,:]
                                      )
