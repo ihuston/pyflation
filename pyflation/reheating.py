@@ -388,7 +388,7 @@ class ReheatingFirstOrder(ReheatingModels):
         dmatter = y[self.dmatter_ix]
         #Get a
         a = self.ainit*np.exp(t)
-        H = y[self.H_ix]
+        H = y[self.H_ix,0] #Use single k value for H
         
         nfields = self.nfields    
         #get potential from function
