@@ -441,7 +441,7 @@ class ReheatingFirstOrder(ReheatingModels):
             tgamma = active_transfers[:,self.tgamma_ix][...,np.newaxis]
             tmatter = active_transfers[:,self.tmatter_ix][...,np.newaxis]
             #Calculate H derivative now as we need it later
-            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)
+            Hdot = -((0.5*rhomatter + 2.0/3.0*rhogamma)/H + 0.5*H*pdotsq)[:,0]
             #d\phi_0/dn = y_1
             dydx[self.phis_ix] = phidots
             #dphi^prime/dn
