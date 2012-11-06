@@ -418,7 +418,7 @@ class ReheatingFirstOrder(ReheatingModels):
             #dqmatter and dqgamma perturbation equations
             dydx[self.qmatter_ix] = -3*qmatter - rhomatter*metric_phi/H
             dydx[self.qgamma_ix] = (-3*qgamma - 4*rhogamma*metric_phi/(3.0*H) 
-                                    - dgamma/(3*H*rhogamma))
+                                    - dgamma/(3*H))
             
             #Metric_phi_dot
             metric_phi_dot = (-metric_phi*Hdot/H 
