@@ -264,6 +264,8 @@ class ReheatingBackground(ReheatingModels):
             self.transfers_on_times[signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))] = t
             self.transfers_on[signchanged] = True
             self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
+            if np.any(signchanged):
+                module_logger.info("Some transfer coefficients switch on at %f.", t)
                 
         # Only do check if fields are still being used
         if self.fields_off:
@@ -553,6 +555,8 @@ class ReheatingFirstOrder(ReheatingModels):
             self.transfers_on_times[signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))] = t
             self.transfers_on[signchanged] = True
             self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
+            if np.any(signchanged):
+                module_logger.info("Some transfer coefficients switch on at %f.", t)
                 
         # Only do check if fields are still being used
         if self.fields_off:
