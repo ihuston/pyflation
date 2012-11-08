@@ -1405,6 +1405,9 @@ class FODriver(MultiStageDriver):
     def getfoargs(self):
         pass
     
+    def postfo_cleanup(self):
+        pass
+    
     def find_fotend(self):
         """Set the end time of first order run.
             Override to use different end time e.g. after reheating"""
@@ -1447,6 +1450,7 @@ class FODriver(MultiStageDriver):
         
         #Set results to current object
         self.tresult, self.yresult = self.firstordermodel.tresult, self.firstordermodel.yresult
+        self.postfo_cleanup()
         return
     
     def run(self, saveresults=True, saveargs=None):
@@ -1490,8 +1494,6 @@ class FODriver(MultiStageDriver):
             #Set up results file
             rf, grpname, filename, yresarr, tresarr = self.openresultsfile(**saveargs)
             self._log.info("Opened results file %s.", filename)
-            resgrp = self.saveparamsinhdf5(rf, grpname)
-            self._log.info("Saved parameters in file.")
         else:
             yresarr = None
             tresarr = None
@@ -1502,6 +1504,8 @@ class FODriver(MultiStageDriver):
         #Save results in file
         if saveresults:
             try:
+                resgrp = self.saveparamsinhdf5(rf, grpname)
+                self._log.info("Saved parameters in file.")
                 self._log.info("Closing file")
                 self.closehdf5file(rf)
             except IOError:
