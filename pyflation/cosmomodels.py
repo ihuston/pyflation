@@ -1481,9 +1481,6 @@ class FODriver(MultiStageDriver):
         #Set initial conditions for first order model
         self.setfoics()
         
-        #Aggregrate results and calling parameters into results list
-        self.lastparams = self.callingparams()   
-        
         if saveargs is None:
             saveargs = {}
         
@@ -1509,7 +1506,9 @@ class FODriver(MultiStageDriver):
                 self._log.info("Closing file")
                 self.closehdf5file(rf)
             except IOError:
-                self._log.exception("Error trying to close file! Results may not be saved.")        
+                self._log.exception("Error trying to close file! Results may not be saved.")
+        #Aggregrate results and calling parameters into results list
+        self.lastparams = self.callingparams()        
         return filename
     
     def getdeltaphi(self):
