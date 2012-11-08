@@ -603,17 +603,22 @@ class ReheatingTwoStage(c.FODriver):
     def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_rkf45", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, nfields=1, 
-                 transfers=None, **kwargs):
+                 transfers=None, rho_limit=1e-5, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Set number of fluids and length of variable array
-        nfluids = 2 # only implemented for 2 fluids at the moment
+        nfluids = self.nfluids = 2 # only implemented for 2 fluids at the moment
         self.nvars = 2*nfields*(nfields + nfluids + 1) + nfluids + 1
         
         if transfers is None:
             self.transfers = np.zeros((nfields,nfluids))
         else:
             self.transfers = transfers
+            
+        # Set default value of rho_limit. If ratio of energy density of 
+        # fields to total energy density falls below this the fields are not
+        # included in the calculation any longer.
+        self.rho_limit = rho_limit
         
         #Initial conditions for each of the variables.
         if bgystart is None:
@@ -814,6 +819,14 @@ class ReheatingTwoStage(c.FODriver):
         foystart[self.qmatter_ix,:] = 0
         
         return foystart
+    
+    def postfo_cleanup(self):
+        """Following a run fix the instances variables to match those
+        of the child run instance."""
+        self.transfers_on_times = self.firstordermodel.transfers_on_times
+        self.reheating_end = self.firstordermodel.reheating_end
+        self.inflation_end = self.firstordermodel.inflation_end
+        return
         
     def callingparams(self):
         """Returns list of parameters to save with results."""
@@ -833,7 +846,12 @@ class ReheatingTwoStage(c.FODriver):
                   "classname":self.__class__.__name__,
                   "datetime":datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
                   "nfields":self.nfields,
-                  "transfers":self.transfers
+                  "transfers":self.transfers,
+                  "nfluids":self.nfluids,
+                  "rho_limit":self.rho_limit,
+                  "transfers_on_times":self.transfers_on_times,
+                  "reheating_end":self.reheating_end,
+                  "inflation_end":self.inflation_end
                   }
         return params
     
@@ -850,6 +868,11 @@ class ReheatingTwoStage(c.FODriver):
         "tstep_wanted" : tables.Float64Col(),
         "datetime" : tables.Float64Col(),
         "nfields" : tables.IntCol(),
-        "transfers":tables.Float64Col(np.shape(self.transfers))
+        "transfers":tables.Float64Col(np.shape(self.transfers)),
+        "nfluids" : tables.IntCol(),
+        "rho_limit" : tables.Float64Col(),
+        "transfers_on_times" : tables.Float64Col(np.shape(self.transfers_on_times)),
+        "reheating_end" : tables.Float64Col(),
+        "inflation_end" : tables.Float64Col()
         }
         return params
