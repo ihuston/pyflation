@@ -453,7 +453,7 @@ class CosmologicalModel(object):
 
 
     def saveparamsinhdf5(self, rf, grpname="results"):
-        """Save simulation results in a HDF5 format file with filename.
+        """Save simulation parameters in a HDF5 format file with filename.
         
         Parameters
         ----------
