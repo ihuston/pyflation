@@ -252,6 +252,77 @@ def components_from_model(m, tix=None, kix=None):
     
     return Vphi,phidot,H,modes,modesdot,axis
 
+def fluid_parts_from_model(m, tix=None, kix=None):
+    """Get the fluid variables from a model instance.
+    
+    Parameters
+    ----------
+    m: Cosmomodels model instance
+       The model instance with which to perform the calculation
+       
+    tix: integer
+         Index for timestep at which to perform calculation. Default is to 
+         calculate over all timesteps.
+        
+    kix: integer
+         Index for k mode for which to perform the calculation. Default is to
+         calculate over all k modes.
+         
+    Returns
+    -------
+    Tuple containing:
+    
+    rhogamma: array_like
+              Background radiation energy density
+              
+    rhomatter: array_like
+               Background matter energy density
+               
+    qgamma: array_like
+            Perturbed radiation momentum
+            
+    qmatter: array_like
+             Perturbed matter momentum
+    
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+    """
+    
+        
+    if tix is None:
+        tslice = slice(None)
+    else:
+        #Check for negative tix
+        if tix < 0:
+            tix = len(m.tresult) + tix
+        tslice = slice(tix, tix+1)
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+        
+    nfluids = getattr(m, "nfluids", 0)
+    axis = 1
+    if nfluids > 0:
+        rhogamma = m.yresult[tslice, m.rhogamma_ix, kslice]
+        rhomatter = m.yresult[tslice, m.rhomatter_ix, kslice]
+        qgamma = m.yresult[tslice, m.qgamma_ix, kslice]
+        qmatter = m.yresult[tslice, m.qmatter_ix, kslice]
+    else:
+        bgshape = m.yresult[tslice, m.phidots_ix, kslice].shape
+        rhoshape = list(bgshape)
+        rhoshape[axis] = 1
+        rhogamma = rhomatter = np.zeros(rhoshape)
+        qgamma = qmatter = np.zeros(bgshape)
+    
+    
+    rhogamma, rhomatter, qgamma, qmatter = fluid_correct_shapes(rhogamma, rhomatter,
+                                                                qgamma, qmatter, axis)
+    
+    return rhogamma, rhomatter, qgamma, qmatter, axis
+
 def makespectrum(modes_I, axis):
     """Calculate spectrum of input.
     
@@ -333,3 +404,54 @@ def correct_shapes(Vphi, phidot, H, modes, modesdot, axis):
         H = np.expand_dims(H, axis)
     
     return Vphi, phidot, H, modes, modesdot, axis
+
+def fluid_correct_shapes(rhogamma, rhomatter, qgamma, qmatter, axis):
+    """Return variables with the correct shapes for calculation.
+    
+    Parameters
+    ----------
+    Vphi: array_like
+          First derivative of the potential with respect to the fields
+          
+    phidot: array_like
+            First derivative of the field values with respect to efold number N.
+            
+    H: array_like
+       The Hubble parameter
+       
+    modes: array_like
+           Mode matrix of first order perturbations. Component array should
+           have two dimensions of length nfields.
+           
+    modesdot: array_like
+           Mode matrix of N-derivative of first order perturbations. Component array should
+           have two dimensions of length nfields.
+           
+    axis: integer
+          Specifies which axis is first in mode matrix, e.g. if modes has shape
+          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+          assumed to be beside each other so (100,3,10,3) would not be valid.
+          
+    Returns
+    -------
+    
+    result: tuple
+            Tuple of the variables with correct shapes in the form
+            (Vphi, phidot, H, modes, modesdot, axis)
+           
+    """
+    
+    
+    #Make rhogamma and rhomatter into at least 1-d arrays
+    rhogamma, rhomatter = np.atleast_1d(rhogamma,rhomatter)
+    
+    if (rhogamma.shape[axis] != 1) or (rhomatter.shape[axis] != 1):
+        raise ValueError("The background fluid dimensions are not correct.")
+    if len(rhogamma.shape) != len(rhomatter.shape):
+        raise ValueError("Background fluid dimensions do not agree.")
+    if (qgamma.shape[axis] != qmatter.shape[axis]):
+        raise ValueError("The perturbed fluid momenta dimensions are not correct.")
+    if len(qgamma.shape) != len(qmatter.shape):
+        raise ValueError("Perturbed fluid momenta dimensions do not agree.")
+    
+    return rhogamma, rhomatter, qgamma, qmatter
