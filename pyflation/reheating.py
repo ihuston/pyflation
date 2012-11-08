@@ -723,7 +723,8 @@ class ReheatingTwoStage(c.FODriver):
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
                       nfields=self.nfields,
-                      transfers=self.transfers)
+                      transfers=self.transfers,
+                      rho_limit=self.rho_limit)
         return args
         
     def getfoargs(self):
@@ -740,7 +741,8 @@ class ReheatingTwoStage(c.FODriver):
                       potential_func=self.potential_func, 
                       pot_params=self.pot_params,
                       nfields=self.nfields,
-                      transfers=self.transfers)
+                      transfers=self.transfers,
+                      rho_limit=self.rho_limit)
         return kwargs
     
     def find_ainit(self):
