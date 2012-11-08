@@ -261,10 +261,11 @@ class ReheatingBackground(ReheatingModels):
         if not np.all(self.transfers_on):
             #Switch on any transfers if minimum is passed
             signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
-            self.transfers_on_times[signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))] = t
+            transfers_newly_turned_on = signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))
+            self.transfers_on_times[transfers_newly_turned_on] = t
             self.transfers_on[signchanged] = True
             self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
-            if np.any(signchanged):
+            if np.any(transfers_newly_turned_on):
                 module_logger.info("Some transfer coefficients switch on at %f.", t)
                 
         # Only do check if fields are still being used
@@ -552,10 +553,11 @@ class ReheatingFirstOrder(ReheatingModels):
         if not np.all(self.transfers_on):
             #Switch on any transfers if minimum is passed
             signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
-            self.transfers_on_times[signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))] = t
+            transfers_newly_turned_on = signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))
+            self.transfers_on_times[transfers_newly_turned_on] = t
             self.transfers_on[signchanged] = True
             self.last_pdot_sign = np.sign(y[self.phidots_ix,0])
-            if np.any(signchanged):
+            if np.any(transfers_newly_turned_on):
                 module_logger.info("Some transfer coefficients switch on at %f.", t)
                 
         # Only do check if fields are still being used
