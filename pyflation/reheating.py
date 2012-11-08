@@ -826,8 +826,6 @@ class ReheatingTwoStage(c.FODriver):
         """Following a run fix the instances variables to match those
         of the child run instance."""
         self.transfers_on_times = self.firstordermodel.transfers_on_times
-        self.reheating_end = self.firstordermodel.reheating_end
-        self.inflation_end = self.firstordermodel.inflation_end
         return
         
     def callingparams(self):
