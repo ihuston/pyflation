@@ -28,6 +28,7 @@ try:
     #Local modules from pyflation package
     from pyflation import helpers, configuration
     from pyflation import cosmomodels as c
+    from pyflation import filewrapper
     _debug = configuration._debug
 except ImportError,e:
     if __name__ == "__main__":
@@ -73,7 +74,7 @@ def runsomodel(mrgfile, filename=None, soargs=None, sodriver=None):
         perturbation calculated.""")
         raise c.ModelError
     try:
-        fomodel = c.make_wrapper_model(mrgfile)
+        fomodel = filewrapper.make_wrapper_model(mrgfile)
     except:
         log.exception("Error wrapping model file.")
         raise

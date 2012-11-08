@@ -28,7 +28,7 @@ except ImportError, e:
 
 try:
     #Local modules from pyflation package
-    from pyflation import helpers, configuration
+    from pyflation import helpers, configuration, filewrapper
     from pyflation import cosmomodels as c
     _debug = configuration._debug
     from pyflation.sourceterm import sosource
@@ -50,7 +50,7 @@ def runsource(fofile, ninit=0, nfinal=-1, sourcefile=None,
     ntasks = (taskarray["max"] -taskarray["min"]) // taskarray["step"] + 1
    
     try:
-        m = c.make_wrapper_model(fofile)
+        m = filewrapper.make_wrapper_model(fofile)
     except:
         log.exception("Error wrapping first order file.")
         
