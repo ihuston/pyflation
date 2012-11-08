@@ -129,13 +129,7 @@ def make_wrapper_model(modelfile, *args, **kwargs):
                 raise
             
             #Set indices correctly
-            self.H_ix = self.nfields*2
-            self.bg_ix = slice(0,self.nfields*2+1)
-            self.phis_ix = slice(0,self.nfields*2,2)
-            self.phidots_ix = slice(1,self.nfields*2,2)
-            self.pert_ix = slice(self.nfields*2+1, None)
-            self.dps_ix = slice(self.nfields*2+1, None, 2)
-            self.dpdots_ix = slice(self.nfields*2+2, None, 2)
+            self.setfieldindices()
             
             #Fix bgmodel to actual instance
             if self.ystart is not None:
