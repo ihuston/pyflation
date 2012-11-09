@@ -372,7 +372,7 @@ def Pr_fromV_model(m, tix=None, kix=None):
       
     """
     Vphi,phidot,H,dpmodes,modesdot,axis = utilities.components_from_model(m, tix, kix)
-    rhogamma, rhomatter, qgamma, qmatter, axis = utilities.fluid_parts_from_model(m, tix, kix)
+    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis = utilities.fluid_parts_from_model(m, tix, kix)
     Pr = Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis)
     return Pr
 
