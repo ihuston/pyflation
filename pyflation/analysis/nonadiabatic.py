@@ -12,7 +12,7 @@ import numpy as np
 
 import utilities
 
-def soundspeeds(Vphi, phidot, H):
+def field_soundspeeds(Vphi, phidot, H):
     """Sound speeds of the background fields
     
     Parameters
@@ -84,7 +84,7 @@ def totalsoundspeed(Vphi, phidot, H, axis):
                             to the field dimension of the others.""")
     return csq
 
-def Pdots(Vphi, phidot, H):
+def field_only_Pdots(Vphi, phidot, H):
     """Derivative of pressure of the background fields
     
     Parameters
@@ -140,9 +140,9 @@ def fullPdot(Vphi, phidot, H, axis=-1):
     fullPdot : array
                The deriative of the pressure of the fields summed over the fields.
     """
-    return np.sum(Pdots(Vphi, phidot, H), axis=axis)
+    return np.sum(field_only_Pdots(Vphi, phidot, H), axis=axis)
 
-def rhodots(phidot, H):
+def field_only_rhodots(phidot, H):
     """Derivative in e-fold time of the energy densities of the individual fields.
     
     Parameters
@@ -158,12 +158,12 @@ def rhodots(phidot, H):
     
     Returns
     -------
-    rhodots : array
+    field_only_rhodots : array
               The derivative of the energy densities of the fields
     """
     return -3*H**2*(phidot**2)
 
-def fullrhodot(phidot, H, axis=-1):
+def fullrhodot(phidot, H, axis=-1, rhogamma=0, rhomatter=0):
     """Combined derivative in e-fold time of the energy density of the field.
     
     Parameters
@@ -182,7 +182,8 @@ def fullrhodot(phidot, H, axis=-1):
     fullrhodot : array
                  The derivative of the energy density summed over the fields.
     """
-    return np.sum(rhodots(phidot, H), axis=axis)
+    
+    return -4*rhogamma -3*rhomatter + np.sum(field_only_rhodots(phidot, H), axis=axis)
 
 
 
@@ -453,8 +454,8 @@ def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
     
-    cs = soundspeeds(Vphi, phidot, H)
-    rdots = rhodots(phidot, H)
+    cs = field_soundspeeds(Vphi, phidot, H)
+    rdots = field_only_rhodots(phidot, H)
     rhodot = fullrhodot(phidot, H, axis)
     drhos = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
     
