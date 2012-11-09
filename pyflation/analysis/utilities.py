@@ -272,22 +272,28 @@ def fluid_parts_from_model(m, tix=None, kix=None):
     -------
     Tuple containing:
     
-    rhogamma: array_like
-              Background radiation energy density
+    rhogamma : array_like
+               Background radiation energy density
               
-    rhomatter: array_like
-               Background matter energy density
+    rhomatter : array_like
+                Background matter energy density
                
-    qgamma: array_like
-            Perturbed radiation momentum
+    dgamma : array_like
+             Perturbed radiation energy density
             
-    qmatter: array_like
+    dmatter : array_like
+             Perturbed matter energy density
+            
+    qgamma : array_like
+             Perturbed radiation momentum
+            
+    qmatter : array_like
              Perturbed matter momentum
     
-    axis: integer
-          Specifies which axis is first in mode matrix, e.g. if modes has shape
-          (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
-          assumed to be beside each other so (100,3,10,3) would not be valid.
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
     """
     
         
@@ -439,7 +445,7 @@ def fluid_correct_shapes(rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, 
     
     result: tuple
             Tuple of the variables with correct shapes in the form
-            (Vphi, phidot, H, modes, modesdot, axis)
+            (rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter, axis)
            
     """
     
@@ -460,7 +466,7 @@ def fluid_correct_shapes(rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, 
     if len(qgamma.shape) != len(qmatter.shape):
         raise ValueError("Perturbed fluid momenta dimensions do not agree.")
     
-    return rhogamma, rhomatter, qgamma, qmatter
+    return rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis
 
 def full_transfers(m, tix=None):
     """Return an array of transfer coefficients applied at each time step.
