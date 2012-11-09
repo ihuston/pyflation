@@ -337,13 +337,13 @@ def deltaP_I(Vphi, phidot, H, modes, modesdot, axis,
     #Change shape of phidot, Vphi, H to add extra dimension of modes
     Vphi = np.expand_dims(Vphi, axis+1)
     phidot = np.expand_dims(phidot, axis+1)
-    H = np.expand_dims(H, axis+1)
     
     #Do first sum over beta index
     metric_phi = -0.5/H*(qgamma+qmatter) + 0.5*np.sum(phidot*modes, axis=axis)
     #Add another dimension to metric_phi fieldpart
     metric_phi = np.expand_dims(metric_phi, axis)
     
+    H = np.expand_dims(H, axis+1)
     fieldpart = H**2*phidot*modesdot
     fieldpart -= H**2*phidot**2*metric_phi
     fieldpart -= Vphi*modes
@@ -534,8 +534,9 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
     
     return spectrum
 
-def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
-    """Power spectrum of the full perturbed relative pressure.
+def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis,
+                   dgamma=0,qgamma=0,qmatter=0):
+    """Power spectrum of the full perturbed relative pressure with/without fluids.
     
     Parameters
     ----------
@@ -561,14 +562,22 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis):
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    dgamma: array_like
+              First order perturbed radiation energy density, default is 0.
+    
+    qgamma: array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter: array_like
+             Perturbed matter momentum, default is 0.
+             
     Returns
     -------
     deltaPspectrum : array
                      Spectrum of the perturbed pressure
     """
-    dPmodes = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
-    
-    dPI = np.sum(dPmodes, axis=axis)
+       
+    dPI = deltaP_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, qgamma, qmatter)
     
     spectrum = utilities.makespectrum(dPI, axis)
     
