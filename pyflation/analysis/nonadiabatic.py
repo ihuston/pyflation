@@ -146,8 +146,10 @@ def fullPdot(Vphi, phidot, H, axis=-1, rhogamma=0, tmatter=0):
     fullPdot : array
                The deriative of the pressure of the fields summed over the fields.
     """
-
+    if len(tmatter.shape) < len(phidot.shape):
+        tmatter = np.expand_dims(tmatter, axis+1)
     fieldsum = -(2*phidot*Vphi + 3*H**2*phidot**2 + 0.5*H*tmatter*phidot**2)
+    rhogamma = np.squeeze(rhogamma)
     Pdot = -4/3.0*rhogamma + np.sum(fieldsum, axis=axis)
     return Pdot
     
