@@ -326,7 +326,7 @@ def fluid_parts_from_model(m, tix=None, kix=None):
         dgamma = dmatter = qgamma = qmatter = np.zeros(bgshape)
     
     
-    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter = fluid_correct_shapes(rhogamma, rhomatter,
+    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis = fluid_correct_shapes(rhogamma, rhomatter,
                                                                 dgamma, dmatter, qgamma, qmatter, axis)
     
     return rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis
