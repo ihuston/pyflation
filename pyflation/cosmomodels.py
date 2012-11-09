@@ -309,8 +309,9 @@ class CosmologicalModel(object):
         
         
         """
-        now = self.lastparams["datetime"]
+        
         if not filename:
+            now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             filename = os.path.join(os.getcwd(), "run" + now + "." + filetype)
             self._log.info("Filename set to " + filename)
         if os.path.isdir(os.path.dirname(filename)):
