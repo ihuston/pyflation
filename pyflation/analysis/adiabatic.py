@@ -147,7 +147,7 @@ def findHorizoncrossings(m, factor=1):
     hcross : array
              horizon crossing values for all ks.
     """
-    return m.findallkcrossings(m.tresult, m.yresult[:,2], factor)
+    return m.findallkcrossings(m.tresult, m.yresult[:,m.H_ix], factor)
      
      
 def Pr_spectrum(phidot, modes, axis):
