@@ -455,3 +455,33 @@ def fluid_correct_shapes(rhogamma, rhomatter, qgamma, qmatter, axis):
         raise ValueError("Perturbed fluid momenta dimensions do not agree.")
     
     return rhogamma, rhomatter, qgamma, qmatter
+
+def full_transfers(m, tix=None):
+    """Return an array of transfer coefficients applied at each time step.
+    
+    Parameters
+    ----------
+    m: Cosmomodels model instance
+       The model instance with which to perform the calculation
+       
+    tix: integer
+         Index for timestep at which to perform calculation. Default is to 
+         calculate over all timesteps.
+         
+    Returns
+    -------
+    """
+    if tix is None:
+        tslice = slice(None)
+    else:
+        #Check for negative tix
+        if tix < 0:
+            tix = len(m.tresult) + tix
+        tslice = slice(tix, tix+1)
+    tresult = m.tresult[tslice][:,np.newaxis,np.newaxis]   
+    transfers_full=(tresult>m.transfers_on_times)*m.transfers
+    return transfers_full
+    
+    
+    
+    
