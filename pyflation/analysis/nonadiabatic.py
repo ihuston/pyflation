@@ -182,7 +182,10 @@ def fullrhodot(phidot, H, axis=-1, rhogamma=0, rhomatter=0):
     fullrhodot : array
                  The derivative of the energy density summed over the fields.
     """
-    
+    if rhogamma.shape[axis] == 1:
+        rhogamma = np.squeeze(rhogamma)
+    if rhomatter.shape[axis] == 1:
+        rhomatter = np.squeeze(rhomatter) 
     return -4*rhogamma -3*rhomatter + np.sum(field_only_rhodots(phidot, H), axis=axis)
 
 
