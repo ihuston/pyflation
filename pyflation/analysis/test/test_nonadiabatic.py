@@ -290,7 +290,7 @@ class TestDeltaRhosMatrix():
     
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltarhosmatrix(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltarho_fields_matrix(self.Vphi, self.phidot, self.H, 
                                         self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.modes.shape
@@ -300,7 +300,7 @@ class TestDeltaRhosMatrix():
         """Test results of scalar calculation with 1x1 mode matrix."""
         modes = np.array([[7]])
         modesdot = np.array([[3]])
-        arr = nonadiabatic.deltarhosmatrix(3, 1.7, 0.5, modes, modesdot, axis=0)
+        arr = nonadiabatic.deltarho_fields_matrix(3, 1.7, 0.5, modes, modesdot, axis=0)
         assert_almost_equal(arr, np.array([[0.5**2*1.7*3-0.5**3*1.7**2*1.7*7+21]]))
         
     def test_two_by_one_by_one(self):
@@ -313,21 +313,21 @@ class TestDeltaRhosMatrix():
         modesdot = np.array([10,5]).reshape((2,1,1,1))
         axis = 2
         
-        arr = nonadiabatic.deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
         actual = np.array([-85, -2025]).reshape((2,1,1,1))
         assert_array_almost_equal(arr, actual)
         
     def test_extend_H(self):
         """Test that if H has no field axis it is created."""
         H = np.arange(8).reshape((4,2))
-        arr = nonadiabatic.deltarhosmatrix(self.Vphi, self.phidot, H, #@UnusedVariable
+        arr = nonadiabatic.deltarho_fields_matrix(self.Vphi, self.phidot, H, #@UnusedVariable
                                         self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
     def test_extend_Vphi(self):
         """Test that if Vphi has no k axis it is created."""
         Vphi = np.arange(12).reshape((4,3))
-        arr = nonadiabatic.deltarhosmatrix(Vphi, self.phidot, self.H, #@UnusedVariable
+        arr = nonadiabatic.deltarho_fields_matrix(Vphi, self.phidot, self.H, #@UnusedVariable
                                         self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
@@ -339,13 +339,13 @@ class TestDeltaRhosMatrix():
         modesdot = np.array([[1,3],[2,5]]).reshape((2,2,1))
         axis = 0
         H = np.array([2]).reshape((1,1))
-        arr = nonadiabatic.deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([[-2421,-6381],[-3974,-10502]]).reshape((2,2,1))
         assert_almost_equal(arr, desired)
                 
     def test_std_result(self):
         """Test simple calculation with modes of shape (4,3,3,2)."""
-        arr = nonadiabatic.deltarhosmatrix(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltarho_fields_matrix(self.Vphi, self.phidot, self.H, 
                                         self.modes, self.modesdot, self.axis)
         assert_almost_equal(arr, self.stdresult, decimal=12)
            

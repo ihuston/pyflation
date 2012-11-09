@@ -186,7 +186,7 @@ def fullrhodot(phidot, H, axis=-1):
 
 
 
-def deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis):
+def deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis):
     """Matrix of the first order perturbed energy densities of the field components.
     
     Parameters
@@ -289,6 +289,70 @@ def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
+def deltaP_I(Vphi, phidot, H, modes, modesdot, axis,
+             dgamma=0,qgamma=0,qmatter=0):
+    """First order perturbed pressure of the field and fluid components.
+    
+    Parameters
+    ----------
+    Vphi : array_like
+           First derivative of the potential with respect to the fields
+          
+    phidot : array_like
+             First derivative of the field values with respect to efold number N.
+            
+    H : array_like
+        The Hubble parameter
+       
+    modes : array_like
+            Mode matrix of first order perturbations. Component array should
+            have two dimensions of length nfields.
+           
+    modesdot : array_like
+               Mode matrix of N-derivative of first order perturbations. 
+               Component array should have two dimensions of length nfields.
+    
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.
+           
+    dgamma: array_like
+              First order perturbed radiation energy density, default is 0.
+    
+    qgamma: array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter: array_like
+             Perturbed matter momentum, default is 0.
+    
+    Returns
+    -------
+    result : array_like
+             The first order perturbed pressure.
+    
+    """
+    Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
+    
+    #Change shape of phidot, Vphi, H to add extra dimension of modes
+    Vphi = np.expand_dims(Vphi, axis+1)
+    phidot = np.expand_dims(phidot, axis+1)
+    H = np.expand_dims(H, axis+1)
+    
+    #Do first sum over beta index
+    metric_phi = -0.5/H*(qgamma+qmatter) + 0.5*np.sum(phidot*modes, axis=axis)
+    #Add another dimension to metric_phi fieldpart
+    metric_phi = np.expand_dims(metric_phi, axis)
+    
+    fieldpart = H**2*phidot*modesdot
+    fieldpart -= H**2*phidot**2*metric_phi
+    fieldpart -= Vphi*modes
+    
+    dP_I = 1/3.0*dgamma + np.sum(fieldpart, axis=axis)
+    
+    return dP_I
+
+
 def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
@@ -327,7 +391,7 @@ def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     cs = soundspeeds(Vphi, phidot, H)
     rdots = rhodots(phidot, H)
     rhodot = fullrhodot(phidot, H, axis)
-    drhos = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+    drhos = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
     
     res_shape = list(drhos.shape)
     del res_shape[axis]
@@ -382,7 +446,7 @@ def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
     # Add two dimensions corresponding to mode axes
     csq.resize(csshape[:axis] + (1,1) + csshape[axis:])
     dP = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
-    drhos = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+    drhos = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
     
     result = np.sum(dP - csq*drhos, axis=axis)
         
@@ -462,7 +526,7 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
     deltarhospectrum : array
                        Spectrum of the perturbed energy density
     """
-    drhomodes = deltarhosmatrix(Vphi, phidot, H, modes, modesdot, axis)
+    drhomodes = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
     
     drhoI = np.sum(drhomodes, axis=axis)
     
