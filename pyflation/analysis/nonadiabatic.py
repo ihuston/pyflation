@@ -118,7 +118,7 @@ def field_only_Pdots(Vphi, phidot, H):
                             to the field dimension of the others.""")
     return Pdotalpha
 
-def fullPdot(Vphi, phidot, H, axis=-1):
+def fullPdot(Vphi, phidot, H, axis=-1, rhogamma=0, tmatter=0):
     """Combined derivative in e-fold time of the pressure of the fields.
     
     Parameters
@@ -134,13 +134,23 @@ def fullPdot(Vphi, phidot, H, axis=-1):
     
     axis : integer, optional
            Specifies which axis is the field dimension, default is the last one.
+           
+    rhogamma : array_like
+               Background radiation energy density
+
+    tmatter : array_like
+              Transfer coefficients for the matter fluid at each time step.
             
     Returns
     -------
     fullPdot : array
                The deriative of the pressure of the fields summed over the fields.
     """
-    return np.sum(field_only_Pdots(Vphi, phidot, H), axis=axis)
+
+    fieldsum = -(2*phidot*Vphi + 3*H**2*phidot**2 + 0.5*H*tmatter*phidot**2)
+    Pdot = -4/3.0*rhogamma + np.sum(fieldsum, axis=axis)
+    return Pdot
+    
 
 def field_only_rhodots(phidot, H):
     """Derivative in e-fold time of the energy densities of the individual fields.
@@ -176,6 +186,12 @@ def fullrhodot(phidot, H, axis=-1, rhogamma=0, rhomatter=0):
     
     axis : integer, optional
            Specifies which axis is the field dimension, default is the last one.
+           
+    rhogamma : array_like
+               Background radiation energy density
+              
+    rhomatter : array_like
+                Background matter energy density
             
     Returns
     -------
