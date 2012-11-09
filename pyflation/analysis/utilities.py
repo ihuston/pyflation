@@ -308,6 +308,8 @@ def fluid_parts_from_model(m, tix=None, kix=None):
     if nfluids > 0:
         rhogamma = m.yresult[tslice, m.rhogamma_ix, kslice]
         rhomatter = m.yresult[tslice, m.rhomatter_ix, kslice]
+        dgamma = m.yresult[tslice, m.dgamma_ix, kslice]
+        dmatter = m.yresult[tslice, m.dmatter_ix, kslice]
         qgamma = m.yresult[tslice, m.qgamma_ix, kslice]
         qmatter = m.yresult[tslice, m.qmatter_ix, kslice]
     else:
@@ -315,13 +317,13 @@ def fluid_parts_from_model(m, tix=None, kix=None):
         rhoshape = list(bgshape)
         rhoshape[axis] = 1
         rhogamma = rhomatter = np.zeros(rhoshape)
-        qgamma = qmatter = np.zeros(bgshape)
+        dgamma = dmatter = qgamma = qmatter = np.zeros(bgshape)
     
     
-    rhogamma, rhomatter, qgamma, qmatter = fluid_correct_shapes(rhogamma, rhomatter,
-                                                                qgamma, qmatter, axis)
+    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter = fluid_correct_shapes(rhogamma, rhomatter,
+                                                                dgamma, dmatter, qgamma, qmatter, axis)
     
-    return rhogamma, rhomatter, qgamma, qmatter, axis
+    return rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis
 
 def makespectrum(modes_I, axis):
     """Calculate spectrum of input.
@@ -405,7 +407,7 @@ def correct_shapes(Vphi, phidot, H, modes, modesdot, axis):
     
     return Vphi, phidot, H, modes, modesdot, axis
 
-def fluid_correct_shapes(rhogamma, rhomatter, qgamma, qmatter, axis):
+def fluid_correct_shapes(rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis):
     """Return variables with the correct shapes for calculation.
     
     Parameters
@@ -449,6 +451,10 @@ def fluid_correct_shapes(rhogamma, rhomatter, qgamma, qmatter, axis):
         raise ValueError("The background fluid dimensions are not correct.")
     if len(rhogamma.shape) != len(rhomatter.shape):
         raise ValueError("Background fluid dimensions do not agree.")
+    if (dgamma.shape[axis] != dmatter.shape[axis]):
+        raise ValueError("The perturbed fluid energy density dimensions are not correct.")
+    if len(dgamma.shape) != len(dmatter.shape):
+        raise ValueError("Perturbed fluid energy density dimensions do not agree.")
     if (qgamma.shape[axis] != qmatter.shape[axis]):
         raise ValueError("The perturbed fluid momenta dimensions are not correct.")
     if len(qgamma.shape) != len(qmatter.shape):
