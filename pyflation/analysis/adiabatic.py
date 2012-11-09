@@ -298,9 +298,36 @@ def Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis):
     
     Parameters
     ----------
+    phidot : array_like
+             Background time derivative of scalar fields
+        
+    H : array_like
+        Value of Hubble parameter
+        
+    rhogamma : array_like
+               Background radiation energy density
+               
+    rhomatter : array_like
+                Background matter energy density
+                
+    dpmodes : array_like
+              First order scalar field perturbations in nfields x nfields matrix
+              
+    qgamma : array_like
+             First order radiation momentum perturbations
+             
+    qmatter : array_like
+              First order matter momentum perturbations
+              
+    axis : integer
+           Specifies which axis is first in mode matrix, e.g. if modes has shape
+           (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
+           assumed to be beside each other so (100,3,10,3) would not be valid.              
     
     Returns
     -------
+    Pr : array_like
+         Array of Pr values
       
     """
     pdotsq = np.sum(phidot**2, axis=axis)
@@ -313,7 +340,41 @@ def Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis):
     R = -H*V_full
     Pr = utilities.makespectrum(R, axis)
     return Pr
+
+def Pr_fromV_model(m, tix=None, kix=None):    
+    r"""Return the spectrum of (first order) comoving curvature perturbations
+    from a model instance.
+        
+    The spectrum is calculated using
     
+    ..math:
+        P_\mathcal{R} = \sum_I H^2 \mathcal{R}_I^* \mathcal{R}_I
+    
+    where :math:`\hat{\mathcal{R}} = \sum_I \mathcal{R}_I \hat{a}_I`,
+    and :math:`\mathcal{R} = -HV`, where :math:`V` is the total covariant velocity
+    perturbation as described in Malik & Wands Phys Rept 2009.
+    
+    Parameters
+    ----------
+    m : Cosmomodels instance
+        model containing yresult with which to calculate spectrum
+    
+    tix : integer, optional
+          index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix : integer, optional
+          integer of k value at which to calculate, defaults to full range of ks.
+          
+    Returns
+    -------
+    Pr : array_like
+         Array of Pr values
+      
+    """
+    Vphi,phidot,H,dpmodes,modesdot,axis = utilities.components_from_model(m, tix, kix)
+    rhogamma, rhomatter, qgamma, qmatter, axis = utilities.fluid_parts_from_model(m, tix, kix)
+    Pr = Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis)
+    return Pr
 
 def Pzeta(m, tix=None, kix=None):
     r"""Return the spectrum of (first order) curvature perturbations P_zeta for each k.
