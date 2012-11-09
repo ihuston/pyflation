@@ -284,6 +284,37 @@ def scaled_Pr(m, tix=None, kix=None):
     """
     return utilities.kscaling(m.k, kix) * Pr(m, tix, kix)           
 
+def Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis):
+    r"""Return the spectrum of (first order) comoving curvature perturbations.
+    
+    The spectrum is calculated using
+    
+    ..math:
+        P_\mathcal{R} = \sum_I H^2 \mathcal{R}_I^* \mathcal{R}_I
+    
+    where :math:`\hat{\mathcal{R}} = \sum_I \mathcal{R}_I \hat{a}_I`,
+    and :math:`\mathcal{R} = -HV`, where :math:`V` is the total covariant velocity
+    perturbation as described in Malik & Wands Phys Rept 2009.
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+      
+    """
+    pdotsq = np.sum(phidot**2, axis=axis)
+    pdotsq = np.expand_dims(pdotsq, axis)
+    phidot = np.expand_dims(phidot, axis+1)
+    # Set up metric phi, V and drho_full
+    metric_phi = -0.5 * (1/H * (qmatter + qgamma)
+                         - np.sum(phidot * dpmodes, axis=axis))
+    V_full = -2*H*metric_phi / (rhomatter + 4/3.0*rhogamma + H**2*pdotsq)
+    R = -H*V_full
+    Pr = utilities.makespectrum(R, axis)
+    return Pr
+    
+
 def Pzeta(m, tix=None, kix=None):
     r"""Return the spectrum of (first order) curvature perturbations P_zeta for each k.
     
