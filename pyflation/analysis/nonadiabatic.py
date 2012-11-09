@@ -48,7 +48,7 @@ def field_soundspeeds(Vphi, phidot, H):
                             to the field dimension of the others.""")
     return calphasq
 
-def totalsoundspeed(Vphi, phidot, H, axis):
+def totalsoundspeed(Vphi, phidot, H, axis, rhogamma=0, rhomatter=0, tmatter=0):
     """Total sound speed of the fluids
     
     Parameters
@@ -64,6 +64,15 @@ def totalsoundspeed(Vphi, phidot, H, axis):
        
     axis : integer
            Index of dimension to sum over (field dimension).
+           
+    rhogamma : array_like
+               Background radiation energy density
+               
+    rhomatter : array_like
+                Background matter energy density
+
+    tmatter : array_like
+              Transfer coefficients for the matter fluid at each time step.
        
     All the arguments should have the same number of dimensions. Vphi and phidot
     should be arrays of the same size, but H should have a dimension of size 1 
@@ -76,7 +85,9 @@ def totalsoundspeed(Vphi, phidot, H, axis):
     """
     
     try:
-        csq = 1 + 2*np.sum(Vphi*phidot, axis=axis)/(3*np.sum((H*phidot)**2, axis=axis))
+        Pdot = fullPdot(Vphi, phidot, H, axis, rhogamma, tmatter)
+        rhodot = fullrhodot(phidot, H, axis, rhogamma, rhomatter)
+        csq = Pdot/rhodot
     except ValueError:
         raise ValueError("""Arrays need to have the correct shape.
                             Vphi and phidot should have exactly the same shape,
