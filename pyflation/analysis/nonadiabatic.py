@@ -269,7 +269,7 @@ def deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
-def deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
+def fields_only_deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis):
     """Matrix of the first order perturbed pressure of the field components.
     
     Parameters
@@ -449,7 +449,7 @@ def deltarho_I(Vphi, phidot, H, modes, modesdot, axis,
     
     return drho_I
 
-def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
+def fields_only_deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     """Perturbed relative pressure of the fields given as quantum mode functions.
     
     Parameters
@@ -505,7 +505,8 @@ def deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis):
     
     return result
 
-def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
+def deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis,
+                   rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0):
     """Perturbed non-adiabatic pressure of the fields given as quantum mode functions.
     
     
@@ -532,22 +533,43 @@ def deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis):
            Specifies which axis is first in mode matrix, e.g. if modes has shape
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
+           
+    rhogamma : array_like
+               Background radiation energy density.
+              
+    rhomatter : array_like
+                Background matter energy density.
+                
+    dgamma: array_like
+              First order perturbed radiation energy density, default is 0.
+              
+    dmatter: array_like
+             First order perturbed matter energy density, default is 0.
+    
+    qgamma: array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter: array_like
+             Perturbed matter momentum, default is 0.
+             
+    tmatter : array_like
+              Transfer coefficients for the matter fluid at each time step.
     
     """
     
     Vphi, phidot, H, modes, modesdot, axis = utilities.correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
     
-    csq = totalsoundspeed(Vphi, phidot, H, axis)
+    csq = totalsoundspeed(Vphi, phidot, H, axis, rhogamma, rhomatter, tmatter)
     csshape = csq.shape
     # Add two dimensions corresponding to mode axes
-    csq.resize(csshape[:axis] + (1,1) + csshape[axis:])
-    dP = deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
-    drhos = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
+    csq.resize(csshape[:axis] + (1,) + csshape[axis:])
+    dP = deltaP_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, qgamma, qmatter)
+    drhos = deltarho_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, dmatter, qgamma, qmatter)
     
-    result = np.sum(dP - csq*drhos, axis=axis)
+    dPnad_I = dP - csq*drhos
         
     
-    return result    
+    return dPnad_I
 
 def Smodes(Vphi, phidot, H, modes, modesdot, axis):
     """Isocurvature perturbation S of the fields given as quantum mode functions.
@@ -583,7 +605,7 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis):
              Isocurvature perturbation S of the fields
     """
     
-    dpnadmodes = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+    dpnadmodes = deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
     Pdot = fullPdot(Vphi, phidot, H, axis)
     Pdot = np.expand_dims(Pdot, axis)
     result = dpnadmodes/Pdot       
@@ -711,7 +733,7 @@ def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     deltaPrelspectrum : array
                        Spectrum of the perturbed relative pressure
     """
-    dPrelI = deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
+    dPrelI = fields_only_deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
     
     spectrum = utilities.makespectrum(dPrelI, axis)
     
@@ -749,7 +771,7 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis):
     deltaPnadspectrum : array
                         Spectrum of the non-adiabatic pressure perturbation
     """
-    dPrelI = deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+    dPrelI = deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
     
     spectrum = utilities.makespectrum(dPrelI, axis)
     

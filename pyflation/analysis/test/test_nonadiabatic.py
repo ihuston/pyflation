@@ -414,7 +414,7 @@ class TestDeltaPMatrix():
     
     def test_shape(self):
         """Test whether the field_only_rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltaPmatrix(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.fields_only_deltaPmatrix(self.Vphi, self.phidot, self.H, 
                                         self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.modes.shape
@@ -424,7 +424,7 @@ class TestDeltaPMatrix():
         """Test results of scalar calculation with 1x1 mode matrix."""
         modes = np.array([[7]])
         modesdot = np.array([[3]])
-        arr = nonadiabatic.deltaPmatrix(3, 1.7, 0.5, modes, modesdot, axis=0)
+        arr = nonadiabatic.fields_only_deltaPmatrix(3, 1.7, 0.5, modes, modesdot, axis=0)
         assert_almost_equal(arr, np.array([[0.5**2*1.7*3-0.5**3*1.7**2*1.7*7-21]]))
         
     def test_two_by_one_by_one(self):
@@ -437,21 +437,21 @@ class TestDeltaPMatrix():
         modesdot = np.array([10,5]).reshape((2,1,1,1))
         axis = 2
         
-        arr = nonadiabatic.deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.fields_only_deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
         actual = np.array([-125, -2055]).reshape((2,1,1,1))
         assert_array_almost_equal(arr, actual)
         
     def test_extend_H(self):
         """Test that if H has no field axis it is created."""
         H = np.arange(8).reshape((4,2))
-        arr = nonadiabatic.deltaPmatrix(self.Vphi, self.phidot, H, #@UnusedVariable
+        arr = nonadiabatic.fields_only_deltaPmatrix(self.Vphi, self.phidot, H, #@UnusedVariable
                                         self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
     def test_extend_Vphi(self):
         """Test that if Vphi has no k axis it is created."""
         Vphi = np.arange(12).reshape((4,3))
-        arr = nonadiabatic.deltaPmatrix(Vphi, self.phidot, self.H, #@UnusedVariable
+        arr = nonadiabatic.fields_only_deltaPmatrix(Vphi, self.phidot, self.H, #@UnusedVariable
                                         self.modes, self.modesdot, self.axis)
         #Test that no exception thrown about shape.
         
@@ -463,13 +463,13 @@ class TestDeltaPMatrix():
         modesdot = np.array([[1,3],[2,5]]).reshape((2,2,1))
         axis = 0
         H = np.array([2]).reshape((1,1))
-        arr = nonadiabatic.deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.fields_only_deltaPmatrix(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([[-2423,-6387],[-3982,-10522]]).reshape((2,2,1))
         assert_almost_equal(arr, desired)
                 
     def test_std_result(self):
         """Test simple calculation with modes of shape (4,3,3,2)."""
-        arr = nonadiabatic.deltaPmatrix(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.fields_only_deltaPmatrix(self.Vphi, self.phidot, self.H, 
                                         self.modes, self.modesdot, self.axis)
         assert_almost_equal(arr, self.stdresult, decimal=12)
            
@@ -538,7 +538,7 @@ class TestDeltaPrelMatrix():
     
     def test_shape(self):
         """Test whether the field_only_rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltaPrelmodes(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.fields_only_deltaPrelmodes(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.Vphi.shape
@@ -552,7 +552,7 @@ class TestDeltaPrelMatrix():
         phidot = 1.7
         H = 0.5
         axis=0
-        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.fields_only_deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.zeros_like(arr))
         
     def test_two_by_two_by_one(self):
@@ -563,7 +563,7 @@ class TestDeltaPrelMatrix():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.fields_only_deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([0.31535513, 0.42954734370370623]).reshape((2,1))
         assert_almost_equal(arr, desired)
         
@@ -575,7 +575,7 @@ class TestDeltaPrelMatrix():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.fields_only_deltaPrelmodes(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([-2/3.0 -1j/3.0, 3 - 1j/3.0]).reshape((2,1))
         assert_almost_equal(arr, desired)
         
@@ -593,7 +593,7 @@ class TestDeltaPnadMatrix():
     
     def test_shape(self):
         """Test whether the field_only_rhodots are shaped correctly."""    
-        arr = nonadiabatic.deltaPnadmodes(self.Vphi, self.phidot, self.H, 
+        arr = nonadiabatic.deltaPnad_I(self.Vphi, self.phidot, self.H, 
                                        self.modes, self.modesdot, self.axis)
         result = arr.shape
         actual = self.Vphi.shape
@@ -607,7 +607,7 @@ class TestDeltaPnadMatrix():
         phidot = 0.5
         H = 2
         axis=0
-        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
         assert_almost_equal(arr, np.array([-71.25]))
         
     def test_two_by_one_by_one(self):
@@ -620,7 +620,7 @@ class TestDeltaPnadMatrix():
         modesdot = np.array([10,5]).reshape((2,1,1,1))
         axis = 2
         
-        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
         actual = np.array([-2.22222222222, 138.75]).reshape((2,1,1))
         assert_array_almost_equal(arr, actual)
     
@@ -632,7 +632,7 @@ class TestDeltaPnadMatrix():
         modesdot = np.array([[0.1,0.2],[0.2,1/7.0]]).reshape((2,2,1))
         axis = 0
         H = np.array([3]).reshape((1,1))
-        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([3.884061, 16.1759427]).reshape((2,1))
         assert_almost_equal(arr, desired, decimal=5)
         
@@ -644,7 +644,7 @@ class TestDeltaPnadMatrix():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((2,2,1))
         modesdot = np.array([[1, -1j],[1j, 3+1j]]).reshape((2,2,1))
         axis=0
-        arr = nonadiabatic.deltaPnadmodes(Vphi, phidot, H, modes, modesdot, axis)
+        arr = nonadiabatic.deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis)
         desired = np.array([-3.0 +4*1j, -18 + 3*1j]).reshape((2,1))
         assert_almost_equal(arr, desired)
 
