@@ -95,8 +95,8 @@ def runfomodel(filename=None, foargs=None, foclass=None):
     #Check foclass is specified and is suitable
     if not foclass:
         foclass = run_config.foclass
-    if not issubclass(foclass, c.FOCanonicalTwoStage):
-        raise ValueError("Must use FOCanonicalTwoStage class for first order run!")
+    if not issubclass(foclass, c.FODriver):
+        raise ValueError("Must use subclass of FODriver for first order run!")
     
     #Create model instance
     model = foclass(**foargs)
