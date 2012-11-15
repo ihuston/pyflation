@@ -19,7 +19,7 @@ import os.path
 #Pyflation imports
 
 from pyflation import cosmomodels as c
-from pyflation import configuration
+from pyflation import configuration, reheating
 from pyflation.sourceterm import srcequations
 from pyflation.helpers import getkend
 # DO NOT CHANGE ANYTHING ABOVE THIS LINE
@@ -48,7 +48,10 @@ LOGLEVEL = configuration.LOGLEVEL
 # initialisation of each k mode pertubation. Initialisation takes place when
 # k/aH = cq. Default value is 50. 
 
-fixtures = {"msqphisq":        {"potential_func": "msqphisq",
+fixtures = {
+#####################
+# SINGLE FIELD MODELS            
+            "msqphisq":        {"potential_func": "msqphisq",
                                 "pot_params": {"nfields": 1},
                                 "nfields": 1,
                                 "bgystart": np.array([18.0, -0.1,0]),
@@ -96,6 +99,8 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "bgystart": np.array([18.0, -0.1,0]),
                                 "cq": 50,
                                 "solver": "rkdriver_tsix"},
+####################
+# MULTI-FIELD MODELS
             "hybridquadratic":  {"potential_func": "hybridquadratic",
                                 "pot_params": {"nfields": 2},
                                 "nfields": 2,
@@ -120,6 +125,16 @@ fixtures = {"msqphisq":        {"potential_func": "msqphisq",
                                 "bgystart": np.array([18.0, 0.0, 0.001,0,0]),
                                 "cq": 50,
                                 "solver": "rkdriver_tsix"},
+##################
+# REHEATING MODELS            
+            "msqphisq-fluids": {"potential_func": "msqphisq",
+                                "pot_params": {"nfields": 1},
+                                "nfields": 1,
+                                "bgystart": np.array([18.0, -0.1,0,0,0]),
+                                "cq": 50,
+                                "solver": "rkdriver_rkf45",
+                                "tend": 100,
+                                "transfers": np.array([[7e-7, 7e-14]])},
             }
 
 ##############################
@@ -167,6 +182,7 @@ kend = getkend(kinit, deltak, numsoks)
 # necessary. The default class is in the pyflation.cosmomodels module.
 # The default is c.FOCanonicalTwoStage. 
 # To set a fixed a_init value use c.FixedainitTwoStage
+# To use a reheating model use reheating.ReheatingTwoStage
 foclass = c.FOCanonicalTwoStage
 
 # Here the source term class can be selected. The classes are in the 
