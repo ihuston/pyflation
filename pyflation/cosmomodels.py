@@ -407,9 +407,7 @@ class CosmologicalModel(object):
                                       (0,), #Shape of a single atom 
                                       filters=filters, 
                                       expectedrows=8194)
-            paramstab = rf.createTable(resgroup, "parameters", 
-                                       self.gethf5paramsdict(), 
-                                       filters=filters)
+            
             #Add in potential parameters pot_params as a table
             potparamsshape = {"name": tables.StringCol(255),
                               "value": tables.Float64Col()}
@@ -468,10 +466,11 @@ class CosmologicalModel(object):
         try:
             #Get tables and array handles
             resgrp = rf.getNode(rf.root, grpname)
-            
+            paramstab = rf.createTable(resgrp, "parameters", 
+                                       self.gethf5paramsdict(), 
+                                       filters=resgrp.tresult.filters)
             #Now save data
             #Save parameters
-            paramstab = resgrp.parameters
             paramstabrow = paramstab.row
             params = self.callingparams()
             for key in params:
