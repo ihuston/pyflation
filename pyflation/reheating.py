@@ -761,6 +761,7 @@ class ReheatingTwoStage(c.FODriver):
         """Set the end time of first order run.
             Find reheating time and set fotend to it"""
         self.reheating_end, self.rehendindex = self.bgmodel.find_reheating_end()
+        module_logger.info("Reheating ended " + str(self.reheating_end) + " efoldings after start.")
         self.fotend = self.reheating_end
         self.fotendindex = self.rehendindex
         return
