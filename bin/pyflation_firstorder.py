@@ -49,7 +49,7 @@ Either run this script from the base directory as bin/firstorder.py or add direc
 
  
 def runfomodel(filename=None, foargs=None, foclass=None):
-    """Execute a FOCanonicalTwoStage driver from cosmomodels and save results.
+    """Execute a subclass of FODriver from cosmomodels and save results.
     
     A new instance of foclass is created, with the specified arguments.
     The model is run and the results are then saved into a file with the specified filename
