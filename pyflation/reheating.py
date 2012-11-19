@@ -49,6 +49,7 @@ class ReheatingModels(c.PhiModels):
         self.transfers_on = np.zeros_like(self.transfers, dtype=np.bool)
         self.transfers_on_times = np.zeros_like(self.transfers)
         self.last_pdot_sign = np.zeros((self.nfields,))
+        self.transfers_on_mintime = kwargs.get("transfers_on_mintime", self.tstart)
         
         # Set default value of rho_limit. If ratio of energy density of 
         # fields to total energy density falls below this the fields are not
@@ -258,7 +259,7 @@ class ReheatingBackground(ReheatingModels):
         rhomatter = y[self.rhomatter_ix]
         
         #Check whether transfers should be on
-        if not np.all(self.transfers_on):
+        if (not np.all(self.transfers_on)) and (t>=self.transfers_on_mintime):
             #Switch on any transfers if minimum is passed
             signchanged = self.last_pdot_sign*y[self.phidots_ix,0] < 0
             transfers_newly_turned_on = signchanged[:,np.newaxis]*(np.logical_not(self.transfers_on))
@@ -647,6 +648,8 @@ class ReheatingTwoStage(c.FODriver):
         
         super(ReheatingTwoStage, self).__init__(**newkwargs)
         
+        #Fix minimum start time for transfers
+        self.transfers_on_mintime = kwargs.get("transfers_on_mintime", self.tstart)
         #Set the field indices
         self.setfieldindices()
         
@@ -724,7 +727,8 @@ class ReheatingTwoStage(c.FODriver):
                       pot_params=self.pot_params,
                       nfields=self.nfields,
                       transfers=self.transfers,
-                      rho_limit=self.rho_limit)
+                      rho_limit=self.rho_limit,
+                      transfers_on_mintime=self.transfers_on_mintime)
         return args
         
     def getfoargs(self):
@@ -742,7 +746,8 @@ class ReheatingTwoStage(c.FODriver):
                       pot_params=self.pot_params,
                       nfields=self.nfields,
                       transfers=self.transfers,
-                      rho_limit=self.rho_limit)
+                      rho_limit=self.rho_limit,
+                      transfers_on_mintime=self.transfers_on_mintime)
         return kwargs
     
     def find_ainit(self):
@@ -852,7 +857,8 @@ class ReheatingTwoStage(c.FODriver):
                   "rho_limit":self.rho_limit,
                   "transfers_on_times":self.transfers_on_times,
                   "reheating_end":self.reheating_end,
-                  "inflation_end":self.inflation_end
+                  "inflation_end":self.inflation_end,
+                  "transfers_on_mintime":self.transfers_on_mintime,
                   }
         return params
     
@@ -874,6 +880,7 @@ class ReheatingTwoStage(c.FODriver):
         "rho_limit" : tables.Float64Col(),
         "transfers_on_times" : tables.Float64Col(np.shape(self.transfers_on_times)),
         "reheating_end" : tables.Float64Col(),
-        "inflation_end" : tables.Float64Col()
+        "inflation_end" : tables.Float64Col(),
+        "transfers_on_mintime" : tables.Float64Col(),
         }
         return params
