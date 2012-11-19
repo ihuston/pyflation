@@ -106,6 +106,7 @@ fixtures = {
                                 "nfields": 2,
                                 "bgystart": np.array([12.0, 1/300.0, 12.0,49/300.0,0]),
                                 "cq": 50,
+                                "tend": 75,
                                 "solver": "rkdriver_rkf45"},
             "nflation":  {"potential_func": "nflation",
                                 "pot_params": {"nfields": 2},
