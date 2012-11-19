@@ -54,7 +54,7 @@ class ReheatingModels(c.PhiModels):
         # Set default value of rho_limit. If ratio of energy density of 
         # fields to total energy density falls below this the fields are not
         # included in the calculation any longer.
-        self.rho_limit = kwargs.get("rho_limit", 1e-5)
+        self.rho_limit = kwargs.get("rho_limit", 1e-3)
         # This setting means the fields will be evolved initially.
         self.fields_off = False
  
@@ -604,7 +604,7 @@ class ReheatingTwoStage(c.FODriver):
     def __init__(self, bgystart=None, tstart=0.0, tstartindex=None, tend=83.0, tstep_wanted=0.01,
                  k=None, ainit=None, solver="rkdriver_rkf45", bgclass=None, foclass=None, 
                  potential_func=None, pot_params=None, simtstart=0, nfields=1, 
-                 transfers=None, rho_limit=1e-5, **kwargs):
+                 transfers=None, rho_limit=1e-3, **kwargs):
         """Initialize model and ensure initial conditions are sane."""
       
         #Set number of fluids and length of variable array
