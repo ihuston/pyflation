@@ -111,11 +111,16 @@ class ReheatingModels(c.PhiModels):
         rho_fields = 0.5*Hsq*pdotsq + U 
         return rho_fields, 3*Hsq
     
-    def find_reheating_end(self, fraction=0.01):
-        """Find the efold time where reheating ends,
-            i.e. the energy density of inflaton fields < 1% of total.
-            Returns tuple of endefold and endindex (in tresult)."""
+    def find_reheating_end(self, fraction=None):
+        """Find the efold time where reheating ends.
         
+        This is taken to be when rho_fields <= fraction*rho_total.
+        
+        Default fraction is self.rho_limit.
+            
+            Returns tuple of endefold and endindex (in tresult)."""
+        if not fraction:
+            fraction = self.rho_limit
         rho_fields, total_rho = self.getrho_fields()
         
         rho_fraction = rho_fields/total_rho
