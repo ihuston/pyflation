@@ -183,7 +183,8 @@ foargs = fixtures["msqphisq"]
 K_ranges = { "K1": {"kinit": 0.5e-61, "deltak": 1e-61, "numsoks": 1025},
              "K2": {"kinit": 1.5e-61, "deltak": 3e-61, "numsoks": 1025},
              "K3": {"kinit": 0.25e-60, "deltak": 1e-60, "numsoks": 1025},
-             "K4": {"kinit": 0.85e-60, "deltak": 0.4e-60, "numsoks":1025}}
+             "K4": {"kinit": 0.85e-60, "deltak": 0.4e-60, "numsoks":1025},
+             "KWMAP":{"kinit": 5.25e-60, "deltak": 5.25e-60, "numsoks":1},}
 
 # Pick K_range used here by selecting it from the dictionary above.
 K_range = K_ranges["K4"]
