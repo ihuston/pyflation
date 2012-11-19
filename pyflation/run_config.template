@@ -155,8 +155,9 @@ fixtures = {
                                 "nfields": 2,
                                 "bgystart": np.array([18.0, 0.0, 0.001,0,0,0,0]),
                                 "cq": 50,
+                                "tend":100,
                                 "solver": "rkdriver_rkf45",
-                                "transfers": np.array([[7e-7, 7e-13],[7e-7, 7e-13]])},
+                                "transfers": np.array([[1.15871696e-07, 0],[0, 0]])},
             }
 
 ##############################
