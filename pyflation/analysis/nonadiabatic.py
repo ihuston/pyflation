@@ -902,9 +902,6 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis,
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
           
-    k : array
-        The values of k to scale the result with.
-        
     rhogamma : array_like
                Background radiation energy density.
               
@@ -925,6 +922,9 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis,
              
     tmatter : array_like
               Transfer coefficients for the matter fluid at each time step.
+              
+    k : array
+        The values of k to scale the result with.
     
     Returns
     -------
@@ -972,8 +972,8 @@ def scaled_dPnad_from_model(m, tix=None, kix=None):
     spectrum = scaled_dPnad_spectrum(*components, k=m.k[kslice]) 
     return spectrum
 
-def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
-                       dgamma=0,qgamma=0,qmatter=0):
+def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis,
+                       rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0,k=1):
     """Power spectrum of delta P scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -1002,17 +1002,29 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
     
-    k : array
-        The values of k to scale the result with.
-        
-    dgamma: array_like
+    rhogamma : array_like
+               Background radiation energy density.
+              
+    rhomatter : array_like
+                Background matter energy density.
+                
+    dgamma : array_like
               First order perturbed radiation energy density, default is 0.
+              
+    dmatter : array_like
+             First order perturbed matter energy density, default is 0.
     
-    qgamma: array_like
+    qgamma : array_like
             Perturbed radiation momentum, default is 0.
             
-    qmatter: array_like
+    qmatter : array_like
              Perturbed matter momentum, default is 0.
+             
+    tmatter : array_like
+              Transfer coefficients for the matter fluid at each time step.
+              
+    k : array
+        The values of k to scale the result with.
     
     Returns
     -------
