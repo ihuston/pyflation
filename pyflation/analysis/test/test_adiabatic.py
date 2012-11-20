@@ -145,7 +145,7 @@ class TestPr():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = adiabatic.Pr(self.m)
+        arr = adiabatic.fields_only_Pr(self.m)
         result = arr.shape
         newshape = list(self.m.yresult[:,self.m.dps_ix].shape)
         del newshape[self.axis]
@@ -160,7 +160,7 @@ class TestPr():
         k=np.array([5.25e-60])
         m=self.getmodel(phidot, modes, k, 1, 1, axis)
         actual = np.array([[49/(1.7)**2]])
-        arr = adiabatic.Pr(m)
+        arr = adiabatic.fields_only_Pr(m)
         assert_almost_equal(arr, actual)
         
     def test_one_by_two_by_two_by_one(self):
@@ -170,7 +170,7 @@ class TestPr():
         axis = 1
         k = np.array([5.25e-60])
         m = self.getmodel(phidot, modes, k, 1, 2, axis)
-        arr = adiabatic.Pr(m)
+        arr = adiabatic.fields_only_Pr(m)
         desired = np.array([[4981/16900.0]]).reshape((1,1))
         assert_almost_equal(arr, desired)
         
@@ -181,7 +181,7 @@ class TestPr():
         axis=1
         k = np.array([5.25e-60])
         m = self.getmodel(phidot, modes, k, 1, 2, axis)
-        arr = adiabatic.Pr(m)
+        arr = adiabatic.fields_only_Pr(m)
         desired = np.array([[11/4.0]]).reshape((1,1))
         assert_almost_equal(arr, desired)
         
@@ -192,7 +192,7 @@ class TestPr():
         axis=1
         k = np.array([5.25e-60])
         m = self.getmodel(phidot, modes, k, 1, 2, axis)
-        arr = adiabatic.Pr(m)
+        arr = adiabatic.fields_only_Pr(m)
         assert_((not np.iscomplexobj(arr)))
 
 class TestPrSpectrum():

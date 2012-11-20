@@ -198,7 +198,7 @@ def fields_only_Pr_spectrum(phidot, modes, axis):
     Pr = (sumflat/phidotsumsq).astype(np.float)
     return Pr
 
-def Pr(m, tix=None, kix=None):
+def fields_only_Pr(m, tix=None, kix=None):
     r"""Return the spectrum of (first order) curvature perturbations P_R1 for a model m.
     
     For a multifield model this is given by:
@@ -341,7 +341,7 @@ def Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis):
     Pr = utilities.makespectrum(R, axis)
     return Pr
 
-def Pr_fromV_model(m, tix=None, kix=None):    
+def Pr(m, tix=None, kix=None):    
     r"""Return the spectrum of (first order) comoving curvature perturbations
     from a model instance.
         
