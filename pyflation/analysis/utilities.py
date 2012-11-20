@@ -250,7 +250,9 @@ def components_from_model(m, tix=None, kix=None):
     axis = 1
     Vphi, phidot, H, modes, modesdot, axis = correct_shapes(Vphi, phidot, H, modes, modesdot, axis)
     
-    return Vphi,phidot,H,modes,modesdot,axis
+    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, tmatter = fluid_parts_from_model(m, tix, kix)
+    
+    return Vphi,phidot,H,modes,modesdot,axis,rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter
 
 def fluid_parts_from_model(m, tix=None, kix=None):
     """Get the fluid variables from a model instance.
@@ -318,18 +320,22 @@ def fluid_parts_from_model(m, tix=None, kix=None):
         dmatter = m.yresult[tslice, m.dmatter_ix, kslice]
         qgamma = m.yresult[tslice, m.qgamma_ix, kslice]
         qmatter = m.yresult[tslice, m.qmatter_ix, kslice]
+        tmatter = full_transfers(m, tix)[..., m.tmatter_ix]
     else:
         bgshape = m.yresult[tslice, m.phidots_ix, kslice].shape
         rhoshape = list(bgshape)
         rhoshape[axis] = 1
         rhogamma = rhomatter = np.zeros(rhoshape)
         dgamma = dmatter = qgamma = qmatter = np.zeros(bgshape)
+        tmatter = np.zeros(bgshape[:2])
     
     
     rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis = fluid_correct_shapes(rhogamma, rhomatter,
                                                                 dgamma, dmatter, qgamma, qmatter, axis)
     
-    return rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis
+    
+    
+    return rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, tmatter
 
 def makespectrum(modes_I, axis):
     """Calculate spectrum of input.

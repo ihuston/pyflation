@@ -40,14 +40,16 @@ class TestComponentsFromModel():
     def test_returned(self):
         """Test that the correct number of components are returned."""
         components = utilities.components_from_model(self.m)
-        assert(len(components) == 6)
+        assert(len(components) == 13)
         
     def test_shapes(self):
         """Test that components returned are of correct shape."""
         components = utilities.components_from_model(self.m)
         shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
                   (1,self.nfields, self.nfields,1),
-                  (1 ,self.nfields, self.nfields, 1), ()]
+                  (1 ,self.nfields, self.nfields, 1), (),
+                  (1,1,1), (1,1,1), (1,self.nfields,1), (1,self.nfields,1),
+                  (1,self.nfields,1), (1,self.nfields,1), (1,self.nfields)]
         for ix, var in enumerate(components):
             assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
             
@@ -56,7 +58,9 @@ class TestComponentsFromModel():
         components = utilities.components_from_model(self.m, -1)
         shapes = [(1, self.nfields, 1), (1,self.nfields,1), (1, 1, 1), 
                   (1,self.nfields, self.nfields,1),
-                  (1 ,self.nfields, self.nfields, 1), ()]
+                  (1 ,self.nfields, self.nfields, 1), (),
+                  (1,1,1), (1,1,1), (1,self.nfields,1), (1,self.nfields,1),
+                  (1,self.nfields,1), (1,self.nfields,1), (1,self.nfields)]
         for ix, var in enumerate(components):
             assert_(np.shape(var)==shapes[ix], msg="Shape of component %d is wrong" % ix)
             
