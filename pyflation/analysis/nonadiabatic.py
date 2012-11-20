@@ -563,7 +563,7 @@ def deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis,
     
     csq = totalsoundspeed(Vphi, phidot, H, axis, rhogamma, rhomatter, tmatter)
     csshape = csq.shape
-    # Add two dimensions corresponding to mode axes
+    # Add dimension corresponding to field axis
     csq.resize(csshape[:axis] + (1,) + csshape[axis:])
     dP = deltaP_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, qgamma, qmatter)
     drhos = deltarho_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, dmatter, qgamma, qmatter)
