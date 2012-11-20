@@ -208,7 +208,7 @@ class TestPrSpectrum():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = adiabatic.Pr_spectrum(self.phidot, self.modes, self.axis)
+        arr = adiabatic.fields_only_Pr_spectrum(self.phidot, self.modes, self.axis)
         result = arr.shape
         newshape = list(self.Vphi.shape)
         del newshape[self.axis]
@@ -221,7 +221,7 @@ class TestPrSpectrum():
         phidot = 1.7
         axis=0
         actual = np.array([49/(1.7)**2])
-        arr = adiabatic.Pr_spectrum(phidot, modes,axis)
+        arr = adiabatic.fields_only_Pr_spectrum(phidot, modes,axis)
         assert_almost_equal(arr, actual)
     
     def test_floatdivision(self):
@@ -229,7 +229,7 @@ class TestPrSpectrum():
         modes = np.array([[1,3],[2,5]]).reshape((1,2,2,1))
         phidot = np.array([7,9]).reshape((1,2,1))
         axis = 1
-        arr = adiabatic.Pr_spectrum(phidot, modes, axis)
+        arr = adiabatic.fields_only_Pr_spectrum(phidot, modes, axis)
         desired = np.array([[4981.0/16900.0]]).reshape((1,1))
         assert_almost_equal(arr, desired)    
     
@@ -238,7 +238,7 @@ class TestPrSpectrum():
         modes = np.array([[1,3],[2,5]]).reshape((1,2,2,1))
         phidot = np.array([7,9]).reshape((1,2,1))
         axis = 1
-        arr = adiabatic.Pr_spectrum(phidot, modes, axis)
+        arr = adiabatic.fields_only_Pr_spectrum(phidot, modes, axis)
         desired = np.array([[4981.0/16900.0]]).reshape((1,1))
         assert_almost_equal(arr, desired)
         
@@ -247,7 +247,7 @@ class TestPrSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((1,2,2,1))
         phidot = np.array([1,1]).reshape((1,2,1))
         axis=1
-        arr = adiabatic.Pr_spectrum(phidot, modes, axis)
+        arr = adiabatic.fields_only_Pr_spectrum(phidot, modes, axis)
         desired = np.array([[11/4.0]]).reshape((1,1))
         assert_almost_equal(arr, desired)
         
@@ -256,7 +256,7 @@ class TestPrSpectrum():
         modes = np.array([[1, 1j],[-1j, 3-1j]]).reshape((1,2,2,1))
         phidot = np.array([1,1]).reshape((1,2,1))
         axis=1
-        arr = adiabatic.Pr_spectrum(phidot, modes, axis)
+        arr = adiabatic.fields_only_Pr_spectrum(phidot, modes, axis)
         assert_((not np.iscomplexobj(arr)))
         
 class TestPzetaSpectrum():

@@ -150,7 +150,7 @@ def findHorizoncrossings(m, factor=1):
     return m.findallkcrossings(m.tresult, m.yresult[:,m.H_ix], factor)
      
      
-def Pr_spectrum(phidot, modes, axis):
+def fields_only_Pr_spectrum(phidot, modes, axis):
     r"""Return the spectrum of (first order) curvature perturbations P_R1 for each k,
     given the first order perturbation modes.
     
@@ -214,7 +214,7 @@ def Pr(m, tix=None, kix=None):
     :math:`\mathcal{P}_\mathcal{R} = k^3/(2\pi^2) P_\mathcal{R}`.
     
     This function is a wrapper function which only requires the model as a parameter.
-    The full calculation is done in the Pr_spectrum function in the 
+    The full calculation is done in the fields_only_Pr_spectrum function in the 
     pyflation.analysis.adiabatic module.
     
     Parameters
@@ -236,7 +236,7 @@ def Pr(m, tix=None, kix=None):
         
     See also
     --------
-    pyflation.analysis.adiabatic.Pr_spectrum function
+    pyflation.analysis.adiabatic.fields_only_Pr_spectrum function
     """
     if tix is None:
         tslice = slice(None)
@@ -254,7 +254,7 @@ def Pr(m, tix=None, kix=None):
     #Get into mode matrix form, over first axis   
     modes = utilities.getmodematrix(m.yresult[tslice,...,kslice], m.nfields, ix=1, ixslice=m.dps_ix)
     axis = 1
-    Pr = Pr_spectrum(phidot, modes, axis)
+    Pr = fields_only_Pr_spectrum(phidot, modes, axis)
     return Pr
     
 
