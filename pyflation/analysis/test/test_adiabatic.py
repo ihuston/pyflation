@@ -34,7 +34,7 @@ class TestPphiModes():
         
     def test_shape(self):
         """Test whether the rhodots are shaped correctly."""    
-        arr = adiabatic.Pphi_modes(self.m)
+        arr = adiabatic.fields_only_Pphi_modes(self.m)
         result = arr.shape
         actual = self.m.yresult[:,self.m.dps_ix].shape
         assert_(result == actual, "Result shape %s, but desired shape is %s"%(str(result), str(actual)))
@@ -46,7 +46,7 @@ class TestPphiModes():
         k=np.array([5.25e-60])
         m=self.getmodel(modes, k, 1, 1, axis)
         actual = modes**2
-        arr = adiabatic.Pphi_modes(m)
+        arr = adiabatic.fields_only_Pphi_modes(m)
         assert_almost_equal(arr, actual)
         
     def test_one_by_two_by_two_by_one(self):
@@ -55,7 +55,7 @@ class TestPphiModes():
         axis = 1
         k = np.array([5.25e-60])
         m = self.getmodel(modes, k, 1, 2, axis)
-        arr = adiabatic.Pphi_modes(m)
+        arr = adiabatic.fields_only_Pphi_modes(m)
         desired = np.array([[10, 17],[17,29]]).reshape((1,4,1))
         assert_almost_equal(arr, desired)
         
@@ -65,7 +65,7 @@ class TestPphiModes():
         axis=1
         k = np.array([5.25e-60])
         m = self.getmodel(modes, k, 1, 2, axis)
-        arr = adiabatic.Pphi_modes(m)
+        arr = adiabatic.fields_only_Pphi_modes(m)
         desired = np.array([[2, -1+4*1j], [-1-4*1j, 11]]).reshape((1,4,1))
         assert_almost_equal(arr, desired)
         
@@ -75,7 +75,7 @@ class TestPphiModes():
         axis=1
         k = np.array([5.25e-60])
         m = self.getmodel(modes, k, 1, 2, axis)
-        arr = adiabatic.Pphi_modes(m)
+        arr = adiabatic.fields_only_Pphi_modes(m)
         assert_equal(arr[0,1], arr[0,2].conj())
 
 class TestPphiMatrix():

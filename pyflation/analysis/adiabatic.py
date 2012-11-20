@@ -13,7 +13,7 @@ import utilities
 import nonadiabatic
 
 
-def Pphi_modes(m):
+def fields_only_Pphi_modes(m):
     """Return the modes of the scalar perturbations P_{I,J}.
     
     This is a helper function which wraps the full calculation in Pphi_matrix
