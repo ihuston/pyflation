@@ -826,9 +826,9 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis,
     deltaPnadspectrum : array
                         Spectrum of the non-adiabatic pressure perturbation
     """
-    dPrelI = deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis, rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, tmatter)
+    dPnadI = deltaPnad_I(Vphi, phidot, H, modes, modesdot, axis, rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, tmatter)
     
-    spectrum = utilities.makespectrum(dPrelI, axis)
+    spectrum = utilities.makespectrum(dPnadI, axis)
     
     return spectrum
 
@@ -872,8 +872,8 @@ def Sspectrum(Vphi, phidot, H, modes, modesdot, axis,
     
     return spectrum
 
-def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
-                          rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0):
+def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, 
+                          rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0,k=1):
     """Power spectrum of delta Pnad scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -937,6 +937,40 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
     #Add extra dimensions to k if necessary
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
+
+def scaled_dPnad_from_model(m, tix=None, kix=None):
+    """Return the spectrum of non-adiabatic pressure perturbations
+    :math:`\mathcal{P}_{\delta P_{\mathrm{nad}}}` 
+    for each timestep and k mode.
+    
+    This is the scaled power spectrum which is related to the unscaled version by
+    :math:`\mathcal{P}_{\delta P_{\mathrm{nad}}} = k^3/(2\pi^2) P_{_{\mathrm{nad}}}`. 
+     
+    Parameters
+    ----------
+    m : Cosmomodels instance
+        Model class instance from which the yresult variable will be used to 
+        calculate P_R.
+    
+    tix : integer, optional
+          index of timestep at which to calculate, defaults to full range of steps.
+         
+    kix : integer, optional
+          integer of k value at which to calculate, defaults to full range of ks.
+            
+    Returns
+    -------
+    scaled_dPnad : array_like
+               Array of spectrum values for all timesteps and k modes
+    """
+    if kix is None:
+        kslice = slice(None)
+    else:
+        kslice = slice(kix, kix+1)
+    components = utilities.components_from_model(m, tix, kix)
+    
+    spectrum = scaled_dPnad_spectrum(*components, k=m.k[kslice]) 
+    return spectrum
 
 def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
                        dgamma=0,qgamma=0,qmatter=0):
