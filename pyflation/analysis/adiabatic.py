@@ -371,9 +371,9 @@ def Pr_fromV_model(m, tix=None, kix=None):
          Array of Pr values
       
     """
-    Vphi,phidot,H,dpmodes,modesdot,axis = utilities.components_from_model(m, tix, kix)
-    rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter, axis = utilities.fluid_parts_from_model(m, tix, kix)
-    Pr = Pr_fromV(phidot, H, rhogamma, rhomatter, dpmodes, qgamma, qmatter, axis)
+    Vphi,phidot,H,modes,modesdot,axis,rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter = utilities.components_from_model(m, tix, kix)
+    
+    Pr = Pr_fromV(phidot, H, rhogamma, rhomatter, modes, qgamma, qmatter, axis)
     return Pr
 
 def Pzeta(m, tix=None, kix=None):
@@ -403,11 +403,12 @@ def Pzeta(m, tix=None, kix=None):
     Pzeta : array_like, dtype: float64
             Array of Pzeta values for all timesteps and k modes
     """      
-    Vphi,phidot,H,modes,modesdot,axis = utilities.components_from_model(m, tix, kix)
-    Pzeta = Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis)
+    Vphi,phidot,H,modes,modesdot,axis,rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter = utilities.components_from_model(m, tix, kix)
+    Pzeta = Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis, rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter)
     return Pzeta
 
-def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis):
+def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis, 
+                   rhogamma, rhomatter, dgamma, dmatter, qgamma, qmatter):
     r"""Return the spectrum of (first order) curvature perturbations P_zeta for each k.
     
     For a multifield model this is given by:
@@ -441,6 +442,24 @@ def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis):
            Specifies which axis is first in mode matrix, e.g. if modes has shape
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
+           
+    rhogamma : array_like
+               Background radiation energy density.
+              
+    rhomatter : array_like
+                Background matter energy density.
+                
+    dgamma : array_like
+              First order perturbed radiation energy density, default is 0.
+              
+    dmatter : array_like
+             First order perturbed matter energy density, default is 0.
+    
+    qgamma : array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter : array_like
+             Perturbed matter momentum, default is 0.
           
     Returns
     -------
@@ -449,8 +468,9 @@ def Pzeta_spectrum(Vphi, phidot, H, modes, modesdot, axis):
     """      
     Vphi,phidot,H,modes,modesdot,axis = utilities.correct_shapes(Vphi, phidot, H, 
                                                                  modes, modesdot, axis)
-    rhodot = nonadiabatic.fullrhodot(phidot, H, axis)
-    drhospectrum = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis)
+    rhodot = nonadiabatic.fullrhodot(phidot, H, axis, rhogamma, rhomatter)
+    drhospectrum = nonadiabatic.deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis,
+                                                 dgamma, dmatter, qgamma, qmatter)
     Pzeta = rhodot**(-2.0) * drhospectrum
     return Pzeta
 
@@ -480,7 +500,7 @@ def scaled_Pzeta(m, tix=None, kix=None):
     """
     return utilities.kscaling(m.k, kix) * Pzeta(m, tix, kix)      
 
-def Pr_spectrum_from_Pphimodes(phidot, Pphi_modes, axis):
+def fields_only_Pr_spectrum_from_Pphimodes(phidot, Pphi_modes, axis):
     r"""Return the spectrum of (first order) curvature perturbations P_R1 for each k.
     
     For a multifield model this is given by:

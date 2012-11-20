@@ -634,7 +634,8 @@ def Smodes(Vphi, phidot, H, modes, modesdot, axis,
     
     return result  
 
-def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
+def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis,
+                     dgamma=0, dmatter=0, qgamma=0, qmatter=0):
     """Power spectrum of the perturbed energy density.
     
     Parameters
@@ -661,14 +662,24 @@ def deltarhospectrum(Vphi, phidot, H, modes, modesdot, axis):
            (100,3,3,10) with nfields=3, then axis=1. The two mode matrix axes are
            assumed to be beside each other so (100,3,10,3) would not be valid.
     
+    dgamma: array_like
+              First order perturbed radiation energy density, default is 0.
+              
+    dmatter: array_like
+             First order perturbed matter energy density, default is 0.
+    
+    qgamma: array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter: array_like
+             Perturbed matter momentum, default is 0.
+    
     Returns
     -------
     deltarhospectrum : array
                        Spectrum of the perturbed energy density
     """
-    drhomodes = deltarho_fields_matrix(Vphi, phidot, H, modes, modesdot, axis)
-    
-    drhoI = np.sum(drhomodes, axis=axis)
+    drhoI = deltarho_I(Vphi, phidot, H, modes, modesdot, axis, dgamma, dmatter, qgamma, qmatter)
     
     spectrum = utilities.makespectrum(drhoI, axis)
     
@@ -723,7 +734,7 @@ def deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis,
     
     return spectrum
 
-def deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
+def fields_only_deltaPrelspectrum(Vphi, phidot, H, modes, modesdot, axis):
     """Power spectrum of the full perturbed relative pressure.
     
     Parameters
@@ -821,7 +832,8 @@ def deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis,
     
     return spectrum
 
-def Sspectrum(Vphi, phidot, H, modes, modesdot, axis):
+def Sspectrum(Vphi, phidot, H, modes, modesdot, axis,
+              rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0):
     """Power spectrum of the isocurvature perturbation S.
     
     Parameters
@@ -853,13 +865,15 @@ def Sspectrum(Vphi, phidot, H, modes, modesdot, axis):
     Sspectrum : array
                 Spectrum of the isocurvature perturbation S.
     """
-    dSI = Smodes(Vphi, phidot, H, modes, modesdot, axis)
+    dSI = Smodes(Vphi, phidot, H, modes, modesdot, axis,
+                rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter)
     
     spectrum = utilities.makespectrum(dSI, axis)
     
     return spectrum
 
-def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
+def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
+                          rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0):
     """Power spectrum of delta Pnad scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -890,6 +904,27 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
           
     k : array
         The values of k to scale the result with.
+        
+    rhogamma : array_like
+               Background radiation energy density.
+              
+    rhomatter : array_like
+                Background matter energy density.
+                
+    dgamma : array_like
+              First order perturbed radiation energy density, default is 0.
+              
+    dmatter : array_like
+             First order perturbed matter energy density, default is 0.
+    
+    qgamma : array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter : array_like
+             Perturbed matter momentum, default is 0.
+             
+    tmatter : array_like
+              Transfer coefficients for the matter fluid at each time step.
     
     Returns
     -------
@@ -897,12 +932,14 @@ def scaled_dPnad_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
                             Scaled spectrum of the non-adiabatic pressure 
                             perturation.
     """
-    spectrum = deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    spectrum = deltaPnadspectrum(Vphi, phidot, H, modes, modesdot, axis,
+                                 rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter)
     #Add extra dimensions to k if necessary
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
-def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
+def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k,
+                       dgamma=0,qgamma=0,qmatter=0):
     """Power spectrum of delta P scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -933,18 +970,29 @@ def scaled_dP_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     
     k : array
         The values of k to scale the result with.
+        
+    dgamma: array_like
+              First order perturbed radiation energy density, default is 0.
+    
+    qgamma: array_like
+            Perturbed radiation momentum, default is 0.
+            
+    qmatter: array_like
+             Perturbed matter momentum, default is 0.
     
     Returns
     -------
     scaled_dP_spectrum : array
                          Scaled spectrum of the perturbed pressure
     """
-    spectrum = deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    spectrum = deltaPspectrum(Vphi, phidot, H, modes, modesdot, axis,
+                              dgamma,qgamma,qmatter)
     #Add extra dimensions to k if necessary
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
 
-def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
+def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, 
+                     rhogamma=0,rhomatter=0,dgamma=0,dmatter=0,qgamma=0,qmatter=0,tmatter=0,k=1):
     """Power spectrum of S scaled with k^3/(2*pi^2)
     
     Assumes that k dimension is last.
@@ -981,7 +1029,8 @@ def scaled_S_spectrum(Vphi, phidot, H, modes, modesdot, axis, k):
     scaled_S_spectrum : array
                         Scaled spectrum of the isocurvature perturbation S
     """
-    spectrum = Sspectrum(Vphi, phidot, H, modes, modesdot, axis)
+    spectrum = Sspectrum(Vphi, phidot, H, modes, modesdot, axis,
+                         rhogamma,rhomatter,dgamma,dmatter,qgamma,qmatter,tmatter)
     #Add extra dimensions to k if necessary
     scaled_spectrum = utilities.kscaling(k) * spectrum
     return scaled_spectrum
@@ -1015,6 +1064,7 @@ def scaled_S_from_model(m, tix=None, kix=None):
     else:
         kslice = slice(kix, kix+1)
     components = utilities.components_from_model(m, tix, kix)
+    
     spectrum = scaled_S_spectrum(*components, k=m.k[kslice]) 
     return spectrum
 
@@ -1090,8 +1140,8 @@ def dprel_from_model(m, tix=None, kix=None):
                Array of values of the power spectrum of the relativistic pressure
                perturbation
     """
-    components = utilities.components_from_model(m, tix, kix)
-    result = deltaPrelspectrum(*components)
+    components = utilities.components_from_model(m, tix, kix)[:6]
+    result = fields_only_deltaPrelspectrum(*components)
     
     return result
 
