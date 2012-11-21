@@ -655,6 +655,9 @@ class ReheatingTwoStage(c.FODriver):
         
         #Fix minimum start time for transfers
         self.transfers_on_mintime = kwargs.get("transfers_on_mintime", self.tstart)
+        
+        #Set whether to run after reheating
+        self.run_after_reheating = kwargs.get("run_after_reheating", False)
         #Set the field indices
         self.setfieldindices()
         
@@ -772,8 +775,10 @@ class ReheatingTwoStage(c.FODriver):
             Find reheating time and set fotend to it"""
         self.reheating_end, self.rehendindex = self.bgmodel.find_reheating_end()
         module_logger.info("Reheating ended " + str(self.reheating_end) + " efoldings after start.")
-        self.fotend = self.reheating_end
-        self.fotendindex = self.rehendindex
+        if self.run_after_reheating:
+            self.fotend = self.tend
+        else:
+            self.fotend = self.reheating_end
         return
         
     def getfoystart(self, ts=None, tsix=None):
