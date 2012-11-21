@@ -152,8 +152,9 @@ class LogFormatterTeXExponent(P.LogFormatter, object):
         return label
     
 
-def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None, 
-                       size="large", ls=line_prop_default, halfticks=False):
+def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, 
+                xlabel=None, ylabel=None, size="large", ls=line_prop_default, 
+                halfticks=False, t0_index=-1):
     """Create a figure using \mathcal{N} on the x-axis.
     
     Parameters
@@ -175,6 +176,9 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
                     List of raw strings (including LaTeX) to use in legend
                     of plot. Defaults to not plotting legend.
 
+    xlabel: string, optional
+            Raw string (including LaTeX) for x-axis, defaults to N_end - N.
+
     ylabel: string, optional
             Raw string (including LaTeX) for y-axis, defaults to empty.
             
@@ -188,12 +192,21 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
     
     halfticks: boolean, optional
                If True only show half the ticks on the y-axis
+               
+    t0_index: integer, optional
+              Index of ts where the value zero should be, default is -1,
+              i.e. the x-axis should count down to zero at the last point.
+              
+               
     Returns
     -------
     fig: the figure instance
     """
     if plot_fn is None:
         plot_fn = P.plot
+    
+    if xlabel is None:
+        xlabel = calN
         
     #Setup figure
     if fig is None:
@@ -202,7 +215,7 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
     lprops = itertools.cycle(ls)
     
     #Plot using specified function
-    lines = [plot_fn(t[-1] - t, s, lprops.next()) for t, s in zip(ts, ys)]
+    lines = [plot_fn(t[t0_index] - t, s, lprops.next()) for t, s in zip(ts, ys)]
     
     #Reverse x axis to count in correct direction
     reversexaxis()
@@ -219,7 +232,7 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None, ylabel=None
         ax.set_yticks(oldticks[::2])
         ax.set_yticks(oldticks[1::2], minor=True)
     #Add labels
-    P.xlabel(calN)
+    P.xlabel(xlabel)
     if ylabel:
         P.ylabel(ylabel)
         
