@@ -159,41 +159,41 @@ def calN_figure(ts, ys, fig=None, plot_fn=None, models_legends=None,
     
     Parameters
     ----------
-    ts: list of arrays
+    ts : list of arrays
         x-axis values 
     
-    ys: list of arrays
+    ys : list of arrays
         y-axis values, each element should be the same length as corresponding ts
         element. 
     
-    fig: Pylab figure instance, optional
+    fig : Pylab figure instance, optional
          Figure to draw on, default is to create a new figure.
          
-    plot_fn: function, optional
+    plot_fn : function, optional
              The Pylab plotting function to use, defaults to P.plot.
              
-    models_legends: list, optional
+    models_legends : list, optional
                     List of raw strings (including LaTeX) to use in legend
                     of plot. Defaults to not plotting legend.
 
-    xlabel: string, optional
+    xlabel : string, optional
             Raw string (including LaTeX) for x-axis, defaults to N_end - N.
 
-    ylabel: string, optional
+    ylabel : string, optional
             Raw string (including LaTeX) for y-axis, defaults to empty.
             
-    size: string, optional
+    size : string, optional
           One of "small", "large", "half", which specifies the size of the
           figure by using pyflation.cosmographs.set_size. Defaults to "large".
     
-    ls: list, optional
+    ls : list, optional
         List of linestyle strings to use with each successive line.
         Defaults to ["r-", "g--", "b:"]
     
-    halfticks: boolean, optional
+    halfticks : boolean, optional
                If True only show half the ticks on the y-axis
                
-    t0_index: integer, optional
+    t0_index : integer, optional
               Index of ts where the value zero should be, default is -1,
               i.e. the x-axis should count down to zero at the last point.
               
