@@ -57,6 +57,7 @@ class ReheatingModels(c.PhiModels):
         self.rho_limit = kwargs.get("rho_limit", 1e-3)
         # This setting means the fields will be evolved initially.
         self.fields_off = False
+        self.fields_off_time = None
  
     def findH(self, U, y):
         """Return value of Hubble variable, H at y for given potential."""
