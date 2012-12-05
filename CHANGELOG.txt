@@ -2,10 +2,15 @@
 Changelog for Pyflation
 ***********************
 
-* v0.2.4 XX/XX/XXXX - For next release
+* v0.5 XX/XX/XXXX - For next release
     There is a new driving function in pyflation.rk4 which allows for results to
     be appended to an already opened HDF5 file. This will reduce the memory 
     requirements for very large runs.
+    New classes implementing radiation and matter fluids as well as scalar fields
+    have been added. This allows the evolution of a model to continue past the 
+    end of inflation through a period of reheating. The transfer of scalar fields
+    into radiation and matter is controlled through transfer coefficients per
+    fluid and field.
 
 * v0.2.3 22/05/2012 - Fix a major issue with the nfields parameter not being
     passed down into the model instance. This would prevent multifield models
