@@ -40,6 +40,14 @@ pyflation Package
     :members:
     :undoc-members:
     :show-inheritance:
+    
+:mod:`reheating` Module
+-------------------------
+
+.. automodule:: pyflation.reheating
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 :mod:`helpers` Module
 ---------------------
