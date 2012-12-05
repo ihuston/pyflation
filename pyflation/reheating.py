@@ -5,7 +5,7 @@ Especially important classes are:
 
 * :class:`ReheatingBackground` - the class containing derivatives for first order calculation
 * :class:`ReheatingFirstOrder` - the class containing derivatives for first order calculation
-* :class:`FOReheatingTwoStage` - drives first order calculation 
+* :class:`ReheatingTwoStage` - drives first order calculation 
 
 """
 #Author: Ian Huston
