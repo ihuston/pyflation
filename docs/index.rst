@@ -28,6 +28,9 @@ term required for the evolution of second order perturbations.
 The :doc:`pyflation.analysis` contains routines to calculate the first order 
 First and Second order perturbations can be calculated for single field models 
 but only first order perturbations can be evolved for multi-field models.
+Using the :doc:`pyflation.reheating` multi-fluid systems of scalar fields, radiation and
+(cold dark) matter can be used to simulate the transfer of energy from fields to
+fluids during reheating.
 
 Alongside the Python package, the bin directory contains Python scripts which 
 can run first and second order simulations.
